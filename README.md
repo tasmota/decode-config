@@ -55,7 +55,7 @@ pip install pycurl configargparse
 
 Install [Python 2.7](https://www.python.org/download/releases/2.7/) then install dependencies. For PyCurl you need to [download pycurl‑7.43.0.3‑cp27‑cp27m‑win_amd64.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycurl) for Windows 10 64bit.
 ```
-pip install pycurl-7.43.0.3-cp27-cp27m-win_amd64.whl configargparse
+pip install pycurl-7.43.0.3-cp27-cp27m-win_amd64.whl
 // run the command from the folder where you downloaded the file
 
 pip install configargparse
