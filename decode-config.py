@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from past.builtins import long
-VER = '2.4.0039'
+VER = '2.4.0040'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -26,6 +26,8 @@ VER = '2.4.0039'
 Requirements:
      - Python 2.x:
          pip install json requests urllib2 configargparse
+     - Python 3.x:
+         pip install json requests urllib configargparse
 
 
 Instructions:
@@ -1518,10 +1520,10 @@ def MakeFilename(filename, filetype, configmapping):
     if 'version' in configmapping:
         config_version = GetVersionStr( int(str(configmapping['version']), 0) )
     if 'friendlyname' in configmapping:
-        config_friendlyname = re.sub('[^0-9a-zA-Z]','_', configmapping['friendlyname'][0])
+        config_friendlyname = re.sub('[^0-9a-zA-Z]','_', str(configmapping['friendlyname'][0]))
     if 'hostname' in configmapping:
-        if configmapping['hostname'].find('%') < 0:
-            config_hostname = re.sub('[^0-9a-zA-Z]','_', configmapping['hostname'])
+        if str(configmapping['hostname']).find('%') < 0:
+            config_hostname = re.sub('[^0-9a-zA-Z]','_', str(configmapping['hostname']))
     if filename.find('@H') >= 0 and args.device is not None:
         device_hostname = GetTasmotaHostname(args.device, args.port, username=args.username, password=args.password)
         if device_hostname is None:
@@ -1719,8 +1721,8 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
-    if isinstance(encode_cfg, (bytes,bytearray)):
-        encode_cfg = str(encode_cfg)
+    if isinstance(encode_cfg, instance(str)):
+        encode_cfg = bytearray(encode_cfg)
 
     # get restore config page first to set internal Tasmota vars
     responsecode, body = TasmotaGet('rs?', host, port, username, password, contenttype='text/html')
@@ -1769,11 +1771,11 @@ def DecryptEncrypt(obj):
     @return:
         decrypted configuration (if obj contains encrypted data)
     """
-    if isinstance(obj, (bytes,bytearray)):
-        obj = str(obj)
-    dobj  = obj[0:2]
+    if isinstance(obj, instance(str)):
+        obj = bytearray(obj)
+    dobj  = bytearray(obj[0:2])
     for i in range(2, len(obj)):
-        dobj += chr( (ord(obj[i]) ^ (CONFIG_FILE_XOR +i)) & 0xff )
+        dobj.append((obj[i] ^ (CONFIG_FILE_XOR +i)) & 0xff)
     return dobj
 
 
@@ -1788,16 +1790,16 @@ def GetSettingsCrc(dobj):
         2 byte unsigned integer crc value
 
     """
-    if isinstance(dobj, (bytes,bytearray)):
-        dobj = str(dobj)
+    if isinstance(dobj, instance(str)):
+        dobj = bytearray(dobj)
     version, size, setting = GetTemplateSetting(dobj)
     if version < 0x06060007 or version > 0x0606000A:
         size = 3584
     crc = 0
     for i in range(0, size):
         if not i in [14,15]: # Skip crc
-            byte = ord(dobj[i])
-            crc += byte * (i+1)
+            byte_ = dobj[i]
+            crc += byte_ * (i+1)
 
     return crc & 0xffff
 
@@ -1813,11 +1815,11 @@ def GetSettingsCrc32(dobj):
         4 byte unsigned integer crc value
 
     """
-    if isinstance(dobj, (bytes,bytearray)):
-        dobj = str(dobj)
+    if isinstance(dobj, instance(str)):
+        dobj = bytearray(dobj)
     crc = 0
     for i in range(0, len(dobj)-4):
-        crc ^= ord(dobj[i])
+        crc ^= dobj[i]
         for j in range(0, 8):
             crc = (crc >> 1) ^ (-int(crc & 1) & 0xEDB88320);
 
@@ -2300,9 +2302,9 @@ def SetFieldValue(fielddef, dobj, addr, value):
     if debug(args) >= 2:
         print("SetFieldValue(): fielddef {}, addr 0x{:04x}  value {}  formatcnt {}  singletype {}  bitsize {}  ".format(fielddef,addr,value,formatcnt,singletype,bitsize), file=sys.stderr)
     if not format_[-1:].lower() in ['s','p']:
-        addr += (bitsize / 8) * formatcnt
+        addr += (bitsize // 8) * formatcnt
         for _ in range(0, formatcnt):
-            addr -= (bitsize / 8)
+            addr -= (bitsize // 8)
             maxunsigned = ((2**bitsize) - 1)
             maxsigned = ((2**bitsize)>>1)-1
             val = value & maxunsigned
@@ -2353,8 +2355,8 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         field mapping
     """
 
-    if isinstance(dobj, instance((bytes,bytearray))):
-        dobj = str(dobj)
+    if isinstance(dobj, instance(str)):
+        dobj = bytearray(dobj)
 
     valuemapping = None
 
@@ -2565,7 +2567,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                     sbits = " {} bits shift {}".format(bits, bitshift) if bits else ""
                     strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, instance(int)) else _value
                     print("SetField(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
-                if fieldname != 'cfg_crc' and fieldname != '_':
+                if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
                     prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
                     dobj = SetFieldValue(fielddef, dobj, baseaddr+addroffset, value)
                     curvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
@@ -2673,8 +2675,8 @@ def Bin2Mapping(decode_cfg):
     @return:
         valuemapping data as mapping dictionary
     """
-    if isinstance(decode_cfg, instance((bytes,bytearray))):
-        decode_cfg = str(decode_cfg)
+    if isinstance(decode_cfg, instance(str)):
+        decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
     version, size, setting = GetTemplateSetting(decode_cfg)
@@ -2706,6 +2708,11 @@ def Bin2Mapping(decode_cfg):
         cfg_crc32 = GetField(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True)
     else:
         cfg_crc32 = GetSettingsCrc32(decode_cfg)
+    if 'cfg_timestamp' in setting:
+        cfg_timestamp = GetField(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True)
+    else:
+        cfg_timestamp = int(time.time())
+
     if version < 0x0606000B:
         if cfg_crc != GetSettingsCrc(decode_cfg):
             exit(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, GetSettingsCrc(decode_cfg)), type_=LogType.WARNING, doexit=not args.ignorewarning,line=inspect.getlineno(inspect.currentframe()))
