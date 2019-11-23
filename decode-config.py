@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, division
 from past.builtins import long
 from builtins import str as text
-VER = '2.4.0040'
+VER = '2.4.0041'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -25,11 +25,10 @@ VER = '2.4.0040'
 
 
 Requirements:
-     - Python 2.x:
-         pip install json requests urllib2 configargparse
-     - Python 3.x:
-         pip install json requests urllib configargparse
-
+    - Python 3.x and Pip:
+          sudo apt-get install python3 python3-pip
+    - additonal modules
+          pip3 install future requests configargparse
 
 Instructions:
     Execute command with option -d to retrieve config data from a host
@@ -189,7 +188,7 @@ import io
 import sys, platform
 def ModuleImportError(module):
     er = str(module)
-    print('{}, try "pip install {}"'.format(er,er.split(' ')[len(er.split(' '))-1]), file=sys.stderr)
+    print('{}, try "pip3 install {}"'.format(er,er.split(' ')[len(er.split(' '))-1]), file=sys.stderr)
     sys.exit(ExitCode.MODULE_NOT_FOUND)
 try:
     from datetime import datetime
