@@ -393,9 +393,9 @@ def bitsRead(x, n=0, c=1):
     @return:
         the bit value(s)
     """
-    if isinstance(x,str):
+    if isinstance(x,instance(str)):
         x = int(x, 0)
-    if isinstance(x,str):
+    if isinstance(x,instance(str)):
         n = int(n, 0)
 
     if n >= 0:
@@ -497,8 +497,8 @@ Setting_5_10_0 = {
     'energy_power_calibration':     ('<L',  0x364,       (None, None,                           ('Power',       '"PowerSet {}".format($)')) ),
     'energy_voltage_calibration':   ('<L',  0x368,       (None, None,                           ('Power',       '"VoltageSet {}".format($)')) ),
     'energy_current_calibration':   ('<L',  0x36C,       (None, None,                           ('Power',       '"CurrentSet {}".format($)')) ),
-    'energy_kWhtoday':              ('<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)/100)))')) ),
-    'energy_kWhyesterday':          ('<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)/100)))')) ),
+    'energy_kWhtoday':              ('<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhyesterday':          ('<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
     'energy_kWhdoy':                ('<H',  0x378,       (None, None,                           ('Power',       None)) ),
     'energy_min_power':             ('<H',  0x37A,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
     'energy_max_power':             ('<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
@@ -545,7 +545,7 @@ Setting_5_10_0 = {
     'ina219_mode':                  ('B',   0x531,       (None, '0 <= $ <= 7',                  ('Sensor',      '"Sensor13 {}".format($)')) ),
     'pulse_timer':                  ('<H',  0x532,       ([8],  '0 <= $ <= 64900',              ('Control',     '"PulseTime{} {}".format(#,$)')) ),
     'ip_address':                   ('<L',  0x544,       ([4],  None,                           ('Wifi',        '"IPAddress{} {}".format(#,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
-    'energy_kWhtotal':              ('<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)/100)))')) ),
+    'energy_kWhtotal':              ('<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
     'mqtt_fulltopic':               ('100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
     'flag2':                        ({
         'current_resolution':       ('<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Power',       '"AmpRes {}".format($)')) ),
@@ -600,12 +600,12 @@ Setting_5_13_1['flag'][0].update    ({
         'knx_enabled':              ('<L', (0x010,1,25), (None, None,                           ('KNX',         '"KNX_ENABLED {}".format($)')) ),
                                     })
 Setting_5_13_1.update               ({
-    'baudrate':                     ('B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ / 1200') ),
+    'baudrate':                     ('B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
     'mqtt_fingerprint':             ('20s', 0x1AD,       ([2],  None,                           ('MQTT',        MqttFingerprint)) ),
     'energy_power_delta':           ('B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
     'light_rotation':               ('<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
     'serial_delimiter':             ('B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
-    'sbaudrate':                    ('B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ / 1200') ),
+    'sbaudrate':                    ('B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
     'knx_GA_registered':            ('B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
     'knx_CB_registered':            ('B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
     'timer':                        ({
@@ -619,8 +619,8 @@ Setting_5_13_1.update               ({
         'mode':                     ('<L', (0x670, 2,29),(None, '0 <= $ <= 3',                  ('Timer',       None)) ),
         'arm':                      ('<L', (0x670, 1,31),(None, None,                           ('Timer',       None)) ),
                                     },      0x670,       ([16], None,                           ('Timer',       None)) ),
-    'latitude':                     ('i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) / 1000000', 'int($ * 1000000)')),
-    'longitude':                    ('i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) / 1000000', 'int($ * 1000000)')),
+    'latitude':                     ('i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) // 1000000', 'int($ * 1000000)')),
+    'longitude':                    ('i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) // 1000000', 'int($ * 1000000)')),
     'knx_physsical_addr':           ('<H',  0x6B8,       (None, None,                           ('KNX',         None)) ),
     'knx_GA_addr':                  ('<H',  0x6BA,       ([10], None,                           ('KNX',         None)) ),
     'knx_CB_addr':                  ('<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
@@ -745,8 +745,8 @@ Setting_6_2_1_10.update({
 # ======================================================================
 Setting_6_2_1_14 = copy.deepcopy(Setting_6_2_1_10)
 Setting_6_2_1_14.update({
-    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) / 10') ),            # undocumented
-    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) / 1000', 'int($ * 1000)') ),        # undocumented
+    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
+    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),        # undocumented
     'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),     # undocumented
     'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),     # undocumented
     'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),     # undocumented
@@ -757,7 +757,7 @@ Setting_6_2_1_14['flag2'][0].update ({
 # ======================================================================
 Setting_6_2_1_19 = copy.deepcopy(Setting_6_2_1_14)
 Setting_6_2_1_19.update({
-    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) / 10') ),            # undocumented
+    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
 })
 Setting_6_2_1_20 = Setting_6_2_1_19
 Setting_6_2_1_20['flag3'][0].update ({
@@ -934,7 +934,7 @@ Setting_6_5_0_11['flag3'][0].update ({
 Setting_6_5_0_12 = copy.deepcopy(Setting_6_5_0_11)
 Setting_6_5_0_12.pop('drivers',None)
 Setting_6_5_0_12.update             ({
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000.0)')) ),
+    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
     'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',       None)) ),
     'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',       None)) ),
     'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',       None)) ),
@@ -998,8 +998,8 @@ Setting_6_6_0_8['flag3'][0].update ({
 # ======================================================================
 Setting_6_6_0_9 = copy.deepcopy(Setting_6_6_0_8)
 Setting_6_6_0_9.update              ({
-    'baudrate':                     ('<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ / 1200') ),
-    'sbaudrate':                    ('<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ / 1200') ),
+    'baudrate':                     ('<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'sbaudrate':                    ('<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
 Setting_6_6_0_10 = copy.deepcopy(Setting_6_6_0_9)
@@ -1046,15 +1046,15 @@ Setting_6_6_0_14.pop('register8_ENERGY_TARIFF1_DS',None)
 Setting_6_6_0_14.pop('register8_ENERGY_TARIFF2_DS',None)
 Setting_6_6_0_14.update             ({
     'register8':                    ('B',   0x1D6,       ([16], None,                           ('Power',       None)) ),
-    'tariff1_0':                    ('<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]/60,@["tariff1_0"]%60,@["tariff1_1"]/60,@["tariff1_1"]%60)')) ),
+    'tariff1_0':                    ('<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]//60,@["tariff1_0"]%60,@["tariff1_1"]//60,@["tariff1_1"]%60)')) ),
     'tariff1_1':                    ('<H',  0xE32,       (None, None,                           ('Power',       None)) ),
-    'tariff2_0':                    ('<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]/60,@["tariff2_0"]%60,@["tariff2_1"]/60,@["tariff2_1"]%60)')) ),
+    'tariff2_0':                    ('<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
     'tariff2_1':                    ('<H',  0xE36,       (None, None,                           ('Power',       None)) ),
     'mqttlog_level':                ('B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
     'pcf8574_config':               ('B',   0xE88,       ([8],  None,                           ('Devices',     None)) ),
     'shutter_accuracy':             ('B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
-    'shutter_opentime':             ('<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#,$/10.0)')) ),
-    'shutter_closetime':            ('<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#,$/10.0)')) ),
+    'shutter_opentime':             ('<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#,float($)/10.0)')) ),
+    'shutter_closetime':            ('<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#,float($)/10.0)')) ),
     'shuttercoeff':                 ('<H',  0xE50,       ([5,4],None,                           ('Shutter',     None)) ),
     'shutter_invert':               ('B',   0xE78,       ([4],  None,                           ('Shutter',     '"ShutterInvert{} {}".format(#,$)')) ),
     'shutter_set50percent':         ('B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#,$)')) ),
@@ -1101,7 +1101,7 @@ Setting_6_6_0_21['flag3'][0].update ({
 Setting_7_0_0_1 = copy.deepcopy(Setting_6_6_0_21)
 Setting_7_0_0_1.pop('register8',None)
 Setting_7_0_0_1.update             ({
-    'shutter_motordelay':           ('B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,$/20.0)')) ),
+    'shutter_motordelay':           ('B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,float($)/20.0)')) ),
     'flag4':                        ('<L',  0x1E0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
                                     })
 Setting_7_0_0_1['flag3'][0].update ({
@@ -1122,7 +1122,7 @@ Setting_7_0_0_3.update             ({
 # ======================================================================
 Setting_7_0_0_4 = copy.deepcopy(Setting_7_0_0_3)
 Setting_7_0_0_4.update             ({
-    'wifi_output_power':            ('B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format($/10.0)')) ),
+    'wifi_output_power':            ('B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
                                     })
 Setting_7_0_0_4['flag3'][0].update ({
         'bootcount_update':         ('<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
@@ -1130,7 +1130,7 @@ Setting_7_0_0_4['flag3'][0].update ({
 # ======================================================================
 Setting_7_0_0_5 = copy.deepcopy(Setting_7_0_0_4)
 Setting_7_0_0_5.update             ({
-    'temp_comp':                    ('b',   0xE9E,       (None, None,                           ('Sensor',      '"TempOffset {:.1f}".format($/10.0)')) ),
+    'temp_comp':                    ('b',   0xE9E,       (None, None,                           ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 Settings = [
