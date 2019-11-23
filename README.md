@@ -1,9 +1,6 @@
 # decode-config
 _decode-config_ can backup and restore the configuration of [Tasmota](http://tasmota.com/)-devices.
 
-It uses the Tasmota http capability so for usage the Tasmota http WebServer must be available and enabled.
-MQTT is currently not possible as long as Tasmota does not support configuration data transmission this way.
-
 In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 * _decode-config_ uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore,
 * _decode-config_ can restore previously backup and changed [JSON](http://www.json.org/)-format files,
@@ -44,13 +41,14 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
     * [Use batch processing](decode-config.md#use-batch-processing)
 
 ## Prerequisite
+
+### Python
 * This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) and compatible with Python 2.x/3.x.
 You need to install a working python environment for your operating system.
 
-As of EOL for Python 2.x on Jan 2020 it is recommended using Python 3.x.
+Because of [Python 2.7 EOL](https://github.com/python/devguide/pull/344) on Jan 2020 it is recommended using Python 3.x.
 
-
-### Linux
+#### Linux
 1. Install [Python 3.x](https://www.python.org/downloads/) and Pip
 ```
 sudo apt-get install python3 python3-pip 
@@ -61,16 +59,20 @@ sudo apt-get install python3 python3-pip
 pip3 install future requests configargparse
 ```
 
-### Windows 10
+#### Windows 10
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
 ```
 pip3 install future requests configargparse
 ```
 
-* [Tasmota](https://github.com/arendst/Tasmota) [Firmware](https://github.com/arendst/Tasmota/releases) with Web-Server enabled:
+### Tasmota Webserver
+Because _decode-config_ uses the Tasmota http capability to receive and send configuration data, the Tasmota http WebServer must be available and enabled:
+
   * To backup or restore configurations from or to a Tasmota device you need a firmare with enabled web-server in admin mode (command [WebServer 2](https://github.com/arendst/Tasmota/wiki/Commands#wifi)). This is the Tasmota default.
   * If using your own compiled firmware be aware to enable the web-server (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
+
+**Note**: MQTT is currently not possible as long as Tasmota does not support configuration data transmission this way.
 
 ## File Types
 _decode-config_ can handle the following backup file types:
