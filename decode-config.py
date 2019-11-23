@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from past.builtins import long
+from builtins import str as text
 VER = '2.4.0040'
 
 """
@@ -199,6 +200,8 @@ try:
     import re
     import math
     import inspect
+    import string
+    import itertools
     import json
     import configargparse
     import requests
@@ -1743,7 +1746,7 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
     if res.headers['Content-Type']!='text/html':
         exit(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)",line=inspect.getlineno(inspect.currentframe()))
 
-    body = res.content
+    body = res.text
 
     findUpload = body.find("Upload")
     if findUpload < 0:
@@ -2272,9 +2275,20 @@ def GetFieldValue(fielddef, dobj, addr):
             value_ = value_ + val
         value_ = bitsRead(value_, bitshift, bits)
     else:
-        value_ = unpackedvalue[0]
-        s = str(value_).split('\0')[0]        # use left string until \0
-        value_ = unicode(s, errors='ignore')  # remove character > 127
+        value_ = ""
+
+        # max length of this field
+        maxlength = GetFieldLength(fielddef)
+
+        # get unpacked binary value as stripped string
+        if sys.version_info.major==2:
+            s = str(unpackedvalue[0]).strip('\x00')
+        else:
+            s = str(unpackedvalue[0],'utf-8').strip('\x00')
+
+        # remove unprintable char
+        if maxlength:
+            value_ = "".join(itertools.islice((c for c in s if c in string.printable), maxlength))
 
     return value_
 
