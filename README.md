@@ -45,20 +45,18 @@ _decode-config.py_ is compatible with Tasmota version from v5.10.0 up to now.
 
 ### Linux
 ```
-sudo apt-get install python python-pip libcurl4-openssl-dev libssl-dev
+sudo apt-get install python python-pip
 ```
 ```
-pip install pycurl configargparse
+pip install json requests urllib2 configargparse
 ```
 
 ### Windows 10
 
-Install [Python 2.7](https://www.python.org/download/releases/2.7/) then install dependencies. For PyCurl you need to [download pycurl‑7.43.0.3‑cp27‑cp27m‑win_amd64.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycurl) for Windows 10 64bit.
-```
-pip install pycurl-7.43.0.3-cp27-cp27m-win_amd64.whl
-// run the command from the folder where you downloaded the file
+Install [Python 2.7](https://www.python.org/download/releases/2.7/) then install dependencies. 
 
-pip install configargparse
+```
+pip install json requests urllib2 configargparse
 ```
 
 * [Tasmota](https://github.com/arendst/Tasmota) [Firmware](https://github.com/arendst/Tasmota/releases) with Web-Server enabled:
