@@ -1291,9 +1291,9 @@ def ShortHelp(doexit=True):
         sys.exit with OK if True
     """
     print(parser.description)
-    print
+    print()
     parser.print_usage()
-    print
+    print()
     print("For advanced help use '{prog} -H' or '{prog} --full-help'".format(prog=os.path.basename(sys.argv[0])))
     if doexit:
         sys.exit(ExitCode.OK)
@@ -3061,7 +3061,7 @@ def OutputTasmotaCmnds(tasmotacmnds):
         for group in groups:
             if group.title() in (groupname.title() for groupname in tasmotacmnds):
                 cmnds = tasmotacmnds[group]
-                print
+                print()
                 print("# {}:".format(group))
                 OutputTasmotaSubCmnds(cmnds)
 
@@ -3303,7 +3303,7 @@ if __name__ == "__main__":
     if encode_cfg is None:
         # no config source given
         ShortHelp(False)
-        print
+        print()
         print(parser.epilog)
         sys.exit(ExitCode.OK)
 
