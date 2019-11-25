@@ -2283,7 +2283,7 @@ def GetFieldValue(fielddef, dobj, addr):
         if sys.version_info.major==2:
             s = str(unpackedvalue[0]).strip('\x00')
         else:
-            s = str(unpackedvalue[0],'utf-8').strip('\x00')
+            s = str(unpackedvalue[0],'utf-8',errors='ignore').strip('\x00')
 
         # remove unprintable char
         if maxlength:
