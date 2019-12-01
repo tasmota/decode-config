@@ -3,7 +3,7 @@
 from __future__ import print_function, unicode_literals, division
 from past.builtins import long
 from builtins import str as text
-VER = '2.4.0041'
+VER = '7.1.1.1 [00042]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1132,7 +1132,13 @@ Setting_7_0_0_5.update             ({
     'temp_comp':                    ('b',   0xE9E,       (None, None,                           ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
+Setting_7_0_0_6 = copy.deepcopy(Setting_7_0_0_5)
+Setting_7_0_0_6['flag3'][0].update ({
+        'slider_dimmer_stay_on':    ('<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x7000006,0x1000, Setting_7_0_0_6),
             (0x7000005,0x1000, Setting_7_0_0_5),
             (0x7000004,0x1000, Setting_7_0_0_4),
             (0x7000003,0x1000, Setting_7_0_0_3),
