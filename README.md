@@ -1,21 +1,21 @@
-# decode-config.py
-_decode-config.py_ is able to backup and restore Tasmota configuration.
+# decode-config
+_decode-config_ can backup and restore the configuration of [Tasmota](http://tasmota.com/)-devices.
 
-In comparison with the Tasmota build-in "Backup/Restore Configuration" function _decode-config.py_
-* uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore,
-* can restore previously backup and changed [JSON](http://www.json.org/)-format files,
-* is able to create Tasmota compatible command list with related config parameter
+In comparison with the Tasmota build-in "Backup/Restore Configuration" function
+* _decode-config_ uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore,
+* _decode-config_ can restore previously backup and changed [JSON](http://www.json.org/)-format files,
+* _decode-config_ is able to create Tasmota compatible command list for the most available commands
 
 Comparing backup files created by *decode-config.py* and *.dmp files created by Tasmota "Backup/Restore Configuration":
 
-| &nbsp;                  | decode-config.py<br />*.json file | Tasmota<br />*.dmp file |
-|-------------------------|:-------------------------------:|:-----------------------------------:|
-| Encrypted               |                No               |                 Yes                 |
-| Readable                |               Yes               |                  No                 |
-| Simply editable         |               Yes               |                  No                 |
-| Simply batch processing |               Yes               |                  No                 |
+| &nbsp;                  | decode-config.py<br />*.json file | Tasmota<br />*.dmp file             |
+|-------------------------|:---------------------------------:|:-----------------------------------:|
+| Encrypted               |                No                 |                 Yes                 |
+| Readable                |               Yes                 |                  No                 |
+| Editable                |               Yes                 |                  No                 |
+| Batch processing        |               Yes                 |                  No                 |
 
-_decode-config.py_ is compatible with Tasmota version from v5.10.0 up to now.
+_decode-config_ is able to process configuration data for Tasmota starting v5.10.0 up to current version.
 
 # Content
 * [Prerequisite](decode-config.md#prerequisite)
@@ -34,53 +34,64 @@ _decode-config.py_ is compatible with Tasmota version from v5.10.0 up to now.
   * [Filter data](decode-config.md#filter-data)
   * [Configuration file](decode-config.md#configuration-file)
   * [More program arguments](decode-config.md#more-program-arguments)
+    * [Program parameter notes](decode-config.md#program-parameter-notes)
   * [Examples](decode-config.md#examples)
     * [Config file](decode-config.md#config-file)
     * [Using Tasmota binary configuration files](decode-config.md#using-tasmota-binary-configuration-files)
     * [Use batch processing](decode-config.md#use-batch-processing)
-  * [Notes](decode-config.md#notes)
 
 ## Prerequisite
-* This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) so you need to install a working python environment for your operating system.
 
-### Linux
-```
-sudo apt-get install python python-pip
-```
-```
-pip install json requests urllib2 configargparse
-```
+### Python
+* This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) and compatible with Python 2.x/3.x.
+You need to install a working python environment for your operating system.
 
-### Windows 10
+Because of [Python 2.7 EOL](https://github.com/python/devguide/pull/344) on Jan 2020 it is recommended using Python 3.x.
 
-Install [Python 2.7](https://www.python.org/download/releases/2.7/) then install dependencies. 
-
+#### Linux
+1. Install [Python 3.x](https://www.python.org/downloads/) and Pip
 ```
-pip install json requests urllib2 configargparse
+sudo apt-get install python3 python3-pip 
 ```
 
-* [Tasmota](https://github.com/arendst/Tasmota) [Firmware](https://github.com/arendst/Tasmota/releases) with Web-Server enabled:
+2. Install dependencies
+```
+pip3 install future requests configargparse
+```
+
+#### Windows 10
+
+Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
+```
+pip3 install future requests configargparse
+```
+
+### Tasmota Webserver
+Because _decode-config_ uses the Tasmota http capability to receive and send configuration data, the Tasmota http WebServer must be available and enabled:
+
   * To backup or restore configurations from or to a Tasmota device you need a firmare with enabled web-server in admin mode (command [WebServer 2](https://github.com/arendst/Tasmota/wiki/Commands#wifi)). This is the Tasmota default.
   * If using your own compiled firmware be aware to enable the web-server (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 
+**Note**: MQTT is currently not possible as long as Tasmota does not support configuration data transmission this way.
+
 ## File Types
-_decode-config.py_ can handle the following backup file types:
+_decode-config_ can handle the following backup file types:
 ### .dmp Format
 Configuration data as used by Tasmota "Backup/Restore Configuration" web interface.
 This format is binary and encrypted.
 ### .json Format
 Configuration data in [JSON](http://www.json.org/)-format.
 This format is decrypted, human readable and editable and can also be used for the `--restore-file` parameter.
-This file will be created by _decode-config.py_ using the `--backup-file` with `--backup-type json` parameter, this is the default.
+This file will be created by _decode-config_ using the `--backup-file` with `--backup-type json` parameter, this is the default.
 ### .bin Format
 Configuration data in binary format.
 This format is binary decryptet, editable (e.g. using a hex editor) and can also be used for `--restore-file` command.
-It will be created by _decode-config.py_ using `--backup-file` with `--backup-type bin`.
+It will be created by _decode-config_ using `--backup-file` with `--backup-type bin`.
 Note:
 The .bin file contains the same information as the original .dmp file from Tasmota "Backup/Restore Configuration" but it is decrpted and  4 byte longer than an original (it is a prefix header at the beginning). .bin file data starting at address 4 contains the same as the **struct SYSCFG** from Tasmota [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) in decrypted format.
 
 #### File extensions
-You don't need to append exensions for your file name as _decode-config.py_ uses auto extension as default. The extension will be choose based on file contents and `--backup-type` parameter.
+You don't need to append exensions for your file name as _decode-config_ uses auto extension as default. The extension will be choose based on file contents and `--backup-type` parameter.
 If you do not want using auto extensions use the `--no-extension` parameter.
 
 ## Usage
@@ -180,7 +191,7 @@ Note: JSON output always contains all configuration data like the backup file ex
 
 
 #### Tasmota command output
-_decode-config.py_ is able to translate the configuration data to (most all) Tasmota commands. To output your configuration as Tasmota commands use `--output-format cmnd` or `--output-format command`.
+_decode-config_ is able to translate the configuration data to (most all) Tasmota commands. To output your configuration as Tasmota commands use `--output-format cmnd` or `--output-format command`.
 
 Example:
 
@@ -209,7 +220,7 @@ Note: A few very specific module commands like MPC230xx, KNX and some Display co
 ### Filter data
 The huge number of Tasmota configuration data can be overstrained and confusing, so the most of the configuration data are grouped into categories.
 
-With _decode-config.py_ the following categories are available:   `Display`, `Domoticz`, `Internal`, `KNX`, `Led`, `Logging`, `MCP230xx`, `MQTT`, `Main`, `Management`, `Pow`, `Sensor`, `Serial`, `SetOption`, `RF`, `System`, `Timers`, `Wifi`
+With _decode-config_ the following categories are available:   `Display`, `Domoticz`, `Internal`, `KNX`, `Led`, `Logging`, `MCP230xx`, `MQTT`, `Main`, `Management`, `Pow`, `Sensor`, `Serial`, `SetOption`, `RF`, `System`, `Timers`, `Wifi`
 
 These are similary to the categories on [https://github.com/arendst/Tasmota/wiki/Commands](Tasmota Command Wiki).
 
@@ -348,9 +359,14 @@ For advanced help use `-H` or `--full-help`:
 
     Either argument -d <host> or -f <filename> must be given.
 
-### Program parameter notes
+#### Program parameter notes
 
-_decode-config.py_
+* Filename replacement macros **@h** and **@H**:
+  * **@h**
+The **@h** replacement macro uses the hostname configured with the Tasomta Wifi `Hostname <host>` command (defaults to `%s-%04d`). It will not use the network hostname of your device because this is not available when working with files only (e.g. `--file <filename>` as source).
+To prevent having a useless % in your filename, **@h** will not replaced by configuration data hostname if this contains '%' characters.
+  * **@H**
+If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
 
 
 ### Examples
@@ -394,12 +410,3 @@ or under windows
     for device in (tasmota1 tasmota2 tasmota3) do python decode-config.py -c my.conf -d %device -o Config_@f_@v
 
 will produce JSON configuration files for host tasmota1, tasmota2 and tasmota3 using friendly name and Tasmota firmware version for backup filenames.
-
-## Notes
-Some general notes:
-* Filename replacement macros **@h** and **@H**:
-  * **@h**
-The **@h** replacement macro uses the hostname configured with the Tasomta Wifi `Hostname <host>` command (defaults to `%s-%04d`). It will not use the network hostname of your device because this is not available when working with files only (e.g. `--file <filename>` as source).
-To prevent having a useless % in your filename, **@h** will not replaced by configuration data hostname if this contains '%' characters.
-  * **@H**
-If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
