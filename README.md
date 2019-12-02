@@ -8,8 +8,8 @@ In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 
 Comparing backup files created by *decode-config.py* and *.dmp files created by Tasmota "Backup/Restore Configuration":
 
-| &nbsp;                  | decode-config.py<br />*.json file | Tasmota<br />*.dmp file             |
-|-------------------------|:---------------------------------:|:-----------------------------------:|
+| &nbsp;                  | decode-config.py *.json file      | Tasmota *.dmp file             |
+|:------------------------|:---------------------------------:|:-----------------------------------:|
 | Encrypted               |                No                 |                 Yes                 |
 | Readable                |               Yes                 |                  No                 |
 | Editable                |               Yes                 |                  No                 |
@@ -18,6 +18,13 @@ Comparing backup files created by *decode-config.py* and *.dmp files created by 
 _decode-config_ is able to process configuration data for Tasmota starting v5.10.0 up to current version.
 
 # Content
+
+| File                    | Description |
+|:------------------------|:------------------------------------------------------------------------|
+| _decode-config.py_      | Python source file running under your local Python environment          |
+| _decode-config_         | Linux executable running standalone                                     |
+| _README.md_             | This content                                                            |
+
 * [Prerequisite](decode-config.md#prerequisite)
 * [File Types](decode-config.md#file-types)
   * [.dmp File Format](decode-config.md#-dmp-format)
@@ -41,14 +48,16 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
     * [Use batch processing](decode-config.md#use-batch-processing)
 
 ## Prerequisite
+You can either run the source _decode-config.py_ using an installed Python environment (see below) or the distributed executable (if applicable).  
+If there is no executable for your OS, you need to install Python.
 
 ### Python
-* This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) and compatible with Python 2.x/3.x.
-You need to install a working python environment for your operating system.
+This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) and compatible with Python 2.x/3.x.
 
-Because of [Python 2.7 EOL](https://github.com/python/devguide/pull/344) on Jan 2020 it is recommended using Python 3.x.
+**Note**: Because of [Python 2.7 EOL](https://github.com/python/devguide/pull/344) on Jan 2020 it is recommended using Python 3.x.
 
 #### Linux
+* Running the source _decode-config.py_:
 1. Install [Python 3.x](https://www.python.org/downloads/) and Pip
 ```
 sudo apt-get install python3 python3-pip 
@@ -60,6 +69,7 @@ pip3 install future requests configargparse
 ```
 
 #### Windows 10
+You need to install a working python environment for your operating system.
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
 ```
