@@ -3,7 +3,7 @@
 from __future__ import print_function, unicode_literals, division
 from past.builtins import long
 from builtins import str as text
-VER = '7.1.1.1 [00042]'
+VER = '7.1.1.1 [00043]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
