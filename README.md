@@ -162,7 +162,7 @@ To force screen output use the `--output` parameter.
 Output to screen is default enabled when calling the program with a source parameter (-f or -d) but without any backup or restore parameter.
 
 #### JSON output
-The default output format is [JSON](decode-config.md#-json-format). You can force JSON output using the `--output-format json` parameter.
+The default output format is [JSON](decode-config#json-format). You can force JSON output using the `--output-format json` parameter.
 
 Example:
 
