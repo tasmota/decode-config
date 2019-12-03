@@ -241,7 +241,7 @@ DEFAULTS            = {
     },
     'jsonformat':
     {
-        'jsonindent':   4,
+        'jsonindent':   None,
         'jsoncompact':  False,
         'jsonsort':     True,
         'jsonhidepw':   False,
@@ -2925,7 +2925,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             message("Writing backup file '{}' ({} format)".format(backup_filename, fileformat), type_=LogType.INFO)
         try:
             with open(backup_filename, "w") as backupfp:
-                json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) < 0 else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
+                json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
         except Exception as e:
             exit(e.args[0], "'{}' {}".format(backup_filename, e[1]),line=inspect.getlineno(inspect.currentframe()))
 
