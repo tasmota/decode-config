@@ -44,8 +44,8 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
     * [Program parameter notes](#program-parameter-notes)
   * [Examples](#examples)
     * [Config file](#config-file)
-    * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-    * [Use batch processing](#use-batch-processing)
+    * [Using Tasmota binary configuration files](#using-Tasmota-binary-configuration-files)
+    * [Use batch processing](#Use-batch-processing)
 
 ## Prerequisite
 You can either run the source _decode-config.py_ using an installed Python environment (see below) or the distributed executable (if applicable).  
