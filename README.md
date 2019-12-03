@@ -27,9 +27,9 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 
 * [Prerequisite](#prerequisite)
 * [File Types](#file-types)
-  * [.dmp File Format](#-dmp-format)
-  * [.json File Format](#-json-format)
-  * [.bin File Format](#-bin-format)
+  * [.dmp File Format](#dmp-format)
+  * [.json File Format](#json-format)
+  * [.bin File Format](#bin-format)
     * [File extensions](#file-extensions)
 * [Usage](#usage)
   * [Basics](#basics)
