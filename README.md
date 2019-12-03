@@ -79,7 +79,7 @@ pip3 install future requests configargparse
 ### Tasmota Webserver
 Because _decode-config_ uses the Tasmota http capability to receive and send configuration data, the Tasmota http WebServer must be available and enabled:
 
-  * To backup or restore configurations from or to a Tasmota device you need a firmare with enabled web-server in admin mode (command [WebServer 2](https://github.com/arendst/Tasmota/wiki/Commands#wifi)). This is the Tasmota default.
+  * To backup or restore configurations from or to a Tasmota device you need a firmare with enabled web-server in admin mode (command [WebServer 2](https://tasmota.github.io/docs/#/Commands?id=wi-fi)). This is the Tasmota default.
   * If using your own compiled firmware be aware to enable the web-server (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 
 **Note**: MQTT is currently not possible as long as Tasmota does not support configuration data transmission this way.
