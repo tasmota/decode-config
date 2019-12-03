@@ -232,7 +232,7 @@ The huge number of Tasmota configuration data can be overstrained and confusing,
 
 With _decode-config_ the following categories are available:   `Display`, `Domoticz`, `Internal`, `KNX`, `Led`, `Logging`, `MCP230xx`, `MQTT`, `Main`, `Management`, `Pow`, `Sensor`, `Serial`, `SetOption`, `RF`, `System`, `Timers`, `Wifi`
 
-These are similary to the categories on [https://github.com/arendst/Tasmota/wiki/Commands](Tasmota Command Wiki).
+These are similary to the categories on [Tasmota Command Wiki](https://tasmota.github.io/docs/#/Commands?id=command-list).
 
 To filter outputs to a subset of groups use the `-g` or `--group` arg concatenating the grooup you want, e. g.
 
