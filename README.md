@@ -69,7 +69,9 @@ pip3 install future requests configargparse
 ```
 
 #### Windows 10
-You need to install a working python environment for your operating system.
+Use the Windows executable file [decode-config_x64.exe](https://github.com/tasmota/decode-config/blob/development/decode-config_x64.exe), for 32 bit Windows use [decode-config.exe](https://github.com/tasmota/decode-config/blob/development/decode-config.exe) no need to install anything..
+
+If you want to use the Python version:
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
 ```
