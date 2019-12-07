@@ -69,7 +69,7 @@ pip3 install future requests configargparse
 ```
 
 #### Windows 10
-Use the Windows executable file [decode-config_x64.exe](https://github.com/tasmota/decode-config/blob/development/decode-config_x64.exe), for 32 bit Windows use [decode-config.exe](https://github.com/tasmota/decode-config/blob/development/decode-config.exe). No need to install anything.
+Use the Windows executable file [decode-config_x64.exe](https://github.com/tasmota/decode-config/releases), for 32 bit Windows use [decode-config.exe](https://github.com/tasmota/decode-config/releases). No need to install anything.
 
 If you want to use the Python version:
 
