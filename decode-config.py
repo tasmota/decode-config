@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals, division
-from past.builtins import long
-from builtins import str as text
-VER = '7.1.1.1 [00043]'
+VER = '7.1.1.1 [00044]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -28,7 +25,7 @@ Requirements:
     - Python 3.x and Pip:
           sudo apt-get install python3 python3-pip
     - additonal modules
-          pip3 install future requests configargparse
+          pip3 install requests configargparse
 
 Instructions:
     Execute command with option -d to retrieve config data from a host
@@ -2411,7 +2408,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         valuemapping = copy.deepcopy(mapping_value)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         if GetFieldLength(fielddef) != 0:
             valuemapping = ReadWriteConverter(GetFieldValue(fielddef, dobj, baseaddr+addroffset), fielddef, read=True, raw=raw)
 
@@ -2477,7 +2474,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 dobj = SetField(dobj, name, format_[name], restore[name], addroffset=addroffset, filename=filename)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         valid = True
         err = ""
         errformat = ""
@@ -2655,7 +2652,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
                 cmnds = SetCmnd(cmnds, name, format_[name], valuemapping, mappedvalue[name], addroffset=addroffset, idx=idx)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         if group is not None:
             group = group.title();
         if isinstance(tasmotacmnd, instance(tuple)):
