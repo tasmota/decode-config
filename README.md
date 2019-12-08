@@ -23,6 +23,8 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 |:------------------------|:------------------------------------------------------------------------|
 | _decode-config.py_      | Python source file running under your local Python environment          |
 | _decode-config_         | Linux executable running standalone                                     |
+| _decode-config.exe_     | WIndows 32bit executable running standalone                             |
+| _decode-config_x64.exe_ | WIndows 64bit executable running standalone                             |
 | _README.md_             | This content                                                            |
 
 * [Prerequisite](#prerequisite)
