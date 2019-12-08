@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals, division
-from past.builtins import long
-from builtins import str as text
-VER = '7.1.1.1 [00043]'
+VER = '7.1.1.1 [00044]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -28,7 +25,7 @@ Requirements:
     - Python 3.x and Pip:
           sudo apt-get install python3 python3-pip
     - additonal modules
-          pip3 install future requests configargparse
+          pip3 install requests configargparse
 
 Instructions:
     Execute command with option -d to retrieve config data from a host
@@ -179,6 +176,7 @@ class ExitCode:
     UPLOAD_CONFIG_ERROR = 11
     MODULE_NOT_FOUND = 20
     INTERNAL_ERROR = 21
+    HTTP_CONNECTION_ERROR = 22
 
 # ======================================================================
 # imports
@@ -1645,13 +1643,16 @@ def TasmotaGet(cmnd, host, port, username=DEFAULTS['source']['username'], passwo
     auth = None
     if username is not None and password is not None:
         auth = (username, password)
-    res = requests.get(url, auth=auth)
+    try:
+        res = requests.get(url, auth=auth)
+    except requests.exceptions.ConnectionError as e:
+        exit(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection")
 
     if not res.ok:
         exit(res.status_code, "Error on http GET request for {} - {}".format(url,res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if contenttype is not None and res.headers['Content-Type']!=contenttype:
-        exit(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)",line=inspect.getlineno(inspect.currentframe()))
+        exit(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not respond properly, maybe Tasmota webserver admin mode is disabled (WebServer 2)",line=inspect.getlineno(inspect.currentframe()))
 
     return res.status_code, res.content
 
@@ -1680,7 +1681,7 @@ def GetTasmotaHostname(host, port, username=DEFAULTS['source']['username'], pass
     # get hostname
     responsecode, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(body)
+        jsonbody = json.loads(str(body, 'utf8'))
         if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
             hostname = jsonbody["StatusNET"]["Hostname"]
             if args.verbose:
@@ -2411,7 +2412,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         valuemapping = copy.deepcopy(mapping_value)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         if GetFieldLength(fielddef) != 0:
             valuemapping = ReadWriteConverter(GetFieldValue(fielddef, dobj, baseaddr+addroffset), fielddef, read=True, raw=raw)
 
@@ -2477,7 +2478,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 dobj = SetField(dobj, name, format_[name], restore[name], addroffset=addroffset, filename=filename)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         valid = True
         err = ""
         errformat = ""
@@ -2655,7 +2656,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
                 cmnds = SetCmnd(cmnds, name, format_[name], valuemapping, mappedvalue[name], addroffset=addroffset, idx=idx)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float, long))):
+    elif isinstance(format_, instance((str, bool, int, float))):
         if group is not None:
             group = group.title();
         if isinstance(tasmotacmnd, instance(tuple)):
