@@ -176,6 +176,7 @@ class ExitCode:
     UPLOAD_CONFIG_ERROR = 11
     MODULE_NOT_FOUND = 20
     INTERNAL_ERROR = 21
+    HTTP_CONNECTION_ERROR = 22
 
 # ======================================================================
 # imports
@@ -1642,13 +1643,16 @@ def TasmotaGet(cmnd, host, port, username=DEFAULTS['source']['username'], passwo
     auth = None
     if username is not None and password is not None:
         auth = (username, password)
-    res = requests.get(url, auth=auth)
+    try:
+        res = requests.get(url, auth=auth)
+    except requests.exceptions.ConnectionError as e:
+        exit(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection")
 
     if not res.ok:
         exit(res.status_code, "Error on http GET request for {} - {}".format(url,res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if contenttype is not None and res.headers['Content-Type']!=contenttype:
-        exit(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)",line=inspect.getlineno(inspect.currentframe()))
+        exit(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not respond properly, maybe Tasmota webserver admin mode is disabled (WebServer 2)",line=inspect.getlineno(inspect.currentframe()))
 
     return res.status_code, res.content
 
@@ -1677,7 +1681,7 @@ def GetTasmotaHostname(host, port, username=DEFAULTS['source']['username'], pass
     # get hostname
     responsecode, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(body)
+        jsonbody = json.loads(str(body, 'utf8'))
         if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
             hostname = jsonbody["StatusNET"]["Hostname"]
             if args.verbose:
