@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.1.1 [00044]'
+VER = '7.1.2.2 [00045]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1135,7 +1135,13 @@ Setting_7_0_0_6['flag3'][0].update ({
         'slider_dimmer_stay_on':    ('<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_7_1_2_2 = copy.deepcopy(Setting_7_0_0_6)
+Setting_7_1_2_2.update             ({
+    'serial_config':                ('b',   0x14E,       (None, None,                           ('Serial',      '"SerialConfig {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x7010202,0x1000, Setting_7_1_2_2),
             (0x7000006,0x1000, Setting_7_0_0_6),
             (0x7000005,0x1000, Setting_7_0_0_5),
             (0x7000004,0x1000, Setting_7_0_0_4),
