@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.2 [00045]'
+VER = '7.1.2.2 [00046]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2296,7 +2296,9 @@ def GetFieldValue(fielddef, dobj, addr):
         if sys.version_info.major==2:
             s = str(unpackedvalue[0]).strip('\x00')
         else:
-            s = str(unpackedvalue[0],'utf-8',errors='ignore').strip('\x00')
+            s = str(unpackedvalue[0],'utf-8',errors='ignore')
+            if s.find('\x00') >= 0:
+                s = s.split('\x00')[0]
 
         # remove unprintable char
         if maxlength:
