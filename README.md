@@ -67,7 +67,7 @@ sudo apt-get install python3 python3-pip
 
 2. Install dependencies
 ```
-pip3 install future requests configargparse
+pip3 install requests configargparse
 ```
 
 #### Windows 10
@@ -77,7 +77,7 @@ If you want to use the Python version:
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
 ```
-pip3 install future requests configargparse
+pip3 install requests configargparse
 ```
 
 ### Tasmota Webserver
