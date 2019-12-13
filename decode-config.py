@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.2 [00047]'
+VER = '7.1.2.3 [00048]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -740,19 +740,19 @@ Setting_6_2_1_10.update({
 # ======================================================================
 Setting_6_2_1_14 = copy.deepcopy(Setting_6_2_1_10)
 Setting_6_2_1_14.update({
-    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
-    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),        # undocumented
-    'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),     # undocumented
-    'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),     # undocumented
-    'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),     # undocumented
+    'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
+    'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
+    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
+    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
 })
 Setting_6_2_1_14['flag2'][0].update ({
-        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Management',  '"WeightRes {}".format($)')) ),      # undocumented
+        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Management',  '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 Setting_6_2_1_19 = copy.deepcopy(Setting_6_2_1_14)
 Setting_6_2_1_19.update({
-    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
+    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
 })
 Setting_6_2_1_20 = Setting_6_2_1_19
 Setting_6_2_1_20['flag3'][0].update ({
@@ -1135,10 +1135,18 @@ Setting_7_0_0_6['flag3'][0].update ({
 # ======================================================================
 Setting_7_1_2_2 = copy.deepcopy(Setting_7_0_0_6)
 Setting_7_1_2_2.update             ({
-    'serial_config':                ('b',   0x14E,       (None, None,                           ('Serial',      '"SerialConfig {}".format($)')) ),
+    'serial_config':                ('b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+                                    })
+# ======================================================================
+Setting_7_1_2_3 = copy.deepcopy(Setting_7_1_2_2)
+Setting_7_1_2_3['flag3'][0].pop('cors_enabled',None)
+Setting_7_1_2_3.update             ({
+    'cors_domain':                  ('33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'weight_change':                ('B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
+            (0x7010203,0x1000, Setting_7_1_2_3),
             (0x7010202,0x1000, Setting_7_1_2_2),
             (0x7000006,0x1000, Setting_7_0_0_6),
             (0x7000005,0x1000, Setting_7_0_0_5),
