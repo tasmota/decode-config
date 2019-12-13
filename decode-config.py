@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.3 [00048]'
+VER = '7.1.2.3 [00049]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1364,14 +1364,16 @@ def GetTemplateSetting(decode_cfg):
     version = 0x0
     size = setting = None
     version = GetField(decode_cfg,  'version', Setting_6_2_1['version'], raw=True)
+    template_version = version
     # search setting definition top-down
     for cfg in sorted(Settings, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
+            template_version = cfg[0]
             size = cfg[1]
             setting = cfg[2]
             break
 
-    return version, size, setting
+    return template_version, version, size, setting
 
 
 def GetGroupList(setting):
@@ -1794,7 +1796,7 @@ def GetSettingsCrc(dobj):
     """
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
-    version, size, setting = GetTemplateSetting(dobj)
+    _, version, size, setting = GetTemplateSetting(dobj)
     if version < 0x06060007 or version > 0x0606000A:
         size = 3584
     crc = 0
@@ -2691,8 +2693,7 @@ def Bin2Mapping(decode_cfg):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
-    version, size, setting = GetTemplateSetting(decode_cfg)
-
+    template_version, version, size, setting = GetTemplateSetting(decode_cfg)
     # if we did not found a mathching setting
     if setting is None:
         exit(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version),line=inspect.getlineno(inspect.currentframe()))
@@ -2745,7 +2746,7 @@ def Bin2Mapping(decode_cfg):
                                             'jsonhidepw':   args.jsonhidepw,
                                             },
                                 'template': {
-                                            'version':  hex(version),
+                                            'version':  hex(template_version),
                                             'crc':      hex(cfg_crc),
                                             },
                                 'data':     {
@@ -2789,7 +2790,7 @@ def Mapping2Bin(decode_cfg, jsonconfig, filename=""):
 
 
     # get binary header data to use the correct version template from device
-    version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, size, setting = GetTemplateSetting(decode_cfg)
 
     # make empty binarray array
     _buffer = bytearray()
@@ -2838,7 +2839,7 @@ def Mapping2Cmnd(decode_cfg, valuemapping, filename=""):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device
-    version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, size, setting = GetTemplateSetting(decode_cfg)
 
     cmnds = {}
 
@@ -3004,7 +3005,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if args.verbose:
             new_decode_cfg = DecryptEncrypt(new_encode_cfg)
             # get binary header and template to use
-            version, size, setting = GetTemplateSetting(new_decode_cfg)
+            _, version, size, setting = GetTemplateSetting(new_decode_cfg)
             # get config file version
             cfg_version = GetField(new_decode_cfg, 'version', setting['version'], raw=True)
             message("Config file contains data of Tasmota {}".format(GetVersionStr(cfg_version)), type_=LogType.INFO)
