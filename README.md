@@ -49,17 +49,19 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
     * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
     * [Use batch processing](#use-batch-processing)
 
-## Prerequisite
-You can either run the source _decode-config.py_ using an installed Python environment (see below) or the distributed executable (if applicable).  
-If there is no executable for your OS, you need to install Python.
+# Running the program
+The program does not have any graphical user interface (GUI), it is needed to run it on command line using [program arguments](#more-program-arguments).  
+For Windows and Linux there is no prerequisite because there are ready to run binaries available.
 
-### Python
-This program is written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) and compatible with Python 2.x/3.x.
+Run `decode-config`(Linux), `decode-config_x64.exe` (Windows) on a command line or if you are still using a 32 bit Windows system use the 32 bit version `decode-config.exe`
 
-**Note**: Because of [Python 2.7 EOL](https://github.com/python/devguide/pull/344) on Jan 2020 it is recommended using Python 3.x.
+## Running as Python script
+If you want or need (Apple Mac) to run the source _decode-config.py_  an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
 
+**Note**: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
+
+### Prerequisite
 #### Linux
-* Running the source _decode-config.py_:
 1. Install [Python 3.x](https://www.python.org/downloads/) and Pip
 ```
 sudo apt-get install python3 python3-pip 
@@ -71,16 +73,14 @@ pip3 install requests configargparse
 ```
 
 #### Windows 10
-Use the Windows executable file [decode-config_x64.exe](https://github.com/tasmota/decode-config/releases), for 32 bit Windows use [decode-config.exe](https://github.com/tasmota/decode-config/releases). No need to install anything.
+1. Install [Python 3.x](https://www.python.org/downloads/windows/) as described.
 
-If you want to use the Python version:
-
-Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
+2. Install dependencies
 ```
 pip3 install requests configargparse
 ```
 
-### Tasmota Webserver
+## Tasmota Webserver
 Because _decode-config_ uses the Tasmota http capability to receive and send configuration data, the Tasmota http WebServer must be available and enabled:
 
   * To backup or restore configurations from or to a Tasmota device you need a firmare with enabled web-server in admin mode (command [WebServer 2](https://tasmota.github.io/docs/#/Commands?id=wi-fi)). This is the Tasmota default.
@@ -109,7 +109,8 @@ You don't need to append exensions for your file name as _decode-config_ uses au
 If you do not want using auto extensions use the `--no-extension` parameter.
 
 ## Usage
-After download don't forget to set the executable flag under linux with `chmod +x decode-config.py` or call the program using `python decode-config.py...`.
+For an overview start the program without any parameter and you will get a small help screen.  
+For full help start the program with parameter `-H`: `decode-config -H`
 
 ### Basics
 At least pass a source where you want to read the configuration data from using `-f <filename>` or `-d <host>`:
