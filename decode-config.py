@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.1.1 [00044]'
+VER = '7.1.2 [Betty]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -156,7 +156,8 @@ Returns:
     11: Device data upload error
     20: python module missing
     21: Internal error
-    >21: python library exit code
+    22: HTTP connection error
+    >22: python library exit code
     4xx, 5xx: HTTP errors
 
 """
@@ -202,10 +203,7 @@ try:
     import json
     import configargparse
     import requests
-    if sys.version_info.major==2:
-        import urllib2
-    else:
-        import urllib
+    import urllib
 except ImportError as e:
     ModuleImportError(e)
 
@@ -390,9 +388,9 @@ def bitsRead(x, n=0, c=1):
     @return:
         the bit value(s)
     """
-    if isinstance(x,instance(str)):
+    if isinstance(x,str):
         x = int(x, 0)
-    if isinstance(x,instance(str)):
+    if isinstance(x,str):
         n = int(n, 0)
 
     if n >= 0:
@@ -1135,7 +1133,13 @@ Setting_7_0_0_6['flag3'][0].update ({
         'slider_dimmer_stay_on':    ('<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_7_1_2_2 = copy.deepcopy(Setting_7_0_0_6)
+Setting_7_1_2_2.update             ({
+    'serial_config':                ('b',   0x14E,       (None, None,                           ('Serial',      '"SerialConfig {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x7010202,0x1000, Setting_7_1_2_2),
             (0x7000006,0x1000, Setting_7_0_0_6),
             (0x7000005,0x1000, Setting_7_0_0_5),
             (0x7000004,0x1000, Setting_7_0_0_4),
@@ -1266,25 +1270,6 @@ def debug(args):
         debug level
     """
     return 0 if args.debug is None else args.debug
-
-
-def instance(type_):
-    """
-    Creates Python2/3 compatible isinstance test type(s)
-
-    @param args:
-        Python3 instance type
-
-    @return:
-        Python2/3 compatible isinstance type(s)
-    """
-    newtype = type_
-    if sys.version_info.major==2:
-        if type_==str:
-            newtype = (str,unicode)
-        elif isinstance(type_, tuple) and str in type_:
-            newtype = newtype + (unicode,)
-    return newtype
 
 
 def ShortHelp(doexit=True):
@@ -1480,7 +1465,7 @@ def GetVersionStr(version):
     @return:
         version string
     """
-    if isinstance(version, instance(str)):
+    if isinstance(version, str):
         version = int(version, 0)
     major = ((version>>24) & 0xff)
     minor = ((version>>16) & 0xff)
@@ -1730,7 +1715,7 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
-    if isinstance(encode_cfg, instance(str)):
+    if isinstance(encode_cfg, str):
         encode_cfg = bytearray(encode_cfg)
 
     # get restore config page first to set internal Tasmota vars
@@ -1780,7 +1765,7 @@ def DecryptEncrypt(obj):
     @return:
         decrypted configuration (if obj contains encrypted data)
     """
-    if isinstance(obj, instance(str)):
+    if isinstance(obj, str):
         obj = bytearray(obj)
     dobj  = bytearray(obj[0:2])
     for i in range(2, len(obj)):
@@ -1799,7 +1784,7 @@ def GetSettingsCrc(dobj):
         2 byte unsigned integer crc value
 
     """
-    if isinstance(dobj, instance(str)):
+    if isinstance(dobj, str):
         dobj = bytearray(dobj)
     version, size, setting = GetTemplateSetting(dobj)
     if version < 0x06060007 or version > 0x0606000A:
@@ -1824,7 +1809,7 @@ def GetSettingsCrc32(dobj):
         4 byte unsigned integer crc value
 
     """
-    if isinstance(dobj, instance(str)):
+    if isinstance(dobj, str):
         dobj = bytearray(dobj)
     crc = 0
     for i in range(0, len(dobj)-4):
@@ -1869,35 +1854,35 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
         raise SyntaxError('<fielddef> error')
 
     # ignore calls with 'root' setting
-    if isinstance(format_, instance(dict)) and baseaddr is None and datadef is None:
+    if isinstance(format_, dict) and baseaddr is None and datadef is None:
         return eval(fields)
 
-    if not isinstance(format_, instance((str,dict))):
+    if not isinstance(format_, (str,dict)):
         print('wrong <format> {} type {} in <fielddef> {}'.format(format_, type(format_), fielddef), file=sys.stderr)
         raise SyntaxError('<fielddef> error')
 
     # extract addrdef items
     baseaddr = addrdef
-    if isinstance(baseaddr, instance((list,tuple))):
+    if isinstance(baseaddr, (list,tuple)):
         if len(baseaddr) == 3:
             # baseaddr bit definition
             baseaddr, bits, bitshift = baseaddr
-            if not isinstance(bits, instance(int)):
+            if not isinstance(bits, int):
                 print('<bits> must be defined as integer in <fielddef> {}'.format(bits, fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
-            if not isinstance(bitshift, instance(int)):
+            if not isinstance(bitshift, int):
                 print('<bitshift> must be defined as integer in <fielddef> {}'.format(bitshift, fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
             raise SyntaxError('<fielddef> error')
-    if not isinstance(baseaddr, instance(int)):
+    if not isinstance(baseaddr, int):
         print('<baseaddr> must be defined as integer in <fielddef> {}'.format(baseaddr, fielddef), file=sys.stderr)
         raise SyntaxError('<fielddef> error')
 
     # extract datadef items
     arraydef = datadef
-    if isinstance(datadef, instance((tuple))):
+    if isinstance(datadef, (tuple)):
         if len(datadef) == 2:
             # datadef has a validator
             arraydef, validate = datadef
@@ -1905,19 +1890,19 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
             # datadef has a validator and cmd set
             arraydef, validate, cmd = datadef
             # cmd must be a tuple with 2 objects
-            if isinstance(cmd, instance((tuple))) and len(cmd) == 2:
+            if isinstance(cmd, (tuple)) and len(cmd) == 2:
                 group, tasmotacmnd = cmd
-                if group is not None and not isinstance(group, instance(str)):
+                if group is not None and not isinstance(group, str):
                     print('wrong <group> {} in <fielddef> {}'.format(group, fielddef), file=sys.stderr)
                     raise SyntaxError('<fielddef> error')
-                if tasmotacmnd is isinstance(tasmotacmnd, instance(tuple)):
+                if tasmotacmnd is isinstance(tasmotacmnd, tuple):
                     tasmotacmnds = tasmotacmnd
                     for tasmotacmnd in tasmotacmnds:
-                        if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, instance(str)):
+                        if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, str):
                             print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tasmotacmnd, fielddef), file=sys.stderr)
                             raise SyntaxError('<fielddef> error')
                 else:
-                    if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, instance(str)):
+                    if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, str):
                         print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tasmotacmnd, fielddef), file=sys.stderr)
                         raise SyntaxError('<fielddef> error')
             else:
@@ -1927,28 +1912,28 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
             print('wrong <datadef> {} length ({}) in <fielddef> {}'.format(datadef, len(datadef), fielddef), file=sys.stderr)
             raise SyntaxError('<fielddef> error')
 
-        if validate is not None and (not isinstance(validate, instance(str)) and not callable(validate)):
+        if validate is not None and (not isinstance(validate, str) and not callable(validate)):
             print('wrong <validate> {} type {} in <fielddef> {}'.format(validate, type(validate), fielddef), file=sys.stderr)
             raise SyntaxError('<fielddef> error')
 
     # convert single int into one-dimensional list
-    if isinstance(arraydef, instance(int)):
+    if isinstance(arraydef, int):
         arraydef = [arraydef]
 
-    if arraydef is not None and not isinstance(arraydef, instance((list))):
+    if arraydef is not None and not isinstance(arraydef, (list)):
         print('wrong <arraydef> {} type {} in <fielddef> {}'.format(arraydef, type(arraydef), fielddef), file=sys.stderr)
         raise SyntaxError('<fielddef> error')
 
     # get read/write converter items
     readconverter = converter
-    if isinstance(converter, instance((tuple))):
+    if isinstance(converter, (tuple)):
         if len(converter) == 2:
             # converter has read/write converter
             readconverter, writeconverter = converter
-            if readconverter is not None  and not isinstance(readconverter, instance(str)) and not callable(readconverter):
+            if readconverter is not None  and not isinstance(readconverter, str) and not callable(readconverter):
                 print('wrong <readconverter> {} type {} in <fielddef> {}'.format(readconverter, type(readconverter), fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
-            if writeconverter is not None and (not isinstance(writeconverter, instance((bool,str))) and not callable(writeconverter)):
+            if writeconverter is not None and (not isinstance(writeconverter, (bool,str)) and not callable(writeconverter)):
                 print('wrong <writeconverter> {} type {} in <fielddef> {}'.format(writeconverter, type(writeconverter), fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
         else:
@@ -1986,7 +1971,7 @@ def ReadWriteConverter(value, fielddef, read=True, raw=False):
     if not raw and converter is not None:
         conv = readconverter if read else writeconverter
         try:
-            if isinstance(conv, instance(str)): # evaluate strings
+            if isinstance(conv, str): # evaluate strings
                 return eval(conv.replace('$','value'))
             elif callable(conv):     # use as format function
                 return conv(value)
@@ -2023,7 +2008,7 @@ def CmndConverter(valuemapping, value, idx, fielddef):
     if tasmotacmnd is not None and (callable(tasmotacmnd) or len(tasmotacmnd) > 0):
         if idx is not None:
             idx += 1
-        if isinstance(tasmotacmnd, instance(str)): # evaluate strings
+        if isinstance(tasmotacmnd, str): # evaluate strings
             if idx is not None:
                 evalstr = tasmotacmnd.replace('$','value').replace('#','idx').replace('@','valuemapping')
             else:
@@ -2062,7 +2047,7 @@ def ValidateValue(value, fielddef):
 
     valid = True
     try:
-        if isinstance(validate, instance(str)): # evaluate strings
+        if isinstance(validate, str): # evaluate strings
             valid = eval(validate.replace('$','value'))
         elif callable(validate):     # use as format function
             valid = validate(value)
@@ -2083,7 +2068,7 @@ def GetFormatCount(format_):
         prefix count or 1 if not specified
     """
 
-    if isinstance(format_, instance(str)):
+    if isinstance(format_, str):
         match = re.search("\s*(\d+)", format_)
         if match:
             return int(match.group(0))
@@ -2104,7 +2089,7 @@ def GetFormatType(format_):
 
     formattype = format_
     bitsize = 0
-    if isinstance(format_, instance(str)):
+    if isinstance(format_, str):
         match = re.search("\s*(\D+)", format_)
         if match:
             formattype = match.group(0)
@@ -2166,7 +2151,7 @@ def GetFieldLength(fielddef):
     format_, addrdef, arraydef = GetFieldDef(fielddef, fields='format_, addrdef, arraydef')
 
     # <arraydef> contains a integer list
-    if isinstance(arraydef, instance(list)) and len(arraydef) > 0:
+    if isinstance(arraydef, list) and len(arraydef) > 0:
         # arraydef contains a list
         # calc size recursive by sum of all elements
         for i in range(0, arraydef[0]):
@@ -2177,7 +2162,7 @@ def GetFieldLength(fielddef):
             else:
                 length += GetFieldLength( (format_, addrdef, None) )
 
-    elif isinstance(format_, instance(dict)):
+    elif isinstance(format_, dict):
             # -> iterate through format
             addr = None
             setting = format_
@@ -2189,7 +2174,7 @@ def GetFieldLength(fielddef):
                     length += _len
 
     # a simple value
-    elif isinstance(format_, instance(str)):
+    elif isinstance(format_, str):
         length = struct.calcsize(format_)
 
     return length
@@ -2215,7 +2200,7 @@ def GetSubfieldDef(fielddef):
         arraydef = None
 
     # create new datadef
-    if isinstance(datadef, instance(tuple)):
+    if isinstance(datadef, tuple):
         if cmd is not None:
             datadef = (arraydef, validate, cmd)
         else:
@@ -2287,10 +2272,9 @@ def GetFieldValue(fielddef, dobj, addr):
         maxlength = GetFieldLength(fielddef)
 
         # get unpacked binary value as stripped string
-        if sys.version_info.major==2:
-            s = str(unpackedvalue[0]).strip('\x00')
-        else:
-            s = str(unpackedvalue[0],'utf-8',errors='ignore').strip('\x00')
+        s = str(unpackedvalue[0],'utf-8',errors='ignore')
+        if s.find('\x00') >= 0:
+            s = s.split('\x00')[0]
 
         # remove unprintable char
         if maxlength:
@@ -2328,7 +2312,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
             maxunsigned = ((2**bitsize) - 1)
             maxsigned = ((2**bitsize)>>1)-1
             val = value & maxunsigned
-            if isinstance(value,instance(int)) and value < 0 and val > maxsigned:
+            if isinstance(value,int) and value < 0 and val > maxsigned:
                 val = ((maxunsigned+1)-val) * (-1)
             if debug(args) >= 3:
                 print("SetFieldValue(): Single type - fielddef {}, addr 0x{:04x}  value {}  singletype {}  bitsize {}".format(fielddef,addr,val,singletype,bitsize), file=sys.stderr)
@@ -2375,7 +2359,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         field mapping
     """
 
-    if isinstance(dobj, instance(str)):
+    if isinstance(dobj, str):
         dobj = bytearray(dobj)
 
     valuemapping = None
@@ -2388,7 +2372,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         return valuemapping
 
     # <arraydef> contains a integer list
-    if isinstance(arraydef, instance(list)) and len(arraydef) > 0:
+    if isinstance(arraydef, list) and len(arraydef) > 0:
         valuemapping = []
         offset = 0
         for i in range(0, arraydef[0]):
@@ -2400,7 +2384,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
             offset += length
 
     # <format> contains a dict
-    elif isinstance(format_, instance(dict)):
+    elif isinstance(format_, dict):
         mapping_value = {}
         # -> iterate through format
         for name in format_:
@@ -2412,7 +2396,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         valuemapping = copy.deepcopy(mapping_value)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float))):
+    elif isinstance(format_, (str, bool, int, float)):
         if GetFieldLength(fielddef) != 0:
             valuemapping = ReadWriteConverter(GetFieldValue(fielddef, dobj, baseaddr+addroffset), fielddef, read=True, raw=raw)
 
@@ -2457,7 +2441,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
         return dobj
 
     # <arraydef> contains a list
-    if isinstance(arraydef, instance(list)) and len(arraydef) > 0:
+    if isinstance(arraydef, list) and len(arraydef) > 0:
         offset = 0
         if len(restore) > arraydef[0]:
             exit(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}', array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restore), smax=arraydef[0]), type_=LogType.WARNING, doexit=not args.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
@@ -2472,13 +2456,13 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             offset += length
 
     # <format> contains a dict
-    elif isinstance(format_, instance(dict)):
+    elif isinstance(format_, dict):
         for name in format_:    # -> iterate through format
             if name in restore:
                 dobj = SetField(dobj, name, format_[name], restore[name], addroffset=addroffset, filename=filename)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float))):
+    elif isinstance(format_, (str, bool, int, float)):
         valid = True
         err = ""
         errformat = ""
@@ -2506,7 +2490,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
         # integer
         elif format_[-1:] in ['b','B','h','H','i','I','l','L','q','Q','P']:
             value = ReadWriteConverter(restore, fielddef, read=False)
-            if isinstance(value, instance(str)):
+            if isinstance(value, str):
                 value = int(value, 0)
             else:
                 value = int(value)
@@ -2578,14 +2562,14 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             # copy value before possible change below
             _value = value
 
-        if isinstance(_value, instance(str)):
+        if isinstance(_value, str):
             _value = "'{}'".format(_value)
 
         if valid:
             if not skip:
                 if debug(args) >= 2:
                     sbits = " {} bits shift {}".format(bits, bitshift) if bits else ""
-                    strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, instance(int)) else _value
+                    strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, int) else _value
                     print("SetField(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
                 if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
                     prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
@@ -2635,7 +2619,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
         return cmnds
 
     # <arraydef> contains a list
-    if isinstance(arraydef, instance(list)) and len(arraydef) > 0:
+    if isinstance(arraydef, list) and len(arraydef) > 0:
         offset = 0
         if len(mappedvalue) > arraydef[0]:
             exit(ExitCode.RESTORE_DATA_ERROR, "array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sname=fieldname, selem=len(mappedvalue), smax=arraydef[0]), type_=LogType.WARNING, doexit=not args.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
@@ -2650,23 +2634,23 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
             offset += length
 
     # <format> contains a dict
-    elif isinstance(format_, instance(dict)):
+    elif isinstance(format_, dict):
         for name in format_:    # -> iterate through format
             if name in mappedvalue:
                 cmnds = SetCmnd(cmnds, name, format_[name], valuemapping, mappedvalue[name], addroffset=addroffset, idx=idx)
 
     # a simple value
-    elif isinstance(format_, instance((str, bool, int, float))):
+    elif isinstance(format_, (str, bool, int, float)):
         if group is not None:
             group = group.title();
-        if isinstance(tasmotacmnd, instance(tuple)):
+        if isinstance(tasmotacmnd, tuple):
             tasmotacmnds = tasmotacmnd
             for tasmotacmnd in tasmotacmnds:
                 cmnd = CmndConverter(valuemapping, mappedvalue, idx, fielddef)
                 if group is not None and cmnd is not None:
                     if group not in cmnds:
                         cmnds[group] = []
-                    if isinstance(cmnd, instance(list)):
+                    if isinstance(cmnd, list):
                         for c in cmnd:
                             cmnds[group].append(c)
                     else:
@@ -2676,7 +2660,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
             if group is not None and cmnd is not None:
                 if group not in cmnds:
                     cmnds[group] = []
-                if isinstance(cmnd, instance(list)):
+                if isinstance(cmnd, list):
                     for c in cmnd:
                         cmnds[group].append(c)
                 else:
@@ -2695,7 +2679,7 @@ def Bin2Mapping(decode_cfg):
     @return:
         valuemapping data as mapping dictionary
     """
-    if isinstance(decode_cfg, instance(str)):
+    if isinstance(decode_cfg, str):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
@@ -2792,7 +2776,7 @@ def Mapping2Bin(decode_cfg, jsonconfig, filename=""):
     @return:
         changed binary config data (decrypted) or None on error
     """
-    if isinstance(decode_cfg, instance(str)):
+    if isinstance(decode_cfg, str):
         decode_cfg = bytearray(decode_cfg)
 
 
@@ -2842,7 +2826,7 @@ def Mapping2Cmnd(decode_cfg, valuemapping, filename=""):
     @return:
         Tasmota command mapping {group: [cmnd <,cmnd <,...>>]}
     """
-    if isinstance(decode_cfg, instance(str)):
+    if isinstance(decode_cfg, str):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device

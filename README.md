@@ -23,6 +23,8 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 |:------------------------|:------------------------------------------------------------------------|
 | _decode-config.py_      | Python source file running under your local Python environment          |
 | _decode-config_         | Linux executable running standalone                                     |
+| _decode-config.exe_     | WIndows 32bit executable running standalone                             |
+| _decode-config_x64.exe_ | WIndows 64bit executable running standalone                             |
 | _README.md_             | This content                                                            |
 
 * [Prerequisite](#prerequisite)
@@ -65,7 +67,7 @@ sudo apt-get install python3 python3-pip
 
 2. Install dependencies
 ```
-pip3 install future requests configargparse
+pip3 install requests configargparse
 ```
 
 #### Windows 10
@@ -75,7 +77,7 @@ If you want to use the Python version:
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) then install dependencies:
 ```
-pip3 install future requests configargparse
+pip3 install requests configargparse
 ```
 
 ### Tasmota Webserver
