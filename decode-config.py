@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.3 [00049]'
+VER = '7.1.2.5 [00050]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -23,9 +23,8 @@ VER = '7.1.2.3 [00049]'
 
 Requirements:
     - Python 3.x and Pip:
-          sudo apt-get install python3 python3-pip
-    - additonal modules
-          pip3 install requests configargparse
+        sudo apt-get install python3 python3-pip
+        pip3 install requests configargparse
 
 Instructions:
     Execute command with option -d to retrieve config data from a host
@@ -44,12 +43,12 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi} ...]]
+                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
                         [--ignore-warnings] [-h] [-H] [-v] [-V]
 
-    Backup/Restore Tasmota configuration data. Args that start with '--'
-    (eg. -f) can also be set in a config file (specified via -c). Config file
-    syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+    Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+    can also be set in a config file (specified via -c). Config file syntax
+    allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
     https://goo.gl/R74nmi). If an arg is specified in more than one place, then
     commandline values override config file values which override defaults.
 
@@ -124,7 +123,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi}
+      -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -1145,7 +1144,26 @@ Setting_7_1_2_3.update             ({
     'weight_change':                ('B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_7_1_2_5 = copy.deepcopy(Setting_7_1_2_3)
+Setting_7_1_2_5.update             ({
+    'seriallog_level':              ('B',   0x452,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   ('B',   0xEC7,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   ('B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'rule_stop':                    ({
+        'rule1':                    ('B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    ('B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    ('B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+                                     },     0xEC9,        None),
+    'syslog_port':                  ('<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 ('B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    ('B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 ('B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint':             ('20s', 0xECF,       ([2],  None,                           ('MQTT',        MqttFingerprint)) ),
+    'adc_param_type':               ('B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x7010205,0x1000, Setting_7_1_2_5),
             (0x7010203,0x1000, Setting_7_1_2_3),
             (0x7010202,0x1000, Setting_7_1_2_2),
             (0x7000006,0x1000, Setting_7_0_0_6),
@@ -3263,8 +3281,9 @@ def ParseArgs():
                             action='store_true',
                             help='produce more output about what the program does')
     info.add_argument('-V', '--version',
-                            action='version',
-                            version=PROG)
+                            dest='version',
+                            action='count',
+                            help="show program's version number and exit")
 
     args = parser.parse_args()
 
@@ -3273,6 +3292,18 @@ def ParseArgs():
         print("Settings:", file=sys.stderr)
         for k in args.__dict__:
             print("  "+str(k), "= ",eval('args.{}'.format(k)), file=sys.stderr)
+
+    if args.version is not None:
+        print(PROG)
+        if args.version > 1 or debug(args) >= 1:
+            print()
+            print("Script:   {}".format(os.path.basename(__file__)))
+            print("Python:   {}".format(platform.python_version()))
+            print("Platform: {} - {}".format(platform.platform(), platform.machine()))
+            print("OS:       {} {} {}".format(platform.system(), platform.release(), platform.version()))
+            print("Time:     {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        sys.exit(ExitCode.OK)
+
     return args
 
 
