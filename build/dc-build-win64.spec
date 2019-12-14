@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['decode-config.py'],
+a = Analysis(['..\decode-config.py'],
              binaries=[],
              datas=[],
              hiddenimports=[],

@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['decode-config.py'],
+a = Analysis(['../decode-config.py'],
              pathex=['decode-config'],
              binaries=[],
              datas=[],
@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True)
+          console=True )
