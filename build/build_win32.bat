@@ -1,7 +1,15 @@
 @echo off
-SET EXEC=decode-config.exe
+set SCRIPTDIR=%~dp0
+set SCRIPTDIR=%SCRIPTDIR:~0,-1%
+pushd %SCRIPTDIR%
+
+set EXEC=decode-config.exe
 pyinstaller.exe dc-build-win32.spec
-IF ERRORLEVEL 0 (
-	ECHO Copying dist\%EXEC% ..\%EXEC%
-	COPY dist\%EXEC% ..\%EXEC%
+if errorlevel 0 (
+	echo Copying dist\%EXEC% ..\%EXEC%...
+	copy dist\%EXEC% ..\%EXEC%
+    echo Well done
+) else (
+	echo Error occurred
 )
+popd
