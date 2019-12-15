@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.5 [00050]'
+VER = '7.1.2.6 [00051]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1162,7 +1162,19 @@ Setting_7_1_2_5.update             ({
     'adc_param_type':               ('B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
+Setting_7_1_2_6 = copy.deepcopy(Setting_7_1_2_5)
+Setting_7_1_2_6.update             ({
+    'flag4':                        ('<L',  0xEF8,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'serial_config':                ('b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
+    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x7010206,0x1000, Setting_7_1_2_6),
             (0x7010205,0x1000, Setting_7_1_2_5),
             (0x7010203,0x1000, Setting_7_1_2_3),
             (0x7010202,0x1000, Setting_7_1_2_2),
