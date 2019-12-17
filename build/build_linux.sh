@@ -10,8 +10,8 @@ pyinstaller --noconfirm \
 
 if [ $? -eq 0 ]
 then
-    echo "Copying dist/${EXEC} ../${EXEC}..."
-    cp dist/${EXEC} ../${EXEC}
+    echo "Copying dist/${EXEC} ../${EXEC}_linux..."
+    cp dist/${EXEC} ../${EXEC}_linux
     echo "Well done"
     rc=0
 else
