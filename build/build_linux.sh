@@ -3,7 +3,7 @@ CURDIR=$PWD
 SCRIPTDIR="$(dirname "$(readlink -f $0)")"
 pushd $SCRIPTDIR > /dev/null 2>&1
 
-EXEC=decode-config
+EXEC=decode-config_linux
 
 pyinstaller --noconfirm \
             dc-build-linux.spec
