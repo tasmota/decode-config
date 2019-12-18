@@ -17,15 +17,17 @@ Comparing backup files created by *decode-config.py* and *.dmp files created by 
 
 _decode-config_ is able to process configuration data for Tasmota starting v5.10.0 up to current version.
 
-# Content
+## Content
 
-| File                    | Description |
-|:------------------------|:------------------------------------------------------------------------|
-| _decode-config.py_      | Python source file running under your local Python environment          |
-| _decode-config_         | Linux executable running standalone                                     |
-| _decode-config.exe_     | WIndows 32bit executable running standalone                             |
-| _decode-config_x64.exe_ | WIndows 64bit executable running standalone                             |
-| _README.md_             | This content                                                            |
+| File                     | Description |
+|:-------------------------|:------------------------------------------------------------------------|
+| _build_                  | contains files to build executables                                     |
+| _decode-config.py_       | Python source file running under your local Python environment          |
+| _decode-config_linux_    | Linux executable running standalone                                     |
+| _decode-config_mac_      | macOS executable running standalone                                     |
+| _decode-config_win32.exe_| Windows 32bit executable running standalone                             |
+| _decode-config_win64.exe_| Windows 64bit executable running standalone                             |
+| _README.md_              | This content                                                            |
 
 * [Prerequisite](#prerequisite)
 * [File Types](#file-types)
