@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
+# needs brew (https://brew.sh/) and "brew install coreutils"
 CURDIR=$PWD
-SCRIPTDIR="$(dirname "$(readlink -f $0)")"
-cd $SCRIPTDIR > /dev/null 2>&1
+SCRIPTDIR="$(dirname "$(greadlink -f $0)")"
+pushd $SCRIPTDIR > /dev/null 2>&1
 
 EXEC=decode-config
 
-pyinstaller --log-level=DEBUG \
-            --noconfirm \
-            dc-build-mac.spec
+pyinstaller --noconfirm \
+            dc-build-linux.spec
 
 if [ $? -eq 0 ]
 then
-    echo "Create app..."
-    create-dmg dist/$EXEC.app
-    echo "Copying dist/${EXEC} ../${EXEC}..."
-    cp "dist/${EXEC}  0.0.0.dmg" ../${EXEC}.dmg
+    echo "Copying dist/${EXEC} ../${EXEC}_mac..."
+    cp dist/${EXEC} ../${EXEC}_mac
     echo "Well done"
     rc=0
 else
@@ -23,3 +21,4 @@ else
 fi
 popd > /dev/null 2>&1
 exit $rc
+
