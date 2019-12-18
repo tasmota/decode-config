@@ -21,5 +21,5 @@ else
     echo "Error occurred"
     rc=1
 fi
-cd $CURDIR > /dev/null 2>&1
-exit $rc$
+popd > /dev/null 2>&1
+exit $rc
