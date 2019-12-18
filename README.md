@@ -1,5 +1,5 @@
 # decode-config
-_decode-config_ can backup and restore the configuration of [Tasmota](http://tasmota.com/)-devices.
+_decode-config_ backup and restore configuration data of [Tasmota](http://tasmota.com/)-devices.
 
 In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 * _decode-config_ uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore,
@@ -19,15 +19,23 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 
 ## Content
 
+**This is the developer branch which contains _decode-config_ matching the latest Tasmota developer version.**
+
+It could be you want to use a stable version matching the latest officical Tasmota release only;  
+then use the offical latest [_decode-config_ Release](https://github.com/tasmota/decode-config/releases) or the 
+[_decode-config_ master branch](https://github.com/tasmota/decode-config/tree/master) which contains
+a version matching the latest offical Tasmota release.
+
+### Files
 | File                     | Description |
 |:-------------------------|:------------------------------------------------------------------------|
-| _build_                  | contains files to build executables                                     |
-| _decode-config.py_       | Python source file running under your local Python environment          |
-| _decode-config_linux_    | Linux executable running standalone                                     |
-| _decode-config_mac_      | macOS executable running standalone                                     |
-| _decode-config_win32.exe_| Windows 32bit executable running standalone                             |
-| _decode-config_win64.exe_| Windows 64bit executable running standalone                             |
-| _README.md_              | This content                                                            |
+| `build`                  | contains files to build executables                                     |
+| `decode-config.py`       | Python source file running under your local Python environment          |
+| `decode-config_linux`    | Linux executable running standalone                                     |
+| `decode-config_mac`      | macOS executable running standalone                                     |
+| `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
+| `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
+| `README.md`              | This content                                                            |
 
 * [Prerequisite](#prerequisite)
 * [File Types](#file-types)
@@ -52,32 +60,30 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
     * [Use batch processing](#use-batch-processing)
 
 # Running the program
-The program does not have any graphical user interface (GUI), it is needed to run it on command line using [program arguments](#more-program-arguments).  
-For Windows and Linux there is no prerequisite because there are ready to run binaries available.
+The program does not have any graphical user interface (GUI), it is needed to run it on command line using [program arguments](#more-program-arguments).
 
-Run `decode-config`(Linux), `decode-config_x64.exe` (Windows) on a command line or if you are still using a 32 bit Windows system use the 32 bit version `decode-config.exe`
+For Windows, MacOS and Linux there is no prerequisite, simply use the command line [executable related to your OS](#files).
 
 ## Running as Python script
-If you want or need (Apple Mac) to run the source _decode-config.py_  an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
+If you want to run the Python source _decode-config.py_, an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
 
 **Note**: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
 ### Prerequisite
 #### Linux
-1. Install [Python 3.x](https://www.python.org/downloads/) and Pip
+Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library installation for all OS](#all-os) below.
 ```
 sudo apt-get install python3 python3-pip 
 ```
 
-2. Install dependencies
-```
-pip3 install requests configargparse
-```
-
 #### Windows 10
-1. Install [Python 3.x](https://www.python.org/downloads/windows/) as described.
+Install [Python 3.x](https://www.python.org/downloads/windows/) as described and follow [library installation for all OS](#all-os) below.
 
-2. Install dependencies
+#### MacOS
+Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and follow [library installation for all OS](#all-os) below.
+
+#### All OS
+After python and pip is installed, install dependencies:
 ```
 pip3 install requests configargparse
 ```
