@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.6 [00052]'
+VER = '8.0.0.1 [00053]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1176,7 +1176,10 @@ Setting_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_8_0_0_1 = copy.deepcopy(Setting_7_1_2_6)
+# ======================================================================
 Settings = [
+            (0x8000001,0x1000, Setting_8_0_0_1),
             (0x7010206,0x1000, Setting_7_1_2_6),
             (0x7010205,0x1000, Setting_7_1_2_5),
             (0x7010203,0x1000, Setting_7_1_2_3),
