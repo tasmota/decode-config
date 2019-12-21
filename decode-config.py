@@ -1172,7 +1172,7 @@ Setting_7_1_2_6.update             ({
     'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
     'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
                                     })
-Setting_7_0_0_6['flag3'][0].update ({
+Setting_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
