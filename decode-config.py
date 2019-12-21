@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2 [Betty]'
+VER = '7.2.0 [Constance]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -23,9 +23,8 @@ VER = '7.1.2 [Betty]'
 
 Requirements:
     - Python 3.x and Pip:
-          sudo apt-get install python3 python3-pip
-    - additonal modules
-          pip3 install requests configargparse
+        sudo apt-get install python3 python3-pip
+        pip3 install requests configargparse
 
 Instructions:
     Execute command with option -d to retrieve config data from a host
@@ -44,12 +43,12 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi} ...]]
+                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
                         [--ignore-warnings] [-h] [-H] [-v] [-V]
 
-    Backup/Restore Tasmota configuration data. Args that start with '--'
-    (eg. -f) can also be set in a config file (specified via -c). Config file
-    syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+    Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+    can also be set in a config file (specified via -c). Config file syntax
+    allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
     https://goo.gl/R74nmi). If an arg is specified in more than one place, then
     commandline values override config file values which override defaults.
 
@@ -124,7 +123,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rules,Sensor,Serial,Setoption,Shutter,Rf,System,Timer,Wifi}
+      -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -740,19 +739,19 @@ Setting_6_2_1_10.update({
 # ======================================================================
 Setting_6_2_1_14 = copy.deepcopy(Setting_6_2_1_10)
 Setting_6_2_1_14.update({
-    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
-    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),        # undocumented
-    'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),     # undocumented
-    'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),     # undocumented
-    'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),     # undocumented
+    'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
+    'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
+    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
+    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
 })
 Setting_6_2_1_14['flag2'][0].update ({
-        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Management',  '"WeightRes {}".format($)')) ),      # undocumented
+        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Management',  '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 Setting_6_2_1_19 = copy.deepcopy(Setting_6_2_1_14)
 Setting_6_2_1_19.update({
-    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),            # undocumented
+    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
 })
 Setting_6_2_1_20 = Setting_6_2_1_19
 Setting_6_2_1_20['flag3'][0].update ({
@@ -1135,10 +1134,52 @@ Setting_7_0_0_6['flag3'][0].update ({
 # ======================================================================
 Setting_7_1_2_2 = copy.deepcopy(Setting_7_0_0_6)
 Setting_7_1_2_2.update             ({
-    'serial_config':                ('b',   0x14E,       (None, None,                           ('Serial',      '"SerialConfig {}".format($)')) ),
+    'serial_config':                ('b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+                                    })
+# ======================================================================
+Setting_7_1_2_3 = copy.deepcopy(Setting_7_1_2_2)
+Setting_7_1_2_3['flag3'][0].pop('cors_enabled',None)
+Setting_7_1_2_3.update             ({
+    'cors_domain':                  ('33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'weight_change':                ('B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
+                                    })
+# ======================================================================
+Setting_7_1_2_5 = copy.deepcopy(Setting_7_1_2_3)
+Setting_7_1_2_5.update             ({
+    'seriallog_level':              ('B',   0x452,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   ('B',   0xEC7,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   ('B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'rule_stop':                    ({
+        'rule1':                    ('B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    ('B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    ('B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+                                     },     0xEC9,        None),
+    'syslog_port':                  ('<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 ('B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    ('B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 ('B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint':             ('20s', 0xECF,       ([2],  None,                           ('MQTT',        MqttFingerprint)) ),
+    'adc_param_type':               ('B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+                                    })
+# ======================================================================
+Setting_7_1_2_6 = copy.deepcopy(Setting_7_1_2_5)
+Setting_7_1_2_6.update             ({
+    'flag4':                        ('<L',  0xEF8,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'serial_config':                ('b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
+    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
+                                    })
+Setting_7_1_2_6['flag3'][0].update ({
+        'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
+            (0x7010206,0x1000, Setting_7_1_2_6),
+            (0x7010205,0x1000, Setting_7_1_2_5),
+            (0x7010203,0x1000, Setting_7_1_2_3),
             (0x7010202,0x1000, Setting_7_1_2_2),
             (0x7000006,0x1000, Setting_7_0_0_6),
             (0x7000005,0x1000, Setting_7_0_0_5),
@@ -1356,14 +1397,16 @@ def GetTemplateSetting(decode_cfg):
     version = 0x0
     size = setting = None
     version = GetField(decode_cfg,  'version', Setting_6_2_1['version'], raw=True)
+    template_version = version
     # search setting definition top-down
     for cfg in sorted(Settings, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
+            template_version = cfg[0]
             size = cfg[1]
             setting = cfg[2]
             break
 
-    return version, size, setting
+    return template_version, version, size, setting
 
 
 def GetGroupList(setting):
@@ -1786,7 +1829,7 @@ def GetSettingsCrc(dobj):
     """
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
-    version, size, setting = GetTemplateSetting(dobj)
+    _, version, size, setting = GetTemplateSetting(dobj)
     if version < 0x06060007 or version > 0x0606000A:
         size = 3584
     crc = 0
@@ -2683,8 +2726,7 @@ def Bin2Mapping(decode_cfg):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
-    version, size, setting = GetTemplateSetting(decode_cfg)
-
+    template_version, version, size, setting = GetTemplateSetting(decode_cfg)
     # if we did not found a mathching setting
     if setting is None:
         exit(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version),line=inspect.getlineno(inspect.currentframe()))
@@ -2737,7 +2779,7 @@ def Bin2Mapping(decode_cfg):
                                             'jsonhidepw':   args.jsonhidepw,
                                             },
                                 'template': {
-                                            'version':  hex(version),
+                                            'version':  hex(template_version),
                                             'crc':      hex(cfg_crc),
                                             },
                                 'data':     {
@@ -2781,7 +2823,7 @@ def Mapping2Bin(decode_cfg, jsonconfig, filename=""):
 
 
     # get binary header data to use the correct version template from device
-    version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, size, setting = GetTemplateSetting(decode_cfg)
 
     # make empty binarray array
     _buffer = bytearray()
@@ -2830,7 +2872,7 @@ def Mapping2Cmnd(decode_cfg, valuemapping, filename=""):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device
-    version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, size, setting = GetTemplateSetting(decode_cfg)
 
     cmnds = {}
 
@@ -2996,7 +3038,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if args.verbose:
             new_decode_cfg = DecryptEncrypt(new_encode_cfg)
             # get binary header and template to use
-            version, size, setting = GetTemplateSetting(new_decode_cfg)
+            _, version, size, setting = GetTemplateSetting(new_decode_cfg)
             # get config file version
             cfg_version = GetField(new_decode_cfg, 'version', setting['version'], raw=True)
             message("Config file contains data of Tasmota {}".format(GetVersionStr(cfg_version)), type_=LogType.INFO)
@@ -3254,8 +3296,9 @@ def ParseArgs():
                             action='store_true',
                             help='produce more output about what the program does')
     info.add_argument('-V', '--version',
-                            action='version',
-                            version=PROG)
+                            dest='version',
+                            action='count',
+                            help="show program's version number and exit")
 
     args = parser.parse_args()
 
@@ -3264,6 +3307,18 @@ def ParseArgs():
         print("Settings:", file=sys.stderr)
         for k in args.__dict__:
             print("  "+str(k), "= ",eval('args.{}'.format(k)), file=sys.stderr)
+
+    if args.version is not None:
+        print(PROG)
+        if args.version > 1 or debug(args) >= 1:
+            print()
+            print("Script:   {}".format(os.path.basename(__file__)))
+            print("Python:   {}".format(platform.python_version()))
+            print("Platform: {} - {}".format(platform.platform(), platform.machine()))
+            print("OS:       {} {} {}".format(platform.system(), platform.release(), platform.version()))
+            print("Time:     {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        sys.exit(ExitCode.OK)
+
     return args
 
 

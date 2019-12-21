@@ -7,7 +7,7 @@ pushd $SCRIPTDIR > /dev/null 2>&1
 EXEC=decode-config
 
 pyinstaller --noconfirm \
-            dc-build-linux.spec
+            dc-build-mac.spec
 
 if [ $? -eq 0 ]
 then
@@ -21,4 +21,3 @@ else
 fi
 popd > /dev/null 2>&1
 exit $rc
-
