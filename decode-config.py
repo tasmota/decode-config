@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.1.2.6 [00051]'
+VER = '7.1.2.6 [00052]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1171,6 +1171,9 @@ Setting_7_1_2_6.update             ({
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
     'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
     'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
+                                    })
+Setting_7_0_0_6['flag3'][0].update ({
+        'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
