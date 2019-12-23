@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.0.0.1 [00053]'
+VER = '8.0.0.1 [00054]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -285,7 +285,7 @@ Settings dictionary describes the config file fields definition:
                     A dictionary describes a (sub)setting dictonary
                     and can recursively define another <setting>
 
-            <addrdef>:  <baseaddr> | (<baseaddr>, <bits>, <bitshift>)
+            <addrdef>:  <baseaddr> | (<baseaddr>, <bits>, <bitshift>) | (<baseaddr>, <strindex>)
                 address definition
                 <baseaddr>: <uint>
                     The address (starting from 0) within binary config data.
@@ -295,6 +295,8 @@ Settings dictionary describes the config file fields definition:
                     bit shift <bitshift>:
                     <bitshift> >= 0: shift the result right
                     <bitshift> <  0: shift the result left
+                <strindex>: <int>
+                    index into a set of strings delimited by \0
 
             <datadef>:  <arraydef> | (<arraydef>, <validate> [,cmd])
                 data definition
@@ -1170,13 +1172,83 @@ Setting_7_1_2_6.update             ({
     'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
     'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',      None)) ),
                                     })
 Setting_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 Setting_8_0_0_1 = copy.deepcopy(Setting_7_1_2_6)
+for key in ('ota_url','mqtt_prefix','sta_ssid','sta_pwd','hostname','syslog_host','web_password','cors_domain','mqtt_host','mqtt_client','mqtt_user','mqtt_pwd','mqtt_fulltopic','mqtt_topic','button_topic','switch_topic','mqtt_grptopic','state_text','ntp_server','mems','friendlyname'):
+    Setting_8_0_0_1.pop(key,None)
+SettingsTextIndex = ['SET_OTAURL',
+                    'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
+                    'SET_STASSID1', 'SET_STASSID2',
+                    'SET_STAPWD1', 'SET_STAPWD2',
+                    'SET_HOSTNAME', 'SET_SYSLOG_HOST',
+                    'SET_WEBPWD', 'SET_CORS',
+                    'SET_MQTT_HOST', 'SET_MQTT_CLIENT',
+                    'SET_MQTT_USER', 'SET_MQTT_PWD',
+                    'SET_MQTT_FULLTOPIC', 'SET_MQTT_TOPIC',
+                    'SET_MQTT_BUTTON_TOPIC', 'SET_MQTT_SWITCH_TOPIC', 'SET_MQTT_GRP_TOPIC',
+                    'SET_STATE_TXT1', 'SET_STATE_TXT2', 'SET_STATE_TXT3', 'SET_STATE_TXT4',
+                    'SET_NTPSERVER1', 'SET_NTPSERVER2', 'SET_NTPSERVER3',
+                    'SET_MEM1', 'SET_MEM2', 'SET_MEM3', 'SET_MEM4', 'SET_MEM5', 'SET_MEM6', 'SET_MEM7', 'SET_MEM8',
+                    'SET_MEM9', 'SET_MEM10', 'SET_MEM11', 'SET_MEM12', 'SET_MEM13', 'SET_MEM14', 'SET_MEM15', 'SET_MEM16',
+                    'SET_FRIENDLYNAME1', 'SET_FRIENDLYNAME2', 'SET_FRIENDLYNAME3', 'SET_FRIENDLYNAME4',
+                    'SET_MAX']
+Setting_8_0_0_1.update             ({
+    'text_pool':                    ({
+        'ota_url':                  ('699s',(0x017, 0),  (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+        'mqtt_prefix1':             ('699s',(0x017, 1),  (None, None,                           ('MQTT',        '"Prefix1 {}".format($)')) ),
+        'mqtt_prefix2':             ('699s',(0x017, 2),  (None, None,                           ('MQTT',        '"Prefix2 {}".format($)')) ),
+        'mqtt_prefix3':             ('699s',(0x017, 3),  (None, None,                           ('MQTT',        '"Prefix3 {}".format($)')) ),
+        'sta_ssid1':                ('699s',(0x017, 4),  (None, None,                           ('Wifi',        '"SSId1 {}".format($)')) ),
+        'sta_ssid2':                ('699s',(0x017, 5),  (None, None,                           ('Wifi',        '"SSId2 {}".format($)')) ),
+        'sta_pwd1':                 ('699s',(0x017, 6),  (None, None,                           ('MQTT',        '"Password1 {}".format($)')), (passwordread,passwordwrite) ),
+        'sta_pwd2':                 ('699s',(0x017, 7),  (None, None,                           ('MQTT',        '"Password2 {}".format($)')), (passwordread,passwordwrite) ),
+        'hostname':                 ('699s',(0x017, 8),  (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+        'syslog_host':              ('699s',(0x017, 9),  (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+        'web_password':             ('699s',(0x017,10),  (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+        'cors_domain':              ('699s',(0x017,11),  (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+        'mqtt_host':                ('699s',(0x017,12),  (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+        'mqtt_client':              ('699s',(0x017,13),  (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+        'mqtt_user':                ('699s',(0x017,14),  (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+        'mqtt_pwd':                 ('699s',(0x017,15),  (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+        'mqtt_fulltopic':           ('699s',(0x017,16),  (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+        'mqtt_topic':               ('699s',(0x017,17),  (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+        'button_topic':             ('699s',(0x017,18),  (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+        'switch_topic':             ('699s',(0x017,19),  (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+        'mqtt_grptopic':            ('699s',(0x017,20),  (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+        'state_text1':              ('699s',(0x017,21),  (None, None,                           ('MQTT',        '"StateText1 {}".format($)')) ),
+        'state_text2':              ('699s',(0x017,22),  (None, None,                           ('MQTT',        '"StateText2 {}".format($)')) ),
+        'state_text3':              ('699s',(0x017,23),  (None, None,                           ('MQTT',        '"StateText3 {}".format($)')) ),
+        'state_text4':              ('699s',(0x017,24),  (None, None,                           ('MQTT',        '"StateText4 {}".format($)')) ),
+        'ntp_server1':              ('699s',(0x017,25),  (None, None,                           ('Wifi',        '"NtpServer1 {}".format($)')) ),
+        'ntp_server2':              ('699s',(0x017,26),  (None, None,                           ('Wifi',        '"NtpServer2 {}".format($)')) ),
+        'ntp_server3':              ('699s',(0x017,27),  (None, None,                           ('Wifi',        '"NtpServer3 {}".format($)')) ),
+        'mem1':                     ('699s',(0x017,28),  (None, None,                           ('Rules',       '"Mem1 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem2':                     ('699s',(0x017,29),  (None, None,                           ('Rules',       '"Mem2 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem3':                     ('699s',(0x017,30),  (None, None,                           ('Rules',       '"Mem3 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem4':                     ('699s',(0x017,31),  (None, None,                           ('Rules',       '"Mem4 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem5':                     ('699s',(0x017,32),  (None, None,                           ('Rules',       '"Mem5 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem6':                     ('699s',(0x017,33),  (None, None,                           ('Rules',       '"Mem6 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem7':                     ('699s',(0x017,34),  (None, None,                           ('Rules',       '"Mem7 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem8':                     ('699s',(0x017,35),  (None, None,                           ('Rules',       '"Mem8 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem9':                     ('699s',(0x017,36),  (None, None,                           ('Rules',       '"Mem9 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem10':                    ('699s',(0x017,37),  (None, None,                           ('Rules',       '"Mem10 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem11':                    ('699s',(0x017,38),  (None, None,                           ('Rules',       '"Mem11 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem12':                    ('699s',(0x017,39),  (None, None,                           ('Rules',       '"Mem12 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem13':                    ('699s',(0x017,40),  (None, None,                           ('Rules',       '"Mem13 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem14':                    ('699s',(0x017,41),  (None, None,                           ('Rules',       '"Mem14 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem15':                    ('699s',(0x017,42),  (None, None,                           ('Rules',       '"Mem15 {}".format("\\"" if len($)==0 else $)')) ),
+        'mem16':                    ('699s',(0x017,43),  (None, None,                           ('Rules',       '"Mem16 {}".format("\\"" if len($)==0 else $)')) ),
+        'friendlyname1':            ('699s',(0x017,44),  (None, None,                           ('Management',  '"FriendlyName1 {}".format($)')) ),
+        'friendlyname2':            ('699s',(0x017,45),  (None, None,                           ('Management',  '"FriendlyName2 {}".format($)')) ),
+        'friendlyname3':            ('699s',(0x017,46),  (None, None,                           ('Management',  '"FriendlyName3 {}".format($)')) ),
+        'friendlyname4':            ('699s',(0x017,47),  (None, None,                           ('Management',  '"FriendlyName4 {}".format($)')) ),
+                                    },      0x017,       (None, None,                           ('*',           None)), (None,      None) ),
+                                    })
 # ======================================================================
 Settings = [
             (0x8000001,0x1000, Setting_8_0_0_1),
@@ -1866,7 +1938,7 @@ def GetSettingsCrc32(dobj):
     return ~crc & 0xffffffff
 
 
-def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
+def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
 
     """
     Get field definition items
@@ -1880,7 +1952,7 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
     @return:
         set of values defined in <fields>
     """
-    format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = None
+    format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
     bits = bitshift = 0
 
     # calling with nothing is wrong
@@ -1914,10 +1986,19 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
             # baseaddr bit definition
             baseaddr, bits, bitshift = baseaddr
             if not isinstance(bits, int):
-                print('<bits> must be defined as integer in <fielddef> {}'.format(bits, fielddef), file=sys.stderr)
+                print('<bits> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
             if not isinstance(bitshift, int):
-                print('<bitshift> must be defined as integer in <fielddef> {}'.format(bitshift, fielddef), file=sys.stderr)
+                print('<bitshift> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
+                raise SyntaxError('<fielddef> error')
+        elif len(baseaddr) == 2:
+            # baseaddr string definition
+            baseaddr, strindex = baseaddr
+            if not isinstance(strindex, int):
+                print('<strindex> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
+                raise SyntaxError('<fielddef> error')
+            if strindex >= SettingsTextIndex.index('SET_MAX'):
+                print('<strindex> out of range [0,{}] in <fielddef> {}'.format(SettingsTextIndex.index('SET_MAX'), fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
@@ -2175,7 +2256,7 @@ def GetFieldMinMax(fielddef):
     if format_[-1:] in minmax:
         min_, max_ = minmax[format_[-1:]]
         max_ *= GetFormatCount(format_)
-    elif format_[-1:] in ['s','p']:
+    elif format_[-1:].lower() in ['s','p']:
         # s and p may have a prefix as length
         max_ = GetFormatCount(format_)
 
@@ -2300,7 +2381,7 @@ def GetFieldValue(fielddef, dobj, addr):
         value read from dobj
     """
 
-    format_, bits, bitshift = GetFieldDef(fielddef, fields='format_, bits, bitshift')
+    format_, bits, bitshift, strindex = GetFieldDef(fielddef, fields='format_, bits, bitshift, strindex')
 
     value_  = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
@@ -2319,8 +2400,11 @@ def GetFieldValue(fielddef, dobj, addr):
 
         # get unpacked binary value as stripped string
         s = str(unpackedvalue[0],'utf-8',errors='ignore')
-        if s.find('\x00') >= 0:
-            s = s.split('\x00')[0]
+        sarray = s.split('\x00')
+        if strindex is None:
+            s = sarray[0]
+        else:
+            s = sarray[strindex]
 
         # remove unprintable char
         if maxlength:
@@ -2372,6 +2456,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
                      line=inspect.getlineno(inspect.currentframe()))
             value >>= bitsize
     else:
+        # TODO: handle indexed strings
         if debug(args) >= 3:
             print("SetFieldValue(): String type - fielddef {}, addr 0x{:04x}  value {}  format_ {}".format(fielddef,addr,value,format_), file=sys.stderr)
         try:
@@ -2583,7 +2668,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 valid = False
 
         # string
-        elif format_[-1:] in ['s','p']:
+        elif format_[-1:].lower() in ['s','p']:
             value = ReadWriteConverter(restore.encode(STR_ENCODING), fielddef, read=False)
             err = "string length exceeding"
             if value is not None:
