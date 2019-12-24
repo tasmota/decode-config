@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.0.0.1 [00054]'
+VER = '8.0.0.3 [00055]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1196,6 +1196,9 @@ SettingsTextIndex = ['SET_OTAURL',
                     'SET_MEM1', 'SET_MEM2', 'SET_MEM3', 'SET_MEM4', 'SET_MEM5', 'SET_MEM6', 'SET_MEM7', 'SET_MEM8',
                     'SET_MEM9', 'SET_MEM10', 'SET_MEM11', 'SET_MEM12', 'SET_MEM13', 'SET_MEM14', 'SET_MEM15', 'SET_MEM16',
                     'SET_FRIENDLYNAME1', 'SET_FRIENDLYNAME2', 'SET_FRIENDLYNAME3', 'SET_FRIENDLYNAME4',
+                    'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
+                    'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
+                    'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
                     'SET_MAX']
 Setting_8_0_0_1.update             ({
     'text_pool':                    ({
@@ -1250,7 +1253,32 @@ Setting_8_0_0_1.update             ({
                                     },      0x017,       (None, None,                           ('*',           None)), (None,      None) ),
                                     })
 # ======================================================================
+Setting_8_0_0_3 = copy.deepcopy(Setting_8_0_0_1)
+Setting_8_0_0_3['text_pool'][0].update ({
+        'friendlyname5':            ('699s',(0x017,48),  (None, None,                           ('Management',  '"FriendlyName5 {}".format($)')) ),
+        'friendlyname6':            ('699s',(0x017,49),  (None, None,                           ('Management',  '"FriendlyName6 {}".format($)')) ),
+        'friendlyname7':            ('699s',(0x017,50),  (None, None,                           ('Management',  '"FriendlyName7 {}".format($)')) ),
+        'friendlyname8':            ('699s',(0x017,51),  (None, None,                           ('Management',  '"FriendlyName8 {}".format($)')) ),
+        'button1':                  ('699s',(0x017,52),  (None, None,                           ('Wifi',        '"WebButton1 {}".format($)')) ),
+        'button2':                  ('699s',(0x017,53),  (None, None,                           ('Wifi',        '"WebButton2 {}".format($)')) ),
+        'button3':                  ('699s',(0x017,54),  (None, None,                           ('Wifi',        '"WebButton3 {}".format($)')) ),
+        'button4':                  ('699s',(0x017,55),  (None, None,                           ('Wifi',        '"WebButton4 {}".format($)')) ),
+        'button5':                  ('699s',(0x017,56),  (None, None,                           ('Wifi',        '"WebButton5 {}".format($)')) ),
+        'button6':                  ('699s',(0x017,57),  (None, None,                           ('Wifi',        '"WebButton6 {}".format($)')) ),
+        'button7':                  ('699s',(0x017,58),  (None, None,                           ('Wifi',        '"WebButton7 {}".format($)')) ),
+        'button8':                  ('699s',(0x017,59),  (None, None,                           ('Wifi',        '"WebButton8 {}".format($)')) ),
+        'button9':                  ('699s',(0x017,60),  (None, None,                           ('Wifi',        '"WebButton9 {}".format($)')) ),
+        'button10':                 ('699s',(0x017,61),  (None, None,                           ('Wifi',        '"WebButton10 {}".format($)')) ),
+        'button11':                 ('699s',(0x017,62),  (None, None,                           ('Wifi',        '"WebButton11 {}".format($)')) ),
+        'button12':                 ('699s',(0x017,63),  (None, None,                           ('Wifi',        '"WebButton12 {}".format($)')) ),
+        'button13':                 ('699s',(0x017,64),  (None, None,                           ('Wifi',        '"WebButton13 {}".format($)')) ),
+        'button14':                 ('699s',(0x017,65),  (None, None,                           ('Wifi',        '"WebButton14 {}".format($)')) ),
+        'button15':                 ('699s',(0x017,66),  (None, None,                           ('Wifi',        '"WebButton15 {}".format($)')) ),
+        'button16':                 ('699s',(0x017,67),  (None, None,                           ('Wifi',        '"WebButton16 {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8000003,0x1000, Setting_8_0_0_3),
             (0x8000001,0x1000, Setting_8_0_0_1),
             (0x7010206,0x1000, Setting_7_1_2_6),
             (0x7010205,0x1000, Setting_7_1_2_5),
