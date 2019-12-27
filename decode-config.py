@@ -44,7 +44,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
-                        [--ignore-warnings] [-h] [-H] [-v] [-V]
+                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
     can also be set in a config file (specified via -c). Config file syntax
@@ -128,6 +128,8 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
                             own responsibility!
+      --dry-run             test program without changing configuration data on
+                            device or file
 
     Info:
       Extra information
@@ -252,6 +254,7 @@ DEFAULTS            = {
         'output':       False,
         'outputformat': 'json',
         'configfile':   None,
+        'dryrun':       False,
         'ignorewarning':False,
         'filter':       None,
     },
@@ -3148,29 +3151,37 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             cfg_version = GetField(new_decode_cfg, 'version', setting['version'], raw=True)
             message("Config file contains data of Tasmota {}".format(GetVersionStr(cfg_version)), type_=LogType.INFO)
         if args.forcerestore or new_encode_cfg != encode_cfg:
+            dryrun = ""
+            if args.dryrun:
+                if args.verbose:
+                    message("Configuration data changed, but leaving untouched and simulating writes for dry run", type_=LogType.INFO)
+                dryrun = "Simulating: "
+                error_code = 0
             # write config direct to device via http
             if args.device is not None:
                 if args.verbose:
-                    message("Push new data to '{}' using restore file '{}'".format(args.device, restorefilename), type_=LogType.INFO)
-                error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
+                    message("{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename), type_=LogType.INFO)
+                if not args.dryrun:
+                    error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
                 if error_code:
                     exit(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str),line=inspect.getlineno(inspect.currentframe()))
                 else:
                     if args.verbose:
-                        message("Restore successful to device '{}' using restore file '{}'".format(args.device, restorefilename), type_=LogType.INFO)
+                        message("{}Restore successful to device '{}' using restore file '{}'".format(dryrun,args.device, restorefilename), type_=LogType.INFO)
 
             # write config from a file
             elif args.tasmotafile is not None:
                 if args.verbose:
-                    message("Write new data to file '{}' using restore file '{}'".format(args.tasmotafile, restorefilename), type_=LogType.INFO)
-                try:
-                    with open(args.tasmotafile, "wb") as outputfile:
-                        outputfile.write(new_encode_cfg)
-                except Exception as e:
-                    exit(e.args[0], "'{}' {}".format(args.tasmotafile, e[1]),line=inspect.getlineno(inspect.currentframe()))
+                    message("{}Write new data to file '{}' using restore file '{}'".format(dryrun,args.tasmotafile, restorefilename), type_=LogType.INFO)
+                if not args.dryrun:
+                    try:
+                        with open(args.tasmotafile, "wb") as outputfile:
+                            outputfile.write(new_encode_cfg)
+                    except Exception as e:
+                        exit(e.args[0], "'{}' {}".format(args.tasmotafile, e[1]),line=inspect.getlineno(inspect.currentframe()))
                 if args.verbose:
-                    message("Restore successful to file '{}' using restore file '{}'".format(args.tasmotafile, restorefilename), type_=LogType.INFO)
-
+                    message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun,args.tasmotafile, restorefilename), type_=LogType.INFO)
+    
         else:
             global exitcode
             exitcode = ExitCode.RESTORE_SKIPPED
@@ -3382,6 +3393,11 @@ def ParseArgs():
                             action='store_true',
                             default=DEFAULTS['common']['ignorewarning'],
                             help="do not exit on warnings{}. Not recommended, used by your own responsibility!".format(' (default)' if DEFAULTS['common']['ignorewarning'] else '') )
+    common.add_argument('--dry-run',
+                            dest='dryrun',
+                            action='store_true',
+                            default=DEFAULTS['common']['ignorewarning'],
+                            help="test program without changing configuration data on device or file".format(' (default)' if DEFAULTS['common']['dryrun'] else '') )
 
 
     info = parser.add_argument_group('Info','Extra information')

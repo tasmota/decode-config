@@ -46,6 +46,7 @@ a version matching the latest offical Tasmota release.
   * [.bin File Format](#bin-format)
     * [File extensions](#file-extensions)
 * [Usage](#usage)
+  * [Test run](#test-run)
   * [Basics](#basics)
   * [Save backup file](#save-backup-file)
   * [Restore backup file](#restore-backup-file)
@@ -121,6 +122,10 @@ If you do not want using auto extensions use the `--no-extension` parameter.
 ## Usage
 For an overview start the program without any parameter and you will get a small help screen.  
 For full help start the program with parameter `-H`: `decode-config -H`
+
+### Test run
+To test your parameter you can prevent writing any changes of configuation to your device or file by appending `--dry-run` on program command line:
+`decode-config.py -d tasmota-4281 -i backupfile --dry-run`
 
 ### Basics
 At least pass a source where you want to read the configuration data from using `-f <filename>` or `-d <host>`:
@@ -289,11 +294,11 @@ For advanced help use `-H` or `--full-help`:
                             [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                             [-c <filename>] [-S] [-T json|cmnd|command]
                             [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
-                            [--ignore-warnings] [-h] [-H] [-v] [-V]
+                            [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
-    Backup/Restore Tasmota configuration data. Args that start with '--'
-    (eg. -f) can also be set in a config file (specified via -c). Config file
-    syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+    Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+    can also be set in a config file (specified via -c). Config file syntax
+    allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
     https://goo.gl/R74nmi). If an arg is specified in more than one place, then
     commandline values override config file values which override defaults.
 
@@ -373,6 +378,8 @@ For advanced help use `-H` or `--full-help`:
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
                             own responsibility!
+      --dry-run             test program without changing configuration data on
+                            device or file
 
     Info:
       Extra information
@@ -383,6 +390,7 @@ For advanced help use `-H` or `--full-help`:
       -V, --version         show program's version number and exit
 
     Either argument -d <host> or -f <filename> must be given.
+
 
 #### Program parameter notes
 
