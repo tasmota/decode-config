@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.0.0.3 [00056]'
+VER = '8.0.0.3 [00057]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -520,7 +520,7 @@ Setting_5_10_0 = {
     'last_module':                  ('B',   0x399,       (None, None,                           ('System',      None)) ),
     'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
     'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
+    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
     'switch_topic':                 ('33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
     'sleep':                        ('B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
     'domoticz_switch_idx':          ('<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
@@ -1224,13 +1224,13 @@ Setting_8_0_0_1.update             ({
     'state_text':                   ('699s',(0x017,SettingsTextIndex.index('SET_STATE_TXT1')),          ([4],  None, ('MQTT',        '"StateText{} {}".format(#,$)')) ),
     'ntp_server':                   ('699s',(0x017,SettingsTextIndex.index('SET_NTPSERVER1')),          ([3],  None, ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
     'mems':                         ('699s',(0x017,SettingsTextIndex.index('SET_MEM1')),                ([16], None, ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
 Setting_8_0_0_3 = copy.deepcopy(Setting_8_0_0_1)
 Setting_8_0_0_3.update             ({
-    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
-    'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,$)')) ),
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
 Settings = [
