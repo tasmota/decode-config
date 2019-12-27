@@ -21,8 +21,8 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 
 **This is the master branch which contains _decode-config_ matching official Tasmota release version only.**
 
-Because this can be outdated if you are using Tasmota from their developer branch, 
-you might want to use [_decode-config_ developer branch](https://github.com/tasmota/decode-config/tree/development) which contains
+If you are using Tasmota from development branch the _decode-config_ version from this master branch can be outdated.
+You can then use the [_decode-config_ developer branch](https://github.com/tasmota/decode-config/tree/development) which contains
 an up-to-date version matching the latest Tasmota developer version.
 
 ### Files
@@ -36,7 +36,13 @@ an up-to-date version matching the latest Tasmota developer version.
 | `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
 
-* [Prerequisite](#prerequisite)
+* [Running the program](#running-the-program)
+* [Running as Python script](#running-as-python-script)
+  * [Prerequisite](#prerequisite)
+    * [Linux](#linux)
+    * [Windows 10](#windows-10)
+    * [MacOS](#macos)
+    * [All OS](#all-os)
 * [File Types](#file-types)
   * [.dmp File Format](#dmp-format)
   * [.json File Format](#json-format)
@@ -287,11 +293,11 @@ For advanced help use `-H` or `--full-help`:
                             [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                             [-c <filename>] [-S] [-T json|cmnd|command]
                             [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
-                            [--ignore-warnings] [-h] [-H] [-v] [-V]
+                            [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
-    Backup/Restore Tasmota configuration data. Args that start with '--'
-    (eg. -f) can also be set in a config file (specified via -c). Config file
-    syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+    Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+    can also be set in a config file (specified via -c). Config file syntax
+    allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
     https://goo.gl/R74nmi). If an arg is specified in more than one place, then
     commandline values override config file values which override defaults.
 
@@ -371,6 +377,8 @@ For advanced help use `-H` or `--full-help`:
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
                             own responsibility!
+      --dry-run             test program without changing configuration data on
+                            device or file
 
     Info:
       Extra information
