@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.0.0.3 [00055]'
+VER = '8.0.0.3 [00056]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1178,10 +1178,8 @@ Setting_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
-Setting_8_0_0_1 = copy.deepcopy(Setting_7_1_2_6)
-for key in ('ota_url','mqtt_prefix','sta_ssid','sta_pwd','hostname','syslog_host','web_password','cors_domain','mqtt_host','mqtt_client','mqtt_user','mqtt_pwd','mqtt_fulltopic','mqtt_topic','button_topic','switch_topic','mqtt_grptopic','state_text','ntp_server','mems','friendlyname'):
-    Setting_8_0_0_1.pop(key,None)
-SettingsTextIndex = ['SET_OTAURL',
+# v8.x.x.x: Index numbers for indexed strings
+SettingsTextIndex =['SET_OTAURL',
                     'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
                     'SET_STASSID1', 'SET_STASSID2',
                     'SET_STAPWD1', 'SET_STAPWD2',
@@ -1200,81 +1198,36 @@ SettingsTextIndex = ['SET_OTAURL',
                     'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
                     'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
                     'SET_MAX']
+# ----------------------------------------------------------------------
+Setting_8_0_0_1 = copy.deepcopy(Setting_7_1_2_6)
 Setting_8_0_0_1.update             ({
-    'text_pool':                    ({
-        'ota_url':                  ('699s',(0x017, 0),  (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-        'mqtt_prefix1':             ('699s',(0x017, 1),  (None, None,                           ('MQTT',        '"Prefix1 {}".format($)')) ),
-        'mqtt_prefix2':             ('699s',(0x017, 2),  (None, None,                           ('MQTT',        '"Prefix2 {}".format($)')) ),
-        'mqtt_prefix3':             ('699s',(0x017, 3),  (None, None,                           ('MQTT',        '"Prefix3 {}".format($)')) ),
-        'sta_ssid1':                ('699s',(0x017, 4),  (None, None,                           ('Wifi',        '"SSId1 {}".format($)')) ),
-        'sta_ssid2':                ('699s',(0x017, 5),  (None, None,                           ('Wifi',        '"SSId2 {}".format($)')) ),
-        'sta_pwd1':                 ('699s',(0x017, 6),  (None, None,                           ('MQTT',        '"Password1 {}".format($)')), (passwordread,passwordwrite) ),
-        'sta_pwd2':                 ('699s',(0x017, 7),  (None, None,                           ('MQTT',        '"Password2 {}".format($)')), (passwordread,passwordwrite) ),
-        'hostname':                 ('699s',(0x017, 8),  (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-        'syslog_host':              ('699s',(0x017, 9),  (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-        'web_password':             ('699s',(0x017,10),  (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
-        'cors_domain':              ('699s',(0x017,11),  (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-        'mqtt_host':                ('699s',(0x017,12),  (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-        'mqtt_client':              ('699s',(0x017,13),  (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-        'mqtt_user':                ('699s',(0x017,14),  (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-        'mqtt_pwd':                 ('699s',(0x017,15),  (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
-        'mqtt_fulltopic':           ('699s',(0x017,16),  (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-        'mqtt_topic':               ('699s',(0x017,17),  (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-        'button_topic':             ('699s',(0x017,18),  (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-        'switch_topic':             ('699s',(0x017,19),  (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-        'mqtt_grptopic':            ('699s',(0x017,20),  (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-        'state_text1':              ('699s',(0x017,21),  (None, None,                           ('MQTT',        '"StateText1 {}".format($)')) ),
-        'state_text2':              ('699s',(0x017,22),  (None, None,                           ('MQTT',        '"StateText2 {}".format($)')) ),
-        'state_text3':              ('699s',(0x017,23),  (None, None,                           ('MQTT',        '"StateText3 {}".format($)')) ),
-        'state_text4':              ('699s',(0x017,24),  (None, None,                           ('MQTT',        '"StateText4 {}".format($)')) ),
-        'ntp_server1':              ('699s',(0x017,25),  (None, None,                           ('Wifi',        '"NtpServer1 {}".format($)')) ),
-        'ntp_server2':              ('699s',(0x017,26),  (None, None,                           ('Wifi',        '"NtpServer2 {}".format($)')) ),
-        'ntp_server3':              ('699s',(0x017,27),  (None, None,                           ('Wifi',        '"NtpServer3 {}".format($)')) ),
-        'mem1':                     ('699s',(0x017,28),  (None, None,                           ('Rules',       '"Mem1 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem2':                     ('699s',(0x017,29),  (None, None,                           ('Rules',       '"Mem2 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem3':                     ('699s',(0x017,30),  (None, None,                           ('Rules',       '"Mem3 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem4':                     ('699s',(0x017,31),  (None, None,                           ('Rules',       '"Mem4 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem5':                     ('699s',(0x017,32),  (None, None,                           ('Rules',       '"Mem5 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem6':                     ('699s',(0x017,33),  (None, None,                           ('Rules',       '"Mem6 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem7':                     ('699s',(0x017,34),  (None, None,                           ('Rules',       '"Mem7 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem8':                     ('699s',(0x017,35),  (None, None,                           ('Rules',       '"Mem8 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem9':                     ('699s',(0x017,36),  (None, None,                           ('Rules',       '"Mem9 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem10':                    ('699s',(0x017,37),  (None, None,                           ('Rules',       '"Mem10 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem11':                    ('699s',(0x017,38),  (None, None,                           ('Rules',       '"Mem11 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem12':                    ('699s',(0x017,39),  (None, None,                           ('Rules',       '"Mem12 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem13':                    ('699s',(0x017,40),  (None, None,                           ('Rules',       '"Mem13 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem14':                    ('699s',(0x017,41),  (None, None,                           ('Rules',       '"Mem14 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem15':                    ('699s',(0x017,42),  (None, None,                           ('Rules',       '"Mem15 {}".format("\\"" if len($)==0 else $)')) ),
-        'mem16':                    ('699s',(0x017,43),  (None, None,                           ('Rules',       '"Mem16 {}".format("\\"" if len($)==0 else $)')) ),
-        'friendlyname1':            ('699s',(0x017,44),  (None, None,                           ('Management',  '"FriendlyName1 {}".format($)')) ),
-        'friendlyname2':            ('699s',(0x017,45),  (None, None,                           ('Management',  '"FriendlyName2 {}".format($)')) ),
-        'friendlyname3':            ('699s',(0x017,46),  (None, None,                           ('Management',  '"FriendlyName3 {}".format($)')) ),
-        'friendlyname4':            ('699s',(0x017,47),  (None, None,                           ('Management',  '"FriendlyName4 {}".format($)')) ),
-                                    },      0x017,       (None, None,                           ('*',           None)), (None,      None) ),
+    'ota_url':                      ('699s',(0x017,SettingsTextIndex.index('SET_OTAURL')),              (None, None, ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  ('699s',(0x017,SettingsTextIndex.index('SET_MQTTPREFIX1')),         ([3],  None, ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'sta_ssid':                     ('699s',(0x017,SettingsTextIndex.index('SET_STASSID1')),            ([2],  None, ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      ('699s',(0x017,SettingsTextIndex.index('SET_STAPWD1')),             ([2],  None, ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     ('699s',(0x017,SettingsTextIndex.index('SET_HOSTNAME')),            (None, None, ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  ('699s',(0x017,SettingsTextIndex.index('SET_SYSLOG_HOST')),         (None, None, ('Management',  '"LogHost {}".format($)')) ),
+    'web_password':                 ('699s',(0x017,SettingsTextIndex.index('SET_WEBPWD')),              (None, None, ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'cors_domain':                  ('699s',(0x017,SettingsTextIndex.index('SET_CORS')),                (None, None, ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'mqtt_host':                    ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_HOST')),           (None, None, ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_client':                  ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_CLIENT')),         (None, None, ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_USER')),           (None, None, ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_PWD')),            (None, None, ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_fulltopic':               ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_FULLTOPIC')),      (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
+    'mqtt_topic':                   ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_TOPIC')),          (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_BUTTON_TOPIC')),   (None, None, ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'switch_topic':                 ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_SWITCH_TOPIC')),   (None, None, ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_GRP_TOPIC')),      (None, None, ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'state_text':                   ('699s',(0x017,SettingsTextIndex.index('SET_STATE_TXT1')),          ([4],  None, ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'ntp_server':                   ('699s',(0x017,SettingsTextIndex.index('SET_NTPSERVER1')),          ([3],  None, ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'mems':                         ('699s',(0x017,SettingsTextIndex.index('SET_MEM1')),                ([16], None, ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
                                     })
 # ======================================================================
 Setting_8_0_0_3 = copy.deepcopy(Setting_8_0_0_1)
-Setting_8_0_0_3['text_pool'][0].update ({
-        'friendlyname5':            ('699s',(0x017,48),  (None, None,                           ('Management',  '"FriendlyName5 {}".format($)')) ),
-        'friendlyname6':            ('699s',(0x017,49),  (None, None,                           ('Management',  '"FriendlyName6 {}".format($)')) ),
-        'friendlyname7':            ('699s',(0x017,50),  (None, None,                           ('Management',  '"FriendlyName7 {}".format($)')) ),
-        'friendlyname8':            ('699s',(0x017,51),  (None, None,                           ('Management',  '"FriendlyName8 {}".format($)')) ),
-        'button1':                  ('699s',(0x017,52),  (None, None,                           ('Wifi',        '"WebButton1 {}".format($)')) ),
-        'button2':                  ('699s',(0x017,53),  (None, None,                           ('Wifi',        '"WebButton2 {}".format($)')) ),
-        'button3':                  ('699s',(0x017,54),  (None, None,                           ('Wifi',        '"WebButton3 {}".format($)')) ),
-        'button4':                  ('699s',(0x017,55),  (None, None,                           ('Wifi',        '"WebButton4 {}".format($)')) ),
-        'button5':                  ('699s',(0x017,56),  (None, None,                           ('Wifi',        '"WebButton5 {}".format($)')) ),
-        'button6':                  ('699s',(0x017,57),  (None, None,                           ('Wifi',        '"WebButton6 {}".format($)')) ),
-        'button7':                  ('699s',(0x017,58),  (None, None,                           ('Wifi',        '"WebButton7 {}".format($)')) ),
-        'button8':                  ('699s',(0x017,59),  (None, None,                           ('Wifi',        '"WebButton8 {}".format($)')) ),
-        'button9':                  ('699s',(0x017,60),  (None, None,                           ('Wifi',        '"WebButton9 {}".format($)')) ),
-        'button10':                 ('699s',(0x017,61),  (None, None,                           ('Wifi',        '"WebButton10 {}".format($)')) ),
-        'button11':                 ('699s',(0x017,62),  (None, None,                           ('Wifi',        '"WebButton11 {}".format($)')) ),
-        'button12':                 ('699s',(0x017,63),  (None, None,                           ('Wifi',        '"WebButton12 {}".format($)')) ),
-        'button13':                 ('699s',(0x017,64),  (None, None,                           ('Wifi',        '"WebButton13 {}".format($)')) ),
-        'button14':                 ('699s',(0x017,65),  (None, None,                           ('Wifi',        '"WebButton14 {}".format($)')) ),
-        'button15':                 ('699s',(0x017,66),  (None, None,                           ('Wifi',        '"WebButton15 {}".format($)')) ),
-        'button16':                 ('699s',(0x017,67),  (None, None,                           ('Wifi',        '"WebButton16 {}".format($)')) ),
+Setting_8_0_0_3.update             ({
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
+    'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,$)')) ),
                                     })
 # ======================================================================
 Settings = [
@@ -1812,7 +1765,7 @@ def GetTasmotaHostname(host, port, username=DEFAULTS['source']['username'], pass
     # get hostname
     responsecode, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(str(body, 'utf8'))
+        jsonbody = json.loads(str(body, STR_ENCODING))
         if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
             hostname = jsonbody["StatusNET"]["Hostname"]
             if args.verbose:
@@ -2394,7 +2347,7 @@ def IsFilterGroup(group):
     return True
 
 
-def GetFieldValue(fielddef, dobj, addr):
+def GetFieldValue(fielddef, dobj, addr, idxoffset=0):
     """
     Get single field value from definition
 
@@ -2427,12 +2380,18 @@ def GetFieldValue(fielddef, dobj, addr):
         maxlength = GetFieldLength(fielddef)
 
         # get unpacked binary value as stripped string
-        s = str(unpackedvalue[0],'utf-8',errors='ignore')
-        sarray = s.split('\x00')
-        if strindex is None:
-            s = sarray[0]
-        else:
-            s = sarray[strindex]
+        s = str(unpackedvalue[0],STR_ENCODING,errors='ignore')
+        # split into single or multiple list elements delimted by \0
+        sarray = s.split('\x00',SettingsTextIndex.index('SET_MAX'))
+        if isinstance(sarray, list):
+            # strip trailing \0 bytes
+            sarray = [element.rstrip('\x00') for element in sarray]
+            if strindex is None:
+                # single string
+                s = sarray[0]
+            else:
+                # indexed string
+                s = sarray[strindex+idxoffset]
 
         # remove unprintable char
         if maxlength:
@@ -2484,14 +2443,13 @@ def SetFieldValue(fielddef, dobj, addr, value):
                      line=inspect.getlineno(inspect.currentframe()))
             value >>= bitsize
     else:
-        # TODO: handle indexed strings
         if debug(args) >= 3:
             print("SetFieldValue(): String type - fielddef {}, addr 0x{:04x}  value {}  format_ {}".format(fielddef,addr,value,format_), file=sys.stderr)
         try:
             struct.pack_into(format_, dobj, addr, value)
         except struct.error as e:
             exit(ExitCode.RESTORE_DATA_ERROR,
-                 "String type {} [fielddef={}, addr=0x{:04x}, value={}} - skipped!".format(e,fielddef,addr,value),
+                 "String type {} [fielddef={}, addr=0x{:04x}, value={} - skipped!".format(e,fielddef,addr,value),
                  type_=LogType.WARNING,
                  doexit=not args.ignorewarning,
                  line=inspect.getlineno(inspect.currentframe()))
@@ -2513,6 +2471,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         return raw values (True) or converted values (False)
     @param addroffset
         use offset for baseaddr (used for recursive calls)
+        for indexed strings: index into indexed string
 
     @return:
         field mapping
@@ -2524,7 +2483,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
     valuemapping = None
 
     # get field definition
-    format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd')
+    format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd')
 
     # filter groups
     if not IsFilterGroup(group):
@@ -2538,7 +2497,10 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
             subfielddef = GetSubfieldDef(fielddef)
             length = GetFieldLength(subfielddef)
             if length != 0:
-                value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
+                if strindex is not None:
+                    value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=i)
+                else:
+                    value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
                 valuemapping.append(value)
             offset += length
 
@@ -2557,7 +2519,11 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
         if GetFieldLength(fielddef) != 0:
-            valuemapping = ReadWriteConverter(GetFieldValue(fielddef, dobj, baseaddr+addroffset), fielddef, read=True, raw=raw)
+            if strindex is not None:
+                value = GetFieldValue(fielddef, dobj, baseaddr, addroffset)
+            else:
+                value = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+            valuemapping = ReadWriteConverter(value, fielddef, read=True, raw=raw)
 
     else:
         exit(ExitCode.INTERNAL_ERROR, "Wrong mapping format definition: '{}'".format(format_), type_=LogType.WARNING, doexit=not args.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
@@ -2585,7 +2551,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
     @return:
         new decrypted binary config data
     """
-    format_, baseaddr, bits, bitshift, arraydef, group, writeconverter = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, arraydef, group, writeconverter')
+    format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
     # cast unicode
     fieldname = str(fieldname)
 
@@ -2611,7 +2577,10 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 if i >= len(restore): # restore data list may be shorter than definition
                     break
                 subrestore = restore[i]
-                dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+                if strindex is not None:
+                    dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                else:
+                    dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
             offset += length
 
     # <format> contains a dict
@@ -2705,6 +2674,22 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             else:
                 skip = True
                 valid = True
+            # handle indexed strings
+            if strindex is not None:
+                # unpack index str from source baseaddr into s
+                unpackedvalue = struct.unpack_from(format_, dobj, baseaddr)
+                s = str(unpackedvalue[0],STR_ENCODING,errors='ignore')
+                # split into separate string values
+                sarray = s.split('\x00')
+                if not isinstance(value,str):
+                    value = str(value,STR_ENCODING,errors='ignore')
+                # remember possible value changes
+                prevvalue = sarray[strindex+addroffset]
+                curvalue = value
+                # change indexed string
+                sarray[strindex+addroffset] = value
+                # convert back to binary string stream
+                value = '\0'.join(sarray).encode(STR_ENCODING)
 
         if value is None and not skip:
             # None is an invalid value
@@ -2731,9 +2716,13 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                     strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, int) else _value
                     print("SetField(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
                 if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
-                    prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
-                    dobj = SetFieldValue(fielddef, dobj, baseaddr+addroffset, value)
-                    curvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+                    if strindex is not None:
+                        # do not use address offset for indexed strings
+                        dobj = SetFieldValue(fielddef, dobj, baseaddr, value)
+                    else:
+                        prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+                        dobj = SetFieldValue(fielddef, dobj, baseaddr+addroffset, value)
+                        curvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
                     if prevvalue != curvalue and args.verbose:
                         message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
                 else:
