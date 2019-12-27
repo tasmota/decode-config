@@ -21,23 +21,30 @@ _decode-config_ is able to process configuration data for Tasmota starting v5.10
 
 **This is the developer branch which contains _decode-config_ matching the latest Tasmota developer version.**
 
-It could be you want to use a stable version matching the latest officical Tasmota release only;  
-then use the offical latest [_decode-config_ Release](https://github.com/tasmota/decode-config/releases) or the 
-[_decode-config_ master branch](https://github.com/tasmota/decode-config/tree/master) which contains
-a version matching the latest offical Tasmota release.
+This branch does not contain any binaries. If you want to use one of the precompiled _decode-config_ binary
+you can either use the binaries from [_decode-config_ master branch](https://github.com/tasmota/decode-config/tree/master) or
+latest [_decode-config_ Release](https://github.com/tasmota/decode-config/releases).
+
+If you want to run the development _decode-config.py_ from this branch, you need an 
+installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment. 
+See [Running as Python script](#running-as-python-script) for more details.
+
 
 ### Files
 | File                     | Description |
 |:-------------------------|:------------------------------------------------------------------------|
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
-| `decode-config_linux`    | Linux executable running standalone                                     |
-| `decode-config_mac`      | macOS executable running standalone                                     |
-| `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
-| `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
 
-* [Prerequisite](#prerequisite)
+
+* [Running the program](#running-the-program)
+* [Running as Python script](#running-as-python-script)
+  * [Prerequisite](#prerequisite)
+    * [Linux](#linux)
+    * [Windows 10](#windows-10)
+    * [MacOS](#macos)
+    * [All OS](#all-os)
 * [File Types](#file-types)
   * [.dmp File Format](#dmp-format)
   * [.json File Format](#json-format)
@@ -63,10 +70,13 @@ a version matching the latest offical Tasmota release.
 # Running the program
 The program does not have any graphical user interface (GUI), it is needed to run it on command line using [program arguments](#more-program-arguments).
 
-For Windows, MacOS and Linux there is no prerequisite, simply use the command line [executable related to your OS](#files).
+_decode-config_ needs a [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment to run.
+If you don't want to install Python you can either use the binaries from [_decode-config_ master branch](https://github.com/tasmota/decode-config/tree/master) or
+latest [_decode-config_ Release](https://github.com/tasmota/decode-config/releases).
+
 
 ## Running as Python script
-If you want to run the Python source _decode-config.py_, an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
+If you want to run _decode-config.py_ from this development branch, an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
 
 **Note**: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
