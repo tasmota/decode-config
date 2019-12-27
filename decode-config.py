@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.0.0.3 [00058]'
+VER = '8.1.0.0 [00058]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1227,14 +1227,14 @@ Setting_8_0_0_1.update             ({
     'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
-Setting_8_0_0_3 = copy.deepcopy(Setting_8_0_0_1)
-Setting_8_0_0_3.update             ({
+Setting_8_1_0_0 = copy.deepcopy(Setting_8_0_0_1)
+Setting_8_1_0_0.update             ({
     'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
     'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
 Settings = [
-            (0x8000003,0x1000, Setting_8_0_0_3),
+            (0x8010000,0x1000, Setting_8_1_0_0),
             (0x8000001,0x1000, Setting_8_0_0_1),
             (0x7010206,0x1000, Setting_7_1_2_6),
             (0x7010205,0x1000, Setting_7_1_2_5),
