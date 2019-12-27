@@ -1,8 +1,6 @@
 # decode-config
 _decode-config_ backup and restore configuration data of [Tasmota](http://tasmota.com/)-devices.
 
-**Note**: This current development branch can not write string settings back to v8.x.x.x Tasmota developer settings, read only!
-
 In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 * _decode-config_ uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore,
 * _decode-config_ can restore previously backup and changed [JSON](http://www.json.org/)-format files,
