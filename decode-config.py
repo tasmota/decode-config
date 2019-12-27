@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '7.2.0 [Constance]'
+VER = '8.1.0.0 [00058]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -44,7 +44,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
-                        [--ignore-warnings] [-h] [-H] [-v] [-V]
+                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
     can also be set in a config file (specified via -c). Config file syntax
@@ -128,6 +128,8 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
                             own responsibility!
+      --dry-run             test program without changing configuration data on
+                            device or file
 
     Info:
       Extra information
@@ -252,6 +254,7 @@ DEFAULTS            = {
         'output':       False,
         'outputformat': 'json',
         'configfile':   None,
+        'dryrun':       False,
         'ignorewarning':False,
         'filter':       None,
     },
@@ -285,7 +288,7 @@ Settings dictionary describes the config file fields definition:
                     A dictionary describes a (sub)setting dictonary
                     and can recursively define another <setting>
 
-            <addrdef>:  <baseaddr> | (<baseaddr>, <bits>, <bitshift>)
+            <addrdef>:  <baseaddr> | (<baseaddr>, <bits>, <bitshift>) | (<baseaddr>, <strindex>)
                 address definition
                 <baseaddr>: <uint>
                     The address (starting from 0) within binary config data.
@@ -295,6 +298,8 @@ Settings dictionary describes the config file fields definition:
                     bit shift <bitshift>:
                     <bitshift> >= 0: shift the result right
                     <bitshift> <  0: shift the result left
+                <strindex>: <int>
+                    index into a set of strings delimited by \0
 
             <datadef>:  <arraydef> | (<arraydef>, <validate> [,cmd])
                 data definition
@@ -515,7 +520,7 @@ Setting_5_10_0 = {
     'last_module':                  ('B',   0x399,       (None, None,                           ('System',      None)) ),
     'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
     'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,$)')) ),
+    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
     'switch_topic':                 ('33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
     'sleep':                        ('B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
     'domoticz_switch_idx':          ('<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
@@ -1170,13 +1175,67 @@ Setting_7_1_2_6.update             ({
     'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
     'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',       None)) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',      None)) ),
                                     })
 Setting_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
+# v8.x.x.x: Index numbers for indexed strings
+SettingsTextIndex =['SET_OTAURL',
+                    'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
+                    'SET_STASSID1', 'SET_STASSID2',
+                    'SET_STAPWD1', 'SET_STAPWD2',
+                    'SET_HOSTNAME', 'SET_SYSLOG_HOST',
+                    'SET_WEBPWD', 'SET_CORS',
+                    'SET_MQTT_HOST', 'SET_MQTT_CLIENT',
+                    'SET_MQTT_USER', 'SET_MQTT_PWD',
+                    'SET_MQTT_FULLTOPIC', 'SET_MQTT_TOPIC',
+                    'SET_MQTT_BUTTON_TOPIC', 'SET_MQTT_SWITCH_TOPIC', 'SET_MQTT_GRP_TOPIC',
+                    'SET_STATE_TXT1', 'SET_STATE_TXT2', 'SET_STATE_TXT3', 'SET_STATE_TXT4',
+                    'SET_NTPSERVER1', 'SET_NTPSERVER2', 'SET_NTPSERVER3',
+                    'SET_MEM1', 'SET_MEM2', 'SET_MEM3', 'SET_MEM4', 'SET_MEM5', 'SET_MEM6', 'SET_MEM7', 'SET_MEM8',
+                    'SET_MEM9', 'SET_MEM10', 'SET_MEM11', 'SET_MEM12', 'SET_MEM13', 'SET_MEM14', 'SET_MEM15', 'SET_MEM16',
+                    'SET_FRIENDLYNAME1', 'SET_FRIENDLYNAME2', 'SET_FRIENDLYNAME3', 'SET_FRIENDLYNAME4',
+                    'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
+                    'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
+                    'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
+                    'SET_MAX']
+# ----------------------------------------------------------------------
+Setting_8_0_0_1 = copy.deepcopy(Setting_7_1_2_6)
+Setting_8_0_0_1.update             ({
+    'ota_url':                      ('699s',(0x017,SettingsTextIndex.index('SET_OTAURL')),              (None, None, ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  ('699s',(0x017,SettingsTextIndex.index('SET_MQTTPREFIX1')),         ([3],  None, ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'sta_ssid':                     ('699s',(0x017,SettingsTextIndex.index('SET_STASSID1')),            ([2],  None, ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      ('699s',(0x017,SettingsTextIndex.index('SET_STAPWD1')),             ([2],  None, ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     ('699s',(0x017,SettingsTextIndex.index('SET_HOSTNAME')),            (None, None, ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  ('699s',(0x017,SettingsTextIndex.index('SET_SYSLOG_HOST')),         (None, None, ('Management',  '"LogHost {}".format($)')) ),
+    'web_password':                 ('699s',(0x017,SettingsTextIndex.index('SET_WEBPWD')),              (None, None, ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'cors_domain':                  ('699s',(0x017,SettingsTextIndex.index('SET_CORS')),                (None, None, ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'mqtt_host':                    ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_HOST')),           (None, None, ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_client':                  ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_CLIENT')),         (None, None, ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_USER')),           (None, None, ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_PWD')),            (None, None, ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_fulltopic':               ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_FULLTOPIC')),      (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
+    'mqtt_topic':                   ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_TOPIC')),          (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_BUTTON_TOPIC')),   (None, None, ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'switch_topic':                 ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_SWITCH_TOPIC')),   (None, None, ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SettingsTextIndex.index('SET_MQTT_GRP_TOPIC')),      (None, None, ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'state_text':                   ('699s',(0x017,SettingsTextIndex.index('SET_STATE_TXT1')),          ([4],  None, ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'ntp_server':                   ('699s',(0x017,SettingsTextIndex.index('SET_NTPSERVER1')),          ([3],  None, ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'mems':                         ('699s',(0x017,SettingsTextIndex.index('SET_MEM1')),                ([16], None, ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                    })
+# ======================================================================
+Setting_8_1_0_0 = copy.deepcopy(Setting_8_0_0_1)
+Setting_8_1_0_0.update             ({
+    'friendlyname':                 ('699s',(0x017,SettingsTextIndex.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010000,0x1000, Setting_8_1_0_0),
+            (0x8000001,0x1000, Setting_8_0_0_1),
             (0x7010206,0x1000, Setting_7_1_2_6),
             (0x7010205,0x1000, Setting_7_1_2_5),
             (0x7010203,0x1000, Setting_7_1_2_3),
@@ -1709,7 +1768,7 @@ def GetTasmotaHostname(host, port, username=DEFAULTS['source']['username'], pass
     # get hostname
     responsecode, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(str(body, 'utf8'))
+        jsonbody = json.loads(str(body, STR_ENCODING))
         if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
             hostname = jsonbody["StatusNET"]["Hostname"]
             if args.verbose:
@@ -1863,7 +1922,7 @@ def GetSettingsCrc32(dobj):
     return ~crc & 0xffffffff
 
 
-def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
+def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
 
     """
     Get field definition items
@@ -1877,7 +1936,7 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
     @return:
         set of values defined in <fields>
     """
-    format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = None
+    format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
     bits = bitshift = 0
 
     # calling with nothing is wrong
@@ -1911,10 +1970,19 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, da
             # baseaddr bit definition
             baseaddr, bits, bitshift = baseaddr
             if not isinstance(bits, int):
-                print('<bits> must be defined as integer in <fielddef> {}'.format(bits, fielddef), file=sys.stderr)
+                print('<bits> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
             if not isinstance(bitshift, int):
-                print('<bitshift> must be defined as integer in <fielddef> {}'.format(bitshift, fielddef), file=sys.stderr)
+                print('<bitshift> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
+                raise SyntaxError('<fielddef> error')
+        elif len(baseaddr) == 2:
+            # baseaddr string definition
+            baseaddr, strindex = baseaddr
+            if not isinstance(strindex, int):
+                print('<strindex> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
+                raise SyntaxError('<fielddef> error')
+            if strindex >= SettingsTextIndex.index('SET_MAX'):
+                print('<strindex> out of range [0,{}] in <fielddef> {}'.format(SettingsTextIndex.index('SET_MAX'), fielddef), file=sys.stderr)
                 raise SyntaxError('<fielddef> error')
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
@@ -2172,7 +2240,7 @@ def GetFieldMinMax(fielddef):
     if format_[-1:] in minmax:
         min_, max_ = minmax[format_[-1:]]
         max_ *= GetFormatCount(format_)
-    elif format_[-1:] in ['s','p']:
+    elif format_[-1:].lower() in ['s','p']:
         # s and p may have a prefix as length
         max_ = GetFormatCount(format_)
 
@@ -2282,7 +2350,7 @@ def IsFilterGroup(group):
     return True
 
 
-def GetFieldValue(fielddef, dobj, addr):
+def GetFieldValue(fielddef, dobj, addr, idxoffset=0):
     """
     Get single field value from definition
 
@@ -2297,7 +2365,7 @@ def GetFieldValue(fielddef, dobj, addr):
         value read from dobj
     """
 
-    format_, bits, bitshift = GetFieldDef(fielddef, fields='format_, bits, bitshift')
+    format_, bits, bitshift, strindex = GetFieldDef(fielddef, fields='format_, bits, bitshift, strindex')
 
     value_  = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
@@ -2315,9 +2383,18 @@ def GetFieldValue(fielddef, dobj, addr):
         maxlength = GetFieldLength(fielddef)
 
         # get unpacked binary value as stripped string
-        s = str(unpackedvalue[0],'utf-8',errors='ignore')
-        if s.find('\x00') >= 0:
-            s = s.split('\x00')[0]
+        s = str(unpackedvalue[0],STR_ENCODING,errors='ignore')
+        # split into single or multiple list elements delimted by \0
+        sarray = s.split('\x00',SettingsTextIndex.index('SET_MAX'))
+        if isinstance(sarray, list):
+            # strip trailing \0 bytes
+            sarray = [element.rstrip('\x00') for element in sarray]
+            if strindex is None:
+                # single string
+                s = sarray[0]
+            else:
+                # indexed string
+                s = sarray[strindex+idxoffset]
 
         # remove unprintable char
         if maxlength:
@@ -2375,7 +2452,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
             struct.pack_into(format_, dobj, addr, value)
         except struct.error as e:
             exit(ExitCode.RESTORE_DATA_ERROR,
-                 "String type {} [fielddef={}, addr=0x{:04x}, value={}} - skipped!".format(e,fielddef,addr,value),
+                 "String type {} [fielddef={}, addr=0x{:04x}, value={} - skipped!".format(e,fielddef,addr,value),
                  type_=LogType.WARNING,
                  doexit=not args.ignorewarning,
                  line=inspect.getlineno(inspect.currentframe()))
@@ -2397,6 +2474,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
         return raw values (True) or converted values (False)
     @param addroffset
         use offset for baseaddr (used for recursive calls)
+        for indexed strings: index into indexed string
 
     @return:
         field mapping
@@ -2408,7 +2486,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
     valuemapping = None
 
     # get field definition
-    format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd')
+    format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd')
 
     # filter groups
     if not IsFilterGroup(group):
@@ -2422,7 +2500,10 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
             subfielddef = GetSubfieldDef(fielddef)
             length = GetFieldLength(subfielddef)
             if length != 0:
-                value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
+                if strindex is not None:
+                    value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=i)
+                else:
+                    value = GetField(dobj, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
                 valuemapping.append(value)
             offset += length
 
@@ -2441,7 +2522,11 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
         if GetFieldLength(fielddef) != 0:
-            valuemapping = ReadWriteConverter(GetFieldValue(fielddef, dobj, baseaddr+addroffset), fielddef, read=True, raw=raw)
+            if strindex is not None:
+                value = GetFieldValue(fielddef, dobj, baseaddr, addroffset)
+            else:
+                value = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+            valuemapping = ReadWriteConverter(value, fielddef, read=True, raw=raw)
 
     else:
         exit(ExitCode.INTERNAL_ERROR, "Wrong mapping format definition: '{}'".format(format_), type_=LogType.WARNING, doexit=not args.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
@@ -2469,7 +2554,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
     @return:
         new decrypted binary config data
     """
-    format_, baseaddr, bits, bitshift, arraydef, group, writeconverter = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, arraydef, group, writeconverter')
+    format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
     # cast unicode
     fieldname = str(fieldname)
 
@@ -2495,7 +2580,10 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 if i >= len(restore): # restore data list may be shorter than definition
                     break
                 subrestore = restore[i]
-                dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+                if strindex is not None:
+                    dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                else:
+                    dobj = SetField(dobj, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
             offset += length
 
     # <format> contains a dict
@@ -2580,7 +2668,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                 valid = False
 
         # string
-        elif format_[-1:] in ['s','p']:
+        elif format_[-1:].lower() in ['s','p']:
             value = ReadWriteConverter(restore.encode(STR_ENCODING), fielddef, read=False)
             err = "string length exceeding"
             if value is not None:
@@ -2589,6 +2677,22 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             else:
                 skip = True
                 valid = True
+            # handle indexed strings
+            if strindex is not None:
+                # unpack index str from source baseaddr into s
+                unpackedvalue = struct.unpack_from(format_, dobj, baseaddr)
+                s = str(unpackedvalue[0],STR_ENCODING,errors='ignore')
+                # split into separate string values
+                sarray = s.split('\x00')
+                if not isinstance(value,str):
+                    value = str(value,STR_ENCODING,errors='ignore')
+                # remember possible value changes
+                prevvalue = sarray[strindex+addroffset]
+                curvalue = value
+                # change indexed string
+                sarray[strindex+addroffset] = value
+                # convert back to binary string stream
+                value = '\0'.join(sarray).encode(STR_ENCODING)
 
         if value is None and not skip:
             # None is an invalid value
@@ -2615,9 +2719,13 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                     strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, int) else _value
                     print("SetField(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
                 if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
-                    prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
-                    dobj = SetFieldValue(fielddef, dobj, baseaddr+addroffset, value)
-                    curvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+                    if strindex is not None:
+                        # do not use address offset for indexed strings
+                        dobj = SetFieldValue(fielddef, dobj, baseaddr, value)
+                    else:
+                        prevvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
+                        dobj = SetFieldValue(fielddef, dobj, baseaddr+addroffset, value)
+                        curvalue = GetFieldValue(fielddef, dobj, baseaddr+addroffset)
                     if prevvalue != curvalue and args.verbose:
                         message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
                 else:
@@ -3043,29 +3151,37 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             cfg_version = GetField(new_decode_cfg, 'version', setting['version'], raw=True)
             message("Config file contains data of Tasmota {}".format(GetVersionStr(cfg_version)), type_=LogType.INFO)
         if args.forcerestore or new_encode_cfg != encode_cfg:
+            dryrun = ""
+            if args.dryrun:
+                if args.verbose:
+                    message("Configuration data changed, but leaving untouched and simulating writes for dry run", type_=LogType.INFO)
+                dryrun = "Simulating: "
+                error_code = 0
             # write config direct to device via http
             if args.device is not None:
                 if args.verbose:
-                    message("Push new data to '{}' using restore file '{}'".format(args.device, restorefilename), type_=LogType.INFO)
-                error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
+                    message("{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename), type_=LogType.INFO)
+                if not args.dryrun:
+                    error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
                 if error_code:
                     exit(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str),line=inspect.getlineno(inspect.currentframe()))
                 else:
                     if args.verbose:
-                        message("Restore successful to device '{}' using restore file '{}'".format(args.device, restorefilename), type_=LogType.INFO)
+                        message("{}Restore successful to device '{}' using restore file '{}'".format(dryrun,args.device, restorefilename), type_=LogType.INFO)
 
             # write config from a file
             elif args.tasmotafile is not None:
                 if args.verbose:
-                    message("Write new data to file '{}' using restore file '{}'".format(args.tasmotafile, restorefilename), type_=LogType.INFO)
-                try:
-                    with open(args.tasmotafile, "wb") as outputfile:
-                        outputfile.write(new_encode_cfg)
-                except Exception as e:
-                    exit(e.args[0], "'{}' {}".format(args.tasmotafile, e[1]),line=inspect.getlineno(inspect.currentframe()))
+                    message("{}Write new data to file '{}' using restore file '{}'".format(dryrun,args.tasmotafile, restorefilename), type_=LogType.INFO)
+                if not args.dryrun:
+                    try:
+                        with open(args.tasmotafile, "wb") as outputfile:
+                            outputfile.write(new_encode_cfg)
+                    except Exception as e:
+                        exit(e.args[0], "'{}' {}".format(args.tasmotafile, e[1]),line=inspect.getlineno(inspect.currentframe()))
                 if args.verbose:
-                    message("Restore successful to file '{}' using restore file '{}'".format(args.tasmotafile, restorefilename), type_=LogType.INFO)
-
+                    message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun,args.tasmotafile, restorefilename), type_=LogType.INFO)
+    
         else:
             global exitcode
             exitcode = ExitCode.RESTORE_SKIPPED
@@ -3277,6 +3393,11 @@ def ParseArgs():
                             action='store_true',
                             default=DEFAULTS['common']['ignorewarning'],
                             help="do not exit on warnings{}. Not recommended, used by your own responsibility!".format(' (default)' if DEFAULTS['common']['ignorewarning'] else '') )
+    common.add_argument('--dry-run',
+                            dest='dryrun',
+                            action='store_true',
+                            default=DEFAULTS['common']['ignorewarning'],
+                            help="test program without changing configuration data on device or file".format(' (default)' if DEFAULTS['common']['dryrun'] else '') )
 
 
     info = parser.add_argument_group('Info','Extra information')
@@ -3362,11 +3483,23 @@ if __name__ == "__main__":
 
     # decode into mappings dictionary
     configmapping = Bin2Mapping(decode_cfg)
-    if args.verbose and 'version' in configmapping:
-        message("{} '{}' is using Tasmota {}".format('File' if args.tasmotafile is not None else 'Device',
-                                                     args.tasmotafile if args.tasmotafile is not None else args.device,
-                                                     GetVersionStr(configmapping['version'])),
-                                                     type_=LogType.INFO)
+    if 'version' in configmapping:
+        config_version = int(configmapping['version'],0)
+        if args.verbose:
+            message("{} '{}' is using Tasmota {}".format('File' if args.tasmotafile is not None else 'Device',
+                                                         args.tasmotafile if args.tasmotafile is not None else args.device,
+                                                         GetVersionStr(config_version)),
+                                                         type_=LogType.INFO)
+        supported_version = sorted(Settings, key=lambda s: s[0], reverse=True)[0][0]
+        if config_version > supported_version and not args.ignorewarning:
+            exit(ExitCode.UNSUPPORTED_VERSION,  "Unsupported Tasmota version!\n"
+                                                "The read configuration data version v{} is newer than the maximum\n"
+                                                "supported version v{} by {}.\n"
+                                                "The data structure of your Tasmota version and the known data structure\n"
+                                                "could be changed and incompatible. You can continue the restore procdure\n"
+                                                "by adding --ignore-warnings at your own risk!\n"
+                                                "Continue without knowning the changes could damaged your Tasmota\n"
+                                                "configuration in that way that Tasmota will stop working.\n".format(GetVersionStr(config_version),GetVersionStr(supported_version),os.path.basename(sys.argv[0])), type_=LogType.WARNING, doexit=not args.ignorewarning)
 
     # backup to file
     if args.backupfile is not None:
