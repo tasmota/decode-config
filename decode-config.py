@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.0 [00059]'
+VER = '8.1.0.0 [00060]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2855,10 +2855,9 @@ def Bin2Mapping(decode_cfg):
         cfg_crc32 = GetField(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True)
     else:
         cfg_crc32 = GetSettingsCrc32(decode_cfg)
+    cfg_timestamp = int(time.time())
     if 'cfg_timestamp' in setting:
         cfg_timestamp = GetField(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True)
-    else:
-        cfg_timestamp = int(time.time())
 
     if version < 0x0606000B:
         if cfg_crc != GetSettingsCrc(decode_cfg):
@@ -2871,8 +2870,7 @@ def Bin2Mapping(decode_cfg):
     valuemapping = GetField(decode_cfg, None, (setting,0,(None, None, (INTERNAL, None))))
 
     # add header info
-    timestamp = datetime.now()
-    valuemapping['header'] = {  'timestamp':timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+    valuemapping['header'] = {  'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
                                 'format':   {
                                             'jsonindent':   args.jsonindent,
                                             'jsoncompact':  args.jsoncompact,
