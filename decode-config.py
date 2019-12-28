@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.0 [00060]'
+VER = '8.1.0.0 [00061]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1519,11 +1519,8 @@ def GetFileType(filename):
         with open(filename, "r") as f:
             try:
                 # try reading as json
-                inputjson = json.load(f)
-                if 'header' in inputjson:
-                    filetype = FileType.JSON
-                else:
-                    filetype = FileType.INCOMPLETE_JSON
+                json.load(f)
+                filetype = FileType.JSON
             except ValueError:
                 filetype = FileType.INVALID_JSON
                 # not a valid json, get filesize and compare it with all possible sizes
@@ -1544,6 +1541,8 @@ def GetFileType(filename):
                         filetype = FileType.BIN
                     else:
                         filetype = FileType.INVALID_BIN
+            pass
+
     except:
         filetype = FileType.FILE_NOT_FOUND
         pass
