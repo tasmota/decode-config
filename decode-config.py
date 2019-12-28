@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.0 [00058]'
+VER = '8.1.0.0 [00059]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -557,7 +557,6 @@ Setting_5_10_0 = {
         'temperature_resolution':   ('<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
                                     },      0x5BC,       (None, None,                           ('*',           None)), (None,      None) ),
     'pulse_counter':                ('<L',  0x5C0,       ([4],  None,                           ('Sensor',      '"Counter{} {}".format(#,$)')) ),
-    'pulse_counter_type':           ('<H',  0x5D0,       (None, None,                           ('Sensor',      '"CounterType {}".format($)')) ),
     'pulse_counter_type':           ({
         'pulse_counter_type1':      ('<H', (0x5D0,1,0),  (None, None,                           ('Sensor',      '"CounterType1 {}".format($)')) ),
         'pulse_counter_type2':      ('<H', (0x5D0,1,1),  (None, None,                           ('Sensor',      '"CounterType2 {}".format($)')) ),
@@ -1517,39 +1516,34 @@ def GetFileType(filename):
 
     # try filename
     try:
-        isfile = os.path.isfile(filename)
-        try:
-            with open(filename, "r") as f:
+        with open(filename, "r") as f:
+            try:
+                # try reading as json
+                inputjson = json.load(f)
+                if 'header' in inputjson:
+                    filetype = FileType.JSON
+                else:
+                    filetype = FileType.INCOMPLETE_JSON
+            except ValueError:
+                filetype = FileType.INVALID_JSON
+                # not a valid json, get filesize and compare it with all possible sizes
                 try:
-                    # try reading as json
-                    inputjson = json.load(f)
-                    if 'header' in inputjson:
-                        filetype = FileType.JSON
-                    else:
-                        filetype = FileType.INCOMPLETE_JSON
-                except ValueError:
-                    filetype = FileType.INVALID_JSON
-                    # not a valid json, get filesize and compare it with all possible sizes
-                    try:
-                        size = os.path.getsize(filename)
-                    except:
-                        filetype = FileType.UNKNOWN
-                    sizes = GetTemplateSizes()
+                    size = os.path.getsize(filename)
+                except:
+                    filetype = FileType.UNKNOWN
+                sizes = GetTemplateSizes()
 
-                    # size is one of a dmp file size
-                    if size in sizes:
-                        filetype = FileType.DMP
-                    elif (size - ((len(hex(BINARYFILE_MAGIC))-2)/2)) in sizes:
-                        # check if the binary file has the magic header
-                        with open(filename, "rb") as inputfile:
-                            inputbin = inputfile.read()
-                        if struct.unpack_from('<L', inputbin, 0)[0] == BINARYFILE_MAGIC:
-                            filetype = FileType.BIN
-                        else:
-                            filetype = FileType.INVALID_BIN
-        except:
-            filetype = FileType.FILE_NOT_FOUND
-            pass
+                # size is one of a dmp file size
+                if size in sizes:
+                    filetype = FileType.DMP
+                elif (size - ((len(hex(BINARYFILE_MAGIC))-2)/2)) in sizes:
+                    # check if the binary file has the magic header
+                    with open(filename, "rb") as inputfile:
+                        inputbin = inputfile.read()
+                    if struct.unpack_from('<L', inputbin, 0)[0] == BINARYFILE_MAGIC:
+                        filetype = FileType.BIN
+                    else:
+                        filetype = FileType.INVALID_BIN
     except:
         filetype = FileType.FILE_NOT_FOUND
         pass
@@ -1631,10 +1625,10 @@ def MakeFilename(filename, filetype, configmapping):
 
     # make a valid filename
     try:
-        name = name.decode('unicode-escape').translate(dict((ord(char), None) for char in '\/*?:"<>|'))
+        name = name.translate(dict((ord(char), None) for char in r'\/*?:"<>|'))
     except:
         pass
-    name = str(name.replace(' ','_'))
+    name = name.replace(' ','_')
 
     # append extension based on filetype if not given
     if len(ext) and ext[0]=='.':
@@ -1703,7 +1697,7 @@ def LoadTasmotaConfig(filename):
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
     except Exception as e:
-        exit(e.args[0], "'{}' {}".format(filename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+        exit(e.args[0], "'{}' {}".format(filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     return encode_cfg
 
@@ -1732,7 +1726,7 @@ def TasmotaGet(cmnd, host, port, username=DEFAULTS['source']['username'], passwo
         auth = (username, password)
     try:
         res = requests.get(url, auth=auth)
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError as _:
         exit(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection")
 
     if not res.ok:
@@ -1764,9 +1758,9 @@ def GetTasmotaHostname(host, port, username=DEFAULTS['source']['username'], pass
 
     loginstr = ""
     if password is not None:
-        loginstr = "user={}&password={}&".format(urllib2.quote(username), urllib2.quote(password))
+        loginstr = "user={}&password={}&".format(urllib.parse.quote(username), urllib.parse.quote(password))
     # get hostname
-    responsecode, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
+    _, body = TasmotaGet("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
         jsonbody = json.loads(str(body, STR_ENCODING))
         if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
@@ -1793,7 +1787,7 @@ def PullTasmotaConfig(host, port, username=DEFAULTS['source']['username'], passw
     @return:
         binary config data (encrypted) or None on error
     """
-    responsecode, body = TasmotaGet('dl', host, port, username, password, contenttype='application/octet-stream')
+    _, body = TasmotaGet('dl', host, port, username, password, contenttype='application/octet-stream')
 
     return body
 
@@ -1848,7 +1842,7 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
     body = body[findUpload:]
     findSuccessful = body.find("Successful")
     if findSuccessful < 0:
-        errmatch = re.search("<font\s*color='[#0-9a-fA-F]+'>(\S*)</font></b><br><br>(.*)<br>", body)
+        errmatch = re.search(r"<font\s*color='[#0-9a-fA-F]+'>(\S*)</font></b><br><br>(.*)<br>", body)
         reason = "Unknown error"
         if errmatch and len(errmatch.groups()) > 1:
             reason = errmatch.group(2)
@@ -1888,7 +1882,7 @@ def GetSettingsCrc(dobj):
     """
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
-    _, version, size, setting = GetTemplateSetting(dobj)
+    _, version, size, _ = GetTemplateSetting(dobj)
     if version < 0x06060007 or version > 0x0606000A:
         size = 3584
     crc = 0
@@ -1916,8 +1910,8 @@ def GetSettingsCrc32(dobj):
     crc = 0
     for i in range(0, len(dobj)-4):
         crc ^= dobj[i]
-        for j in range(0, 8):
-            crc = (crc >> 1) ^ (-int(crc & 1) & 0xEDB88320);
+        for _ in range(0, 8):
+            crc = (crc >> 1) ^ (-int(crc & 1) & 0xEDB88320)
 
     return ~crc & 0xffffffff
 
@@ -1988,7 +1982,7 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, st
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
             raise SyntaxError('<fielddef> error')
     if not isinstance(baseaddr, int):
-        print('<baseaddr> must be defined as integer in <fielddef> {}'.format(baseaddr, fielddef), file=sys.stderr)
+        print('<baseaddr> {} must be defined as integer in <fielddef> {}'.format(baseaddr, fielddef), file=sys.stderr)
         raise SyntaxError('<fielddef> error')
 
     # extract datadef items
@@ -2106,7 +2100,7 @@ def CmndConverter(valuemapping, value, idx, fielddef):
     @return:
         converted value, list of values or None if unable to convert
     """
-    converter, readconverter, writeconverter, group, tasmotacmnd = GetFieldDef(fielddef, fields='converter, readconverter, writeconverter, group, tasmotacmnd')
+    readconverter, writeconverter, tasmotacmnd = GetFieldDef(fielddef, fields='readconverter, writeconverter, tasmotacmnd')
 
     result = None
 
@@ -2154,7 +2148,7 @@ def ValidateValue(value, fielddef):
         # some Tasmota values are not allowed to be 0 on input
         # even though these values are set to 0 on Tasmota initial.
         # so we can't validate 0 values
-        return True;
+        return True
 
     valid = True
     try:
@@ -2180,7 +2174,7 @@ def GetFormatCount(format_):
     """
 
     if isinstance(format_, str):
-        match = re.search("\s*(\d+)", format_)
+        match = re.search(r'\s*(\d+)', format_)
         if match:
             return int(match.group(0))
 
@@ -2201,7 +2195,7 @@ def GetFormatType(format_):
     formattype = format_
     bitsize = 0
     if isinstance(format_, str):
-        match = re.search("\s*(\D+)", format_)
+        match = re.search(r'\s*(\D+)', format_)
         if match:
             formattype = match.group(0)
             bitsize = struct.calcsize(formattype) * 8
@@ -2265,7 +2259,7 @@ def GetFieldLength(fielddef):
     if isinstance(arraydef, list) and len(arraydef) > 0:
         # arraydef contains a list
         # calc size recursive by sum of all elements
-        for i in range(0, arraydef[0]):
+        for _ in range(0, arraydef[0]):
             subfielddef = GetSubfieldDef(fielddef)
             if len(arraydef) > 1:
                 length += GetFieldLength( (format_, addrdef, subfielddef) )
@@ -2278,7 +2272,7 @@ def GetFieldLength(fielddef):
             addr = None
             setting = format_
             for name in setting:
-                baseaddr, bits, bitshift = GetFieldDef(setting[name], fields='baseaddr, bits, bitshift')
+                baseaddr = GetFieldDef(setting[name], fields='baseaddr')
                 _len = GetFieldLength(setting[name])
                 if addr != baseaddr:
                     addr = baseaddr
@@ -2369,7 +2363,7 @@ def GetFieldValue(fielddef, dobj, addr, idxoffset=0):
 
     value_  = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
-    singletype, bitsize = GetFormatType(format_)
+    _, bitsize = GetFormatType(format_)
 
     if not format_[-1:].lower() in ['s','p']:
         for val in unpackedvalue:
@@ -2420,7 +2414,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
         new decrypted binary config data
     """
 
-    format_, bits, bitshift = GetFieldDef(fielddef, fields='format_, bits, bitshift')
+    format_ = GetFieldDef(fielddef, fields='format_')
     formatcnt = GetFormatCount(format_)
     singletype, bitsize = GetFormatType(format_)
     if debug(args) >= 2:
@@ -2486,7 +2480,7 @@ def GetField(dobj, fieldname, fielddef, raw=False, addroffset=0):
     valuemapping = None
 
     # get field definition
-    format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, tasmotacmnd')
+    format_, baseaddr, strindex, arraydef, group = GetFieldDef(fielddef, fields='format_, baseaddr, strindex, arraydef, group')
 
     # filter groups
     if not IsFilterGroup(group):
@@ -2648,7 +2642,6 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
                         else:
                             bitvalue >>= abs(bitshift)
                             mask >>= abs(bitshift)
-                        v=value
                         value &= (0xffffffff ^ mask)
                         value |= bitvalue
 
@@ -2760,7 +2753,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
     @return:
         new Tasmota command mapping
     """
-    format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd, writeconverter = GetFieldDef(fielddef, fields='format_, baseaddr, bits, bitshift, arraydef, group, tasmotacmnd, writeconverter')
+    format_, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, arraydef, group, tasmotacmnd')
 
     # cast unicode
     fieldname = str(fieldname)
@@ -2793,7 +2786,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
         if group is not None:
-            group = group.title();
+            group = group.title()
         if isinstance(tasmotacmnd, tuple):
             tasmotacmnds = tasmotacmnd
             for tasmotacmnd in tasmotacmnds:
@@ -2931,7 +2924,7 @@ def Mapping2Bin(decode_cfg, jsonconfig, filename=""):
 
 
     # get binary header data to use the correct version template from device
-    _, version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, _, setting = GetTemplateSetting(decode_cfg)
 
     # make empty binarray array
     _buffer = bytearray()
@@ -2980,7 +2973,7 @@ def Mapping2Cmnd(decode_cfg, valuemapping, filename=""):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device
-    _, version, size, setting = GetTemplateSetting(decode_cfg)
+    _, version, _, setting = GetTemplateSetting(decode_cfg)
 
     cmnds = {}
 
@@ -3018,7 +3011,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         config data mapppings
     """
 
-    name, ext = os.path.splitext(backupfile)
+    _, ext = os.path.splitext(backupfile)
     if ext.lower() == '.'+FileType.BIN.lower():
         backupfileformat = FileType.BIN
     elif ext.lower() == '.'+FileType.DMP.lower():
@@ -3037,7 +3030,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             with open(backup_filename, "wb") as backupfp:
                 backupfp.write(encode_cfg)
         except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     # binary format
     elif backupfileformat.lower() == FileType.BIN.lower():
@@ -3050,7 +3043,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
                 backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
                 backupfp.write(decode_cfg)
         except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     # JSON format
     elif backupfileformat.lower() == FileType.JSON.lower():
@@ -3062,7 +3055,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             with open(backup_filename, "w") as backupfp:
                 json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
         except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     if args.verbose:
         srctype = 'device'
@@ -3106,7 +3099,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             with open(restorefilename, "rb") as restorefp:
                 new_encode_cfg = restorefp.read()
         except Exception as e:
-            exit(e.args[0], "'{}' {}".format(restorefilename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], "'{}' {}".format(restorefilename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     elif filetype == FileType.BIN:
         if args.verbose:
@@ -3115,7 +3108,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             with open(restorefilename, "rb") as restorefp:
                 restorebin = restorefp.read()
         except Exception as e:
-            exit(e.args[0], "'{}' {}".format(restorefilename, e[1]),line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], "'{}' {}".format(restorefilename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
         header = struct.unpack_from('<L', restorebin, 0)[0]
         if header == BINARYFILE_MAGIC:
             decode_cfg = restorebin[4:]                     # remove header from encrypted config file
@@ -3146,7 +3139,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if args.verbose:
             new_decode_cfg = DecryptEncrypt(new_encode_cfg)
             # get binary header and template to use
-            _, version, size, setting = GetTemplateSetting(new_decode_cfg)
+            _, _, _, setting = GetTemplateSetting(new_decode_cfg)
             # get config file version
             cfg_version = GetField(new_decode_cfg, 'version', setting['version'], raw=True)
             message("Config file contains data of Tasmota {}".format(GetVersionStr(cfg_version)), type_=LogType.INFO)
@@ -3178,7 +3171,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                         with open(args.tasmotafile, "wb") as outputfile:
                             outputfile.write(new_encode_cfg)
                     except Exception as e:
-                        exit(e.args[0], "'{}' {}".format(args.tasmotafile, e[1]),line=inspect.getlineno(inspect.currentframe()))
+                        exit(e.args[0], "'{}' {}".format(args.tasmotafile, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
                 if args.verbose:
                     message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun,args.tasmotafile, restorefilename), type_=LogType.INFO)
     
@@ -3198,7 +3191,7 @@ def OutputTasmotaCmnds(tasmotacmnds):
     """
     def OutputTasmotaSubCmnds(cmnds):
         if args.cmndsort:
-            for cmnd in sorted(cmnds, key = lambda cmnd:[int(c) if c.isdigit() else c for c in re.split('(\d+)', cmnd)]):
+            for cmnd in sorted(cmnds, key = lambda cmnd:[int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]):
                 print("{}{}".format(" "*args.cmndindent, cmnd))
         else:
             for cmnd in cmnds:
@@ -3397,7 +3390,7 @@ def ParseArgs():
                             dest='dryrun',
                             action='store_true',
                             default=DEFAULTS['common']['ignorewarning'],
-                            help="test program without changing configuration data on device or file".format(' (default)' if DEFAULTS['common']['dryrun'] else '') )
+                            help="test program without changing configuration data on device or file{}".format(' (default)' if DEFAULTS['common']['dryrun'] else '') )
 
 
     info = parser.add_argument_group('Info','Extra information')
