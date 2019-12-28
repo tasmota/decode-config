@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.0 [00062]'
+VER = '8.1.0.1 [00063]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1232,7 +1232,13 @@ Setting_8_1_0_0.update             ({
     'button_text':                  ('699s',(0x017,SettingsTextIndex.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
+Setting_8_1_0_1 = copy.deepcopy(Setting_8_1_0_0)
+Setting_8_1_0_1['flag3'][0].update ({
+        'counter_reset_on_tele':    ('<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79    {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010001,0x1000, Setting_8_1_0_1),
             (0x8010000,0x1000, Setting_8_1_0_0),
             (0x8000001,0x1000, Setting_8_0_0_1),
             (0x7010206,0x1000, Setting_7_1_2_6),
