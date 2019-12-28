@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.0 [00061]'
+VER = '8.1.0.0 [00062]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1528,8 +1528,8 @@ def GetFileType(filename):
                     size = os.path.getsize(filename)
                 except:
                     filetype = FileType.UNKNOWN
-                sizes = GetTemplateSizes()
 
+                sizes = GetTemplateSizes()
                 # size is one of a dmp file size
                 if size in sizes:
                     filetype = FileType.DMP
@@ -1882,8 +1882,6 @@ def GetSettingsCrc(dobj):
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
     _, version, size, _ = GetTemplateSetting(dobj)
-    if version < 0x06060007 or version > 0x0606000A:
-        size = 3584
     crc = 0
     for i in range(0, size):
         if not i in [14,15]: # Skip crc
