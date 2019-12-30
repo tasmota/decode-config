@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.1 [00063]'
+VER = '8.1.0.1 [00064]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -528,7 +528,7 @@ Setting_5_10_0 = {
     'module':                       ('B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
     'ws_color':                     ('B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
     'ws_width':                     ('B',   0x481,       ([3],  None,                           ('Light',       None)) ),
-    'my_gp':                        ('B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#,$)')) ),
+    'my_gp':                        ('B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#-1,$)')) ),
     'light_pixels':                 ('<H',  0x496,       (None, '1 <= $ <= 512',                ('Light',       '"Pxels {}".format($)')) ),
     'light_color':                  ('B',   0x498,       ([5],  None,                           ('Light',       None)) ),
     'light_correction':             ('B',   0x49D     ,  (None, '0 <= $ <= 1',                  ('Light',       '"LedTable {}".format($)')) ),
@@ -841,7 +841,7 @@ Setting_6_4_1_7['flag3'][0].update ({
 # ======================================================================
 Setting_6_4_1_8 = copy.deepcopy(Setting_6_4_1_7)
 Setting_6_4_1_8.update              ({
-    'my_gp':                        ('B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#,$)')) ),
+    'my_gp':                        ('B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#-1,$)')) ),
                                     })
 Setting_6_4_1_8['flag3'][0].update ({
         'split_interlock':          ('<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
