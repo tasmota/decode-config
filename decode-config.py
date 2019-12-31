@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.1 [00064]'
+VER = '8.1.0.2 [00065]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
 
-    Copyright (C) 2019 Norbert Richter <nr@prsolution.eu>
+    Copyright (C) 2020 Norbert Richter <nr@prsolution.eu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1237,7 +1237,13 @@ Setting_8_1_0_1['flag3'][0].update ({
         'counter_reset_on_tele':    ('<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79    {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_8_1_0_2 = copy.deepcopy(Setting_8_1_0_1)
+Setting_8_1_0_2.update             ({
+    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensors',     '"HotPlug {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010002,0x1000, Setting_8_1_0_2),
             (0x8010001,0x1000, Setting_8_1_0_1),
             (0x8010000,0x1000, Setting_8_1_0_0),
             (0x8000001,0x1000, Setting_8_0_0_1),
