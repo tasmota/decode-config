@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.2 [00065]'
+VER = '8.1.0.2 [00066]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1618,10 +1618,10 @@ def MakeFilename(filename, filetype, configmapping):
     if 'version' in configmapping:
         config_version = GetVersionStr( int(str(configmapping['version']), 0) )
     if 'friendlyname' in configmapping:
-        config_friendlyname = re.sub('[^0-9a-zA-Z]','_', str(configmapping['friendlyname'][0]))
+        config_friendlyname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]','_', str(configmapping['friendlyname'][0])).strip('_'))
     if 'hostname' in configmapping:
         if str(configmapping['hostname']).find('%') < 0:
-            config_hostname = re.sub('[^0-9a-zA-Z]','_', str(configmapping['hostname']))
+            config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]','_', str(configmapping['hostname'])).strip('_'))
     if filename.find('@H') >= 0 and args.device is not None:
         device_hostname = GetTasmotaHostname(args.device, args.port, username=args.username, password=args.password)
         if device_hostname is None:
