@@ -3026,43 +3026,51 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     elif ext.lower() == '.'+FileType.JSON.lower():
         backupfileformat = FileType.JSON
 
+    dryrun = ""
+    if args.dryrun:
+        if args.verbose:
+            message("Do not write backup files for dry run", type_=LogType.INFO)
+        dryrun = "** Simulating ** "
     fileformat = ""
     # Tasmota format
     if backupfileformat.lower() == FileType.DMP.lower():
         fileformat = "Tasmota"
         backup_filename = MakeFilename(backupfile, FileType.DMP, configmapping)
         if args.verbose:
-            message("Writing backup file '{}' ({} format)".format(backup_filename, fileformat), type_=LogType.INFO)
-        try:
-            with open(backup_filename, "wb") as backupfp:
-                backupfp.write(encode_cfg)
-        except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
+            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
+        if not args.dryrun:
+            try:
+                with open(backup_filename, "wb") as backupfp:
+                    backupfp.write(encode_cfg)
+            except Exception as e:
+                exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     # binary format
     elif backupfileformat.lower() == FileType.BIN.lower():
         fileformat = "binary"
         backup_filename = MakeFilename(backupfile, FileType.BIN, configmapping)
         if args.verbose:
-            message("Writing backup file '{}' ({} format)".format(backup_filename, fileformat), type_=LogType.INFO)
-        try:
-            with open(backup_filename, "wb") as backupfp:
-                backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
-                backupfp.write(decode_cfg)
-        except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
+            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
+        if not args.dryrun:
+            try:
+                with open(backup_filename, "wb") as backupfp:
+                    backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
+                    backupfp.write(decode_cfg)
+            except Exception as e:
+                exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     # JSON format
     elif backupfileformat.lower() == FileType.JSON.lower():
         fileformat = "JSON"
         backup_filename = MakeFilename(backupfile, FileType.JSON, configmapping)
         if args.verbose:
-            message("Writing backup file '{}' ({} format)".format(backup_filename, fileformat), type_=LogType.INFO)
-        try:
-            with open(backup_filename, "w") as backupfp:
-                json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
-        except Exception as e:
-            exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
+            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
+        if not args.dryrun:
+            try:
+                with open(backup_filename, "w") as backupfp:
+                    json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
+            except Exception as e:
+                exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
     if args.verbose:
         srctype = 'device'
@@ -3070,7 +3078,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         if args.tasmotafile is not None:
             srctype = 'file'
             src = args.tasmotafile
-        message("Backup successful from {} '{}' to file '{}' ({} format)".format(srctype, src, backup_filename, fileformat), type_=LogType.INFO)
+        message("{}Backup successful from {} '{}' to file '{}' ({} format)".format(dryrun, srctype, src, backup_filename, fileformat), type_=LogType.INFO)
 
 
 def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping):
@@ -3154,8 +3162,8 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             dryrun = ""
             if args.dryrun:
                 if args.verbose:
-                    message("Configuration data changed, but leaving untouched and simulating writes for dry run", type_=LogType.INFO)
-                dryrun = "Simulating: "
+                    message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
+                dryrun = "** Simulating ** "
                 error_code = 0
             # write config direct to device via http
             if args.device is not None:
