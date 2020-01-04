@@ -1,6 +1,8 @@
 # decode-config
 
-_decode-config_ backup and restore configuration data of [Tasmota](http://tasmota.com/)-devices.
+Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
+
+[![Developer Version](https://img.shields.io/badge/development%20version-v8.1.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 
