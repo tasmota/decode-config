@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.2 [00067]'
+VER = '8.1.0.3 [00068]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1234,16 +1234,51 @@ Setting_8_1_0_0.update             ({
 # ======================================================================
 Setting_8_1_0_1 = copy.deepcopy(Setting_8_1_0_0)
 Setting_8_1_0_1['flag3'][0].update ({
-        'counter_reset_on_tele':    ('<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79    {}".format($)')) ),
+        'counter_reset_on_tele':    ('<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
                                     })
 # ======================================================================
 Setting_8_1_0_2 = copy.deepcopy(Setting_8_1_0_1)
 Setting_8_1_0_2.update             ({
     'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensors',     '"HotPlug {}".format($)')) ),
-    'shutter_button':               ('<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')) ),
+    'shutter_button':               ('<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')),'"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
+Setting_8_1_0_3 = copy.deepcopy(Setting_8_1_0_2)
+Setting_8_1_0_3.update             ({
+    'shutter_button':              ({
+        '_':                        ('<L',  0xFDC,       (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
+                                                                                                                                x=@["shutter_button"][#-1]["shutter"], \
+                                                                                                                                a=#, \
+                                                                                                                                b=@["shutter_button"][#-1]["press_single"], \
+                                                                                                                                c=@["shutter_button"][#-1]["press_double"], \
+                                                                                                                                d=@["shutter_button"][#-1]["press_triple"], \
+                                                                                                                                e=@["shutter_button"][#-1]["press_hold"], \
+                                                                                                                                f=@["shutter_button"][#-1]["mqtt_broadcast_single"], \
+                                                                                                                                g=@["shutter_button"][#-1]["mqtt_broadcast_double"], \
+                                                                                                                                h=@["shutter_button"][#-1]["mqtt_broadcast_triple"], \
+                                                                                                                                i=@["shutter_button"][#-1]["mqtt_broadcast_hold"], \
+                                                                                                                                j=@["shutter_button"][#-1]["mqtt_broadcast_all"] \
+                                                                                                                                )')), \
+                                                                                                                                ('"0x{:08x}".format($)', False) ),
+        'shutter':                  ('<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     None)), ('$+1','$-1') ),
+        'press_single':             ('<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_double':             ('<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_triple':             ('<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_hold':               ('<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'mqtt_broadcast_single':    ('<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_double':    ('<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_triple':    ('<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_hold':      ('<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_all':       ('<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
+        'enabled':                  ('<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
+                                     },     0xFDC,       ([4], None,                            ('Shutter',     None)), (None,      None) ),
+    'flag4':                        ({
+         'alexa_ct_range':          ('<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SetOption82 {}".format($)')) ),
+                                    },      0xEF8,       (None, None,                           ('*',           None)), (None,      None) ),
                                     })
 # ======================================================================
 Settings = [
+            (0x8010003,0x1000, Setting_8_1_0_3),
             (0x8010002,0x1000, Setting_8_1_0_2),
             (0x8010001,0x1000, Setting_8_1_0_1),
             (0x8010000,0x1000, Setting_8_1_0_0),
@@ -2091,7 +2126,8 @@ def ReadWriteConverter(value, fielddef, read=True, raw=False):
             elif callable(conv):     # use as format function
                 return conv(value)
         except Exception as e:
-            exit(e.args[0], e.args[1], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            exit(e.args[0], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            pass
 
     return value
 
@@ -2448,6 +2484,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
                      type_=LogType.WARNING,
                      doexit=not args.ignorewarning,
                      line=inspect.getlineno(inspect.currentframe()))
+                pass
             value >>= bitsize
     else:
         if debug(args) >= 3:
@@ -2460,6 +2497,7 @@ def SetFieldValue(fielddef, dobj, addr, value):
                  type_=LogType.WARNING,
                  doexit=not args.ignorewarning,
                  line=inspect.getlineno(inspect.currentframe()))
+            pass
 
     return dobj
 
@@ -2613,6 +2651,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             except Exception as e:
                 exit(e.args[0], e.args[1], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 valid = False
+                pass
 
         # bool
         elif format_[-1:] in ['?']:
@@ -2621,6 +2660,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
             except Exception as e:
                 exit(e.args[0], e.args[1], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 valid = False
+                pass
 
         # integer
         elif format_[-1:] in ['b','B','h','H','i','I','l','L','q','Q','P']:
