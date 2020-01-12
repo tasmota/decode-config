@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00068]'
+VER = '8.1.0.3 [00067]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1244,7 +1244,9 @@ Setting_8_1_0_2.update             ({
                                     })
 # ======================================================================
 Setting_8_1_0_3 = copy.deepcopy(Setting_8_1_0_2)
+Setting_8_1_0_3.pop('shutter_invert',None)
 Setting_8_1_0_3.update             ({
+    'shutter_options':              ('B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#,1 if $ & 1 else 0)','"ShutterLock{} {}".format(#,1 if $ & 2 else 0)'))) ),
     'shutter_button':              ({
         '_':                        ('<L',  0xFDC,       (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
                                                                                                                                 x=@["shutter_button"][#-1]["shutter"], \
@@ -2040,16 +2042,15 @@ def GetFieldDef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, st
             # datadef has a validator and cmd set
             arraydef, validate, cmd = datadef
             # cmd must be a tuple with 2 objects
-            if isinstance(cmd, (tuple)) and len(cmd) == 2:
+            if isinstance(cmd, tuple) and len(cmd) == 2:
                 group, tasmotacmnd = cmd
                 if group is not None and not isinstance(group, str):
                     print('wrong <group> {} in <fielddef> {}'.format(group, fielddef), file=sys.stderr)
                     raise SyntaxError('<fielddef> error')
-                if tasmotacmnd is isinstance(tasmotacmnd, tuple):
-                    tasmotacmnds = tasmotacmnd
-                    for tasmotacmnd in tasmotacmnds:
-                        if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, str):
-                            print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tasmotacmnd, fielddef), file=sys.stderr)
+                if isinstance(tasmotacmnd, tuple):
+                    for tcmnd in tasmotacmnd:
+                        if tcmnd is not None and not callable(tcmnd) and not isinstance(tcmnd, str):
+                            print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tcmnd, fielddef), file=sys.stderr)
                             raise SyntaxError('<fielddef> error')
                 else:
                     if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, str):
@@ -2132,7 +2133,7 @@ def ReadWriteConverter(value, fielddef, read=True, raw=False):
     return value
 
 
-def CmndConverter(valuemapping, value, idx, fielddef):
+def CmndConverter(valuemapping, value, idx, readconverter, writeconverter, tasmotacmnd):
     """
     Convert field value into Tasmota command if available
 
@@ -2140,14 +2141,16 @@ def CmndConverter(valuemapping, value, idx, fielddef):
         data mapping
     @param value:
         original value
-    @param fielddef
-        field definition - see "Settings dictionary" above
+    @param readconverter
+        <function> to convert value from binary object to JSON
+    @param writeconverter
+        <function> to convert value from JSON back to binary object
+    @param tasmotacmnd
+        <function> convert data into Tasmota command function
 
     @return:
         converted value, list of values or None if unable to convert
     """
-    readconverter, writeconverter, tasmotacmnd = GetFieldDef(fielddef, fields='readconverter, writeconverter, tasmotacmnd')
-
     result = None
 
     if (callable(readconverter) and readconverter == passwordread) or (callable(writeconverter) and writeconverter == passwordwrite):
@@ -2783,7 +2786,7 @@ def SetField(dobj, fieldname, fielddef, restore, addroffset=0, filename=""):
 
 def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0, idx=None):
     """
-    Get field value from definition
+    Get Tasmota command mapping from given field value definition
 
     @param cmnds:
         Tasmota command mapping: { 'group': ['cmnd' <,'cmnd'...>] ... }
@@ -2803,7 +2806,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
     @return:
         new Tasmota command mapping
     """
-    format_, arraydef, group, tasmotacmnd = GetFieldDef(fielddef, fields='format_, arraydef, group, tasmotacmnd')
+    format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = GetFieldDef(fielddef, fields='format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # cast unicode
     fieldname = str(fieldname)
@@ -2840,7 +2843,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
         if isinstance(tasmotacmnd, tuple):
             tasmotacmnds = tasmotacmnd
             for tasmotacmnd in tasmotacmnds:
-                cmnd = CmndConverter(valuemapping, mappedvalue, idx, fielddef)
+                cmnd = CmndConverter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
                 if group is not None and cmnd is not None:
                     if group not in cmnds:
                         cmnds[group] = []
@@ -2850,7 +2853,7 @@ def SetCmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0,
                     else:
                         cmnds[group].append(cmnd)
         else:
-            cmnd = CmndConverter(valuemapping, mappedvalue, idx, fielddef)
+            cmnd = CmndConverter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
             if group is not None and cmnd is not None:
                 if group not in cmnds:
                     cmnds[group] = []
