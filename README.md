@@ -126,7 +126,7 @@ _decode-config_ handles the following backup/restore file formats:
 
 ### .dmp Format
 
-This format is binary encrypted and is the same as used by Tasmota "Backup/Restore Configuration" web interface.
+This format is binary encrypted and is identical to a Tasmota configuration file saved by Tasmota web interface using "Configuration/Backup Configuration".
 
 ### .json Format
 
@@ -137,7 +137,8 @@ This file format will be created by _decode-config_ using the `--backup-file` wi
 
 ### .bin Format
 
-This format is binary decrypted and is nearly the same as used by Tasmota "Backup/Restore Configuration" web interface. The difference between ths format and the original Tasmota dmp format is an additonal header of 4 bytes at the beginning of this file; also the decrypted status lets you observe (and change) the original binary data using a hex editor.
+This format is binary decrypted. The difference to the original Tasmota format is on the one hand the decrypted form of the binary data and on the other hand an additional 4 attached bytes to distinguish between the original [.dmp File Format](#dmp-format) and this .bin format.
+The decrypted binary format allows viewing and changing (using a hex editor) the pure Tasmota configuration binary data based on the address information in the Tasmota source code (tasmota/settings.h).
 
 This file format will be created by _decode-config_ using the `--backup-file` with `--backup-type bin` parameter and can also be used for the `--restore-file` parameter.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00068]'
+VER = '8.1.0.3 [00069]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1579,15 +1579,17 @@ def GetFileType(filename):
                 except:
                     filetype = FileType.UNKNOWN
 
+                header_format = '<L'
                 sizes = GetTemplateSizes()
                 # size is one of a dmp file size
                 if size in sizes:
                     filetype = FileType.DMP
-                elif (size - ((len(hex(BINARYFILE_MAGIC))-2)/2)) in sizes:
+                elif (size - struct.calcsize(header_format)) in sizes:
                     # check if the binary file has the magic header
                     with open(filename, "rb") as inputfile:
                         inputbin = inputfile.read()
-                    if struct.unpack_from('<L', inputbin, 0)[0] == BINARYFILE_MAGIC:
+                    if struct.unpack_from(header_format, inputbin, 0)[0] == BINARYFILE_MAGIC or \
+                       struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
                         filetype = FileType.BIN
                     else:
                         filetype = FileType.INVALID_BIN
@@ -3106,8 +3108,9 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         if not args.dryrun:
             try:
                 with open(backup_filename, "wb") as backupfp:
-                    backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
                     backupfp.write(decode_cfg)
+                    # append file format identifier
+                    backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
             except Exception as e:
                 exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
@@ -3176,10 +3179,17 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                 restorebin = restorefp.read()
         except Exception as e:
             exit(e.args[0], "'{}' {}".format(restorefilename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
-        header = struct.unpack_from('<L', restorebin, 0)[0]
-        if header == BINARYFILE_MAGIC:
-            decode_cfg = restorebin[4:]                     # remove header from encrypted config file
-            new_encode_cfg = DecryptEncrypt(decode_cfg)     # process binary to binary config
+        decode_cfg = None
+        header_format = '<L'
+        if struct.unpack_from(header_format, restorebin, 0)[0] == BINARYFILE_MAGIC:
+            # remove file format identifier (outdated header at the beginning)
+            decode_cfg = restorebin[struct.calcsize(header_format):]
+        elif struct.unpack_from(header_format, restorebin, len(restorebin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
+            # remove file format identifier (new append format)
+            decode_cfg = restorebin[:len(restorebin)-struct.calcsize(header_format)]
+        if decode_cfg is not None:
+            # process binary to binary config
+            new_encode_cfg = DecryptEncrypt(decode_cfg)
 
     elif filetype == FileType.JSON or filetype == FileType.INVALID_JSON:
         if args.verbose:
