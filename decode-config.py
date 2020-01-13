@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00069]'
+VER = '8.1.0.3 [00070]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3071,7 +3071,26 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     @param configmapping:
         config data mapppings
     """
+    def Backup_DMP(backup_filename, encode_cfg, _):
+        # do dmp file write
+        with open(backup_filename, "wb") as backupfp:
+            backupfp.write(encode_cfg)
+    def Backup_BIN(backup_filename, encode_cfg, _):
+        # do bin file write
+        with open(backup_filename, "wb") as backupfp:
+            backupfp.write(decode_cfg)
+            backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
+    def Backup_JSON(backup_filename, encode_cfg, configmapping):
+        # do json file write
+        with open(backup_filename, "w") as backupfp:
+            json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
 
+    backups = { FileType.DMP.lower():("Tasmota",FileType.DMP, Backup_DMP),
+                FileType.BIN.lower():("binary",FileType.BIN, Backup_BIN),
+                FileType.JSON.lower():("JSON",FileType.JSON, Backup_JSON)
+              }
+
+    # possible extension in filename overrules possible given -t/--backup-type parameter
     _, ext = os.path.splitext(backupfile)
     if ext.lower() == '.'+FileType.BIN.lower():
         backupfileformat = FileType.BIN
@@ -3085,49 +3104,21 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         if args.verbose:
             message("Do not write backup files for dry run", type_=LogType.INFO)
         dryrun = "** Simulating ** "
-    fileformat = ""
-    # Tasmota format
-    if backupfileformat.lower() == FileType.DMP.lower():
-        fileformat = "Tasmota"
-        backup_filename = MakeFilename(backupfile, FileType.DMP, configmapping)
+    
+    fileformat = None
+    if backupfileformat.lower() in backups:
+        backup = backups[backupfileformat.lower()]
+        fileformat = backup[0]
+        backup_filename = MakeFilename(backupfile, backup[1], configmapping)
         if args.verbose:
             message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
         if not args.dryrun:
             try:
-                with open(backup_filename, "wb") as backupfp:
-                    backupfp.write(encode_cfg)
+                backup[2](backup_filename, encode_cfg, configmapping)
             except Exception as e:
                 exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
 
-    # binary format
-    elif backupfileformat.lower() == FileType.BIN.lower():
-        fileformat = "binary"
-        backup_filename = MakeFilename(backupfile, FileType.BIN, configmapping)
-        if args.verbose:
-            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
-        if not args.dryrun:
-            try:
-                with open(backup_filename, "wb") as backupfp:
-                    backupfp.write(decode_cfg)
-                    # append file format identifier
-                    backupfp.write(struct.pack('<L',BINARYFILE_MAGIC))
-            except Exception as e:
-                exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
-
-    # JSON format
-    elif backupfileformat.lower() == FileType.JSON.lower():
-        fileformat = "JSON"
-        backup_filename = MakeFilename(backupfile, FileType.JSON, configmapping)
-        if args.verbose:
-            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
-        if not args.dryrun:
-            try:
-                with open(backup_filename, "w") as backupfp:
-                    json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
-            except Exception as e:
-                exit(e.args[0], "'{}' {}".format(backup_filename, e.args[1]),line=inspect.getlineno(inspect.currentframe()))
-
-    if args.verbose:
+    if fileformat is not None and args.verbose:
         srctype = 'device'
         src = args.device
         if args.tasmotafile is not None:
@@ -3149,7 +3140,6 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
     @param configmapping:
         config data mapppings
     """
-
     new_encode_cfg = None
 
     restorefileformat = None
