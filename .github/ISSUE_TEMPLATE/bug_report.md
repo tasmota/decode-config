@@ -19,8 +19,18 @@ _2. Result:_
 _A clear and concise description of what you expected to happen._
 
 **Version Information (please complete the following information):**
-- decode-config: [e.g. use `decode-config -V -V` or `decode-config -V` to retrieve the info]:  
-- 'header' object from Tasmota data (use decode-config with paramater `-g System` to get the info, e. g. `decode-config -f myconfig.dmp -g System`):  
+- decode-config: [e.g. use `decode-config -VV` to retrieve the info]:  
+```
+
+>>> paste decode-config.py output here <<<
+
+```
+- 'system' information of your Tasmota data (append `-g System` to your decode-config parameter, e. g. `decode-config -f myconfig.dmp -g System`):  
+```
+
+>>> paste decode-config.py output here <<<
+
+```
 
 **Additional context**
 _Add any other context about the problem here._
