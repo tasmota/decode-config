@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00067]'
+VER = '8.1.0.3 [00068]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3544,14 +3544,24 @@ if __name__ == "__main__":
                                                          type_=LogType.INFO)
         supported_version = sorted(Settings, key=lambda s: s[0], reverse=True)[0][0]
         if config_version > supported_version and not args.ignorewarning:
-            exit(ExitCode.UNSUPPORTED_VERSION,  "Unsupported Tasmota version!\n"
-                                                "The read configuration data version v{} is newer than the maximum\n"
-                                                "supported version v{} by {}.\n"
-                                                "The data structure of your Tasmota version and the known data structure\n"
-                                                "could be changed and incompatible. You can continue the restore procdure\n"
-                                                "by adding --ignore-warnings at your own risk!\n"
-                                                "Continue without knowning the changes could damaged your Tasmota\n"
-                                                "configuration in that way that Tasmota will stop working.\n".format(GetVersionStr(config_version),GetVersionStr(supported_version),os.path.basename(sys.argv[0])), type_=LogType.WARNING, doexit=not args.ignorewarning)
+            exit(ExitCode.UNSUPPORTED_VERSION, \
+                "*** Unsupported Tasmota configuration data version! ***\n"
+                "\n"
+                "The read configuration contains data for Tasmota version {}.\n"
+                "This is newer than Tasmota version {} supported by this program.\n"
+                "\n"
+                "With newer Tasmota versions, the data structure may have changed\n"
+                "so that the data with older versions become incompatible.\n"
+                "You can force recovery at your own risk by adding --ignore-warnings.\n"
+                "Be warned that forcing this can lead to unpredictable results for your\n"
+                "Tasmota device. In the worst case, your Tasmota device will not\n"
+                "respond and you will have to flash it again using the serial interface.\n"
+                "\n"
+                "If you are unsure and do not know the changes in the configuration\n"
+                "structure, use a developer version of this program that you can download\n"
+                "from https://github.com/tasmota/decode-config/tree/development.\n"
+                "\n".format(GetVersionStr(config_version),GetVersionStr(supported_version)) \
+                     ,type_=LogType.WARNING, doexit=not args.ignorewarning)
 
     # backup to file
     if args.backupfile is not None:
