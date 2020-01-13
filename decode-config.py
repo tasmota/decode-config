@@ -1742,6 +1742,9 @@ def LoadTasmotaConfig(filename):
     # read config from a file
     if not os.path.isfile(filename):    # check file exists
         exit(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename),line=inspect.getlineno(inspect.currentframe()))
+
+    if args.verbose:
+        message("Load data from file '{}'".format(args.tasmotafile), type_=LogType.INFO)
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
@@ -1836,6 +1839,8 @@ def PullTasmotaConfig(host, port, username=DEFAULTS['source']['username'], passw
     @return:
         binary config data (encrypted) or None on error
     """
+    if args.verbose:
+        message("Load data from device '{}'".format(args.device), type_=LogType.INFO)
     _, body = TasmotaGet('dl', host, port, username, password, contenttype='application/octet-stream')
 
     return body
@@ -1860,6 +1865,9 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
+    if args.verbose:
+        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename), type_=LogType.INFO)
+
     if isinstance(encode_cfg, str):
         encode_cfg = bytearray(encode_cfg)
 
@@ -3211,8 +3219,6 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                 error_code = 0
             # write config direct to device via http
             if args.device is not None:
-                if args.verbose:
-                    message("{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename), type_=LogType.INFO)
                 if not args.dryrun:
                     error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
                 if error_code:
@@ -3509,14 +3515,10 @@ if __name__ == "__main__":
 
     # pull config from Tasmota device
     if args.tasmotafile is not None:
-        if args.verbose:
-            message("Load data from file '{}'".format(args.tasmotafile), type_=LogType.INFO)
         encode_cfg = LoadTasmotaConfig(args.tasmotafile)
 
     # load config from Tasmota file
     if args.device is not None:
-        if args.verbose:
-            message("Load data from device '{}'".format(args.device), type_=LogType.INFO)
         encode_cfg = PullTasmotaConfig(args.device, args.port, username=args.username, password=args.password)
 
     if encode_cfg is None:
