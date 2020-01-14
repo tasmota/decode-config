@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00070]'
+VER = '8.1.0.3 [00071]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1246,7 +1246,9 @@ Setting_8_1_0_2.update             ({
 Setting_8_1_0_3 = copy.deepcopy(Setting_8_1_0_2)
 Setting_8_1_0_3.pop('shutter_invert',None)
 Setting_8_1_0_3.update             ({
-    'shutter_options':              ('B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#,1 if $ & 1 else 0)','"ShutterLock{} {}".format(#,1 if $ & 2 else 0)'))) ),
+    'shutter_options':              ('B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#,1 if $ & 1 else 0)',\
+                                                                                                                 '"ShutterLock{} {}".format(#,1 if $ & 2 else 0)',\
+                                                                                                                 '"ShutterEnableEndStopTime{} {}".format(#,1 if $ & 4 else 0)'))) ),
     'shutter_button':              ({
         '_':                        ('<L',  0xFDC,       (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
                                                                                                                                 x=@["shutter_button"][#-1]["shutter"], \
