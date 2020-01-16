@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.3 [00071]'
+VER = '8.1.0.4 [00072]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1281,7 +1281,13 @@ Setting_8_1_0_3.update             ({
                                     },      0xEF8,       (None, None,                           ('*',           None)), (None,      None) ),
                                     })
 # ======================================================================
+Setting_8_1_0_4 = copy.deepcopy(Setting_8_1_0_3)
+Setting_8_1_0_4.update             ({
+    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010004,0x1000, Setting_8_1_0_4),
             (0x8010003,0x1000, Setting_8_1_0_3),
             (0x8010002,0x1000, Setting_8_1_0_2),
             (0x8010001,0x1000, Setting_8_1_0_1),
