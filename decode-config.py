@@ -1856,7 +1856,7 @@ def PullTasmotaConfig(host, port, username=DEFAULTS['source']['username'], passw
     return body
 
 
-def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['username'], password=None):
+def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['username'], password=None, verbosemsg=""):
     """
     Upload binary data to a Tasmota host using http
 
@@ -1870,13 +1870,15 @@ def PushTasmotaConfig(encode_cfg, host, port, username=DEFAULTS['source']['usern
         optional username for Tasmota web login
     @param password
         optional password for Tasmota web login
+    @param verbosemsg
+        optional verbosemsg text
 
     @return
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
     if args.verbose:
-        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename), type_=LogType.INFO)
+        message(verbosemsg, type_=LogType.INFO)
 
     if isinstance(encode_cfg, str):
         encode_cfg = bytearray(encode_cfg)
@@ -3228,7 +3230,7 @@ def Restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             # write config direct to device via http
             if args.device is not None:
                 if not args.dryrun:
-                    error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password)
+                    error_code, error_str = PushTasmotaConfig(new_encode_cfg, args.device, args.port, args.username, args.password, verbosemsg=    "{}Push new data to '{}' using restore file '{}'".format(dryrun, args.device, restorefilename))
                 if error_code:
                     exit(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str),line=inspect.getlineno(inspect.currentframe()))
                 else:
