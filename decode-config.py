@@ -27,10 +27,11 @@ Requirements:
         pip3 install requests configargparse
 
 Instructions:
-    Execute command with option -d to retrieve config data from a host
-    or use -f to read a configuration file saved using Tasmota Web-UI
+    Execute decode-config with option -d <ip> or <host> to retrieve config data 
+    from a Tasmota host or use -f <configfile.dmp> to read the configuration
+    data from a file previously saved using Tasmota Web-UI
 
-    For further information read 'decode-config.md'
+    For further information see 'README.md'
 
     For help execute command with argument -h (or -H for advanced help)
 
@@ -267,18 +268,32 @@ exitcode = 0
 # Settings mapping
 # ======================================================================
 """
-Settings dictionary describes the config file fields definition:
+Settings dictionary
+
+The Tasmota permanent setttings are stored in binary format using
+'struct SYSCFG' defined in tasmota/settings.h.
+
+decode-config handles the binary data described by this Settings
+dictionary. The processing from/to Tasmota configuration data is
+based on this dictionary.
+
 
     <setting> = { <name> : <def> }
 
     <name>: "string"
-        a python valid dictionary key (string)
+        key (string)
+        for simply identifying value from Tasmota configuration this key has the same
+        name as the structure element of tasmota/settings.h
 
     <def>:  ( <format>, <addrdef>, <datadef> [,<converter>] )
-        a tuple containing the following items:
+        tuple with 3 or 4 objects which describes the format, address and structure
+        of the binary source. 
+        For optional values there are two possibilities: If the definition object is
+        mandatory it could be None, for none-mandatory optional objects it can be omit.
 
             <format>:   <formatstring> | <setting>
                 data type & format definition
+
                 <formatstring>: <string>
                     defines the use of data at <addrdef>
                     format is defined in 'struct module format string'
@@ -288,85 +303,110 @@ Settings dictionary describes the config file fields definition:
                     A dictionary describes a (sub)setting dictonary
                     and can recursively define another <setting>
 
+
             <addrdef>:  <baseaddr> | (<baseaddr>, <bits>, <bitshift>) | (<baseaddr>, <strindex>)
                 address definition
+
                 <baseaddr>: <uint>
                     The address (starting from 0) within binary config data.
+
                 <bits>:     <uint>
                     number of bits used (positive integer)
+
                 <bitshift>: <int>
                     bit shift <bitshift>:
                     <bitshift> >= 0: shift the result right
                     <bitshift> <  0: shift the result left
+
                 <strindex>: <int>
                     index into a set of strings delimited by \0
 
+
             <datadef>:  <arraydef> | (<arraydef>, <validate> [,cmd])
                 data definition
+
                 <arraydef>: None | <dim> | [<dim>] | [<dim> ,<dim>...]
                     None:
-                        Single value, not an array
-                    <dim>:  <int>
-                    [<dim>]
-                        Defines a one-dimensional array of size <n>
-                    [<dim> ,<dim>...]
-                        Defines a one- or multi-dimensional array
-                <validate>: <function>
-                    value validation function
-                <cmd>:  (<group>, <tasmotacmnd>)
-                    Tasmota command definition
-                    <group>:        <string>
-                        command group string
-                    <tasmotacmnd>:   <function> | (<function>,...)
-                        convert data into Tasmota command function
+                        single value
+                    <dim>:  <uint>
 
-            <converter>:    <readconverter> | (<readconverter>, <writeconverter>)
+                    [<dim>]
+                        a one-dimensional array of size <n>
+
+                    [<dim> ,<dim>...]
+                        a one- or multi-dimensional array
+
+                <validate>: None | <function>
+                    value validation function
+
+                <cmd>:  (<group>, <tasmotacmnd>) - optional
+                    Tasmota command definition
+
+                    <group>:        <string>
+                        command group
+                        There exists two special group names
+                        INTERNAL - processed but invisible in group output
+                        '*'      - must be used as group name for nested
+                                   dict definition - invisible in group output
+
+                    <tasmotacmnd>:   <function> | (<function>,...)
+                        convert function into Tasmota cmnd function
+
+
+            <converter>:    <readconverter> | (<readconverter>, <writeconverter>) -
                 read/write converter
+
                 <readconverter>:    None | <function>
                     Will be used in Bin2Mapping to convert values read
                     from the binary data object into mapping dictionary
                     None
-                        None indicates not read conversion
+                        indicates no read conversion
                     <function>
                         to convert value from binary object to JSON.
+
                 <writeconverter>:   None | False | <function>
                     Will be used in Mapping2Bin to convert values read
                     from mapping dictionary before write to binary
                     data object
                     None
-                        None indicates not write conversion
+                        indicates no write conversion
                     False
-                        False indicates the value is readonly and will
-                        not be written into the binary object.
+                        False indicates the value is readonly and is not
+                        written back into the binary Tasmota data.
                     <function>
                         to convert value from JSON back to binary object
+
 
         Common definitions
 
         <function>: <functionname> | <string> | None
-            function to be called or string to evaluate:
+            the name of an object to be called or a string to be evaluated
+
             <functionname>:
-                A function name will be called with one or two parameter:
-                    The value to be processed
-                    (optional) the current array index (1,n)
+                name will be called with one or two parameter:
+                    - The value to be processed
+                    - (optional) the current array index (1,n)
+                      if an array is defined
+
             <string>
-                A string will be evaluate as is. The following
-                placeholder can be used to replace it by runtime values:
+                A string will be evaluate as is. The following placeholder
+                can be used for runtime replacements:
                 '$':
-                    will be replaced by the mapping name value
+                    will be replaced by the object mapping value
                 '#':
-                    will be replace by array index (if any)
+                    will be replace by array index (if defined)
                 '@':
-                    can be used as reference to other mapping values
-                see definition below for examples
+                    can be used to reference another mapping value
+
 
         <string>:   'string' | "string"
-            characters enclosed in ' or "
+            characters enclosed by ' or "
 
         <int>:      integer
-             numbers in the range -2147483648 through 2147483647
+             integer number in the range -2147483648 through 2147483647
+
         <uint>:     unsigned integer
-             numbers in the range 0 through 4294967295
+             integer number in the range 0 through 4294967295
 
 """
 # ----------------------------------------------------------------------
