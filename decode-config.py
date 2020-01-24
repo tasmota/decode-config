@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.4 [00073]'
+VER = '8.1.0.4 [00074]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -972,7 +972,7 @@ Setting_6_5_0_11['flag3'][0].update ({
 Setting_6_5_0_12 = copy.deepcopy(Setting_6_5_0_11)
 Setting_6_5_0_12.pop('drivers',None)
 Setting_6_5_0_12.update             ({
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
     'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',       None)) ),
     'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',       None)) ),
     'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',       None)) ),
@@ -1324,6 +1324,11 @@ Setting_8_1_0_3.update             ({
 Setting_8_1_0_4 = copy.deepcopy(Setting_8_1_0_3)
 Setting_8_1_0_4.update             ({
     'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
+                                                                                                                  if 6==@["my_adc0"] \
+                                                                                                                  else \
+                                                                                                                  "AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
+    'adc_param4':                   ('<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
                                     })
 Setting_8_1_0_4['flag4'][0].update ({
         'zigbee_use_names':         ('<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
