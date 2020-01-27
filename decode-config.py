@@ -2996,6 +2996,10 @@ def Bin2Mapping(decode_cfg):
     # get valuemapping
     valuemapping = GetField(decode_cfg, None, (setting,0,(None, None, (INTERNAL, None))))
 
+    # remove keys having empty object
+    for key in {k: v for k, v in valuemapping.items() if isinstance(v,(dict,list,tuple)) and len(valuemapping[k])==0 }:
+        valuemapping.pop(key,None)
+
     # add header info
     valuemapping['header'] = {  'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
                                 'format':   {
