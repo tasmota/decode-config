@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.4 [00074]'
+VER = '8.1.0.5 [00075]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1334,7 +1334,13 @@ Setting_8_1_0_4['flag4'][0].update ({
         'zigbee_use_names':         ('<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_8_1_0_5 = copy.deepcopy(Setting_8_1_0_4)
+Setting_8_1_0_5['flag4'][0].update ({
+        'awsiot_shadow':            ('<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010005,0x1000, Setting_8_1_0_5),
             (0x8010004,0x1000, Setting_8_1_0_4),
             (0x8010003,0x1000, Setting_8_1_0_3),
             (0x8010002,0x1000, Setting_8_1_0_2),
