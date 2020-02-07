@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.5 [00075]'
+VER = '8.1.0.6 [00076]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1339,7 +1339,13 @@ Setting_8_1_0_5['flag4'][0].update ({
         'awsiot_shadow':            ('<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_8_1_0_6 = copy.deepcopy(Setting_8_1_0_5)
+Setting_8_1_0_6.update             ({
+    'bootcount_reset_time':         ('<L',  0xFD4,       (None, None,                           ('System',      None)) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010006,0x1000, Setting_8_1_0_6),
             (0x8010005,0x1000, Setting_8_1_0_5),
             (0x8010004,0x1000, Setting_8_1_0_4),
             (0x8010003,0x1000, Setting_8_1_0_3),
