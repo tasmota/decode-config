@@ -65,9 +65,9 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [JSON output](#json-output)
     * [Tasmota command output](#tasmota-command-output)
   * [Filter data](#filter-data)
-  * [Program parameter configuration file](#program-parameter-configuration-file)
-  * [More program arguments](#more-program-arguments)
-    * [Program parameter notes](#program-parameter-notes)
+  * [Program parameter configuration file](#parameter-configuration-file)
+  * [More arguments](#more-arguments)
+    * [Parameter notes](#parameter-notes)
   * [Examples](#examples)
     * [Parameter config file](#parameter-config-file)
     * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
@@ -75,7 +75,7 @@ See [Running as Python script](#running-as-python-script) for more details.
 
 ## Running the program
 
-The program does not have a graphical user interface (GUI), you have to run it from your OS command line using [program arguments](#more-program-arguments).
+The program does not have a graphical user interface (GUI), you have to run it from your OS command line using [program arguments](#more-arguments).
 
 _decode-config_ needs a [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment to run.
 If you don't want to install Python you can either use the binaries from [master branch](https://github.com/tasmota/decode-config/tree/master) or
@@ -379,7 +379,7 @@ For details see [https://pypi.org/project/ConfigArgParse](https://pypi.org/proje
 
 If a parameter is specified in more than one place (parameter file and command line) then commandline value will overrule the parameter file value. This is usefull if you use the same argument or a basic set of arguments and want to change a parameter once without the need to edit your parameter configuration file.
 
-### More program arguments
+### More arguments
 
 For better reading each short written arg (minus sign `-`) has a corresponding long version (two minus signs `--`), eg. `--device` for `-d` or `--file` for `-f` (note: not even all `--` arg has a corresponding `-` one).
 
@@ -495,7 +495,7 @@ Info:
 Either argument -d <host> or -f <filename> must be given.
 ```
 
-#### Program parameter notes
+#### Parameter notes
 
 * Filename replacement macros **@h** and **@H**:
   * **@h**
