@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.6 [00077]'
+VER = '8.1.0.6 [00078]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3157,7 +3157,7 @@ def Backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     def Backup_JSON(backup_filename, encode_cfg, configmapping):
         # do json file write
         with open(backup_filename, "w") as backupfp:
-            json.dump(configmapping, backupfp, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
+            json.dump(configmapping, backupfp, ensure_ascii=False, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') )
 
     backups = { FileType.DMP.lower():("Tasmota",FileType.DMP, Backup_DMP),
                 FileType.BIN.lower():("binary",FileType.BIN, Backup_BIN),
@@ -3650,7 +3650,7 @@ if __name__ == "__main__":
     # json screen output
     if (args.backupfile is None and args.restorefile is None) or args.output:
         if args.outputformat == 'json':
-            print(json.dumps(configmapping, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') ))
+            print(json.dumps(configmapping, ensure_ascii=False, sort_keys=args.jsonsort, indent=None if (args.jsonindent is None or args.jsonindent<0) else args.jsonindent, separators=(',', ':') if args.jsoncompact else (', ', ': ') ))
 
         if args.outputformat == 'cmnd' or args.outputformat == 'command':
             tasmotacmnds = Mapping2Cmnd(decode_cfg, configmapping)
