@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.6 [00076]'
+VER = '8.1.0.6 [00077]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1726,7 +1726,7 @@ def MakeFilename(filename, filetype, configmapping):
     if 'version' in configmapping:
         config_version = GetVersionStr( int(str(configmapping['version']), 0) )
     if 'friendlyname' in configmapping:
-        config_friendlyname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]','_', str(configmapping['friendlyname'][0])).strip('_'))
+        config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(configmapping['friendlyname'][0]) if c.isprintable()), 256))).replace(' ','_')
     if 'hostname' in configmapping:
         if str(configmapping['hostname']).find('%') < 0:
             config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]','_', str(configmapping['hostname'])).strip('_'))
@@ -2521,7 +2521,7 @@ def GetFieldValue(fielddef, dobj, addr, idxoffset=0):
 
         # remove unprintable char
         if maxlength:
-            value_ = "".join(itertools.islice((c for c in s if c in string.printable), maxlength))
+            value_ = "".join(itertools.islice((c for c in s if c.isprintable()), maxlength))
 
     return value_
 
