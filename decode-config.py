@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.9 [00079]'
+VER = '8.1.0.9 [00080]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1351,6 +1351,7 @@ Setting_8_1_0_9.update             ({
                                     })
 Setting_8_1_0_9['flag4'][0].update ({
         'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
+        'force_sdk_erase':          ('<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
