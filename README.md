@@ -133,7 +133,7 @@ This format is binary encrypted and is identical to a Tasmota configuration file
 This format is decrypted, human readable, editable and contains the configuration data in [JSON](http://www.json.org/)-format.
 This file format will be created by _decode-config_ using the `--backup-file` with `--backup-type json` parameter (that's the default) and can also be used for the `--restore-file` parameter.
 
-> Note: The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands.
+> Note: The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
 
 ### .bin Format
 
@@ -152,7 +152,7 @@ If you want to use your own extensions, disable auto extension by using the `--n
 For an overview start the program without any parameter and you will get a small help screen.  
 For full help start the program with parameter `-H`: `decode-config -H`
 
-> Note: Replace the program name `decode-config` within examples with your one, e.g. `decode-config_win64` for Windows or `decode-config_mac`under MacOS.
+> Note: Replace the program name `decode-config` within examples with your one, e.g. `decode-config.py` running as Python executable, `decode-config_win64` for Windows or `decode-config_mac`under MacOS.
 
 ### Test run
 
@@ -218,19 +218,24 @@ This will create a file like `Config_Tasmota_8.1.0.json` (the part `Tasmota` and
 
 Reading back a previously saved backup file use the `--restore-file <filename>` parameter. This will read the (possibly changed) configuration data from this file and send it back to the source device or filename.
 
-To restore the previously save backup file `Config_Tasmota_6.2.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.1.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -d tasmota-4281 --restore-file Config_Tasmota_6.2.1.json
+decode-config -d tasmota-4281 --restore-file Config_Tasmota_8.1.0
+```
+or
+
+```bash
+decode-config -d tasmota-4281 --restore-file Config_@f_@v
 ```
 
 with password set by WebPassword:
 
 ```bash
-decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_Tasmota_6.2.1.json
+decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_@f_@v
 ```
 
-> Note: For JSON file formats you can also use files containing a subset of configuration data. For example: You want to change othe three configuration data for location (altitude, latitude, longitude) only use a JSON file with the content
+> Note: For JSON file formats you can use files containing a subset of configuration data only. For example: You want to change the data for location (altitude, latitude, longitude) only, use a JSON file with the content
 
 ```json
 {
@@ -240,9 +245,9 @@ decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_Tasmota_6.
 }
 ```
 
-Be aware to keep a valid JSON-format. For example: When cutting unnecessary content from a given JSON backup file, consider to remove the last comma:
+Be aware to keep the JSON-format valid. For example: When cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:
 
-Invalid JSON format:
+Invalid JSON format (useless comma in line 3: `...2.294442,`):
 
 ```json
 {
@@ -262,11 +267,11 @@ Valid JSON format:
 
 ### Output to screen
 
-Output to screen is the default when calling the program backup or restore parameter. The output is prevented when using backup or restore parameter. In that case you can force screen output using the `--output` parameter.
+Output to screen is the default when calling the program without any backup or restore parameter. Screen output is suppressed if using any backup or restore parameter. In that case you can force screen output by using the `--output` parameter.
 
 #### JSON output
 
-The default backup format is [JSON](#json-format). You can force JSON backup using the `--output-format json` parameter.
+The default backup format is [JSON](#json-format). In any case you can force JSON backup format using the `--output-format json` parameter.
 
 Example:
 
