@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.6 [00078]'
+VER = '8.1.0.9 [00079]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1344,7 +1344,17 @@ Setting_8_1_0_6.update             ({
     'bootcount_reset_time':         ('<L',  0xFD4,       (None, None,                           ('System',      None)) ),
                                     })
 # ======================================================================
+Setting_8_1_0_9 = copy.deepcopy(Setting_8_1_0_6)
+Setting_8_1_0_9.update             ({
+    'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
+                                    })
+Setting_8_1_0_9['flag4'][0].update ({
+        'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x8010009,0x1000, Setting_8_1_0_9),
             (0x8010006,0x1000, Setting_8_1_0_6),
             (0x8010005,0x1000, Setting_8_1_0_5),
             (0x8010004,0x1000, Setting_8_1_0_4),
