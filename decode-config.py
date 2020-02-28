@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.9 [00080]'
+VER = '8.1.0.9 [00081]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1348,10 +1348,16 @@ Setting_8_1_0_9 = copy.deepcopy(Setting_8_1_0_6)
 Setting_8_1_0_9.update             ({
     'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
+    'bri_power_on':                 ('B',   0xF04,       (None, None,                           ('Light',       None)) ),
+    'bri_min':                      ('B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
+    'bri_preset_low':               ('B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
+    'bri_preset_high':              ('B',   0xF07,       (None, None,                           ('Light',       None)) ),
                                     })
 Setting_8_1_0_9['flag4'][0].update ({
         'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
-        'force_sdk_erase':          ('<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
+        'led_timeout':              ('<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
+        'powered_off_led':          ('<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
+        'remote_device_mode':       ('<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
