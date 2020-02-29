@@ -2,7 +2,7 @@
 
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
-[![Developer Version](https://img.shields.io/badge/development%20version-v8.1.0.9-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![Developer Version](https://img.shields.io/badge/development%20version-v8.1.0.10-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 In comparison with the Tasmota build-in "Backup/Restore Configuration" function
 
