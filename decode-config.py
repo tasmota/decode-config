@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.10 [00083]'
+VER = '8.1.0.10 [00084]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1358,6 +1358,9 @@ Setting_8_1_0_9['flag4'][0].update ({
                                     })
 # ======================================================================
 Setting_8_1_0_10 = copy.deepcopy(Setting_8_1_0_9)
+Setting_8_1_0_10['flag2'][0].update ({
+        'speed_conversion':         ('<L', (0x5BC,3, 1), (None, '0 <= $ <= 5',                  ('Sensor',      '"SpeedUnit {}".format($)')) ),
+                                    })
 Setting_8_1_0_10['flag4'][0].update ({
         'led_timeout':              ('<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
         'powered_off_led':          ('<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
