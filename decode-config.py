@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.10 [00082]'
+VER = '8.1.0.10 [00083]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -44,7 +44,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -124,7 +124,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
+      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -587,11 +587,11 @@ Setting_5_10_0 = {
     'energy_kWhtotal':              ('<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
     'mqtt_fulltopic':               ('100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
     'flag2':                        ({
-        'current_resolution':       ('<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Power',       '"AmpRes {}".format($)')) ),
-        'voltage_resolution':       ('<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Power',       '"VoltRes {}".format($)')) ),
-        'wattage_resolution':       ('<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Power',       '"WattRes {}".format($)')) ),
+        'current_resolution':       ('<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Sensor',      '"AmpRes {}".format($)')) ),
+        'voltage_resolution':       ('<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Sensor',      '"VoltRes {}".format($)')) ),
+        'wattage_resolution':       ('<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Sensor',      '"WattRes {}".format($)')) ),
         'emulation':                ('<L', (0x5BC,2,21), (None, '0 <= $ <= 2',                  ('Management',  '"Emulation {}".format($)')) ),
-        'energy_resolution':        ('<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Power',       '"EnergyRes {}".format($)')) ),
+        'energy_resolution':        ('<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Sensor',      '"EnergyRes {}".format($)')) ),
         'pressure_resolution':      ('<L', (0x5BC,2,26), (None, '0 <= $ <= 3',                  ('Sensor',      '"PressRes {}".format($)')) ),
         'humidity_resolution':      ('<L', (0x5BC,2,28), (None, '0 <= $ <= 3',                  ('Sensor',      '"HumRes {}".format($)')) ),
         'temperature_resolution':   ('<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
@@ -712,14 +712,14 @@ Setting_6_1_1.update                ({
     'flag3':                        ('<L',  0x3A0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
     'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
     'mcp230xx_config':              ({
-        '_':                        ('<L',  0x6F6,       (None, None,                           ('Devices',     '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), ('"0x{:08x}".format($)', False) ),
-        'pinmode':                  ('<L', (0x6F6,3, 0), (None, None,                           ('Devices',     None)) ),
-        'pullup':                   ('<L', (0x6F6,1, 3), (None, None,                           ('Devices',     None)) ),
-        'saved_state':              ('<L', (0x6F6,1, 4), (None, None,                           ('Devices',     None)) ),
-        'int_report_mode':          ('<L', (0x6F6,2, 5), (None, None,                           ('Devices',     None)) ),
-        'int_report_defer':         ('<L', (0x6F6,4, 7), (None, None,                           ('Devices',     None)) ),
-        'int_count_en':             ('<L', (0x6F6,1,11), (None, None,                           ('Devices',     None)) ),
-                                     },     0x6F6,       ([16], None,                           ('Devices',     None)), (None,      None) ),
+        '_':                        ('<L',  0x6F6,       (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), ('"0x{:08x}".format($)', False) ),
+        'pinmode':                  ('<L', (0x6F6,3, 0), (None, None,                           ('Sensor',      None)) ),
+        'pullup':                   ('<L', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
+        'saved_state':              ('<L', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
+        'int_report_mode':          ('<L', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
+        'int_report_defer':         ('<L', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
+        'int_count_en':             ('<L', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
+                                     },     0x6F6,       ([16], None,                           ('Sensor',      None)), (None,      None) ),
                                     })
 Setting_6_1_1['flag'][0].update     ({
         'rf_receive_decimal':       ('<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SetOption28 {}".format($)')) ),
@@ -742,8 +742,8 @@ Setting_6_2_1.update                ({
                                     },      0x3A0,       (None, None,                           ('*',           None)), (None,      None) ),
     'button_debounce':              ('<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
     'switch_debounce':              ('<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
-    'mcp230xx_int_prio':            ('B',   0x716,       (None, None,                           ('Devices',     None)) ),
-    'mcp230xx_int_timer':           ('<H',  0x718,       (None, None,                           ('Devices',     None)) ),
+    'mcp230xx_int_prio':            ('B',   0x716,       (None, None,                           ('Sensor',      None)) ),
+    'mcp230xx_int_timer':           ('<H',  0x718,       (None, None,                           ('Sensor',      None)) ),
                                     })
 Setting_6_2_1['flag'][0].pop('rules_enabled',None)
 Setting_6_2_1['flag'][0].update     ({
@@ -790,12 +790,12 @@ Setting_6_2_1_14.update({
     'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
 })
 Setting_6_2_1_14['flag2'][0].update ({
-        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Management',  '"WeightRes {}".format($)')) ),
+        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 Setting_6_2_1_19 = copy.deepcopy(Setting_6_2_1_14)
 Setting_6_2_1_19.update({
-    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
 })
 Setting_6_2_1_20 = Setting_6_2_1_19
 Setting_6_2_1_20['flag3'][0].update ({
@@ -860,7 +860,7 @@ Setting_6_3_0_15['flag3'][0].update ({
 # ======================================================================
 Setting_6_3_0_16 = copy.deepcopy(Setting_6_3_0_15)
 Setting_6_3_0_16['mcp230xx_config'][0].update ({
-        'int_retain_flag':          ('<L', (0x6F6,1,12), (None, None,                           ('Devices',     None)) ),
+        'int_retain_flag':          ('<L', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
                                     })
 Setting_6_3_0_16['flag3'][0].update ({
         'button_switch_force_local':('<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
@@ -1089,7 +1089,7 @@ Setting_6_6_0_14.update             ({
     'tariff2_0':                    ('<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
     'tariff2_1':                    ('<H',  0xE36,       (None, None,                           ('Power',       None)) ),
     'mqttlog_level':                ('B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'pcf8574_config':               ('B',   0xE88,       ([8],  None,                           ('Devices',     None)) ),
+    'pcf8574_config':               ('B',   0xE88,       ([8],  None,                           ('Sensor',      None)) ),
     'shutter_accuracy':             ('B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
     'shutter_opentime':             ('<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#,float($)/10.0)')) ),
     'shutter_closetime':            ('<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#,float($)/10.0)')) ),
