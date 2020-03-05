@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.10 [00084]'
+VER = '8.1.0.10 [00085]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1365,6 +1365,7 @@ Setting_8_1_0_10['flag4'][0].update ({
         'led_timeout':              ('<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
         'powered_off_led':          ('<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
         'remote_device_mode':       ('<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
+        'zigbee_distinct_topics':   ('<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
                                     })
 # ======================================================================
 Settings = [
