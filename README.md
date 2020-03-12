@@ -1,34 +1,41 @@
 # decode-config
 
-_decode-config_ backup and restore configuration data of [Tasmota](http://tasmota.com/)-devices.
+Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
-In comparison with the Tasmota build-in "Backup/Restore Configuration" function
+[![release](https://img.shields.io/badge/release-v8.2.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
+[![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
-* _decode-config_ uses human readable and editable [JSON](http://www.json.org/)-format for backup/restore
-* _decode-config_ can restore previously backup and changed [JSON](http://www.json.org/)-format files
-* _decode-config_ is able to create Tasmota compatible command list for the most available commands
-* _decode-config_ can handle subsets of configuration data
-* _decode-config_ can convert data from all older versions starting v5.10.0 into newer one and reverse.
+If you like **decode_config** give it a star or fork it:
 
-Comparing backup files created by *decode-config.py* and *.dmp files created by Tasmota "Backup/Restore Configuration":
+[![GitHub stars](https://img.shields.io/github/stars/tasmota/decode-config.svg?style=social&label=Star)](https://github.com/tasmota/decode-config/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/tasmota/decode-config.svg?style=social&label=Fork)](https://github.com/tasmota/decode-config/network)
 
-| &nbsp;                  | decode-config.py *.json file      | Tasmota *.dmp file             |
-|:------------------------|:---------------------------------:|:-----------------------------------:|
-| Encrypted               |                No                 |                 Yes                 |
-| Readable                |               Yes                 |                  No                 |
-| Editable                |               Yes                 |                  No                 |
-| Batch processing        |               Yes                 |                  No                 |
-| Backup/Restore subsets  |               Yes                 |                  No                 |
+In comparison with the [Tasmota](https://github.com/arendst/Tasmota) build-in "Backup/Restore Configuration" function the **decode-config** tool:
 
-_decode-config_ is compatible with Tasmota starting from v5.10.0 up to now.
+* uses a human readable and editable [JSON](http://www.json.org/)-format for backup/restore
+* can restore previously backed up and modified [JSON](http://www.json.org/)-format files
+* is able to process any subsets of configuration data
+* can convert data from older Tasmota versions (from version v5.10.0) to a newer one and vice versa
+* is able to create [Tasmota](https://github.com/arendst/Tasmota) compatible command list for the most available commands
+
+Comparing backup files created by **decode-config** and *.dmp files created by [Tasmota](https://github.com/arendst/Tasmota) "Backup/Restore Configuration":
+
+| Configuration           | decode-config JSON file | Tasmota *.dmp file |
+|:------------------------|:-----------------------:|:------------------:|
+| encrypted               |           No            |         Yes        |
+| readable                |           Yes           |         No         |
+| editable                |           Yes           |         No         |
+| batch processing        |           Yes           |         No         |
+| Backup/Restore subsets  |           Yes           |         No         |
+
+**decode-config** is compatible with [Tasmota](https://github.com/arendst/Tasmota) starting from v5.10.0 up to now.
 
 ## Content
 
-**This is the master branch which contains _decode-config_ matching official Tasmota release.**
+**This is the master branch which contains decode-config matching the latest Tasmota release version.**
 
-> If you are using Tasmota from development branch the _decode-config_ version from this master branch can be outdated.
-You can then use the [developer branch](https://github.com/tasmota/decode-config/tree/development) which contains
-an up-to-date version matching the latest Tasmota developer version.
+If you want to use a current version than this one (e.g. because you also use a Tasmota version from the developer branch) then use the _decode-config_ [developer branch](https://github.com/tasmota/decode-config/tree/development). This usually contains an up-to-date version if **decode-config** that corresponds to the latest Tasmota developer version.
 
 ### Files
 
@@ -36,59 +43,52 @@ an up-to-date version matching the latest Tasmota developer version.
 |:-------------------------|:------------------------------------------------------------------------|
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
-| `decode-config_linux`    | Linux executable running standalone                                     |
-| `decode-config_mac`      | macOS executable running standalone                                     |
-| `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
-| `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
 
-* [Running the program](#running-the-program)
-  * [Prerequisite](#prerequisite)
-  * [Running as Python script](#running-as-python-script)
-    * [Linux](#linux)
-    * [Windows 10](#windows-10)
-    * [MacOS](#macos)
-    * [All OS](#all-os)
-* [File Formats](#file-formats)
-  * [.dmp File Format](#dmp-format)
-  * [.json File Format](#json-format)
-  * [.bin File Format](#bin-format)
-  * [File extensions](#file-extensions)
-* [Usage](#usage)
-  * [Test run](#test-run)
-  * [Basics](#basics)
-  * [Save backup file](#save-backup-file)
-  * [Restore backup file](#restore-backup-file)
-  * [Output to screen](#output-to-screen)
-    * [JSON output](#json-output)
-    * [Tasmota command output](#tasmota-command-output)
-  * [Filter data](#filter-data)
-  * [Program parameter configuration file](#program-parameter-configuration-file)
-  * [More program arguments](#more-program-arguments)
-    * [Program parameter notes](#program-parameter-notes)
-  * [Examples](#examples)
-    * [Parameter config file](#parameter-config-file)
-    * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-    * [Use batch processing](#use-batch-processing)
+- [decode-config](#decode-config)
+  - [Content](#content)
+    - [Files](#files)
+  - [Running the program](#running-the-program)
+    - [Prerequisite](#prerequisite)
+      - [Linux](#linux)
+      - [Windows 10](#windows-10)
+      - [MacOS](#macos)
+      - [All OS](#all-os)
+  - [File Formats](#file-formats)
+    - [.dmp Format](#dmp-format)
+    - [.json Format](#json-format)
+    - [.bin Format](#bin-format)
+    - [File extensions](#file-extensions)
+  - [Usage](#usage)
+    - [Test run](#test-run)
+    - [Basics](#basics)
+    - [Save backup file](#save-backup-file)
+    - [Restore backup file](#restore-backup-file)
+    - [Output to screen](#output-to-screen)
+      - [JSON output](#json-output)
+      - [Tasmota command output](#tasmota-command-output)
+    - [Filter data](#filter-data)
+    - [Parameter configuration file](#parameter-configuration-file)
+    - [More arguments](#more-arguments)
+      - [Parameter notes](#parameter-notes)
+    - [Examples](#examples)
+      - [Parameter config file](#parameter-config-file)
+        - [my.conf](#myconf)
+      - [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+      - [Use batch processing](#use-batch-processing)
 
 ## Running the program
 
-The program does not have any graphical user interface (GUI), it is needed to run it on command line using [program arguments](#more-program-arguments).
+The program does not have a graphical user interface (GUI), you have to run it from your OS command line using [program arguments](#more-arguments).
 
 For Windows, MacOS and Linux you can simply use the program on your OS command line [executable related to your OS](#files).
 
 ### Prerequisite
 
-Tasmota provides its configuration data by http request only. To receive and send configuration data from Tasmota devices directly the http WebServer in Tasmota must be enabled:
+[Tasmota](https://github.com/arendst/Tasmota) provides its configuration data by http request only. To receive and send configuration data from Tasmota devices directly the http WebServer in Tasmota must be enabled:
 
 * when using your own compiled firmware you have to compile your firmware with web-server (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 * enable web-server in admin mode (command [WebServer 2](https://tasmota.github.io/docs/#/Commands?id=wi-fi))
-
-> Note: Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so _decode-config_ is unable using this way.
-
-### Running as Python script
-
-If you want to run the Python source _decode-config.py_, an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
 
 > Note: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
@@ -118,24 +118,25 @@ pip3 install requests configargparse
 
 ## File Formats
 
-_decode-config_ handles the following backup/restore file formats:
+**decode-config** handles the following backup/restore file formats:
 
 ### .dmp Format
 
-This format is binary encrypted and is the same as used by Tasmota "Backup/Restore Configuration" web interface.
+This format is binary encrypted and is identical to a Tasmota configuration file saved by Tasmota web interface using "Configuration/Backup Configuration".
 
 ### .json Format
 
 This format is decrypted, human readable, editable and contains the configuration data in [JSON](http://www.json.org/)-format.
-This file format will be created by _decode-config_ using the `--backup-file` with `--backup-type json` parameter (that's the default) and can also be used for the `--restore-file` parameter.
+This file format will be created by **decode-config** using the `--backup-file` with `--backup-type json` parameter (that's the default) and can also be used for the `--restore-file` parameter.
 
-> Note: The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands.
+> Note: The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
 
 ### .bin Format
 
-This format is binary decrypted and is nearly the same as used by Tasmota "Backup/Restore Configuration" web interface. The difference between ths format and the original Tasmota dmp format is an additonal header of 4 bytes at the beginning of this file; also the decrypted status lets you observe (and change) the original binary data using a hex editor.
+This format is binary decrypted. The difference to the original Tasmota format is on the one hand the decrypted form of the binary data and on the other hand an additional 4 attached bytes to distinguish between the original [.dmp File Format](#dmp-format) and this .bin format.
+The decrypted binary format allows viewing and changing (using a hex editor) the pure Tasmota configuration binary data based on the address information in the Tasmota source code (tasmota/settings.h).
 
-This file format will be created by _decode-config_ using the `--backup-file` with `--backup-type bin` parameter and can also be used for the `--restore-file` parameter.
+This file format will be created by **decode-config** using the `--backup-file` with `--backup-type bin` parameter and can also be used for the `--restore-file` parameter.
 
 ### File extensions
 
@@ -147,7 +148,7 @@ If you want to use your own extensions, disable auto extension by using the `--n
 For an overview start the program without any parameter and you will get a small help screen.  
 For full help start the program with parameter `-H`: `decode-config -H`
 
-> Note: Replace the program name `decode-config` within examples with your one, e.g. `decode-config_win64` for Windows or `decode-config_mac`under MacOS.
+> Note: Replace the program name `decode-config` within examples with your one, e.g. `decode-config.py` running as Python executable, `decode-config_win64` for Windows or `decode-config_mac`under MacOS.
 
 ### Test run
 
@@ -207,25 +208,31 @@ If your Tasmota web interface is protected by WebPassword command use
 decode-config -d tasmota-4281 -p <yourpassword> --backup-file Config_@f_@v
 ```
 
-This will create a file like `Config_Tasmota_8.1.0.json` (the part `Tasmota` and `8.1.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.2.0.json` (the part `Tasmota` and `8.2.0` will choosen related to your device configuration).
 
 ### Restore backup file
 
 Reading back a previously saved backup file use the `--restore-file <filename>` parameter. This will read the (possibly changed) configuration data from this file and send it back to the source device or filename.
 
-To restore the previously save backup file `Config_Tasmota_6.2.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.2.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -d tasmota-4281 --restore-file Config_Tasmota_6.2.1.json
+decode-config -d tasmota-4281 --restore-file Config_Tasmota_8.2.0
+```
+
+or
+
+```bash
+decode-config -d tasmota-4281 --restore-file Config_@f_@v
 ```
 
 with password set by WebPassword:
 
 ```bash
-decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_Tasmota_6.2.1.json
+decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_@f_@v
 ```
 
-> Note: For JSON file formats you can also use files containing a subset of configuration data. For example: You want to change othe three configuration data for location (altitude, latitude, longitude) only use a JSON file with the content
+> Note: For JSON file formats you can use files containing a subset of configuration data only. For example: You want to change the data for location (altitude, latitude, longitude) only, use a JSON file with the content
 
 ```json
 {
@@ -235,9 +242,9 @@ decode-config -d tasmota-4281 -p <yourpassword> --restore-file Config_Tasmota_6.
 }
 ```
 
-Be aware to keep a valid JSON-format. For example: When cutting unnecessary content from a given JSON backup file, consider to remove the last comma:
+Be aware to keep the JSON-format valid. For example: When cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:
 
-Invalid JSON format:
+Invalid JSON format (useless comma in line 3: `...2.294442,`):
 
 ```json
 {
@@ -257,11 +264,11 @@ Valid JSON format:
 
 ### Output to screen
 
-Output to screen is the default when calling the program backup or restore parameter. The output is prevented when using backup or restore parameter. In that case you can force screen output using the `--output` parameter.
+Output to screen is the default when calling the program without any backup or restore parameter. Screen output is suppressed if using any backup or restore parameter. In that case you can force screen output by using the `--output` parameter.
 
 #### JSON output
 
-The default backup format is [JSON](#json-format). You can force JSON backup using the `--output-format json` parameter.
+The default backup format is [JSON](#json-format). In any case you can force JSON backup format using the `--output-format json` parameter.
 
 Example:
 
@@ -304,7 +311,7 @@ decode-config -d tasmota-4281 -c my.conf -x Wifi --output-format json
 
 #### Tasmota command output
 
-_decode-config_ is able to translate the configuration data to (most all) Tasmota commands. To output your configuration as Tasmota commands use `--output-format cmnd` or `--output-format command`.
+**decode-config** is able to translate the configuration data to (most all) Tasmota commands. To output your configuration as Tasmota commands use `--output-format cmnd` or `--output-format command`.
 
 Example:
 
@@ -338,7 +345,7 @@ decode-config -d tasmota-4281 -c my.conf -g Wifi --output-format cmnd
 
 The huge number of Tasmota configuration data can be overstrained and confusing, so the most of the configuration data are grouped into categories.
 
-With _decode-config_ the following categories are available:   `Display`, `Domoticz`, `Internal`, `KNX`, `Led`, `Logging`, `MCP230xx`, `MQTT`, `Main`, `Management`, `Pow`, `Sensor`, `Serial`, `SetOption`, `RF`, `System`, `Timers`, `Wifi`
+With **decode-config** the following categories are available:   `Display`, `Domoticz`, `Internal`, `KNX`, `Led`, `Logging`, `MCP230xx`, `MQTT`, `Main`, `Management`, `Pow`, `Sensor`, `Serial`, `SetOption`, `RF`, `System`, `Timers`, `Wifi`
 
 These are similary to the categories on [Tasmota Command Wiki](https://tasmota.github.io/docs/#/Commands?id=command-list).
 
@@ -374,7 +381,7 @@ For details see [https://pypi.org/project/ConfigArgParse](https://pypi.org/proje
 
 If a parameter is specified in more than one place (parameter file and command line) then commandline value will overrule the parameter file value. This is usefull if you use the same argument or a basic set of arguments and want to change a parameter once without the need to edit your parameter configuration file.
 
-### More program arguments
+### More arguments
 
 For better reading each short written arg (minus sign `-`) has a corresponding long version (two minus signs `--`), eg. `--device` for `-d` or `--file` for `-f` (note: not even all `--` arg has a corresponding `-` one).
 
@@ -391,7 +398,7 @@ usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
 Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -471,7 +478,7 @@ Common:
                         (default do not output on backup or restore usage)
   -T, --output-format json|cmnd|command
                         display output format (default: 'json')
-  -g, --group {Control,Devices,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
+  -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
                         limit data processing to command groups (default no
                         filter)
   --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -490,7 +497,7 @@ Info:
 Either argument -d <host> or -f <filename> must be given.
 ```
 
-#### Program parameter notes
+#### Parameter notes
 
 * Filename replacement macros **@h** and **@H**:
   * **@h**
@@ -520,23 +527,23 @@ json-indent 2
 #### Using Tasmota binary configuration files
 
 1. Restore a Tasmota configuration file
-  
+
   ```bash
-  `decode-config -c my.conf -d tasmota --restore-file Config_Tasmota_6.2.1.dmp`
+  decode-config -c my.conf -d tasmota --restore-file Config_Tasmota_6.2.1.dmp
   ```
-  
+
 1. Backup device using Tasmota configuration compatible format
-  
+
    a) use file extension to choice the file format
-  
+
   ```bash
-  `decode-config -c my.conf -d tasmota --backup-file Config_@f_@v.dmp`
+  decode-config -c my.conf -d tasmota --backup-file Config_@f_@v.dmp
   ```
 
    b) use args to choice the file format
 
   ```bash
-  `decode-config -c my.conf -d tasmota --backup-type dmp --backup-file Config_@f_@v`
+    decode-config -c my.conf -d tasmota --backup-type dmp --backup-file Config_@f_@v
   ```
 
 #### Use batch processing
@@ -547,8 +554,8 @@ for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -d $devi
 
 or under windows
 
-```bat
-    for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -d %device -o Config_@f_@v
+```batch
+for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -d %device -o Config_@f_@v
 ```
 
 will produce JSON configuration files for host tasmota1, tasmota2 and tasmota3 using friendly name and Tasmota firmware version for backup filenames.
