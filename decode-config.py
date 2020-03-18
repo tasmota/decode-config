@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.10 [00085]'
+VER = '8.1.0.11 [00086]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1168,7 +1168,7 @@ Setting_7_0_0_4['flag3'][0].update ({
 # ======================================================================
 Setting_7_0_0_5 = copy.deepcopy(Setting_7_0_0_4)
 Setting_7_0_0_5.update             ({
-    'temp_comp':                    ('b',   0xE9E,       (None, None,                           ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
+    'temp_comp':                    ('b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 Setting_7_0_0_6 = copy.deepcopy(Setting_7_0_0_5)
@@ -1368,7 +1368,13 @@ Setting_8_1_0_10['flag4'][0].update ({
         'zigbee_distinct_topics':   ('<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
                                     })
 # ======================================================================
+Setting_8_1_0_11 = copy.deepcopy(Setting_8_1_0_10)
+Setting_8_1_0_11.update             ({
+    'hum_comp':                     ('b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
+                                    })
+# ======================================================================
 Settings = [
+            (0x801000B,0x1000, Setting_8_1_0_11),
             (0x801000A,0x1000, Setting_8_1_0_10),
             (0x8010009,0x1000, Setting_8_1_0_9),
             (0x8010006,0x1000, Setting_8_1_0_6),
