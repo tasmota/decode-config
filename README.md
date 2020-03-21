@@ -35,7 +35,7 @@ Comparing backup files created by **decode-config** and *.dmp files created by [
 
 **This is the master branch which contains decode-config matching the latest Tasmota release version.**
 
-If you want to use a current version than this one (e.g. because you also use a Tasmota version from the developer branch) then use the _decode-config_ [developer branch](https://github.com/tasmota/decode-config/tree/development). This usually contains an up-to-date version if **decode-config** that corresponds to the latest Tasmota developer version.
+If you want to use a current version than this one (e.g. because you also use a Tasmota version from the developer branch) then use the _decode-config_ [developer branch](https://github.com/tasmota/decode-config/tree/development). This usually contains an up-to-date version of **decode-config** that corresponds to the latest Tasmota developer version.
 
 ### Files
 
@@ -43,6 +43,10 @@ If you want to use a current version than this one (e.g. because you also use a 
 |:-------------------------|:------------------------------------------------------------------------|
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
+| `decode-config_linux`    | Linux executable running standalone                                     |
+| `decode-config_mac`      | macOS executable running standalone                                     |
+| `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
+| `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
 
 - [decode-config](#decode-config)
@@ -50,6 +54,8 @@ If you want to use a current version than this one (e.g. because you also use a 
     - [Files](#files)
   - [Running the program](#running-the-program)
     - [Prerequisite](#prerequisite)
+    - [Running the precompiled binaries](#running-the-precompiled-binaries)
+    - [Running as Python script](#running-as-python-script)
       - [Linux](#linux)
       - [Windows 10](#windows-10)
       - [MacOS](#macos)
@@ -89,6 +95,16 @@ For Windows, MacOS and Linux you can simply use the program on your OS command l
 
 * when using your own compiled firmware you have to compile your firmware with web-server (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 * enable web-server in admin mode (command [WebServer 2](https://tasmota.github.io/docs/#/Commands?id=wi-fi))
+
+-> Note: Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so _decode-config_ is unable using this way.
+
+### Running the precompiled binaries
+
+To start the program using the command line see [Usage](#usage).
+
+### Running as Python script
+
+If you want to run the Python source _decode-config.py_, an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment is neccessary.
 
 > Note: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
@@ -148,7 +164,11 @@ If you want to use your own extensions, disable auto extension by using the `--n
 For an overview start the program without any parameter and you will get a small help screen.  
 For full help start the program with parameter `-H`: `decode-config -H`
 
-> Note: Replace the program name `decode-config` within examples with your one, e.g. `decode-config.py` running as Python executable, `decode-config_win64` for Windows or `decode-config_mac`under MacOS.
+> Replace the program name `decode-config` within examples with your one:
+> - `decode-config.py` running as Python executable
+> - `decode-config_win64` or `decode-config_win32` for Windows 64 and 32-bit systems
+> - `decode-config_mac`under MacOS
+> - `decode-config_linux`under Linux
 
 ### Test run
 
