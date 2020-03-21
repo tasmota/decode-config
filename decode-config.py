@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.1.0.11 [00087]'
+VER = '8.2.0.1 [00088]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1395,7 +1395,10 @@ SETTING_8_1_0_11.update             ({
     'hum_comp':                     ('b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
+SETTING_8_2_0_1 = copy.deepcopy(SETTING_8_1_0_11)
+# ======================================================================
 SETTINGS = [
+            (0x8020001,0x1000, SETTING_8_2_0_1),
             (0x801000B,0x1000, SETTING_8_1_0_11),
             (0x801000A,0x1000, SETTING_8_1_0_10),
             (0x8010009,0x1000, SETTING_8_1_0_9),

@@ -2,7 +2,7 @@
 
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
-[![development](https://img.shields.io/badge/development-v8.1.0.11-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v8.2.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -51,38 +51,38 @@ See [Running as Python script](#running-as-python-script) for more details.
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `README.md`              | This content                                                            |
 
-* [decode-config](#decode-config)
-  * [Content](#content)
-    * [Files](#files)
-  * [Running the program](#running-the-program)
-    * [Prerequisite](#prerequisite)
-    * [Running as Python script](#running-as-python-script)
-      * [Linux](#linux)
-      * [Windows 10](#windows-10)
-      * [MacOS](#macos)
-      * [All OS](#all-os)
-  * [File Formats](#file-formats)
-    * [.dmp Format](#dmp-format)
-    * [.json Format](#json-format)
-    * [.bin Format](#bin-format)
-    * [File extensions](#file-extensions)
-  * [Usage](#usage)
-    * [Test run](#test-run)
-    * [Basics](#basics)
-    * [Save backup file](#save-backup-file)
-    * [Restore backup file](#restore-backup-file)
-    * [Output to screen](#output-to-screen)
-      * [JSON output](#json-output)
-      * [Tasmota command output](#tasmota-command-output)
-    * [Filter data](#filter-data)
-    * [Parameter configuration file](#parameter-configuration-file)
-    * [More arguments](#more-arguments)
-      * [Parameter notes](#parameter-notes)
-    * [Examples](#examples)
-      * [Parameter config file](#parameter-config-file)
-        * [my.conf](#myconf)
-      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-      * [Use batch processing](#use-batch-processing)
+- [decode-config](#decode-config)
+  - [Content](#content)
+    - [Files](#files)
+  - [Running the program](#running-the-program)
+    - [Prerequisite](#prerequisite)
+    - [Running as Python script](#running-as-python-script)
+      - [Linux](#linux)
+      - [Windows 10](#windows-10)
+      - [MacOS](#macos)
+      - [All OS](#all-os)
+  - [File Formats](#file-formats)
+    - [.dmp Format](#dmp-format)
+    - [.json Format](#json-format)
+    - [.bin Format](#bin-format)
+    - [File extensions](#file-extensions)
+  - [Usage](#usage)
+    - [Test run](#test-run)
+    - [Basics](#basics)
+    - [Save backup file](#save-backup-file)
+    - [Restore backup file](#restore-backup-file)
+    - [Output to screen](#output-to-screen)
+      - [JSON output](#json-output)
+      - [Tasmota command output](#tasmota-command-output)
+    - [Filter data](#filter-data)
+    - [Parameter configuration file](#parameter-configuration-file)
+    - [More arguments](#more-arguments)
+      - [Parameter notes](#parameter-notes)
+    - [Examples](#examples)
+      - [Parameter config file](#parameter-config-file)
+        - [my.conf](#myconf)
+      - [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+      - [Use batch processing](#use-batch-processing)
 
 ## Running the program
 
@@ -223,16 +223,16 @@ If your Tasmota web interface is protected by WebPassword command use
 decode-config -d tasmota-4281 -p <yourpassword> --backup-file Config_@f_@v
 ```
 
-This will create a file like `Config_Tasmota_8.1.0.json` (the part `Tasmota` and `8.1.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.2.0.json` (the part `Tasmota` and `8.2.0` will choosen related to your device configuration).
 
 ### Restore backup file
 
 Reading back a previously saved backup file use the `--restore-file <filename>` parameter. This will read the (possibly changed) configuration data from this file and send it back to the source device or filename.
 
-To restore the previously save backup file `Config_Tasmota_8.1.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.2.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -d tasmota-4281 --restore-file Config_Tasmota_8.1.0
+decode-config -d tasmota-4281 --restore-file Config_Tasmota_8.2.0
 ```
 
 or
