@@ -51,38 +51,38 @@ See [Running as Python script](#running-as-python-script) for more details.
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `README.md`              | This content                                                            |
 
-- [decode-config](#decode-config)
-  - [Content](#content)
-    - [Files](#files)
-  - [Running the program](#running-the-program)
-    - [Prerequisite](#prerequisite)
-    - [Running as Python script](#running-as-python-script)
-      - [Linux](#linux)
-      - [Windows 10](#windows-10)
-      - [MacOS](#macos)
-      - [All OS](#all-os)
-  - [File Formats](#file-formats)
-    - [.dmp Format](#dmp-format)
-    - [.json Format](#json-format)
-    - [.bin Format](#bin-format)
-    - [File extensions](#file-extensions)
-  - [Usage](#usage)
-    - [Test run](#test-run)
-    - [Basics](#basics)
-    - [Save backup file](#save-backup-file)
-    - [Restore backup file](#restore-backup-file)
-    - [Output to screen](#output-to-screen)
-      - [JSON output](#json-output)
-      - [Tasmota command output](#tasmota-command-output)
-    - [Filter data](#filter-data)
-    - [Parameter configuration file](#parameter-configuration-file)
-    - [More arguments](#more-arguments)
-      - [Parameter notes](#parameter-notes)
-    - [Examples](#examples)
-      - [Parameter config file](#parameter-config-file)
-        - [my.conf](#myconf)
-      - [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-      - [Use batch processing](#use-batch-processing)
+* [decode-config](#decode-config)
+  * [Content](#content)
+    * [Files](#files)
+  * [Running the program](#running-the-program)
+    * [Prerequisite](#prerequisite)
+    * [Running as Python script](#running-as-python-script)
+      * [Linux](#linux)
+      * [Windows 10](#windows-10)
+      * [MacOS](#macos)
+      * [All OS](#all-os)
+  * [File Formats](#file-formats)
+    * [.dmp Format](#dmp-format)
+    * [.json Format](#json-format)
+    * [.bin Format](#bin-format)
+    * [File extensions](#file-extensions)
+  * [Usage](#usage)
+    * [Test run](#test-run)
+    * [Basics](#basics)
+    * [Save backup file](#save-backup-file)
+    * [Restore backup file](#restore-backup-file)
+    * [Output to screen](#output-to-screen)
+      * [JSON output](#json-output)
+      * [Tasmota command output](#tasmota-command-output)
+    * [Filter data](#filter-data)
+    * [Parameter configuration file](#parameter-configuration-file)
+    * [More arguments](#more-arguments)
+      * [Parameter notes](#parameter-notes)
+    * [Examples](#examples)
+      * [Parameter config file](#parameter-config-file)
+        * [my.conf](#myconf)
+      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+      * [Use batch processing](#use-batch-processing)
 
 ## Running the program
 
@@ -234,6 +234,7 @@ To restore the previously save backup file `Config_Tasmota_8.1.0.json` to device
 ```bash
 decode-config -d tasmota-4281 --restore-file Config_Tasmota_8.1.0
 ```
+
 or
 
 ```bash
