@@ -211,6 +211,7 @@ try:
     import configargparse
     import requests
     import urllib
+    import codecs
 except ImportError as err:
     module_import_error(err)
 # pylint: enable=wrong-import-position
@@ -3130,7 +3131,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
     def backup_json(backup_filename, _, configmapping):
         # do json file write
-        with open(backup_filename, "w") as backupfp:
+        with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
             json.dump(
                 configmapping,
                 backupfp,
@@ -3242,7 +3243,8 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if ARGS.verbose:
             message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
-            with open(restorefilename, "r") as restorefp:
+            #with open(restorefilename, "r") as restorefp:
+            with codecs.open(restorefilename, "r", encoding="utf-8") as restorefp:
                 jsonconfig = json.load(restorefp)
         except ValueError as err:
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
