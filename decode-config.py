@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.1 [00088]'
+VER = '8.2.0.1 [00089]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -211,6 +211,7 @@ try:
     import configargparse
     import requests
     import urllib
+    import codecs
 except ImportError as err:
     module_import_error(err)
 # pylint: enable=wrong-import-position
@@ -1832,7 +1833,7 @@ def load_tasmotaconfig(filename):
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
     except Exception as err:    # pylint: disable=broad-except
-        exit_(err.args[0], "'{}' {}".format(filename, err.args[1]), line=inspect.getlineno(inspect.currentframe()))
+        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(filename, err), line=inspect.getlineno(inspect.currentframe()))
 
     return encode_cfg
 
@@ -2209,7 +2210,7 @@ def readwrite_converter(value, fielddef, read=True, raw=False):
                 # use as format function
                 return conv(value)
         except Exception as err:    # pylint: disable=broad-except
-            exit_(err.args[0], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
     return value
 
@@ -2713,7 +2714,7 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
             try:
                 value = readwrite_converter(restoremapping.encode(STR_ENCODING)[0], fielddef, read=False)
             except Exception as err:    # pylint: disable=broad-except
-                exit_(err.args[0], err.args[1], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 valid = False
 
         # bool
@@ -2721,7 +2722,7 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
             try:
                 value = readwrite_converter(bool(restoremapping), fielddef, read=False)
             except Exception as err:  # pylint: disable=broad-except
-                exit_(err.args[0], err.args[1], type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 valid = False
 
         # integer
@@ -3130,7 +3131,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
     def backup_json(backup_filename, _, configmapping):
         # do json file write
-        with open(backup_filename, "w") as backupfp:
+        with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
             json.dump(
                 configmapping,
                 backupfp,
@@ -3172,7 +3173,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             try:
                 _backup[2](backup_filename, encode_cfg, configmapping)
             except Exception as err:    # pylint: disable=broad-except
-                exit_(err.args[0], "'{}' {}".format(backup_filename, err.args[1]), line=inspect.getlineno(inspect.currentframe()))
+                exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
     if fileformat is not None and ARGS.verbose:
         srctype = 'device'
@@ -3216,7 +3217,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             with open(restorefilename, "rb") as restorefp:
                 new_encode_cfg = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(err.args[0], "'{}' {}".format(restorefilename, err.args[1]), line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
 
     elif filetype == FileType.BIN:
         if ARGS.verbose:
@@ -3225,7 +3226,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             with open(restorefilename, "rb") as restorefp:
                 restorebin = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(err.args[0], "'{}' {}".format(restorefilename, err.args[1]), line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         decode_cfg = None
         header_format = '<L'
         if struct.unpack_from(header_format, restorebin, 0)[0] == BINARYFILE_MAGIC:
@@ -3242,7 +3243,8 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if ARGS.verbose:
             message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
-            with open(restorefilename, "r") as restorefp:
+            #with open(restorefilename, "r") as restorefp:
+            with codecs.open(restorefilename, "r", encoding="utf-8") as restorefp:
                 jsonconfig = json.load(restorefp)
         except ValueError as err:
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
@@ -3293,7 +3295,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                         with open(ARGS.tasmotafile, "wb") as outputfile:
                             outputfile.write(new_encode_cfg)
                     except Exception as err:    # pylint: disable=broad-except
-                        exit_(err.args[0], "'{}' {}".format(ARGS.tasmotafile, err.args[1]), line=inspect.getlineno(inspect.currentframe()))
+                        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.tasmotafile, err), line=inspect.getlineno(inspect.currentframe()))
                 if ARGS.verbose:
                     message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO)
 
