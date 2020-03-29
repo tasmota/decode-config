@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.1 [00090]'
+VER = '8.2.0.2 [00091]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -487,8 +487,8 @@ def cmnd_websensor(value, idx):
 SETTING_5_10_0 = {
                               # <format>, <addrdef>, <datadef> [,<converter>]
     'cfg_holder':                   ('<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'save_flag':                    ('<L',  0x004,       (None, None,                           ('System',      None)), (None,      False) ),
-    'version':                      ('<L',  0x008,       (None, None,                           (INTERNAL,      None)), ('hex($)',  False) ),
+    'save_flag':                    ('<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+    'version':                      ('<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
     'bootcount':                    ('<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
     'flag':                         ({
         'save_state':               ('<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
@@ -580,7 +580,7 @@ SETTING_5_10_0 = {
     'energy_max_energy_start':      ('<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
     'mqtt_retry':                   ('<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
     'poweronstate':                 ('B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
-    'last_module':                  ('B',   0x399,       (None, None,                           ('System',      None)) ),
+    'last_module':                  ('B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
     'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
     'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
     'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
@@ -710,9 +710,9 @@ SETTING_5_14_0.update               ({
 SETTING_6_0_0 = copy.deepcopy(SETTING_5_14_0)
 SETTING_6_0_0.update({
     'cfg_holder':                   ('<H',  0x000,       (None, None,                           ('System',      None)), ),
-    'cfg_size':                     ('<H',  0x002,       (None, None,                           (INTERNAL,      None)), (None, False)),
+    'cfg_size':                     ('<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
     'bootcount':                    ('<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
-    'cfg_crc':                      ('<H',  0x00E,       (None, None,                           (INTERNAL,      None)), '"0x{:04x}".format($)'),
+    'cfg_crc':                      ('<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
     'rule_enabled':                 ({
         'rule1':                    ('B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
         'rule2':                    ('B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
@@ -732,7 +732,7 @@ SETTING_6_0_0['flag'][0].update     ({
 # ======================================================================
 SETTING_6_1_1 = copy.deepcopy(SETTING_6_0_0)
 SETTING_6_1_1.update                ({
-    'flag3':                        ('<L',  0x3A0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag3':                        ('<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
     'mcp230xx_config':              ({
         '_':                        ('<L',  0x6F6,       (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), ('"0x{:08x}".format($)', False) ),
@@ -761,7 +761,7 @@ SETTING_6_2_1.update                ({
     'display_font':                 ('B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
     'flag3':                        ({
          'timers_enable':           ('<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
-         'user_esp8285_enable':     ('<L', (0x3A0,1,31), (None, None,                           ('System',      None)) ),
+         'user_esp8285_enable':     ('<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
                                     },      0x3A0,       (None, None,                           ('*',           None)), (None,      None) ),
     'button_debounce':              ('<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
     'switch_debounce':              ('<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
@@ -775,7 +775,7 @@ SETTING_6_2_1['flag'][0].update     ({
                                     })
 SETTING_6_2_1['flag2'][0].update    ({
     # currently unsupported Tasmota command, should be Sensor32, still needs to implement
-    'axis_resolution':              ('<L', (0x5BC,2,13), (None, None,                           ('System',      None)) ),
+    'axis_resolution':              ('<L', (0x5BC,2,13), (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_2 = copy.deepcopy(SETTING_6_2_1)
@@ -801,7 +801,7 @@ SETTING_6_2_1_6.update({
 # ======================================================================
 SETTING_6_2_1_10 = copy.deepcopy(SETTING_6_2_1_6)
 SETTING_6_2_1_10.update({
-    'rgbwwTable':                   ('B',   0x71A,       ([5],  None,                           ('System',      None)) ), # RGBWWTable 255,135,70,255,255
+    'rgbwwTable':                   ('B',   0x71A,       ([5],  None,                           (INTERNAL,      None)) ), # RGBWWTable 255,135,70,255,255
 })
 # ======================================================================
 SETTING_6_2_1_14 = copy.deepcopy(SETTING_6_2_1_10)
@@ -827,12 +827,12 @@ SETTING_6_2_1_20['flag3'][0].update ({
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           ('System',       None)) ),
+    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           (INTERNAL,       None)) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update({
-    'timezone_minutes':             ('B',   0x66D,       (None, None,                           ('System',       None)) ),
+    'timezone_minutes':             ('B',   0x66D,       (None, None,                           (INTERNAL,       None)) ),
 })
 SETTING_6_3_0_2['flag'][0].pop('rules_once',None)
 SETTING_6_3_0_2['flag'][0].update   ({
@@ -841,10 +841,10 @@ SETTING_6_3_0_2['flag'][0].update   ({
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
 SETTING_6_3_0_4.update({
-    'drivers':                      ('<L',  0x794,       ([3],  None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'monitors':                     ('<L',  0x7A0,       (None, None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'displays':                     ('<L',  0x7B0,       (None, None,                           ('System',       None)), '"0x{:08x}".format($)' ),
+    'drivers':                      ('<L',  0x794,       ([3],  None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
+    'monitors':                     ('<L',  0x7A0,       (None, None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
+    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
+    'displays':                     ('<L',  0x7B0,       (None, None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
 })
 SETTING_6_3_0_4['flag3'][0].update ({
         'tuya_apply_o20':           ('<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
@@ -999,7 +999,7 @@ SETTING_6_5_0_12.update             ({
     'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',       None)) ),
     'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',       None)) ),
     'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',       None)) ),
-    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           ('System',       None)) ),
+    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           (INTERNAL,       None)) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_15 = copy.deepcopy(SETTING_6_5_0_12)
@@ -1066,8 +1066,8 @@ SETTING_6_6_0_9.update              ({
 SETTING_6_6_0_10 = copy.deepcopy(SETTING_6_6_0_9)
 SETTING_6_6_0_10['flag3'][0].pop('tuya_disable_dimmer',None)
 SETTING_6_6_0_10.update             ({
-    'cfg_timestamp':                ('<L',  0xFF8,       (None, None,                           (INTERNAL,      None)) ),
-    'cfg_crc32':                    ('<L',  0xFFC,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'cfg_timestamp':                ('<L',  0xFF8,       (None, None,                           ('System',      None)) ),
+    'cfg_crc32':                    ('<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
     'tuya_fnid_map':                ({
         'fnid':                     ('B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#-1]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#-1]["dpid"]!=0) else None')) ),
         'dpid':                     ('B',   0xE01,       (None, None,                           ('Management',  None)) ),
@@ -1163,7 +1163,7 @@ SETTING_7_0_0_1 = copy.deepcopy(SETTING_6_6_0_21)
 SETTING_7_0_0_1.pop('register8',None)
 SETTING_7_0_0_1.update             ({
     'shutter_motordelay':           ('B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,float($)/20.0)')) ),
-    'flag4':                        ('<L',  0x1E0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag4':                        ('<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_7_0_0_1['flag3'][0].update ({
         'cors_enabled':             ('<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
@@ -1231,13 +1231,13 @@ SETTING_7_1_2_5.update             ({
 # ======================================================================
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
 SETTING_7_1_2_6.update             ({
-    'flag4':                        ('<L',  0xEF8,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag4':                        ('<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'serial_config':                ('b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
     'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
     'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
     'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',      None)) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
@@ -1595,7 +1595,7 @@ def get_templatesetting(decode_cfg):
     """
     version = 0x0
     size = setting = None
-    version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True)
+    version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
     template_version = version
     # search setting definition top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
@@ -2462,7 +2462,7 @@ def is_filtergroup(group):
             return False
         if group == '*':
             return True
-        if group.title() != INTERNAL.title() and group.title() not in (groupname.title() for groupname in ARGS.filter):
+        if group.title() == INTERNAL.title() or group.title() not in (groupname.title() for groupname in ARGS.filter):
             return False
     return True
 
@@ -2572,7 +2572,7 @@ def set_fieldvalue(fielddef, dobj, addr, value):
 
     return dobj
 
-def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0):
+def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False):
     """
     Get field value from definition
 
@@ -2600,7 +2600,7 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0):
     format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='format_, baseaddr, strindex, arraydef, group')
 
     # filter groups
-    if not is_filtergroup(group):
+    if not ignoregroup and not is_filtergroup(group):
         return valuemapping
 
     # <arraydef> contains a integer list
@@ -2947,11 +2947,11 @@ def bin2mapping(decode_cfg):
         exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
 
     if 'version' in setting:
-        cfg_version = get_field(decode_cfg, 'version', setting['version'], raw=True)
+        cfg_version = get_field(decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
 
     # check size if exists
     if 'cfg_size' in setting:
-        cfg_size = get_field(decode_cfg, 'cfg_size', setting['cfg_size'], raw=True)
+        cfg_size = get_field(decode_cfg, 'cfg_size', setting['cfg_size'], raw=True, ignoregroup=True)
         # read size should be same as definied in setting
         if cfg_size > size:
             # may be processed
@@ -2962,16 +2962,16 @@ def bin2mapping(decode_cfg):
 
     # check crc if exists
     if 'cfg_crc' in setting:
-        cfg_crc = get_field(decode_cfg, 'cfg_crc', setting['cfg_crc'], raw=True)
+        cfg_crc = get_field(decode_cfg, 'cfg_crc', setting['cfg_crc'], raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(decode_cfg)
     if 'cfg_crc32' in setting:
-        cfg_crc32 = get_field(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True)
+        cfg_crc32 = get_field(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(decode_cfg)
     cfg_timestamp = int(time.time())
     if 'cfg_timestamp' in setting:
-        cfg_timestamp = get_field(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True)
+        cfg_timestamp = get_field(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True, ignoregroup=True)
 
     if version < 0x0606000B:
         if cfg_crc != get_settingcrc(decode_cfg):
@@ -2981,11 +2981,12 @@ def bin2mapping(decode_cfg):
             exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
-    valuemapping = get_field(decode_cfg, None, (setting, 0, (None, None, (INTERNAL, None))))
+    valuemapping = get_field(decode_cfg, None, (setting, 0, (None, None, ('System', None))), ignoregroup=True)
 
     # remove keys having empty object
-    for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
-        valuemapping.pop(key, None)
+    if valuemapping is not None:
+        for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
+            valuemapping.pop(key, None)
 
     # add header info
     valuemapping['header'] = {
@@ -3270,7 +3271,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             # get binary header and template to use
             _, _, _, setting = get_templatesetting(new_decode_cfg)
             # get config file version
-            cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True)
+            cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
             message("Config file contains data of Tasmota {}".format(get_versionstr(cfg_version)), type_=LogType.INFO)
         if ARGS.forcerestore or new_encode_cfg != encode_cfg:
             dryrun = ""
