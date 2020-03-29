@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.1 [00089]'
+VER = '8.2.0.1 [00090]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1262,6 +1262,7 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
                     'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
                     'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
+                    'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
@@ -1375,6 +1376,8 @@ SETTING_8_1_0_9.update             ({
     'bri_min':                      ('B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
     'bri_preset_low':               ('B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
     'bri_preset_high':              ('B',   0xF07,       (None, None,                           ('Light',       None)) ),
+    'mqtt_grptopicdev':             ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][0].update ({
         'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
