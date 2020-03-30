@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.2 [00092]'
+VER = '8.2.0.3 [00093]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -827,12 +827,12 @@ SETTING_6_2_1_20['flag3'][0].update ({
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           (INTERNAL,       None)) ),
+    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update({
-    'timezone_minutes':             ('B',   0x66D,       (None, None,                           (INTERNAL,       None)) ),
+    'timezone_minutes':             ('B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
 })
 SETTING_6_3_0_2['flag'][0].pop('rules_once',None)
 SETTING_6_3_0_2['flag'][0].update   ({
@@ -841,10 +841,10 @@ SETTING_6_3_0_2['flag'][0].update   ({
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
 SETTING_6_3_0_4.update({
-    'drivers':                      ('<L',  0x794,       ([3],  None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
-    'monitors':                     ('<L',  0x7A0,       (None, None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
-    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
-    'displays':                     ('<L',  0x7B0,       (None, None,                           (INTERNAL,       None)), '"0x{:08x}".format($)' ),
+    'drivers':                      ('<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'monitors':                     ('<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'displays':                     ('<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
 })
 SETTING_6_3_0_4['flag3'][0].update ({
         'tuya_apply_o20':           ('<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
@@ -995,11 +995,11 @@ SETTING_6_5_0_11['flag3'][0].update ({
 SETTING_6_5_0_12 = copy.deepcopy(SETTING_6_5_0_11)
 SETTING_6_5_0_12.pop('drivers',None)
 SETTING_6_5_0_12.update             ({
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',       None)) ),
-    'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',       None)) ),
-    'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',       None)) ),
-    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           (INTERNAL,       None)) ),
+    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
+    'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
+    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_15 = copy.deepcopy(SETTING_6_5_0_12)
@@ -1236,7 +1236,7 @@ SETTING_7_1_2_6.update             ({
     'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
     'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
-    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
+    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
     'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_7_1_2_6['flag3'][0].update ({
@@ -1263,37 +1263,61 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
                     'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
                     'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
+                    'SET_TEMPLATE_NAME',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
 SETTING_8_0_0_1.update             ({
-    'ota_url':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),              (None, None, ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),         ([3],  None, ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
-    'sta_ssid':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),            ([2],  None, ('Wifi',        '"SSId{} {}".format(#,$)')) ),
-    'sta_pwd':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),             ([2],  None, ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
-    'hostname':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),            (None, None, ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),         (None, None, ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),              (None, None, ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'cors_domain':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),                (None, None, ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),           (None, None, ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),         (None, None, ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),           (None, None, ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),            (None, None, ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'mqtt_fulltopic':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),      (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),          (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
-    'button_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),   (None, None, ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),   (None, None, ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),      (None, None, ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),          ([4],  None, ('MQTT',        '"StateText{} {}".format(#,$)')) ),
-    'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),          ([3],  None, ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
-    'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),                ([16], None, ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'ota_url':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),
+                                                         (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),
+                                                         ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'sta_ssid':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),
+                                                         ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),
+                                                         ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),
+                                                         (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),
+                                                         (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+    'web_password':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),
+                                                         (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'cors_domain':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),
+                                                         (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'mqtt_host':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),
+                                                         (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_client':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),
+                                                         (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
+                                                         (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
+                                                         (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_fulltopic':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
+                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'mqtt_topic':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'switch_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'state_text':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),
+                                                         ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
+                                                         ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
+                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update             ({
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
+                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
@@ -1399,10 +1423,23 @@ SETTING_8_1_0_11.update             ({
     'hum_comp':                     ('b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
-SETTING_8_2_0_2 = copy.deepcopy(SETTING_8_1_0_11)
+SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
+SETTING_8_2_0_0.update             ({
+    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+                                    })
+# ======================================================================
+SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
+SETTING_8_2_0_3.update             ({
+    'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
+                                                         (None,  None,                          ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
+                                    })
+SETTING_8_2_0_3['user_template'][0].update ({
+        'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x8020002,0x1000, SETTING_8_2_0_2),
+            (0x8020003,0x1000, SETTING_8_2_0_3),
+            (0x8020000,0x1000, SETTING_8_2_0_0),
             (0x801000B,0x1000, SETTING_8_1_0_11),
             (0x801000A,0x1000, SETTING_8_1_0_10),
             (0x8010009,0x1000, SETTING_8_1_0_9),
