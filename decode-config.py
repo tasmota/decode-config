@@ -1574,6 +1574,7 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
     if doexit:
+        message("Premature exit (code {})".format(status), type_=None, status=None, line=line)
         sys.exit(EXIT_CODE)
 
 def debug(_args):
@@ -1867,8 +1868,8 @@ def load_tasmotaconfig(filename):
     if not os.path.isfile(filename):    # check file exists
         exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename), line=inspect.getlineno(inspect.currentframe()))
 
-    if ARGS.verbose:
-        message("Load data from file '{}'".format(ARGS.tasmotafile), type_=LogType.INFO)
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data from file '{}'".format(ARGS.tasmotafile), type_=LogType.INFO if ARGS.verbose else None)
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
@@ -1959,8 +1960,8 @@ def pull_tasmotaconfig(host, port, username=DEFAULTS['source']['username'], pass
     @return:
         binary config data (encrypted) or None on error
     """
-    if ARGS.verbose:
-        message("Load data from device '{}'".format(ARGS.device), type_=LogType.INFO)
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data from device '{}'".format(ARGS.device), type_=LogType.INFO if ARGS.verbose else None)
 
     _, body = get_tasmotaconfig('dl', host, port, username, password, contenttype='application/octet-stream')
 
@@ -3216,13 +3217,9 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             except Exception as err:    # pylint: disable=broad-except
                 exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
-    if fileformat is not None and ARGS.verbose:
-        srctype = 'device'
-        src = ARGS.device
-        if ARGS.tasmotafile is not None:
-            srctype = 'file'
-            src = ARGS.tasmotafile
-        message("{}Backup successful from {} '{}' to file '{}' ({} format)".format(dryrun, srctype, src, backup_filename, fileformat), type_=LogType.INFO)
+    if fileformat is not None and (ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output)):
+        message("{}Backup successful to '{}' ({} format)"\
+            .format(dryrun, backup_filename, fileformat), type_=LogType.INFO if ARGS.verbose else None)
 
 def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     """
@@ -3324,8 +3321,8 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                 if error_code:
                     exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
-                    if ARGS.verbose:
-                        message("{}Restore successful to device '{}' using restore file '{}'".format(dryrun, ARGS.device, restorefilename), type_=LogType.INFO)
+                    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.device, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
             # write config from a file
             elif ARGS.tasmotafile is not None:
@@ -3337,13 +3334,13 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                             outputfile.write(new_encode_cfg)
                     except Exception as err:    # pylint: disable=broad-except
                         exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.tasmotafile, err), line=inspect.getlineno(inspect.currentframe()))
-                if ARGS.verbose:
-                    message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO)
+                if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                    message("{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
-            if ARGS.verbose:
-                message("Configuration data leaving unchanged", type_=LogType.INFO)
+            if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                message("Configuration data leaving unchanged", type_=LogType.INFO if ARGS.verbose else None)
 
 def output_tasmotacmnds(tasmotacmnds):
     """
