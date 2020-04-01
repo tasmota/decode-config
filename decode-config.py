@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00093]'
+VER = '8.2.0.3 [00094]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -626,7 +626,7 @@ SETTING_5_10_0 = {
         'pulse_counter_type3':      ('<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
         'pulse_counter_type4':      ('<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
                                     },      0x5D0,       (None, None,                           ('Sensor',      None)), (None,      None) ),
-    'pulse_counter_debounce':       ('<H',  0x5D2,       (None, '0 <= $ <= 3200',               ('Sensor',      '"CounterDebounce {}".format($)')) ),
+    'pulse_counter_debounce':       ('<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
     'rf_code':                      ('B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
 }
 # ======================================================================
@@ -1432,6 +1432,8 @@ SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
 SETTING_8_2_0_3.update             ({
     'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
                                                          (None,  None,                          ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
+    'pulse_counter_debounce_low':   ('<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
+    'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
                                     })
 SETTING_8_2_0_3['user_template'][0].update ({
         'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
