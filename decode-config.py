@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00094]'
+VER = '8.2.0.3 [00095]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1327,7 +1327,7 @@ SETTING_8_1_0_1['flag3'][0].update ({
 # ======================================================================
 SETTING_8_1_0_2 = copy.deepcopy(SETTING_8_1_0_1)
 SETTING_8_1_0_2.update             ({
-    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensors',     '"HotPlug {}".format($)')) ),
+    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
     'shutter_button':               ('<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
