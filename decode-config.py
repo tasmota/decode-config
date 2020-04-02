@@ -1610,6 +1610,40 @@ def shorthelp(doexit=True):
 # ======================================================================
 # Tasmota config data handling
 # ======================================================================
+def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
+    """
+    Get JSON string output from config mapping
+
+    @param configmapping:
+        binary config data (decrypted)
+    @param jsonsort:
+        True: output of dictionaries will be sorted by key
+        Uppercase and lowercase main keys remain unaffected
+    @param jsonindent:
+        pretty-printed JSON output indent level (<0 disables indent)
+    @param jsoncompact:
+        True: output of dictionaries will be compacted (no space after , and :)
+
+    @return:
+        template sizes as list []
+    """
+    conv_keys = {}
+    for key in configmapping:
+        if key[0].isupper():
+            conv_keys[key] = key.lower()
+            configmapping[conv_keys[key]] = configmapping.pop(key)
+    json_output = json.dumps(
+        configmapping,
+        ensure_ascii=False,
+        sort_keys=jsonsort,
+        indent=None if (jsonindent is None or ARGS.jsonindent < 0) else jsonindent,
+        separators=(',', ':') if jsoncompact else (', ', ': ')
+        )
+    for str_ in conv_keys:
+        json_output = json_output.replace('"'+conv_keys[str_]+'"', '"'+str_+'"')
+
+    return json_output
+
 def get_templatesizes():
     """
     Get all possible template sizes as list
@@ -3176,14 +3210,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     def backup_json(backup_filename, _, configmapping):
         # do json file write
         with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
-            json.dump(
-                configmapping,
-                backupfp,
-                ensure_ascii=False,
-                sort_keys=ARGS.jsonsort,
-                indent=None if (ARGS.jsonindent is None or ARGS.jsonindent < 0) else ARGS.jsonindent,
-                separators=(',', ':') if ARGS.jsoncompact else (', ', ': ')
-                )
+            backupfp.write(get_jsonstr(configmapping, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
     backups = {
         FileType.DMP.lower():("Tasmota", FileType.DMP, backup_dmp),
@@ -3715,7 +3742,7 @@ if __name__ == "__main__":
     if (ARGS.backupfile is None and ARGS.restorefile is None) or ARGS.output:
         if ARGS.outputformat == 'json':
             # json screen output
-            print(json.dumps(CONFIG_MAPPING, ensure_ascii=False, sort_keys=ARGS.jsonsort, indent=None if (ARGS.jsonindent is None or ARGS.jsonindent < 0) else ARGS.jsonindent, separators=(',', ':') if ARGS.jsoncompact else (', ', ': ')))
+            print(get_jsonstr(CONFIG_MAPPING, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
         if ARGS.outputformat == 'cmnd' or ARGS.outputformat == 'command':
             # Tasmota command output
