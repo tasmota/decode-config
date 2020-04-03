@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00096]'
+VER = '8.2.0.3 [00097]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2948,6 +2948,21 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
     @return:
         new Tasmota command mapping
     """
+    def set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd):
+        """
+        Helper to append Tasmota commands to list
+        """
+        cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
+        if group is not None and cmnd is not None:
+            if group not in cmnds:
+                cmnds[group] = []
+            if isinstance(cmnd, list):
+                for command in cmnd:
+                    cmnds[group].append(command)
+            else:
+                cmnds[group].append(cmnd)
+        return cmnds
+
     format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # cast unicode
@@ -2985,25 +3000,9 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
         if isinstance(tasmotacmnd, tuple):
             tasmotacmnds = tasmotacmnd
             for tasmotacmnd in tasmotacmnds:
-                cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
-                if group is not None and cmnd is not None:
-                    if group not in cmnds:
-                        cmnds[group] = []
-                    if isinstance(cmnd, list):
-                        for command in cmnd:
-                            cmnds[group].append(command)
-                    else:
-                        cmnds[group].append(cmnd)
+                cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
         else:
-            cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
-            if group is not None and cmnd is not None:
-                if group not in cmnds:
-                    cmnds[group] = []
-                if isinstance(cmnd, list):
-                    for command in cmnd:
-                        cmnds[group].append(command)
-                else:
-                    cmnds[group].append(cmnd)
+            cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
 
     return cmnds
 
