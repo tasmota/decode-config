@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00097]'
+VER = '8.2.0.3 [00098]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1440,6 +1440,7 @@ SETTING_8_2_0_3['user_template'][0].update ({
                                     })
 SETTING_8_2_0_3['flag4'][0].update ({
         'only_json_message':        ('<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
+        'fade_at_startup':          ('<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
                                     })
 SETTING_8_2_0_3['SensorBits1'][0].update ({
         'bh1750_resolution':        ('B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
