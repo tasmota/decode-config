@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00098]'
+VER = '8.2.0.3 [00099]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1431,9 +1431,11 @@ SETTING_8_2_0_0.update             ({
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
 SETTING_8_2_0_3.update             ({
     'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
-                                                         (None,  None,                          ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
+                                                         (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
     'pulse_counter_debounce_low':   ('<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
     'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
+    'channel':                      ('B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
+    'bssid':                        ('B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
                                     })
 SETTING_8_2_0_3['user_template'][0].update ({
         'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
