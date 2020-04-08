@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00099]'
+VER = '8.2.0.3 [00100]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -583,7 +583,7 @@ SETTING_5_10_0 = {
     'last_module':                  ('B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
     'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
     'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
     'switch_topic':                 ('33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
     'sleep':                        ('B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
     'domoticz_switch_idx':          ('<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
@@ -687,7 +687,7 @@ SETTING_5_13_1.update               ({
     'knx_CB_addr':                  ('<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
     'knx_GA_param':                 ('B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
     'knx_CB_param':                 ('B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
-    'rules':                        ('512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($)==0 else $)')) ),
+    'rules':                        ('512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_5_14_0 = copy.deepcopy(SETTING_5_13_1)
@@ -723,8 +723,8 @@ SETTING_6_0_0.update({
         'rule2':                    ('B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
         'rule3':                    ('B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
                                     },      0x4A0,       (None, None,                           ('Rules',       None)), (None,      None) ),
-    'mems':                         ('10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'rules':                        ('512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'mems':                         ('10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'rules':                        ('512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
 })
 SETTING_6_0_0['flag'][0].update     ({
         'knx_enable_enhancement':   ('<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
@@ -1264,6 +1264,7 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
                     'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
                     'SET_TEMPLATE_NAME',
+                    'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
@@ -1307,17 +1308,17 @@ SETTING_8_0_0_1.update             ({
     'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
                                                          ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
     'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
-                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
     'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
-                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update             ({
     'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
-                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
     'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
-                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
@@ -1401,7 +1402,7 @@ SETTING_8_1_0_9.update             ({
     'bri_preset_low':               ('B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
     'bri_preset_high':              ('B',   0xF07,       (None, None,                           ('Light',       None)) ),
     'mqtt_grptopicdev':             ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
-                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#,$)')) ),
+                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][0].update ({
         'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
@@ -1429,6 +1430,7 @@ SETTING_8_2_0_0.update             ({
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
+SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update             ({
     'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
@@ -1436,6 +1438,14 @@ SETTING_8_2_0_3.update             ({
     'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
     'channel':                      ('B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
     'bssid':                        ('B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
+    'device_group_topic':           ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
+                                                         ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#,$ if len($) else "\\"")')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
+    'mqtt_grptopic2':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1, "\\"" if len($) == 0 else $)')) ),
                                     })
 SETTING_8_2_0_3['user_template'][0].update ({
         'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
