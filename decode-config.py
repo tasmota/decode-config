@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00100]'
+VER = '8.2.0.3 [00101]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -56,11 +56,10 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
     Source:
       Read/Write Tasmota configuration from/to
 
-      -f, --file, --tasmota-file <filename>
+      -f, --file <filename>
                             file to retrieve/write Tasmota configuration from/to
                             (default: None)'
-      -d, --device, --host <host>
-                            hostname or IP address to retrieve/send Tasmota
+      -d, --device <host>   hostname or IP address to retrieve/send Tasmota
                             configuration from/to (default: None)
       -P, --port <port>     TCP/IP port number to use for the host connection
                             (default: 80)
@@ -100,8 +99,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default: 'None'). -1 disables indent.
       --json-compact        compact JSON output by eliminate whitespace
       --json-hide-pw        hide passwords
-      --json-show-pw, --json-unhide-pw
-                            unhide passwords (default)
+      --json-show-pw        unhide passwords (default)
 
     Tasmota command output:
       Tasmota command output format specification
@@ -119,7 +117,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
 
       -c, --config <filename>
                             program config file - can be used to set default
-                            command args (default: None)
+                            command parameters (default: None)
       -S, --output          display output regardsless of backup/restore usage
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
@@ -3472,16 +3470,18 @@ def parseargs():
                                            formatter_class=lambda prog: HelpFormatter(prog))    # pylint: disable=unnecessary-lambda
 
     source = PARSER.add_argument_group('Source', 'Read/Write Tasmota configuration from/to')
-    source.add_argument('-f', '--file', '--tasmota-file',
+    source.add_argument('-f', '--file',
                         metavar='<filename>',
                         dest='tasmotafile',
                         default=DEFAULTS['source']['tasmotafile'],
                         help="file to retrieve/write Tasmota configuration from/to (default: {})'".format(DEFAULTS['source']['tasmotafile']))
-    source.add_argument('-d', '--device', '--host',
+    source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
+    source.add_argument('-d', '--device',
                         metavar='<host>',
                         dest='device',
                         default=DEFAULTS['source']['device'],
                         help="hostname or IP address to retrieve/send Tasmota configuration from/to (default: {})".format(DEFAULTS['source']['device']))
+    source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
     source.add_argument('-P', '--port',
                         metavar='<port>',
                         dest='port',
@@ -3561,11 +3561,12 @@ def parseargs():
                             action='store_true',
                             default=DEFAULTS['jsonformat']['jsonhidepw'],
                             help="hide passwords{}".format(' (default)' if DEFAULTS['jsonformat']['jsonhidepw'] else ''))
-    jsonformat.add_argument('--json-show-pw', '--json-unhide-pw',
+    jsonformat.add_argument('--json-show-pw',
                             dest='jsonhidepw',
                             action='store_false',
                             default=DEFAULTS['jsonformat']['jsonhidepw'],
                             help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['jsonhidepw'] else ''))
+    jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', help=configargparse.SUPPRESS)
 
     cmndformat = PARSER.add_argument_group('Tasmota command output', 'Tasmota command output format specification')
     cmndformat.add_argument('--cmnd-indent',

@@ -51,38 +51,38 @@ See [Running as Python script](#running-as-python-script) for more details.
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `README.md`              | This content                                                            |
 
-- [decode-config](#decode-config)
-  - [Content](#content)
-    - [Files](#files)
-  - [Running the program](#running-the-program)
-    - [Prerequisite](#prerequisite)
-    - [Running as Python script](#running-as-python-script)
-      - [Linux](#linux)
-      - [Windows 10](#windows-10)
-      - [MacOS](#macos)
-      - [All OS](#all-os)
-  - [File Formats](#file-formats)
-    - [.dmp Format](#dmp-format)
-    - [.json Format](#json-format)
-    - [.bin Format](#bin-format)
-    - [File extensions](#file-extensions)
-  - [Usage](#usage)
-    - [Test run](#test-run)
-    - [Basics](#basics)
-    - [Save backup file](#save-backup-file)
-    - [Restore backup file](#restore-backup-file)
-    - [Output to screen](#output-to-screen)
-      - [JSON output](#json-output)
-      - [Tasmota command output](#tasmota-command-output)
-    - [Filter data](#filter-data)
-    - [Parameter configuration file](#parameter-configuration-file)
-    - [More arguments](#more-arguments)
-      - [Parameter notes](#parameter-notes)
-    - [Examples](#examples)
-      - [Parameter config file](#parameter-config-file)
-        - [my.conf](#myconf)
-      - [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-      - [Use batch processing](#use-batch-processing)
+* [decode-config](#decode-config)
+  * [Content](#content)
+    * [Files](#files)
+  * [Running the program](#running-the-program)
+    * [Prerequisite](#prerequisite)
+    * [Running as Python script](#running-as-python-script)
+      * [Linux](#linux)
+      * [Windows 10](#windows-10)
+      * [MacOS](#macos)
+      * [All OS](#all-os)
+  * [File Formats](#file-formats)
+    * [.dmp Format](#dmp-format)
+    * [.json Format](#json-format)
+    * [.bin Format](#bin-format)
+    * [File extensions](#file-extensions)
+  * [Usage](#usage)
+    * [Test run](#test-run)
+    * [Basics](#basics)
+    * [Save backup file](#save-backup-file)
+    * [Restore backup file](#restore-backup-file)
+    * [Output to screen](#output-to-screen)
+      * [JSON output](#json-output)
+      * [Tasmota command output](#tasmota-command-output)
+    * [Filter data](#filter-data)
+    * [Parameter configuration file](#parameter-configuration-file)
+    * [More arguments](#more-arguments)
+      * [Parameter notes](#parameter-notes)
+    * [Examples](#examples)
+      * [Parameter config file](#parameter-config-file)
+        * [my.conf](#myconf)
+      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+      * [Use batch processing](#use-batch-processing)
 
 ## Running the program
 
@@ -425,11 +425,10 @@ commandline values override config file values which override defaults.
 Source:
   Read/Write Tasmota configuration from/to
 
-  -f, --file, --tasmota-file <filename>
+  -f, --file <filename>
                         file to retrieve/write Tasmota configuration from/to
                         (default: None)'
-  -d, --device, --host <host>
-                        hostname or IP address to retrieve/send Tasmota
+  -d, --device <host>   hostname or IP address to retrieve/send Tasmota
                         configuration from/to (default: None)
   -P, --port <port>     TCP/IP port number to use for the host connection
                         (default: 80)
@@ -469,8 +468,7 @@ JSON output:
                         (default: 'None'). -1 disables indent.
   --json-compact        compact JSON output by eliminate whitespace
   --json-hide-pw        hide passwords
-  --json-show-pw, --json-unhide-pw
-                        unhide passwords (default)
+  --json-show-pw        unhide passwords (default)
 
 Tasmota command output:
   Tasmota command output format specification
@@ -488,7 +486,7 @@ Common:
 
   -c, --config <filename>
                         program config file - can be used to set default
-                        command args (default: None)
+                        command parameters (default: None)
   -S, --output          display output regardsless of backup/restore usage
                         (default do not output on backup or restore usage)
   -T, --output-format json|cmnd|command
