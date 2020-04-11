@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00101]'
+VER = '8.2.0.3 [00102]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -44,7 +44,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -122,7 +122,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
+      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -1436,6 +1436,24 @@ SETTING_8_2_0_3.update             ({
     'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
     'channel':                      ('B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
     'bssid':                        ('B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'as3935_sensor_cfg':            ('B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
+    'as3935_functions':             ({
+         'nf_autotune':             ('B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
+         'dist_autotune':           ('B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
+         'nf_autotune_both':        ('B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
+         'mqtt_only_Light_Event':   ('B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
+                                    },      0xF15,       (None, None,                           ('*',           None)), (None,      None) ),
+    'as3935_parameter':             ({
+         'nf_autotune_time':        ('<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
+         'dist_autotune_time':      ('<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
+         'nf_autotune_min':         ('<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
+                                    },      0xF16,       (None, None,                           ('*',           None)), (None,      None) ),
+    'zb_ext_panid':                 ('<Q',  0xF18,       (None, None,                           ('Zigbee',      None)) ),
+    'zb_precfgkey_l':               ('<Q',  0xF20,       (None, None,                           ('Zigbee',      None)) ),
+    'zb_precfgkey_h':               ('<Q',  0xF28,       (None, None,                           ('Zigbee',      None)) ),
+    'zb_pan_id':                    ('<H',  0xF30,       (None, None,                           ('Zigbee',      None)) ),
+    'zb_channel':                   ('B',   0xF32,       (None, None,                           ('Zigbee',      None)) ),
+    'zb_free_byte':                 ('B',   0xF33,       (None, None,                           ('Zigbee',      None)) ),
     'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
     'device_group_topic':           ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
