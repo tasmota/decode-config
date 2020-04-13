@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.0 [00064]'
+VER = '8.3.0.0 [00065]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -44,7 +44,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
                         [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi} ...]]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -56,11 +56,10 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
     Source:
       Read/Write Tasmota configuration from/to
 
-      -f, --file, --tasmota-file <filename>
+      -f, --file <filename>
                             file to retrieve/write Tasmota configuration from/to
                             (default: None)'
-      -d, --device, --host <host>
-                            hostname or IP address to retrieve/send Tasmota
+      -d, --device <host>   hostname or IP address to retrieve/send Tasmota
                             configuration from/to (default: None)
       -P, --port <port>     TCP/IP port number to use for the host connection
                             (default: 80)
@@ -100,8 +99,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default: 'None'). -1 disables indent.
       --json-compact        compact JSON output by eliminate whitespace
       --json-hide-pw        hide passwords
-      --json-show-pw, --json-unhide-pw
-                            unhide passwords (default)
+      --json-show-pw        unhide passwords (default)
 
     Tasmota command output:
       Tasmota command output format specification
@@ -119,12 +117,12 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
 
       -c, --config <filename>
                             program config file - can be used to set default
-                            command args (default: None)
+                            command parameters (default: None)
       -S, --output          display output regardsless of backup/restore usage
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi}
+      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -487,8 +485,8 @@ def cmnd_websensor(value, idx):
 SETTING_5_10_0 = {
                               # <format>, <addrdef>, <datadef> [,<converter>]
     'cfg_holder':                   ('<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'save_flag':                    ('<L',  0x004,       (None, None,                           ('System',      None)), (None,      False) ),
-    'version':                      ('<L',  0x008,       (None, None,                           (INTERNAL,      None)), ('hex($)',  False) ),
+    'save_flag':                    ('<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+    'version':                      ('<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
     'bootcount':                    ('<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
     'flag':                         ({
         'save_state':               ('<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
@@ -580,10 +578,10 @@ SETTING_5_10_0 = {
     'energy_max_energy_start':      ('<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
     'mqtt_retry':                   ('<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
     'poweronstate':                 ('B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
-    'last_module':                  ('B',   0x399,       (None, None,                           ('System',      None)) ),
+    'last_module':                  ('B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
     'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
     'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
     'switch_topic':                 ('33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
     'sleep':                        ('B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
     'domoticz_switch_idx':          ('<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
@@ -626,7 +624,7 @@ SETTING_5_10_0 = {
         'pulse_counter_type3':      ('<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
         'pulse_counter_type4':      ('<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
                                     },      0x5D0,       (None, None,                           ('Sensor',      None)), (None,      None) ),
-    'pulse_counter_debounce':       ('<H',  0x5D2,       (None, '0 <= $ <= 3200',               ('Sensor',      '"CounterDebounce {}".format($)')) ),
+    'pulse_counter_debounce':       ('<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
     'rf_code':                      ('B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
 }
 # ======================================================================
@@ -687,7 +685,7 @@ SETTING_5_13_1.update               ({
     'knx_CB_addr':                  ('<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
     'knx_GA_param':                 ('B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
     'knx_CB_param':                 ('B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
-    'rules':                        ('512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($)==0 else $)')) ),
+    'rules':                        ('512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_5_14_0 = copy.deepcopy(SETTING_5_13_1)
@@ -710,9 +708,9 @@ SETTING_5_14_0.update               ({
 SETTING_6_0_0 = copy.deepcopy(SETTING_5_14_0)
 SETTING_6_0_0.update({
     'cfg_holder':                   ('<H',  0x000,       (None, None,                           ('System',      None)), ),
-    'cfg_size':                     ('<H',  0x002,       (None, None,                           (INTERNAL,      None)), (None, False)),
+    'cfg_size':                     ('<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
     'bootcount':                    ('<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
-    'cfg_crc':                      ('<H',  0x00E,       (None, None,                           (INTERNAL,      None)), '"0x{:04x}".format($)'),
+    'cfg_crc':                      ('<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
     'rule_enabled':                 ({
         'rule1':                    ('B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
         'rule2':                    ('B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
@@ -723,8 +721,8 @@ SETTING_6_0_0.update({
         'rule2':                    ('B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
         'rule3':                    ('B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
                                     },      0x4A0,       (None, None,                           ('Rules',       None)), (None,      None) ),
-    'mems':                         ('10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'rules':                        ('512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'mems':                         ('10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'rules':                        ('512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
 })
 SETTING_6_0_0['flag'][0].update     ({
         'knx_enable_enhancement':   ('<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
@@ -732,7 +730,7 @@ SETTING_6_0_0['flag'][0].update     ({
 # ======================================================================
 SETTING_6_1_1 = copy.deepcopy(SETTING_6_0_0)
 SETTING_6_1_1.update                ({
-    'flag3':                        ('<L',  0x3A0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag3':                        ('<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
     'mcp230xx_config':              ({
         '_':                        ('<L',  0x6F6,       (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), ('"0x{:08x}".format($)', False) ),
@@ -761,7 +759,7 @@ SETTING_6_2_1.update                ({
     'display_font':                 ('B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
     'flag3':                        ({
          'timers_enable':           ('<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
-         'user_esp8285_enable':     ('<L', (0x3A0,1,31), (None, None,                           ('System',      None)) ),
+         'user_esp8285_enable':     ('<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
                                     },      0x3A0,       (None, None,                           ('*',           None)), (None,      None) ),
     'button_debounce':              ('<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
     'switch_debounce':              ('<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
@@ -775,7 +773,7 @@ SETTING_6_2_1['flag'][0].update     ({
                                     })
 SETTING_6_2_1['flag2'][0].update    ({
     # currently unsupported Tasmota command, should be Sensor32, still needs to implement
-    'axis_resolution':              ('<L', (0x5BC,2,13), (None, None,                           ('System',      None)) ),
+    'axis_resolution':              ('<L', (0x5BC,2,13), (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_2 = copy.deepcopy(SETTING_6_2_1)
@@ -801,7 +799,7 @@ SETTING_6_2_1_6.update({
 # ======================================================================
 SETTING_6_2_1_10 = copy.deepcopy(SETTING_6_2_1_6)
 SETTING_6_2_1_10.update({
-    'rgbwwTable':                   ('B',   0x71A,       ([5],  None,                           ('System',      None)) ), # RGBWWTable 255,135,70,255,255
+    'rgbwwTable':                   ('B',   0x71A,       ([5],  None,                           (INTERNAL,      None)) ), # RGBWWTable 255,135,70,255,255
 })
 # ======================================================================
 SETTING_6_2_1_14 = copy.deepcopy(SETTING_6_2_1_10)
@@ -827,12 +825,12 @@ SETTING_6_2_1_20['flag3'][0].update ({
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           ('System',       None)) ),
+    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update({
-    'timezone_minutes':             ('B',   0x66D,       (None, None,                           ('System',       None)) ),
+    'timezone_minutes':             ('B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
 })
 SETTING_6_3_0_2['flag'][0].pop('rules_once',None)
 SETTING_6_3_0_2['flag'][0].update   ({
@@ -841,10 +839,10 @@ SETTING_6_3_0_2['flag'][0].update   ({
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
 SETTING_6_3_0_4.update({
-    'drivers':                      ('<L',  0x794,       ([3],  None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'monitors':                     ('<L',  0x7A0,       (None, None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           ('System',       None)), '"0x{:08x}".format($)' ),
-    'displays':                     ('<L',  0x7B0,       (None, None,                           ('System',       None)), '"0x{:08x}".format($)' ),
+    'drivers':                      ('<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'monitors':                     ('<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'displays':                     ('<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
 })
 SETTING_6_3_0_4['flag3'][0].update ({
         'tuya_apply_o20':           ('<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
@@ -995,11 +993,11 @@ SETTING_6_5_0_11['flag3'][0].update ({
 SETTING_6_5_0_12 = copy.deepcopy(SETTING_6_5_0_11)
 SETTING_6_5_0_12.pop('drivers',None)
 SETTING_6_5_0_12.update             ({
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',       None)) ),
-    'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',       None)) ),
-    'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',       None)) ),
-    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           ('System',       None)) ),
+    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
+    'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
+    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_15 = copy.deepcopy(SETTING_6_5_0_12)
@@ -1066,8 +1064,8 @@ SETTING_6_6_0_9.update              ({
 SETTING_6_6_0_10 = copy.deepcopy(SETTING_6_6_0_9)
 SETTING_6_6_0_10['flag3'][0].pop('tuya_disable_dimmer',None)
 SETTING_6_6_0_10.update             ({
-    'cfg_timestamp':                ('<L',  0xFF8,       (None, None,                           (INTERNAL,      None)) ),
-    'cfg_crc32':                    ('<L',  0xFFC,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'cfg_timestamp':                ('<L',  0xFF8,       (None, None,                           ('System',      None)) ),
+    'cfg_crc32':                    ('<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
     'tuya_fnid_map':                ({
         'fnid':                     ('B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#-1]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#-1]["dpid"]!=0) else None')) ),
         'dpid':                     ('B',   0xE01,       (None, None,                           ('Management',  None)) ),
@@ -1163,7 +1161,7 @@ SETTING_7_0_0_1 = copy.deepcopy(SETTING_6_6_0_21)
 SETTING_7_0_0_1.pop('register8',None)
 SETTING_7_0_0_1.update             ({
     'shutter_motordelay':           ('B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,float($)/20.0)')) ),
-    'flag4':                        ('<L',  0x1E0,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag4':                        ('<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_7_0_0_1['flag3'][0].update ({
         'cors_enabled':             ('<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
@@ -1231,13 +1229,13 @@ SETTING_7_1_2_5.update             ({
 # ======================================================================
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
 SETTING_7_1_2_6.update             ({
-    'flag4':                        ('<L',  0xEF8,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'flag4':                        ('<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'serial_config':                ('b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
     'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
     'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
-    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           ('System',      None)) ),
+    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
+    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_7_1_2_6['flag3'][0].update ({
         'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
@@ -1262,37 +1260,63 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
                     'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
                     'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
+                    'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
+                    'SET_TEMPLATE_NAME',
+                    'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
 SETTING_8_0_0_1.update             ({
-    'ota_url':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),              (None, None, ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),         ([3],  None, ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
-    'sta_ssid':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),            ([2],  None, ('Wifi',        '"SSId{} {}".format(#,$)')) ),
-    'sta_pwd':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),             ([2],  None, ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
-    'hostname':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),            (None, None, ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),         (None, None, ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),              (None, None, ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'cors_domain':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),                (None, None, ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),           (None, None, ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),         (None, None, ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),           (None, None, ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),            (None, None, ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'mqtt_fulltopic':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),      (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),          (None, None, ('MQTT',        '"FullTopic {}".format($)')) ),
-    'button_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),   (None, None, ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),   (None, None, ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),      (None, None, ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),          ([4],  None, ('MQTT',        '"StateText{} {}".format(#,$)')) ),
-    'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),          ([3],  None, ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
-    'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),                ([16], None, ('Rules',       '"Mem{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),       ([4],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'ota_url':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),
+                                                         (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),
+                                                         ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'sta_ssid':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),
+                                                         ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),
+                                                         ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),
+                                                         (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),
+                                                         (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+    'web_password':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),
+                                                         (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'cors_domain':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),
+                                                         (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'mqtt_host':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),
+                                                         (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_client':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),
+                                                         (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
+                                                         (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
+                                                         (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_fulltopic':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
+                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'mqtt_topic':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'switch_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'state_text':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),
+                                                         ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
+                                                         ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
+                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update             ({
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),       ([8],  None, ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($)==0 else $)')) ),
-    'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),             ([16], None, ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($)==0 else $)')) ),
+    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
+                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
@@ -1302,7 +1326,7 @@ SETTING_8_1_0_1['flag3'][0].update ({
 # ======================================================================
 SETTING_8_1_0_2 = copy.deepcopy(SETTING_8_1_0_1)
 SETTING_8_1_0_2.update             ({
-    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensors',     '"HotPlug {}".format($)')) ),
+    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
     'shutter_button':               ('<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
@@ -1375,6 +1399,8 @@ SETTING_8_1_0_9.update             ({
     'bri_min':                      ('B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
     'bri_preset_low':               ('B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
     'bri_preset_high':              ('B',   0xF07,       (None, None,                           ('Light',       None)) ),
+    'mqtt_grptopicdev':             ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][0].update ({
         'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
@@ -1397,8 +1423,62 @@ SETTING_8_1_0_11.update             ({
                                     })
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
+SETTING_8_2_0_0.update             ({
+    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+                                    })
+# ======================================================================
+SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
+SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
+SETTING_8_2_0_3.update             ({
+    'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
+                                                         (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
+    'pulse_counter_debounce_low':   ('<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
+    'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
+    'channel':                      ('B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
+    'bssid':                        ('B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'as3935_sensor_cfg':            ('B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
+    'as3935_functions':             ({
+         'nf_autotune':             ('B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
+         'dist_autotune':           ('B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
+         'nf_autotune_both':        ('B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
+         'mqtt_only_Light_Event':   ('B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
+                                    },      0xF15,       (None, None,                           ('*',           None)), (None,      None) ),
+    'as3935_parameter':             ({
+         'nf_autotune_time':        ('<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
+         'dist_autotune_time':      ('<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
+         'nf_autotune_min':         ('<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
+                                    },      0xF16,       (None, None,                           ('*',           None)), (None,      None) ),
+    'zb_ext_panid':                 ('<Q',  0xF18,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_l':               ('<Q',  0xF20,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_h':               ('<Q',  0xF28,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_pan_id':                    ('<H',  0xF30,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_channel':                   ('B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\"}}".format(@["zb_channel"], int(@["zb_pan_id"],0), int(@["zb_ext_panid"],0), int(@["zb_precfgkey_l"],0), int(@["zb_precfgkey_h"],0))')) ),
+    'pms_wake_interval':            ('<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
+    'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
+    'device_group_topic':           ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
+                                                         ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#,$ if len($) else "\\"")')) ),
+    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                         (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
+    'mqtt_grptopic2':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1, "\\"" if len($) == 0 else $)')) ),
+                                    })
+SETTING_8_2_0_3['user_template'][0].update ({
+        'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
+                                    })
+SETTING_8_2_0_3['flag4'][0].update ({
+        'only_json_message':        ('<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
+        'fade_at_startup':          ('<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
+                                    })
+SETTING_8_2_0_3['SensorBits1'][0].update ({
+        'bh1750_resolution':        ('B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_8_3_0_0 = copy.deepcopy(SETTING_8_2_0_3)
 # ======================================================================
 SETTINGS = [
+            (0x8030000,0x1000, SETTING_8_3_0_0),
+            (0x8020003,0x1000, SETTING_8_2_0_3),
             (0x8020000,0x1000, SETTING_8_2_0_0),
             (0x801000B,0x1000, SETTING_8_1_0_11),
             (0x801000A,0x1000, SETTING_8_1_0_10),
@@ -1534,6 +1614,7 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
     if doexit:
+        message("Premature exit (code {})".format(status), type_=None, status=None, line=line)
         sys.exit(EXIT_CODE)
 
 def debug(_args):
@@ -1567,6 +1648,40 @@ def shorthelp(doexit=True):
 # ======================================================================
 # Tasmota config data handling
 # ======================================================================
+def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
+    """
+    Get JSON string output from config mapping
+
+    @param configmapping:
+        binary config data (decrypted)
+    @param jsonsort:
+        True: output of dictionaries will be sorted by key
+        Uppercase and lowercase main keys remain unaffected
+    @param jsonindent:
+        pretty-printed JSON output indent level (<0 disables indent)
+    @param jsoncompact:
+        True: output of dictionaries will be compacted (no space after , and :)
+
+    @return:
+        template sizes as list []
+    """
+    conv_keys = {}
+    for key in configmapping:
+        if key[0].isupper():
+            conv_keys[key] = key.lower()
+            configmapping[conv_keys[key]] = configmapping.pop(key)
+    json_output = json.dumps(
+        configmapping,
+        ensure_ascii=False,
+        sort_keys=jsonsort,
+        indent=None if (jsonindent is None or ARGS.jsonindent < 0) else jsonindent,
+        separators=(',', ':') if jsoncompact else (', ', ': ')
+        )
+    for str_ in conv_keys:
+        json_output = json_output.replace('"'+conv_keys[str_]+'"', '"'+str_+'"')
+
+    return json_output
+
 def get_templatesizes():
     """
     Get all possible template sizes as list
@@ -1592,7 +1707,7 @@ def get_templatesetting(decode_cfg):
     """
     version = 0x0
     size = setting = None
-    version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True)
+    version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
     template_version = version
     # search setting definition top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
@@ -1827,8 +1942,8 @@ def load_tasmotaconfig(filename):
     if not os.path.isfile(filename):    # check file exists
         exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename), line=inspect.getlineno(inspect.currentframe()))
 
-    if ARGS.verbose:
-        message("Load data from file '{}'".format(ARGS.tasmotafile), type_=LogType.INFO)
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data from file '{}'".format(ARGS.tasmotafile), type_=LogType.INFO if ARGS.verbose else None)
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
@@ -1919,8 +2034,8 @@ def pull_tasmotaconfig(host, port, username=DEFAULTS['source']['username'], pass
     @return:
         binary config data (encrypted) or None on error
     """
-    if ARGS.verbose:
-        message("Load data from device '{}'".format(ARGS.device), type_=LogType.INFO)
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data from device '{}'".format(ARGS.device), type_=LogType.INFO if ARGS.verbose else None)
 
     _, body = get_tasmotaconfig('dl', host, port, username, password, contenttype='application/octet-stream')
 
@@ -2459,7 +2574,7 @@ def is_filtergroup(group):
             return False
         if group == '*':
             return True
-        if group.title() != INTERNAL.title() and group.title() not in (groupname.title() for groupname in ARGS.filter):
+        if group.title() == INTERNAL.title() or group.title() not in (groupname.title() for groupname in ARGS.filter):
             return False
     return True
 
@@ -2569,7 +2684,7 @@ def set_fieldvalue(fielddef, dobj, addr, value):
 
     return dobj
 
-def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0):
+def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False):
     """
     Get field value from definition
 
@@ -2597,7 +2712,7 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0):
     format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='format_, baseaddr, strindex, arraydef, group')
 
     # filter groups
-    if not is_filtergroup(group):
+    if not ignoregroup and not is_filtergroup(group):
         return valuemapping
 
     # <arraydef> contains a integer list
@@ -2865,6 +2980,21 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
     @return:
         new Tasmota command mapping
     """
+    def set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd):
+        """
+        Helper to append Tasmota commands to list
+        """
+        cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
+        if group is not None and cmnd is not None:
+            if group not in cmnds:
+                cmnds[group] = []
+            if isinstance(cmnd, list):
+                for command in cmnd:
+                    cmnds[group].append(command)
+            else:
+                cmnds[group].append(cmnd)
+        return cmnds
+
     format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # cast unicode
@@ -2902,25 +3032,9 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
         if isinstance(tasmotacmnd, tuple):
             tasmotacmnds = tasmotacmnd
             for tasmotacmnd in tasmotacmnds:
-                cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
-                if group is not None and cmnd is not None:
-                    if group not in cmnds:
-                        cmnds[group] = []
-                    if isinstance(cmnd, list):
-                        for command in cmnd:
-                            cmnds[group].append(command)
-                    else:
-                        cmnds[group].append(cmnd)
+                cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
         else:
-            cmnd = cmnd_converter(valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
-            if group is not None and cmnd is not None:
-                if group not in cmnds:
-                    cmnds[group] = []
-                if isinstance(cmnd, list):
-                    for command in cmnd:
-                        cmnds[group].append(command)
-                else:
-                    cmnds[group].append(cmnd)
+            cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
 
     return cmnds
 
@@ -2944,11 +3058,11 @@ def bin2mapping(decode_cfg):
         exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
 
     if 'version' in setting:
-        cfg_version = get_field(decode_cfg, 'version', setting['version'], raw=True)
+        cfg_version = get_field(decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
 
     # check size if exists
     if 'cfg_size' in setting:
-        cfg_size = get_field(decode_cfg, 'cfg_size', setting['cfg_size'], raw=True)
+        cfg_size = get_field(decode_cfg, 'cfg_size', setting['cfg_size'], raw=True, ignoregroup=True)
         # read size should be same as definied in setting
         if cfg_size > size:
             # may be processed
@@ -2959,16 +3073,16 @@ def bin2mapping(decode_cfg):
 
     # check crc if exists
     if 'cfg_crc' in setting:
-        cfg_crc = get_field(decode_cfg, 'cfg_crc', setting['cfg_crc'], raw=True)
+        cfg_crc = get_field(decode_cfg, 'cfg_crc', setting['cfg_crc'], raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(decode_cfg)
     if 'cfg_crc32' in setting:
-        cfg_crc32 = get_field(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True)
+        cfg_crc32 = get_field(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(decode_cfg)
     cfg_timestamp = int(time.time())
     if 'cfg_timestamp' in setting:
-        cfg_timestamp = get_field(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True)
+        cfg_timestamp = get_field(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True, ignoregroup=True)
 
     if version < 0x0606000B:
         if cfg_crc != get_settingcrc(decode_cfg):
@@ -2978,11 +3092,12 @@ def bin2mapping(decode_cfg):
             exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
-    valuemapping = get_field(decode_cfg, None, (setting, 0, (None, None, (INTERNAL, None))))
+    valuemapping = get_field(decode_cfg, None, (setting, 0, (None, None, ('System', None))), ignoregroup=True)
 
     # remove keys having empty object
-    for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
-        valuemapping.pop(key, None)
+    if valuemapping is not None:
+        for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
+            valuemapping.pop(key, None)
 
     # add header info
     valuemapping['header'] = {
@@ -3132,14 +3247,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     def backup_json(backup_filename, _, configmapping):
         # do json file write
         with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
-            json.dump(
-                configmapping,
-                backupfp,
-                ensure_ascii=False,
-                sort_keys=ARGS.jsonsort,
-                indent=None if (ARGS.jsonindent is None or ARGS.jsonindent < 0) else ARGS.jsonindent,
-                separators=(',', ':') if ARGS.jsoncompact else (', ', ': ')
-                )
+            backupfp.write(get_jsonstr(configmapping, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
     backups = {
         FileType.DMP.lower():("Tasmota", FileType.DMP, backup_dmp),
@@ -3175,13 +3283,9 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
             except Exception as err:    # pylint: disable=broad-except
                 exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
-    if fileformat is not None and ARGS.verbose:
-        srctype = 'device'
-        src = ARGS.device
-        if ARGS.tasmotafile is not None:
-            srctype = 'file'
-            src = ARGS.tasmotafile
-        message("{}Backup successful from {} '{}' to file '{}' ({} format)".format(dryrun, srctype, src, backup_filename, fileformat), type_=LogType.INFO)
+    if fileformat is not None and (ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output)):
+        message("{}Backup successful to '{}' ({} format)"\
+            .format(dryrun, backup_filename, fileformat), type_=LogType.INFO if ARGS.verbose else None)
 
 def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     """
@@ -3267,7 +3371,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             # get binary header and template to use
             _, _, _, setting = get_templatesetting(new_decode_cfg)
             # get config file version
-            cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True)
+            cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
             message("Config file contains data of Tasmota {}".format(get_versionstr(cfg_version)), type_=LogType.INFO)
         if ARGS.forcerestore or new_encode_cfg != encode_cfg:
             dryrun = ""
@@ -3283,8 +3387,8 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                 if error_code:
                     exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
-                    if ARGS.verbose:
-                        message("{}Restore successful to device '{}' using restore file '{}'".format(dryrun, ARGS.device, restorefilename), type_=LogType.INFO)
+                    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.device, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
             # write config from a file
             elif ARGS.tasmotafile is not None:
@@ -3296,13 +3400,13 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
                             outputfile.write(new_encode_cfg)
                     except Exception as err:    # pylint: disable=broad-except
                         exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.tasmotafile, err), line=inspect.getlineno(inspect.currentframe()))
-                if ARGS.verbose:
-                    message("{}Restore successful to file '{}' using restore file '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO)
+                if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                    message("{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
-            if ARGS.verbose:
-                message("Configuration data leaving unchanged", type_=LogType.INFO)
+            if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                message("Configuration data leaving unchanged", type_=LogType.INFO if ARGS.verbose else None)
 
 def output_tasmotacmnds(tasmotacmnds):
     """
@@ -3387,16 +3491,18 @@ def parseargs():
                                            formatter_class=lambda prog: HelpFormatter(prog))    # pylint: disable=unnecessary-lambda
 
     source = PARSER.add_argument_group('Source', 'Read/Write Tasmota configuration from/to')
-    source.add_argument('-f', '--file', '--tasmota-file',
+    source.add_argument('-f', '--file',
                         metavar='<filename>',
                         dest='tasmotafile',
                         default=DEFAULTS['source']['tasmotafile'],
                         help="file to retrieve/write Tasmota configuration from/to (default: {})'".format(DEFAULTS['source']['tasmotafile']))
-    source.add_argument('-d', '--device', '--host',
+    source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
+    source.add_argument('-d', '--device',
                         metavar='<host>',
                         dest='device',
                         default=DEFAULTS['source']['device'],
                         help="hostname or IP address to retrieve/send Tasmota configuration from/to (default: {})".format(DEFAULTS['source']['device']))
+    source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
     source.add_argument('-P', '--port',
                         metavar='<port>',
                         dest='port',
@@ -3476,11 +3582,12 @@ def parseargs():
                             action='store_true',
                             default=DEFAULTS['jsonformat']['jsonhidepw'],
                             help="hide passwords{}".format(' (default)' if DEFAULTS['jsonformat']['jsonhidepw'] else ''))
-    jsonformat.add_argument('--json-show-pw', '--json-unhide-pw',
+    jsonformat.add_argument('--json-show-pw',
                             dest='jsonhidepw',
                             action='store_false',
                             default=DEFAULTS['jsonformat']['jsonhidepw'],
                             help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['jsonhidepw'] else ''))
+    jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', help=configargparse.SUPPRESS)
 
     cmndformat = PARSER.add_argument_group('Tasmota command output', 'Tasmota command output format specification')
     cmndformat.add_argument('--cmnd-indent',
@@ -3675,7 +3782,7 @@ if __name__ == "__main__":
     if (ARGS.backupfile is None and ARGS.restorefile is None) or ARGS.output:
         if ARGS.outputformat == 'json':
             # json screen output
-            print(json.dumps(CONFIG_MAPPING, ensure_ascii=False, sort_keys=ARGS.jsonsort, indent=None if (ARGS.jsonindent is None or ARGS.jsonindent < 0) else ARGS.jsonindent, separators=(',', ':') if ARGS.jsoncompact else (', ', ': ')))
+            print(get_jsonstr(CONFIG_MAPPING, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
         if ARGS.outputformat == 'cmnd' or ARGS.outputformat == 'command':
             # Tasmota command output
