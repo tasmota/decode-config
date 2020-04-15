@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00105]'
+VER = '8.2.0.3 [00106]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1465,6 +1465,9 @@ SETTING_8_2_0_3.update             ({
                                     })
 SETTING_8_2_0_3['user_template'][0].update ({
         'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
+                                    })
+SETTING_8_2_0_3['flag3'][0].update ({
+        'mqtt_buttons':             ('<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
                                     })
 SETTING_8_2_0_3['flag4'][0].update ({
         'only_json_message':        ('<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
