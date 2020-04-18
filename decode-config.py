@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00108]'
+VER = '8.2.0.4 [00109]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1802,6 +1802,22 @@ def get_filetype(filename):
         filetype = FileType.FILE_NOT_FOUND
 
     return filetype
+
+def get_platformstr(version):
+    """
+    Create platform string
+
+    @param version:
+        version integer
+
+    @return:
+        platform string
+    """
+    if version==0:
+        return "ESP82xx"
+    if version==1:
+        return "ESP32"
+    return "unknown"
 
 def get_versionstr(version):
     """
@@ -3743,15 +3759,19 @@ if __name__ == "__main__":
 
     # check version compatibility
     if 'version' in CONFIG_MAPPING:
-        CONFIG_VERSION = int(CONFIG_MAPPING['version'], 0)
+        VERSION = int(CONFIG_MAPPING['version'], 0)
+        CONFIG_VERSION = 0
+        if 'config_version' in CONFIG_MAPPING:
+            CONFIG_VERSION = CONFIG_MAPPING['config_version']
         if ARGS.verbose:
-            message("{} '{}' is using Tasmota {}"\
+            message("{} '{}' is using Tasmota {} for {}"\
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
                         ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
-                        get_versionstr(CONFIG_VERSION)),
+                        get_versionstr(VERSION),
+                        get_platformstr(CONFIG_VERSION)),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-        if CONFIG_VERSION > SUPPORTED_VERSION and not ARGS.ignorewarning:
+        if VERSION > SUPPORTED_VERSION and not ARGS.ignorewarning:
             exit_(ExitCode.UNSUPPORTED_VERSION, \
                   "*** Unsupported Tasmota configuration data version! ***\n"
                   "\n"
@@ -3768,7 +3788,19 @@ if __name__ == "__main__":
                   "If you are unsure and do not know the changes in the configuration\n"
                   "structure, use a developer version of this program that you can download\n"
                   "from https://github.com/tasmota/decode-config/tree/development.\n"
-                  "\n".format(get_versionstr(CONFIG_VERSION), get_versionstr(SUPPORTED_VERSION)),
+                  "\n".format(get_versionstr(VERSION), get_versionstr(SUPPORTED_VERSION)),
+                  type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+        if CONFIG_VERSION > 0 and not ARGS.ignorewarning:
+            exit_(ExitCode.UNSUPPORTED_VERSION, \
+                  "*** Unsupported Tasmota configuration data version! ***\n"
+                  "\n"
+                  "The read configuration contains data for Tasmota platform {}.\n"
+                  "This is currently not fully supported.\n"
+                  "You can force recovery at your own risk by adding --ignore-warnings.\n"
+                  "Be warned that forcing this can lead to unpredictable results for your\n"
+                  "Tasmota device. In the worst case, your Tasmota device will not\n"
+                  "respond and you will have to flash it again using the serial interface.\n"
+                  "\n".format(get_platformstr(CONFIG_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
