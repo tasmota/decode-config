@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00106]'
+VER = '8.2.0.3 [00107]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -460,15 +460,6 @@ def bitsread(value, pos=0, bits=1):
         value &= (1<<bits)-1
     return value
 
-def cmnd_mqttfingerprint(value, idx=None):
-    """
-    Tasmota MqttFingerprint cmnd helper
-    """
-    fingerprint = ""
-    for i in value:
-        fingerprint += "{:02x} ".format(ord(i))
-    return "MqttFingerprint{} {}".format('' if idx is None else idx, fingerprint.strip())
-
 def cmnd_websensor(value, idx):
     """
     Tasmota WebSensor cmnd helper
@@ -523,7 +514,7 @@ SETTING_5_10_0 = {
     'syslog_level':                 ('B',   0x1AA,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
     'webserver':                    ('B',   0x1AB,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
     'weblog_level':                 ('B',   0x1AC,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint':             ('60s', 0x1AD,       (None, None,                           ('MQTT',        None)) ),
+    'mqtt_fingerprint':             ('B',   0x1AD,       ([60], None,                           ('MQTT',        '"MqttFingerprint {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint"])) if 1==# else None')), '"0x{:02x}".format($)' ),
     'mqtt_host':                    ('33s', 0x1E9,       (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
     'mqtt_port':                    ('<H',  0x20A,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'mqtt_client':                  ('33s', 0x20C,       (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
@@ -652,6 +643,7 @@ SETTING_5_12_0['flag'][0].update    ({
                                     })
 # ======================================================================
 SETTING_5_13_1 = copy.deepcopy(SETTING_5_12_0)
+SETTING_5_13_1.pop('mqtt_fingerprint',None)
 SETTING_5_13_1['flag'][0].update    ({
         'mqtt_serial':              ('<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SetOption22 {}".format($)')) ),
         'rules_enabled':            ('<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
@@ -660,7 +652,8 @@ SETTING_5_13_1['flag'][0].update    ({
                                     })
 SETTING_5_13_1.update               ({
     'baudrate':                     ('B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'mqtt_fingerprint':             ('20s', 0x1AD,       ([2],  None,                           ('MQTT',        cmnd_mqttfingerprint)) ),
+    'mqtt_fingerprint1':            ('B',   0x1AD,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint1"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            ('B',   0x1AD+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint2"])) if 1==# else None')), '"0x{:02x}".format($)' ),
     'energy_power_delta':           ('B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
     'light_rotation':               ('<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
     'serial_delimiter':             ('B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
@@ -1223,7 +1216,8 @@ SETTING_7_1_2_5.update             ({
     'syslog_level':                 ('B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
     'webserver':                    ('B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
     'weblog_level':                 ('B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint':             ('20s', 0xECF,       ([2],  None,                           ('MQTT',        cmnd_mqttfingerprint)) ),
+    'mqtt_fingerprint1':            ('B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint1"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            ('B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint2"])) if 1==# else None')), '"0x{:02x}".format($)' ),
     'adc_param_type':               ('B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
