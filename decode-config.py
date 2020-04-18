@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.3 [00107]'
+VER = '8.2.0.4 [00108]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1471,7 +1471,13 @@ SETTING_8_2_0_3['SensorBits1'][0].update ({
         'bh1750_resolution':        ('B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
+SETTING_8_2_0_4.update             ({
+    'config_version':               ('B',   0xF36,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x8020004,0x1000, SETTING_8_2_0_4),
             (0x8020003,0x1000, SETTING_8_2_0_3),
             (0x8020000,0x1000, SETTING_8_2_0_0),
             (0x801000B,0x1000, SETTING_8_1_0_11),
