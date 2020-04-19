@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00109]'
+VER = '8.2.0.4 [00110]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -918,32 +918,18 @@ SETTING_6_4_1_13.update            ({
                                     })
 # ======================================================================
 SETTING_6_4_1_16 = copy.deepcopy(SETTING_6_4_1_13)
-SETTING_6_4_1_16.update             ({
-    'user_template_base':           ('B',   0x71F,       (None,  None,                          ('Management',  '"Template {}".format($)')), ('$ + 1','$ - 1') ),
-    'user_template':                ({
+SETTING_6_4_1_16.update    ({
+    'user_template':               ({
+        'base':                     ('B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
         'name':                     ('15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
-        'gpio00':                   ('B',   0x72F,       (None, None,                           ('Management',  '"Template {{\\\"GPIO\\\":[{},{},{},{},{},{},{},{},{},{},{},{},{}]}}".format(@["user_template"]["gpio00"],@["user_template"]["gpio01"],@["user_template"]["gpio02"],@["user_template"]["gpio03"],@["user_template"]["gpio04"],@["user_template"]["gpio05"],@["user_template"]["gpio09"],@["user_template"]["gpio10"],@["user_template"]["gpio12"],@["user_template"]["gpio13"],@["user_template"]["gpio14"],@["user_template"]["gpio15"],@["user_template"]["gpio16"])')) ),
-        'gpio01':                   ('B',   0x730,       (None, None,                           ('Management',  None)) ),
-        'gpio02':                   ('B',   0x731,       (None, None,                           ('Management',  None)) ),
-        'gpio03':                   ('B',   0x732,       (None, None,                           ('Management',  None)) ),
-        'gpio04':                   ('B',   0x733,       (None, None,                           ('Management',  None)) ),
-        'gpio05':                   ('B',   0x734,       (None, None,                           ('Management',  None)) ),
-        'gpio09':                   ('B',   0x735,       (None, None,                           ('Management',  None)) ),
-        'gpio10':                   ('B',   0x736,       (None, None,                           ('Management',  None)) ),
-        'gpio12':                   ('B',   0x737,       (None, None,                           ('Management',  None)) ),
-        'gpio13':                   ('B',   0x738,       (None, None,                           ('Management',  None)) ),
-        'gpio14':                   ('B',   0x739,       (None, None,                           ('Management',  None)) ),
-        'gpio15':                   ('B',   0x73A,       (None, None,                           ('Management',  None)) ),
-        'gpio16':                   ('B',   0x73B,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     ('B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"]) if 1==# else None')) ),
         'flag':                     ({
-            '_':                    ('B',   0x73C     ,  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')),(None,  False) ),
-            'adc0':                 ('B',  (0x73C,1,0),  (None, None,                           ('Management',  None)) ),
-            'pullup':               ('B',  (0x73C,1,1),  (None, None,                           ('Management',  None)) ),
+            'adc0':                 ('B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },      0x73C,       (None, None,                           ('Management',  None))
                                     ),
-                                    },      0x720,       (None, None,                           ('Management',  None))
+                                    },      0x71F,       (None, None,                           ('Management',  None))
                                     ),
-})
+                                   })
 # ======================================================================
 SETTING_6_4_1_17 = copy.deepcopy(SETTING_6_4_1_16)
 SETTING_6_4_1_17['flag3'][0].pop('no_pullup',None)
