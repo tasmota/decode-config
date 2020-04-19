@@ -472,6 +472,10 @@ def cmnd_websensor(value, idx):
 # ----------------------------------------------------------------------
 # Tasmota configuration data definition
 # ----------------------------------------------------------------------
+
+# Tasmota setings platforms
+PLATFORMS = ["ESP82xx", "ESP32"]
+
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
                               # <format>, <addrdef>, <datadef> [,<converter>]
@@ -1547,6 +1551,22 @@ SETTINGS = [
            ]
 # pylint: enable=bad-continuation,bad-whitespace,invalid-name
 
+def check_setting_definition():
+    """
+    Check complete setting definition history
+
+    @return: True if ok
+    """
+    for cfg in SETTINGS:
+        template_version = cfg[0]
+        size = cfg[1]
+        setting = cfg[2]
+        for key in setting:
+            fielddef = setting[key]
+            get_fielddef(fielddef)
+
+    return True
+
 # ======================================================================
 # Common helper
 # ======================================================================
@@ -1679,21 +1699,38 @@ def get_templatesizes():
     # return unique sizes only (remove duplicates)
     return list(set(sizes))
 
-def get_templatesetting(decode_cfg):
+def get_setting_template(decode_cfg):
     """
-    Search for version, size and settings to be used depending on given binary config data
+    Search for template_version, version, config_version, size and settings
+    to be used depending on given binary config data
 
     @param decode_cfg:
         binary config data (decrypted)
 
     @return:
-        version, size, settings to use; None if version is invalid
+        template_version, version, config_version, size, setting
+            template_version int  version number of template to use
+            version          int  version number from config data
+            config_version   int  hardware platform from config data
+            size             int  size of config data
+            setting          dict setting to use (from SETTINGS)
     """
     version = 0x0
     size = setting = None
     version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
     template_version = version
-    # search setting definition top-down
+
+    # identify platform (config_version)
+    config_version = 0
+    for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
+        if version >= cfg[0]:
+            if 'config_version' in cfg[2]:
+                config_version = get_field(decode_cfg, 'config_version', cfg[2]['config_version'], raw=True, ignoregroup=True)
+                if config_version > (len(PLATFORMS)-1):
+                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version={}, valid range is [0,{}])".format(config_version, len(PLATFORMS)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    config_version = 0
+            break
+    # search setting definition for platform top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             template_version = cfg[0]
@@ -1701,7 +1738,7 @@ def get_templatesetting(decode_cfg):
             setting = cfg[2]
             break
 
-    return template_version, version, size, setting
+    return template_version, version, config_version, size, setting
 
 def get_grouplist(setting):
     """
@@ -1797,11 +1834,7 @@ def get_platformstr(version):
     @return:
         platform string
     """
-    if version==0:
-        return "ESP82xx"
-    if version==1:
-        return "ESP32"
-    return "unknown"
+    return PLATFORMS[version] if version >= 0 and version < len(PLATFORMS) else "Unknown"
 
 def get_versionstr(version):
     """
@@ -2133,7 +2166,7 @@ def get_settingcrc(dobj):
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
 
-    _, _, size, _ = get_templatesetting(dobj)
+    _, _, _, size, _ = get_setting_template(dobj)
     crc = 0
     for i in range(0, size):
         if not i in [14, 15]: # Skip crc
@@ -3052,7 +3085,7 @@ def bin2mapping(decode_cfg):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
-    template_version, version, size, setting = get_templatesetting(decode_cfg)
+    template_version, version, _, size, setting = get_setting_template(decode_cfg)
     # if we did not found a mathching setting
     if setting is None:
         exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
@@ -3151,7 +3184,7 @@ def mapping2bin(decode_cfg, jsonconfig, filename=""):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device
-    _, version, _, setting = get_templatesetting(decode_cfg)
+    _, version, _, _, setting = get_setting_template(decode_cfg)
 
     # make empty binarray array
     _buffer = bytearray()
@@ -3199,7 +3232,7 @@ def mapping2cmnd(decode_cfg, valuemapping, filename=""):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header data to use the correct version template from device
-    _, version, _, setting = get_templatesetting(decode_cfg)
+    _, version, _, _, setting = get_setting_template(decode_cfg)
 
     cmnds = {}
 
@@ -3369,7 +3402,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         if ARGS.verbose:
             new_decode_cfg = decrypt_encrypt(new_encode_cfg)
             # get binary header and template to use
-            _, _, _, setting = get_templatesetting(new_decode_cfg)
+            _, _, _, _, setting = get_setting_template(new_decode_cfg)
             # get config file version
             cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
             message("Config file contains data of Tasmota {}".format(get_versionstr(cfg_version)), type_=LogType.INFO)
@@ -3713,6 +3746,10 @@ if __name__ == "__main__":
     # default no configuration available
     ENCODE_CONFIG = None
 
+    if debug(ARGS) >= 1:
+        print("Checking setting definition")
+        check_setting_definition()
+
     # pull config from Tasmota device
     if ARGS.tasmotafile is not None:
         ENCODE_CONFIG = load_tasmotaconfig(ARGS.tasmotafile)
@@ -3741,12 +3778,26 @@ if __name__ == "__main__":
     # decode into mappings dictionary
     CONFIG_MAPPING = bin2mapping(DECODE_CONFIG)
 
+    # check platform compatibility
+    CONFIG_VERSION = 0
+    if 'config_version' in CONFIG_MAPPING:
+        CONFIG_VERSION = CONFIG_MAPPING['config_version']
+        if CONFIG_VERSION > 0 and not ARGS.ignorewarning:
+            exit_(ExitCode.UNSUPPORTED_VERSION, \
+                "Tasmota configuration data platform {} currently unsupported!\n"
+                "           This Tasmota version was compiled for an unsupported platform\n"
+                "           which may contain changed data structures so that the data with\n"
+                "           older versions become incompatible. You can force proceeding at\n"
+                "           your own risk by appending the parameter '--ignore-warnings'\n"
+                "           Be warned: Forcing can lead to unpredictable results for\n"
+                "           your Tasmota device. In the worst case, your Tasmota device\n"
+                "           will not respond and you will have to flash it again using\n"
+                "           the serial interface."\
+                .format(get_platformstr(CONFIG_VERSION)),
+                type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
     # check version compatibility
     if 'version' in CONFIG_MAPPING:
         VERSION = int(CONFIG_MAPPING['version'], 0)
-        CONFIG_VERSION = 0
-        if 'config_version' in CONFIG_MAPPING:
-            CONFIG_VERSION = CONFIG_MAPPING['config_version']
         if ARGS.verbose:
             message("{} '{}' is using Tasmota {} for {}"\
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
@@ -3757,35 +3808,22 @@ if __name__ == "__main__":
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if VERSION > SUPPORTED_VERSION and not ARGS.ignorewarning:
             exit_(ExitCode.UNSUPPORTED_VERSION, \
-                  "*** Unsupported Tasmota configuration data version! ***\n"
-                  "\n"
-                  "The read configuration contains data for Tasmota version {}.\n"
-                  "This is newer than Tasmota version {} supported by this program.\n"
-                  "\n"
-                  "With newer Tasmota versions, the data structure may have changed\n"
-                  "so that the data with older versions become incompatible.\n"
-                  "You can force recovery at your own risk by adding --ignore-warnings.\n"
-                  "Be warned that forcing this can lead to unpredictable results for your\n"
-                  "Tasmota device. In the worst case, your Tasmota device will not\n"
-                  "respond and you will have to flash it again using the serial interface.\n"
-                  "\n"
-                  "If you are unsure and do not know the changes in the configuration\n"
-                  "structure, use a developer version of this program that you can download\n"
-                  "from https://github.com/tasmota/decode-config/tree/development.\n"
-                  "\n".format(get_versionstr(VERSION), get_versionstr(SUPPORTED_VERSION)),
-                  type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
-        if CONFIG_VERSION > 0 and not ARGS.ignorewarning:
-            exit_(ExitCode.UNSUPPORTED_VERSION, \
-                  "*** Unsupported Tasmota configuration data version! ***\n"
-                  "\n"
-                  "The read configuration contains data for Tasmota platform {}.\n"
-                  "This is currently not fully supported.\n"
-                  "You can force recovery at your own risk by adding --ignore-warnings.\n"
-                  "Be warned that forcing this can lead to unpredictable results for your\n"
-                  "Tasmota device. In the worst case, your Tasmota device will not\n"
-                  "respond and you will have to flash it again using the serial interface.\n"
-                  "\n".format(get_platformstr(CONFIG_VERSION)),
-                  type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                "Tasmota configuration data v{} currently unsupported!\n"
+                "           The read configuration data is newer than the last\n"
+                "           supported v{} by this program.\n"
+                "           Newer Tasmota versions may contain changed data struc-\n"
+                "           tures so that the data with older versions may become\n"
+                "           incompatible. You can force proceeding at your own risk\n"
+                "           by appending the parameter '--ignore-warnings'\n"
+                "           Be warned: Forcing can lead to unpredictable results for\n"
+                "           your Tasmota device. In the worst case, your Tasmota device\n"
+                "           will not respond and you will have to flash it again using\n"
+                "           the serial interface. If you are unsure and do not know the\n"
+                "           changes in the configuration structure, you may able to use\n"
+                "           the developer version of this program from\n"
+                "           https://github.com/tasmota/decode-config/tree/development."\
+                .format(get_versionstr(VERSION), get_versionstr(SUPPORTED_VERSION)),
+                type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
         # backup to file
