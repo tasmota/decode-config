@@ -2,6 +2,7 @@
 
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
+<!-- markdownlint-disable MD033 -->
 [![development](https://img.shields.io/badge/development-v8.2.0.4-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
@@ -138,11 +139,14 @@ pip3 install requests configargparse
 
 For an overview start the program without any parameter and you will get a short help:
 
+<!-- markdownlint-capture -->
+<!-- markdownlint-disable MD031 -->
 ```bash
 decode-config
 ```
 > replace `decode-config` by the program name your are using:  
 `decode-config.py` when running as Python executable.
+<!-- markdownlint-restore -->
 
 This prints a short help:
 
