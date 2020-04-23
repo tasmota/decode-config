@@ -178,10 +178,40 @@ class ExitCode:
     RESTORE_DATA_ERROR = 9
     DOWNLOAD_CONFIG_ERROR = 10
     UPLOAD_CONFIG_ERROR = 11
+    INVALID_DATA = 12
     MODULE_NOT_FOUND = 20
     INTERNAL_ERROR = 21
     HTTP_CONNECTION_ERROR = 22
-    INVALID_DATA = 23
+    STR = [
+        'OK',
+        'Restore skipped',
+        'Parameter error',
+        'File not found',
+        'Data size mismatch',
+        'Data CRC error',
+        'Unsupported version',
+        'File read error',
+        'JSON read error',
+        'Restore data error',
+        'Download error',
+        'Upload error',
+        'Invaid data',
+        '', '', '', '', '', '', '',
+        'Module not found',
+        'Internal error',
+        'HTTP connection error'
+        ]
+    @staticmethod
+    def str(code):
+        """
+        Program return string by code
+
+        @param: code
+            int number of code
+        """
+        if code >= 0 and code < len(ExitCode.STR):
+            return ExitCode.STR[code]
+        return ''
 
 # ======================================================================
 # imports
@@ -1620,13 +1650,14 @@ def message(msg, type_=None, status=None, line=None):
     @param status:
         status number
     """
-    print('{styp}{sdelimiter}{sstatus}{slineno}{scolon}{smgs}'\
+    sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
+    print('{styp}{sdelimiter}{sstatus}{sdelimiter}{slineno}{scolon}{smgs}'\
           .format(styp=type_ if type_ is not None else '',
-                  sdelimiter=' ' if status is not None and status > 0 and type_ is not None else '',
+                  sdelimiter=sdelimiter,
                   sstatus=status if status is not None and status > 0 else '',
                   scolon=': ' if type_ is not None or line is not None else '',
                   smgs=msg,
-                  slineno=' (@{:04d})'.format(line) if line is not None else ''),
+                  slineno='(@{:04d})'.format(line) if line is not None else ''),
           file=sys.stderr)
 
 def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=None):
@@ -1649,7 +1680,7 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
     if doexit:
-        message("Premature exit (code {})".format(status), type_=None, status=None, line=line)
+        message("Premature exit - {} #{}".format(ExitCode.str(status), status), type_=None, status=None, line=None)
         sys.exit(EXIT_CODE)
 
 def debug(_args):
@@ -2186,13 +2217,16 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
     if username is not None and password is not None:
         auth = (username, password)
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=VER), encode_cfg)}
-    res = requests.post(url, auth=auth, files=files)
+    try:
+        res = requests.post(url, auth=auth, files=files)
+    except ConnectionError as err:
+        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
     if not res.ok:
         exit_(res.status_code, "Error on http POST request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if res.headers['Content-Type'] != 'text/html':
-        exit_(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
+        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     body = res.text
 
