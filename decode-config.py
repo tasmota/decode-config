@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00111]'
+VER = '8.2.0.4 [00112]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1786,8 +1786,9 @@ def get_config_platform(decode_cfg):
         configuration data platform id, None if not exists
     """
     _, _, _, _, setting = get_setting_template(decode_cfg)
-    if 'config_version' in setting:
-        return get_field(decode_cfg, Platform.ALL, 'config_version', setting['config_version'], raw=True, ignoregroup=True)
+    fielddef = setting.get('config_version', None)
+    if fielddef is not None:
+        return get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
 
     return None
 
@@ -1802,8 +1803,9 @@ def get_version(decode_cfg):
         configuration data version, None if not exists
     """
     _, _, _, _, setting = get_setting_template(decode_cfg)
-    if 'version' in setting:
-        return get_field(decode_cfg, Platform.ALL, 'version', setting['version'], raw=True, ignoregroup=True)
+    fielddef = setting.get('version', None)
+    if fielddef is not None:
+        return get_field(decode_cfg, Platform.ALL, 'version', fielddef, raw=True, ignoregroup=True)
 
     return None
 
@@ -1955,13 +1957,16 @@ def make_filename(filename, filetype, configmapping):
     """
     config_version = config_friendlyname = config_hostname = device_hostname = ''
 
-    if 'version' in configmapping:
-        config_version = get_versionstr(int(str(configmapping['version']), 0))
-    if 'friendlyname' in configmapping:
-        config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(configmapping['friendlyname'][0]) if c.isprintable()), 256))).replace(' ', '_')
-    if 'hostname' in configmapping:
-        if str(configmapping['hostname']).find('%') < 0:
-            config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(configmapping['hostname'])).strip('_'))
+    config_version = configmapping.get('version', None)
+    if config_version is not None:
+        config_version = get_versionstr(int(str(config_version), 0))
+    config_friendlyname = configmapping.get('friendlyname', None)
+    if config_friendlyname is not None:
+        config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(config_friendlyname[0]) if c.isprintable()), 256))).replace(' ', '_')
+    config_hostname = configmapping.get('hostname', None)
+    if config_hostname is not None:
+        if str(config_hostname).find('%') < 0:
+            config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_hostname)).strip('_'))
     if filename.find('@H') >= 0 and ARGS.device is not None:
         device_hostname = get_tasmotahostname(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
         if device_hostname is None:
@@ -2111,10 +2116,12 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
     _, body = get_tasmotaconfig("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
         jsonbody = json.loads(str(body, STR_ENCODING))
-        if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
-            hostname = jsonbody["StatusNET"]["Hostname"]
-            if ARGS.verbose:
-                message("Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
+        statusnet = jsonbody.get('StatusNET', None)
+        if statusnet is not None:
+            hostname = statusnet.get('Hostname', None)
+            if hostname is not None:
+                if ARGS.verbose:
+                    message("Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
 
     return hostname
 
@@ -2583,8 +2590,9 @@ def get_fieldminmax(fielddef):
     min_ = 0
     max_ = 0
 
-    if format_[-1:] in minmax:
-        min_, max_ = minmax[format_[-1:]]
+    minmax_format = minmax.get(format_[-1:], None)
+    if minmax_format is not None:
+        min_, max_ = minmax_format
         max_ *= get_formatcount(format_)
     elif format_[-1:].lower() in ['s', 'p']:
         # s and p may have a prefix as length
@@ -2934,9 +2942,10 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
     # <format> contains a dict
     elif isinstance(format_, dict):
-        for name in format_:    # -> iterate through format
-            if name in restoremapping:
-                dobj = set_field(dobj, platform_bits, name, format_[name], restoremapping[name], addroffset=addroffset, filename=filename)
+        for name, rm_fielddef in format_.items():    # -> iterate through format
+            restoremap = restoremapping.get(name, None)
+            if restoremap is not None:
+                dobj = set_field(dobj, platform_bits, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
 
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
@@ -3151,9 +3160,10 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
 
     # <format> contains a dict
     elif isinstance(format_, dict):
-        for name in format_:    # -> iterate through format
-            if name in mappedvalue:
-                cmnds = set_cmnd(cmnds, platform_bits, name, format_[name], valuemapping, mappedvalue[name], addroffset=addroffset, idx=idx)
+        for name, rm_fielddef in format_.items():    # -> iterate through format
+            mapped = mappedvalue.get(name, None)
+            if mapped is not None:
+                cmnds = set_cmnd(cmnds, platform_bits, name, rm_fielddef, valuemapping, mapped, addroffset=addroffset, idx=idx)
 
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
@@ -3186,8 +3196,9 @@ def bin2mapping(decode_cfg):
 
     # check size if exists
     cfg_size = None
-    if 'cfg_size' in setting:
-        cfg_size = get_field(decode_cfg, Platform.ALL, 'cfg_size', setting['cfg_size'], raw=True, ignoregroup=True)
+    cfg_size_fielddef = setting.get('cfg_size', None)
+    if cfg_size_fielddef is not None:
+        cfg_size = get_field(decode_cfg, Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
         # read size should be same as definied in setting
         if cfg_size > size:
             # may be processed
@@ -3197,18 +3208,21 @@ def bin2mapping(decode_cfg):
             exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, size), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
 
     # check crc if exists
-    if 'cfg_crc' in setting:
-        cfg_crc = get_field(decode_cfg, Platform.ALL, 'cfg_crc', setting['cfg_crc'], raw=True, ignoregroup=True)
+    cfg_crc_fielddef = setting.get('cfg_crc', None)
+    if cfg_crc_fielddef is not None:
+        cfg_crc = get_field(decode_cfg, Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(decode_cfg)
     cfg_crc32 = None
-    if 'cfg_crc32' in setting:
-        cfg_crc32 = get_field(decode_cfg, Platform.ALL, 'cfg_crc32', setting['cfg_crc32'], raw=True, ignoregroup=True)
+    cfg_crc32_fielddef = setting.get('cfg_crc32', None)
+    if cfg_crc32_fielddef is not None:
+        cfg_crc32 = get_field(decode_cfg, Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(decode_cfg)
     cfg_timestamp = int(time.time())
-    if 'cfg_timestamp' in setting:
-        cfg_timestamp = get_field(decode_cfg, Platform.ALL, 'cfg_timestamp', setting['cfg_timestamp'], raw=True, ignoregroup=True)
+    cfg_timestamp_fielddef = setting.get('cfg_timestamp', None)
+    if cfg_timestamp_fielddef is not None:
+        cfg_timestamp = get_field(decode_cfg, Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
 
     if version < 0x0606000B:
         if cfg_crc != get_settingcrc(decode_cfg):
@@ -3249,13 +3263,13 @@ def bin2mapping(decode_cfg):
         'os': (platform.machine(), platform.system(), platform.release(), platform.version(), platform.platform()),
         'python': platform.python_version()
         }
-    if 'cfg_crc' in setting and cfg_size is not None:
+    if cfg_crc_fielddef is not None and cfg_size is not None:
         valuemapping['header']['template'].update({'size': cfg_size})
-    if 'cfg_crc32' in setting:
+    if cfg_crc32_fielddef is not None:
         if cfg_crc32 is not None:
             valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(decode_cfg))})
-    if 'version' in setting:
+    if version != 0x0:
         valuemapping['header']['data'].update({'version': hex(version)})
 
     return valuemapping
@@ -3287,20 +3301,23 @@ def mapping2bin(decode_cfg, jsonconfig, filename=""):
 
     if setting is not None:
         # iterate through restore data mapping
-        for name in jsonconfig:
+        for name, config in jsonconfig.items():
             # key must exist in both dict
-            if name in setting:
-                set_field(_buffer, 1<<config_version, name, setting[name], jsonconfig[name], addroffset=0, filename=filename)
+            setting_fielddef = setting.get(name, None)
+            if setting_fielddef is not None:
+                set_field(_buffer, 1<<config_version, name, setting_fielddef, config, addroffset=0, filename=filename)
             else:
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-        if 'cfg_crc' in setting:
+        cfg_crc_setting = setting.get('cfg_crc', None)
+        if cfg_crc_setting is not None:
             crc = get_settingcrc(_buffer)
-            struct.pack_into(setting['cfg_crc'][1], _buffer, setting['cfg_crc'][2], crc)
-        if 'cfg_crc32' in setting:
+            struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
+        cfg_crc32_setting = setting.get('cfg_crc32', None)
+        if cfg_crc32_setting is not None:
             crc32 = get_settingcrc32(_buffer)
-            struct.pack_into(setting['cfg_crc32'][1], _buffer, setting['cfg_crc32'][2], crc32)
+            struct.pack_into(cfg_crc32_setting[1], _buffer, cfg_crc32_setting[2], crc32)
         return _buffer
 
     else:
@@ -3332,10 +3349,11 @@ def mapping2cmnd(decode_cfg, valuemapping, filename=""):
 
     if setting is not None:
         # iterate through restore data mapping
-        for name in valuemapping:
+        for name, mapping in valuemapping.items():
             # key must exist in both dict
-            if name in setting:
-                cmnds = set_cmnd(cmnds, 1<<config_version, name, setting[name], valuemapping, valuemapping[name], addroffset=0)
+            setting_fielddef = setting.get(name, None)
+            if setting_fielddef is not None:
+                cmnds = set_cmnd(cmnds, 1<<config_version, name, setting_fielddef, valuemapping, mapping, addroffset=0)
             else:
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
