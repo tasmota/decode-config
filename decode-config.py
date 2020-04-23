@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00112]'
+VER = '8.2.0.4 [00113]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1398,7 +1398,7 @@ SETTING_8_1_0_3.update             ({
 SETTING_8_1_0_4 = copy.deepcopy(SETTING_8_1_0_3)
 SETTING_8_1_0_4.update             ({
     'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
-    'adc_param_type':               (Platform.ALL,   'B',   0x1D5,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
+    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
                                                                                                                   if 6==@["my_adc0"] \
                                                                                                                   else \
                                                                                                                   "AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
