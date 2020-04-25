@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00120]'
+VER = '8.2.0.5 [00121]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1535,7 +1535,7 @@ SETTING_8_2_0_3['SensorBits1'][1].update ({
 # ======================================================================
 SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
 SETTING_8_2_0_4.update             ({
-    'config_version':               (Platform.ALL,   'B',   0xF36,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+    'config_version':               (Platform.ALL,   'B',   0xF36,       (None, '0 <= $ < len(Platform.STR)',   (INTERNAL,      None)), (None,      False) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_5 = copy.deepcopy(SETTING_8_2_0_4)
@@ -3507,6 +3507,19 @@ def restore(restorefile, backupfileformat, config):
 
     if new_encode_cfg is not None:
         new_decode_cfg = decrypt_encrypt(new_encode_cfg)
+        if filetype == FileType.DMP or filetype == FileType.BIN:
+            platform_new_data = get_config_info(new_decode_cfg)['platform']
+        else:
+            platform_new_data = jsonconfig.get('config_version', Platform.STR.index("ESP82xx"))
+        platform_device = config['info']['platform']
+        if platform_device != platform_new_data:
+            exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
+                "File" if ARGS.tasmotafile is not None else "Device",
+                ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+                Platform.str(platform_device),
+                restorefilename,
+                Platform.str(platform_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+
         if ARGS.verbose:
             # get binary header and template to use
             message("Config file contains data of Tasmota v{}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
