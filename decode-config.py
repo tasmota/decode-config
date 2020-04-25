@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00121]'
+VER = '8.2.0.5 [00122]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1665,9 +1665,10 @@ def message(msg, type_=None, status=None, line=None):
         status number
     """
     sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
-    print('{styp}{sdelimiter}{sstatus}{sdelimiter}{slineno}{scolon}{smgs}'\
+    print('{styp}{sdelimiter1}{sstatus}{sdelimiter2}{slineno}{scolon}{smgs}'\
           .format(styp=type_ if type_ is not None else '',
-                  sdelimiter=sdelimiter,
+                  sdelimiter1=sdelimiter,
+                  sdelimiter2=sdelimiter if line is not None else '',
                   sstatus=status if status is not None and status > 0 else '',
                   scolon=': ' if type_ is not None or line is not None else '',
                   smgs=msg,
@@ -3507,6 +3508,8 @@ def restore(restorefile, backupfileformat, config):
 
     if new_encode_cfg is not None:
         new_decode_cfg = decrypt_encrypt(new_encode_cfg)
+
+        # Platform compatibility check
         if filetype == FileType.DMP or filetype == FileType.BIN:
             platform_new_data = get_config_info(new_decode_cfg)['platform']
         else:
@@ -3519,6 +3522,18 @@ def restore(restorefile, backupfileformat, config):
                 Platform.str(platform_device),
                 restorefilename,
                 Platform.str(platform_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+
+        # Data version compatibility check
+        if filetype == FileType.DMP or filetype == FileType.BIN:
+            version_new_data = get_config_info(new_decode_cfg)['version']
+            version_device = config['info']['version']
+            if version_device != version_new_data:
+                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore binary data incompatibility: {} '{}' v'{}', restore file '{}' v'{}'".format(\
+                    "File" if ARGS.tasmotafile is not None else "Device",
+                    ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+                    get_versionstr(version_device),
+                    restorefilename,
+                    get_versionstr(version_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
         if ARGS.verbose:
             # get binary header and template to use
