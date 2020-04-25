@@ -3184,62 +3184,59 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
 
     return cmnds
 
-def bin2mapping(decode_cfg):
+def bin2mapping(config):
     """
     Decodes binary data stream into pyhton mappings dict
 
-    @param decode_cfg:
-        binary config data (decrypted)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
 
     @return:
         valuemapping data as mapping dictionary
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header and template to use
-    config_info = get_config_info(decode_cfg)
-
     # check size if exists
     cfg_size = None
-    cfg_size_fielddef = config_info['template'].get('cfg_size', None)
+    cfg_size_fielddef = config['info']['template'].get('cfg_size', None)
     if cfg_size_fielddef is not None:
-        cfg_size = get_field(decode_cfg, Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
+        cfg_size = get_field(config['decode'], Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
         # read size should be same as definied in setting
-        if cfg_size > config_info['template_size']:
+        if cfg_size > config['info']['template_size']:
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, config_info['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
-        elif cfg_size < config_info['template_size']:
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+        elif cfg_size < config['info']['template_size']:
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config_info['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
 
     # get/calc crc
-    cfg_crc_fielddef = config_info['template'].get('cfg_crc', None)
+    cfg_crc_fielddef = config['info']['template'].get('cfg_crc', None)
     if cfg_crc_fielddef is not None:
-        cfg_crc = get_field(decode_cfg, Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
+        cfg_crc = get_field(config['decode'], Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
-        cfg_crc = get_settingcrc(decode_cfg)
+        cfg_crc = get_settingcrc(config['decode'])
     # get/calc crc32
     cfg_crc32 = None
-    cfg_crc32_fielddef = config_info['template'].get('cfg_crc32', None)
+    cfg_crc32_fielddef = config['info']['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
-        cfg_crc32 = get_field(decode_cfg, Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
+        cfg_crc32 = get_field(config['decode'], Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
-        cfg_crc32 = get_settingcrc32(decode_cfg)
+        cfg_crc32 = get_settingcrc32(config['decode'])
     cfg_timestamp = int(time.time())
-    cfg_timestamp_fielddef = config_info['template'].get('cfg_timestamp', None)
+    cfg_timestamp_fielddef = config['info']['template'].get('cfg_timestamp', None)
     if cfg_timestamp_fielddef is not None:
-        cfg_timestamp = get_field(decode_cfg, Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
+        cfg_timestamp = get_field(config['decode'], Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
 
-    if config_info['version'] < 0x0606000B:
-        if cfg_crc != get_settingcrc(decode_cfg):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+    if config['info']['version'] < 0x0606000B:
+        if cfg_crc != get_settingcrc(config['decode']):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
     else:
-        if cfg_crc32 != get_settingcrc32(decode_cfg):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        if cfg_crc32 != get_settingcrc32(config['decode']):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
-    valuemapping = get_field(decode_cfg, 1<<config_info['platform'], None, (Platform.ALL, config_info['template'], 0, (None, None, ('System', None))), ignoregroup=True)
+    valuemapping = get_field(config['decode'], 1<<config['info']['platform'], None, (Platform.ALL, config['info']['template'], 0, (None, None, ('System', None))), ignoregroup=True)
 
     # remove keys having empty object
     if valuemapping is not None:
@@ -3256,12 +3253,12 @@ def bin2mapping(decode_cfg):
             'jsonhidepw':   ARGS.jsonhidepw,
         },
         'template': {
-            'version':  hex(config_info['template_version']),
+            'version':  hex(config['info']['template_version']),
             'crc':      hex(cfg_crc),
         },
         'data': {
-            'crc':      hex(get_settingcrc(decode_cfg)),
-            'size':     len(decode_cfg),
+            'crc':      hex(get_settingcrc(config['decode'])),
+            'size':     len(config['decode']),
         },
         'script': {
             'name':     os.path.basename(__file__),
@@ -3275,9 +3272,9 @@ def bin2mapping(decode_cfg):
     if cfg_crc32_fielddef is not None:
         if cfg_crc32 is not None:
             valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
-        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(decode_cfg))})
-    if config_info['version'] != 0x0:
-        valuemapping['header']['data'].update({'version': hex(config_info['version'])})
+        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
+    if config['info']['version'] != 0x0:
+        valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
 
     return valuemapping
 
@@ -3883,7 +3880,7 @@ if __name__ == "__main__":
     CONFIG['info'] = get_config_info(CONFIG['decode'])
 
     # decode into mappings dictionary
-    CONFIG['mapping'] = bin2mapping(CONFIG['decode'])
+    CONFIG['mapping'] = bin2mapping(CONFIG)
 
     # check version compatibility
     if CONFIG['info']['version'] is not None:
