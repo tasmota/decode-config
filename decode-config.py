@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00116]'
+VER = '8.2.0.4 [00117]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1809,40 +1809,6 @@ def get_config_info(decode_cfg):
         'template_size': size,
         'template': setting
         }
-
-def get_config_platform(decode_cfg):
-    """
-    Get config platform identifier ('config_version' from settings)
-
-    @param decode_cfg:
-        binary config data (decrypted)
-
-    @return: int
-        configuration data platform id, None if not exists
-    """
-    config_info = get_config_info(decode_cfg)
-    fielddef = config_info['template'].get('config_version', None)
-    if fielddef is not None:
-        return get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
-
-    return None
-
-def get_version(decode_cfg):
-    """
-    Get config data version ('version' from settings)
-
-    @param decode_cfg:
-        binary config data (decrypted)
-
-    @return: int
-        configuration data version, None if not exists
-    """
-    config_info = get_config_info(decode_cfg)
-    fielddef = config_info['template'].get('version', None)
-    if fielddef is not None:
-        return get_field(decode_cfg, Platform.ALL, 'version', fielddef, raw=True, ignoregroup=True)
-
-    return None
 
 def get_grouplist(setting):
     """
@@ -3926,7 +3892,7 @@ if __name__ == "__main__":
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
                         ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
                         get_versionstr(CONFIG['info']['version']),
-                        get_platformstr(get_config_platform(DECODE_CONFIG))),
+                        get_platformstr(CONFIG['info']['platform'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
