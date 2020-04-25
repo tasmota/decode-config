@@ -3053,18 +3053,10 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 if not isinstance(value, str):
                     value = str(value, STR_ENCODING, errors='ignore')
                 # remember possible value changes
-                try:
-                    prevvalue = sarray[strindex+addroffset]
-                except:
-                    print(fieldname, value,strindex, addroffset)
-
+                prevvalue = sarray[strindex+addroffset]
                 curvalue = value
                 # change indexed string
-                try:
-                    sarray[strindex+addroffset] = value
-                except:
-                    print(fieldname, value,strindex, addroffset)
-
+                sarray[strindex+addroffset] = value
                 # convert back to binary string stream
                 new_value = '\0'.join(sarray).encode(STR_ENCODING)
                 if len(new_value) > get_fieldlength(fielddef):
