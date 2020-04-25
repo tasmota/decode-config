@@ -3216,17 +3216,20 @@ def bin2mapping(config):
         cfg_crc = get_field(config['decode'], Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(config['decode'])
+
     # get/calc crc32
-    cfg_crc32 = None
     cfg_crc32_fielddef = config['info']['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
         cfg_crc32 = get_field(config['decode'], Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(config['decode'])
-    cfg_timestamp = int(time.time())
+
+    # get config timestamp
     cfg_timestamp_fielddef = config['info']['template'].get('cfg_timestamp', None)
     if cfg_timestamp_fielddef is not None:
         cfg_timestamp = get_field(config['decode'], Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
+    else:
+        cfg_timestamp = int(time.time())
 
     if config['info']['version'] < 0x0606000B:
         if cfg_crc != get_settingcrc(config['decode']):
@@ -3270,11 +3273,14 @@ def bin2mapping(config):
     if cfg_crc_fielddef is not None and cfg_size is not None:
         valuemapping['header']['template'].update({'size': cfg_size})
     if cfg_crc32_fielddef is not None:
-        if cfg_crc32 is not None:
-            valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
+        valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
+    cfg_platform_def = config['info']['template'].get('config_version', None)
+    if cfg_platform_def is not None:
+        cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
+        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform)})
 
     return valuemapping
 
