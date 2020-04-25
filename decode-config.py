@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00117]'
+VER = '8.2.0.4 [00118]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1800,7 +1800,7 @@ def get_config_info(decode_cfg):
             break
 
     if setting is None:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
+        exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version v{} not supported".format(get_versionstr(version)), line=inspect.getlineno(inspect.currentframe()))
 
     return {
         'platform': config_version,
@@ -3324,7 +3324,7 @@ def mapping2bin(config, jsonconfig, filename=""):
         return _buffer
 
     else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, config['info']['version']), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     return None
 
@@ -3503,7 +3503,7 @@ def restore(restorefile, backupfileformat, config):
         new_decode_cfg = decrypt_encrypt(new_encode_cfg)
         if ARGS.verbose:
             # get binary header and template to use
-            message("Config file contains data of Tasmota {}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
+            message("Config file contains data of Tasmota v{}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
         if ARGS.forcerestore or new_encode_cfg != config['encode']:
             dryrun = ""
             if ARGS.dryrun:
