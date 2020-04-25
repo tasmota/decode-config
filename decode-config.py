@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00122]'
+VER = '8.2.0.5 [00123]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3045,15 +3045,33 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 str_ = str(unpackedvalue[0], STR_ENCODING, errors='ignore')
                 # split into separate string values
                 sarray = str_.split('\x00')
+                # limit to SET_MAX
+                if len(sarray) >= SETTINGSTEXTINDEX.index('SET_MAX'):
+                    delrange = len(sarray) - SETTINGSTEXTINDEX.index('SET_MAX')
+                    if delrange > 0:
+                        del sarray[-delrange:]
                 if not isinstance(value, str):
                     value = str(value, STR_ENCODING, errors='ignore')
                 # remember possible value changes
-                prevvalue = sarray[strindex+addroffset]
+                try:
+                    prevvalue = sarray[strindex+addroffset]
+                except:
+                    print(fieldname, value,strindex, addroffset)
+
                 curvalue = value
                 # change indexed string
-                sarray[strindex+addroffset] = value
+                try:
+                    sarray[strindex+addroffset] = value
+                except:
+                    print(fieldname, value,strindex, addroffset)
+
                 # convert back to binary string stream
-                value = '\0'.join(sarray).encode(STR_ENCODING)
+                new_value = '\0'.join(sarray).encode(STR_ENCODING)
+                if len(new_value) > get_fieldlength(fielddef):
+                    err_text = "Text pool overflow by {} chars (max {})".format(len(new_value) - get_fieldlength(fielddef), get_fieldlength(fielddef))
+                    valid = False
+                else:
+                    value = new_value
 
         if value is None and not skip:
             # None is an invalid value
@@ -3088,6 +3106,10 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr+addroffset, value)
                         curvalue = get_fieldvalue(fielddef, dobj, baseaddr+addroffset)
                     if prevvalue != curvalue and ARGS.verbose:
+                        if isinstance(prevvalue, str):
+                            prevvalue = '"{}"'.format(prevvalue)
+                        if isinstance(curvalue, str):
+                            curvalue = '"{}"'.format(curvalue)
                         message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
                 else:
                     if debug(ARGS) >= 2:
