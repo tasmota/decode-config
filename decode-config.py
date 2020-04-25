@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00115]'
+VER = '8.2.0.4 [00116]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3536,11 +3536,6 @@ def restore(restorefile, backupfileformat, config):
     if new_encode_cfg is not None:
         new_decode_cfg = decrypt_encrypt(new_encode_cfg)
         if ARGS.verbose:
-            if config['decode'] != new_decode_cfg:
-                print("DATA CHANGED! {} {}".format(len(config['decode']), len(new_decode_cfg)))
-                for i in range(0, len(config['decode'])):
-                    if config['decode'][i] != new_decode_cfg[i]:
-                        print("${:04x}: origin 0x{:02x}  new 0x{:02x}".format(i, config['decode'][i], new_decode_cfg[i]))
             # get binary header and template to use
             message("Config file contains data of Tasmota {}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
         if ARGS.forcerestore or new_encode_cfg != config['encode']:
@@ -3576,7 +3571,7 @@ def restore(restorefile, backupfileformat, config):
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
             if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                message("Configuration data leaving unchanged", type_=LogType.INFO if ARGS.verbose else None)
+                message("Restore skipped, configuration data unchanged", type_=LogType.INFO if ARGS.verbose else None)
 
 def output_tasmotacmnds(tasmotacmnds):
     """
