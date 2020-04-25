@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00119]'
+VER = '8.2.0.5 [00120]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -510,16 +510,27 @@ def cmnd_websensor(value, idx):
 # Tasmota configuration data definition
 # ----------------------------------------------------------------------
 
-# Tasmota setings platforms
-PLATFORMS = ["ESP82xx", "ESP32"]
-
+# Tasmota settings platforms
 class Platform:
     """
-    Platform bitmask
+    Platform constant
     """
     ESP82 = 0x1
     ESP32 = 0x2
     ALL = 0xf
+    STR = ["ESP82xx", "ESP32"]
+    @staticmethod
+    def str(version):
+        """
+        Create platform string
+
+        @param version:
+            version integer
+
+        @return:
+            platform string
+        """
+        return Platform.STR[version] if version is not None and version >= 0 and version < len(Platform.STR) else Platform.STR[0]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -1784,15 +1795,15 @@ def get_config_info(decode_cfg):
     template_version = version
 
     # identify platform (config_version)
-    config_version = PLATFORMS.index("ESP82xx")  # default legacy
+    config_version = Platform.STR.index("ESP82xx")  # default legacy
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             fielddef = cfg[2].get('config_version', None)
             if fielddef is not None:
                 config_version = get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
-                if config_version >= len(PLATFORMS):
-                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(PLATFORMS)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
-                    config_version = PLATFORMS.index("ESP82xx")
+                if config_version >= len(Platform.STR):
+                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(Platform.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    config_version = Platform.STR.index("ESP82xx")
             break
     # search setting definition for platform top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
@@ -1896,18 +1907,6 @@ def get_filetype(filename):
         filetype = FileType.FILE_NOT_FOUND
 
     return filetype
-
-def get_platformstr(version):
-    """
-    Create platform string
-
-    @param version:
-        version integer
-
-    @return:
-        platform string
-    """
-    return PLATFORMS[version] if version is not None and version >= 0 and version < len(PLATFORMS) else PLATFORMS[0]
 
 def get_versionstr(version):
     """
@@ -3214,12 +3213,13 @@ def bin2mapping(decode_cfg):
             # less number of bytes can not be processed
             exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config_info['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
 
-    # check crc if exists
+    # get/calc crc
     cfg_crc_fielddef = config_info['template'].get('cfg_crc', None)
     if cfg_crc_fielddef is not None:
         cfg_crc = get_field(decode_cfg, Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(decode_cfg)
+    # get/calc crc32
     cfg_crc32 = None
     cfg_crc32_fielddef = config_info['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
@@ -3844,8 +3844,11 @@ if __name__ == "__main__":
     if ARGS.device is not None and ARGS.tasmotafile is not None:
         exit_(ExitCode.ARGUMENT_ERROR, "Unable to select source, do not use -d and -f together", line=inspect.getlineno(inspect.currentframe()))
 
+    # create global data dict
+    CONFIG = {}
+
     # default no configuration available
-    ENCODE_CONFIG = None
+    CONFIG['encode'] = None
 
     if debug(ARGS) >= 1:
         print("Checking setting definition")
@@ -3853,20 +3856,20 @@ if __name__ == "__main__":
 
     # pull config from Tasmota device
     if ARGS.tasmotafile is not None:
-        ENCODE_CONFIG = load_tasmotaconfig(ARGS.tasmotafile)
+        CONFIG['encode'] = load_tasmotaconfig(ARGS.tasmotafile)
 
     # load config from Tasmota file
     if ARGS.device is not None:
-        ENCODE_CONFIG = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
+        CONFIG['encode'] = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
 
-    if ENCODE_CONFIG is None:
+    if CONFIG['encode'] is None:
         # no config source given
         shorthelp(False)
         print()
         print(PARSER.epilog)
         sys.exit(ExitCode.OK)
 
-    if len(ENCODE_CONFIG) == 0:
+    if len(CONFIG['encode']) == 0:
         exit_(ExitCode.FILE_READ_ERROR,
               "Unable to read configuration data from {} '{}'"\
               .format('device' if ARGS.device is not None else 'file',
@@ -3874,19 +3877,13 @@ if __name__ == "__main__":
               line=inspect.getlineno(inspect.currentframe()))
 
     # decrypt Tasmota config
-    DECODE_CONFIG = decrypt_encrypt(ENCODE_CONFIG)
-
-    # decode into mappings dictionary
-    CONFIG_MAPPING = bin2mapping(DECODE_CONFIG)
+    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'])
 
     # config dict
-    CONFIG_INFO = get_config_info(DECODE_CONFIG)
-    CONFIG = {
-        'encode': ENCODE_CONFIG,
-        "decode": DECODE_CONFIG,
-        "mapping": CONFIG_MAPPING,
-        'info': CONFIG_INFO
-        }
+    CONFIG['info'] = get_config_info(CONFIG['decode'])
+
+    # decode into mappings dictionary
+    CONFIG['mapping'] = bin2mapping(CONFIG['decode'])
 
     # check version compatibility
     if CONFIG['info']['version'] is not None:
@@ -3895,7 +3892,7 @@ if __name__ == "__main__":
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
                         ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
                         get_versionstr(CONFIG['info']['version']),
-                        get_platformstr(CONFIG['info']['platform'])),
+                        Platform.str(CONFIG['info']['platform'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
