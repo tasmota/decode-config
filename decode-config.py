@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00113]'
+VER = '8.2.0.4 [00114]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1761,21 +1761,19 @@ def get_templatesizes():
     # return unique sizes only (remove duplicates)
     return list(set(sizes))
 
-def get_setting_template(decode_cfg):
+def get_config_info(decode_cfg):
     """
-    Search for template_version, version, config_version, size and settings
-    to be used depending on given binary config data
+    Extract info about loaded config
 
     @param decode_cfg:
         binary config data (decrypted)
 
-    @return:
-        template_version, version, config_version, size, setting
-            template_version int  version number of template to use
-            version          int  version number from config data
-            config_version   int  hardware platform from config data
-            size             int  size of config data
-            setting          dict setting to use (from SETTINGS)
+    @return: dict
+        platform         int  config data hardware platform
+        version          int  config data version
+        template_version int  template version number
+        template_size    int  config data size
+        template         dict template dict (from SETTINGS)
     """
     version = 0x0
     size = setting = None
@@ -1804,7 +1802,13 @@ def get_setting_template(decode_cfg):
     if setting is None:
         exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
 
-    return template_version, version, config_version, size, setting
+    return {
+        'platform': config_version,
+        'version': version,
+        'template_version': template_version,
+        'template_size': size,
+        'template': setting
+        }
 
 def get_config_platform(decode_cfg):
     """
@@ -1816,8 +1820,8 @@ def get_config_platform(decode_cfg):
     @return: int
         configuration data platform id, None if not exists
     """
-    _, _, _, _, setting = get_setting_template(decode_cfg)
-    fielddef = setting.get('config_version', None)
+    config_info = get_config_info(decode_cfg)
+    fielddef = config_info['template'].get('config_version', None)
     if fielddef is not None:
         return get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
 
@@ -1833,8 +1837,8 @@ def get_version(decode_cfg):
     @return: int
         configuration data version, None if not exists
     """
-    _, _, _, _, setting = get_setting_template(decode_cfg)
-    fielddef = setting.get('version', None)
+    config_info = get_config_info(decode_cfg)
+    fielddef = config_info['template'].get('version', None)
     if fielddef is not None:
         return get_field(decode_cfg, Platform.ALL, 'version', fielddef, raw=True, ignoregroup=True)
 
@@ -2274,9 +2278,9 @@ def get_settingcrc(dobj):
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
 
-    _, _, _, size, _ = get_setting_template(dobj)
     crc = 0
-    for i in range(0, size):
+    config_info = get_config_info(dobj)
+    for i in range(0, config_info['template_size']):
         if not i in [14, 15]: # Skip crc
             byte_ = dobj[i]
             crc += byte_ * (i+1)
@@ -3226,39 +3230,39 @@ def bin2mapping(decode_cfg):
         decode_cfg = bytearray(decode_cfg)
 
     # get binary header and template to use
-    template_version, version, config_version, size, setting = get_setting_template(decode_cfg)
+    config_info = get_config_info(decode_cfg)
 
     # check size if exists
     cfg_size = None
-    cfg_size_fielddef = setting.get('cfg_size', None)
+    cfg_size_fielddef = config_info['template'].get('cfg_size', None)
     if cfg_size_fielddef is not None:
         cfg_size = get_field(decode_cfg, Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
         # read size should be same as definied in setting
-        if cfg_size > size:
+        if cfg_size > config_info['template_size']:
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, size), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
-        elif cfg_size < size:
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, config_info['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+        elif cfg_size < config_info['template_size']:
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, size), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config_info['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
 
     # check crc if exists
-    cfg_crc_fielddef = setting.get('cfg_crc', None)
+    cfg_crc_fielddef = config_info['template'].get('cfg_crc', None)
     if cfg_crc_fielddef is not None:
         cfg_crc = get_field(decode_cfg, Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(decode_cfg)
     cfg_crc32 = None
-    cfg_crc32_fielddef = setting.get('cfg_crc32', None)
+    cfg_crc32_fielddef = config_info['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
         cfg_crc32 = get_field(decode_cfg, Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(decode_cfg)
     cfg_timestamp = int(time.time())
-    cfg_timestamp_fielddef = setting.get('cfg_timestamp', None)
+    cfg_timestamp_fielddef = config_info['template'].get('cfg_timestamp', None)
     if cfg_timestamp_fielddef is not None:
         cfg_timestamp = get_field(decode_cfg, Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
 
-    if version < 0x0606000B:
+    if config_info['version'] < 0x0606000B:
         if cfg_crc != get_settingcrc(decode_cfg):
             exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
     else:
@@ -3266,7 +3270,7 @@ def bin2mapping(decode_cfg):
             exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
-    valuemapping = get_field(decode_cfg, 1<<config_version, None, (Platform.ALL, setting, 0, (None, None, ('System', None))), ignoregroup=True)
+    valuemapping = get_field(decode_cfg, 1<<config_info['platform'], None, (Platform.ALL, config_info['template'], 0, (None, None, ('System', None))), ignoregroup=True)
 
     # remove keys having empty object
     if valuemapping is not None:
@@ -3283,7 +3287,7 @@ def bin2mapping(decode_cfg):
             'jsonhidepw':   ARGS.jsonhidepw,
         },
         'template': {
-            'version':  hex(template_version),
+            'version':  hex(config_info['template_version']),
             'crc':      hex(cfg_crc),
         },
         'data': {
@@ -3303,17 +3307,20 @@ def bin2mapping(decode_cfg):
         if cfg_crc32 is not None:
             valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(decode_cfg))})
-    if version != 0x0:
-        valuemapping['header']['data'].update({'version': hex(version)})
+    if config_info['version'] != 0x0:
+        valuemapping['header']['data'].update({'version': hex(config_info['version'])})
 
     return valuemapping
 
-def mapping2bin(decode_cfg, jsonconfig, filename=""):
+def mapping2bin(config, jsonconfig, filename=""):
     """
     Encodes into binary data stream
 
-    @param decode_cfg:
-        binary config data (decrypted)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     @param jsonconfig:
         restore data mapping
     @param filename:
@@ -3322,84 +3329,64 @@ def mapping2bin(decode_cfg, jsonconfig, filename=""):
     @return:
         changed binary config data (decrypted) or None on error
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header data to use the correct version template from device
-    _, version, config_version, _, setting = get_setting_template(decode_cfg)
-
     # make empty binarray array
     _buffer = bytearray()
     # add data
-    _buffer.extend(decode_cfg)
+    _buffer.extend(config['decode'])
 
-    if setting is not None:
+    if config['info']['template'] is not None:
         # iterate through restore data mapping
-        for name, config in jsonconfig.items():
+        for name, data in jsonconfig.items():
             # key must exist in both dict
-            setting_fielddef = setting.get(name, None)
+            setting_fielddef = config['info']['template'].get(name, None)
             if setting_fielddef is not None:
-                set_field(_buffer, 1<<config_version, name, setting_fielddef, config, addroffset=0, filename=filename)
+                set_field(_buffer, 1<<config['info']['platform'], name, setting_fielddef, data, addroffset=0, filename=filename)
             else:
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-        cfg_crc_setting = setting.get('cfg_crc', None)
+        cfg_crc_setting = config['info']['template'].get('cfg_crc', None)
         if cfg_crc_setting is not None:
             crc = get_settingcrc(_buffer)
             struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
-        cfg_crc32_setting = setting.get('cfg_crc32', None)
+        cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
         if cfg_crc32_setting is not None:
             crc32 = get_settingcrc32(_buffer)
             struct.pack_into(cfg_crc32_setting[1], _buffer, cfg_crc32_setting[2], crc32)
         return _buffer
 
     else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, version), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, config['info']['version']), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     return None
 
-def mapping2cmnd(decode_cfg, valuemapping, filename=""):
+def mapping2cmnd(config):
     """
     Encodes mapping data into Tasmota command mapping
 
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param valuemapping:
-        data mapping
-    @param filename:
-        name of the restore file (for error output only)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
 
     @return:
         Tasmota command mapping {group: [cmnd <,cmnd <,...>>]}
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header data to use the correct version template from device
-    _, version, config_version, _, setting = get_setting_template(decode_cfg)
-
     cmnds = {}
+    # iterate through restore data mapping
+    for name, mapping in config['mapping'].items():
+        # key must exist in both dict
+        setting_fielddef = config['info']['template'].get(name, None)
+        if setting_fielddef is not None:
+            cmnds = set_cmnd(cmnds, 1<<config['info']['platform'], name, setting_fielddef, config['mapping'], mapping, addroffset=0)
+        else:
+            if name != 'header':
+                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-    if setting is not None:
-        # iterate through restore data mapping
-        for name, mapping in valuemapping.items():
-            # key must exist in both dict
-            setting_fielddef = setting.get(name, None)
-            if setting_fielddef is not None:
-                cmnds = set_cmnd(cmnds, 1<<config_version, name, setting_fielddef, valuemapping, mapping, addroffset=0)
-            else:
-                if name != 'header':
-                    exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+    return cmnds
 
-        return cmnds
-
-    else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, version), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
-
-    return None
-
-def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
+def backup(backupfile, backupfileformat, config):
     """
     Create backup file
 
@@ -3407,26 +3394,25 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         Raw backup filename from program args
     @param backupfileformat:
         Backup file format
-    @param encode_cfg:
-        binary config data (encrypted)
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param configmapping:
-        config data mapppings
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     """
-    def backup_dmp(backup_filename, encode_cfg, _):
+    def backup_dmp(backup_filename, config):
         # do dmp file write
         with open(backup_filename, "wb") as backupfp:
-            backupfp.write(encode_cfg)
-    def backup_bin(backup_filename, _, __):
+            backupfp.write(config['encode'])
+    def backup_bin(backup_filename, config):
         # do bin file write
         with open(backup_filename, "wb") as backupfp:
-            backupfp.write(decode_cfg)
+            backupfp.write(config['decode'])
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
-    def backup_json(backup_filename, _, configmapping):
+    def backup_json(backup_filename, config):
         # do json file write
         with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
-            backupfp.write(get_jsonstr(configmapping, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            backupfp.write(get_jsonstr(config['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
     backups = {
         FileType.DMP.lower():("Tasmota", FileType.DMP, backup_dmp),
@@ -3453,12 +3439,12 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     if backupfileformat.lower() in backups:
         _backup = backups[backupfileformat.lower()]
         fileformat = _backup[0]
-        backup_filename = make_filename(backupfile, _backup[1], configmapping)
+        backup_filename = make_filename(backupfile, _backup[1], config['mapping'])
         if ARGS.verbose:
             message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
         if not ARGS.dryrun:
             try:
-                _backup[2](backup_filename, encode_cfg, configmapping)
+                _backup[2](backup_filename, config)
             except Exception as err:    # pylint: disable=broad-except
                 exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
@@ -3466,7 +3452,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         message("{}Backup successful to '{}' ({} format)"\
             .format(dryrun, backup_filename, fileformat), type_=LogType.INFO if ARGS.verbose else None)
 
-def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping):
+def restore(restorefile, backupfileformat, config):
     """
     Restore from file
 
@@ -3474,10 +3460,11 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         binary config data (encrypted)
     @param backupfileformat:
         Backup file format
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param configmapping:
-        config data mapppings
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     """
     global EXIT_CODE    # pylint: disable=global-statement
 
@@ -3490,7 +3477,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         restorefileformat = FileType.DMP
     elif backupfileformat.lower() == 'json':
         restorefileformat = FileType.JSON
-    restorefilename = make_filename(restorefile, restorefileformat, configmapping)
+    restorefilename = make_filename(restorefile, restorefileformat, config['mapping'])
     filetype = get_filetype(restorefilename)
 
     if filetype == FileType.DMP:
@@ -3532,7 +3519,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         except ValueError as err:
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # process json config to binary config
-        new_decode_cfg = mapping2bin(decode_cfg, jsonconfig, restorefilename)
+        new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
         new_encode_cfg = decrypt_encrypt(new_decode_cfg)
 
     elif filetype == FileType.FILE_NOT_FOUND:
@@ -3545,12 +3532,16 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         exit_(ExitCode.FILE_READ_ERROR, "File '{}' unknown error".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
 
     if new_encode_cfg is not None:
+        new_decode_cfg = decrypt_encrypt(new_encode_cfg)
         if ARGS.verbose:
-            new_decode_cfg = decrypt_encrypt(new_encode_cfg)
+            if config['decode'] != new_decode_cfg:
+                print("DATA CHANGED! {} {}".format(len(config['decode']), len(new_decode_cfg)))
+                for i in range(0, len(config['decode'])):
+                    if config['decode'][i] != new_decode_cfg[i]:
+                        print("${:04x}: origin 0x{:02x}  new 0x{:02x}".format(i, config['decode'][i], new_decode_cfg[i]))
             # get binary header and template to use
-            _, version, _, _, _ = get_setting_template(new_decode_cfg)
-            message("Config file contains data of Tasmota {}".format(get_versionstr(version)), type_=LogType.INFO)
-        if ARGS.forcerestore or new_encode_cfg != encode_cfg:
+            message("Config file contains data of Tasmota {}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
+        if ARGS.forcerestore or new_encode_cfg != config['encode']:
             dryrun = ""
             if ARGS.dryrun:
                 if ARGS.verbose:
@@ -3922,18 +3913,26 @@ if __name__ == "__main__":
     # decode into mappings dictionary
     CONFIG_MAPPING = bin2mapping(DECODE_CONFIG)
 
+    # config dict
+    CONFIG_INFO = get_config_info(DECODE_CONFIG)
+    CONFIG = {
+        'encode': ENCODE_CONFIG,
+        "decode": DECODE_CONFIG,
+        "mapping": CONFIG_MAPPING,
+        'info': CONFIG_INFO
+        }
+
     # check version compatibility
-    VERSION = get_version(DECODE_CONFIG)
-    if VERSION is not None:
+    if CONFIG['info']['version'] is not None:
         if ARGS.verbose:
             message("{} '{}' is using Tasmota v{} on {}"\
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
                         ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
-                        get_versionstr(VERSION),
+                        get_versionstr(CONFIG['info']['version']),
                         get_platformstr(get_config_platform(DECODE_CONFIG))),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-        if VERSION > SUPPORTED_VERSION and not ARGS.ignorewarning:
+        if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
             exit_(ExitCode.UNSUPPORTED_VERSION, \
                 "Tasmota configuration data v{} currently unsupported!\n"
                 "           The read configuration data is newer than the last\n"
@@ -3949,24 +3948,24 @@ if __name__ == "__main__":
                 "           changes in the configuration structure, you may able to use\n"
                 "           the developer version of this program from\n"
                 "           https://github.com/tasmota/decode-config/tree/development."\
-                  .format(get_versionstr(VERSION), get_versionstr(SUPPORTED_VERSION)),
+                  .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
         # backup to file
-        backup(ARGS.backupfile, ARGS.backupfileformat, ENCODE_CONFIG, DECODE_CONFIG, CONFIG_MAPPING)
+        backup(ARGS.backupfile, ARGS.backupfileformat, CONFIG)
 
     if ARGS.restorefile is not None:
         # restore from file
-        restore(ARGS.restorefile, ARGS.backupfileformat, ENCODE_CONFIG, DECODE_CONFIG, CONFIG_MAPPING)
+        restore(ARGS.restorefile, ARGS.backupfileformat, CONFIG)
 
     if (ARGS.backupfile is None and ARGS.restorefile is None) or ARGS.output:
         if ARGS.outputformat == 'json':
             # json screen output
-            print(get_jsonstr(CONFIG_MAPPING, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            print(get_jsonstr(CONFIG['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
         if ARGS.outputformat == 'cmnd' or ARGS.outputformat == 'command':
             # Tasmota command output
-            output_tasmotacmnds(mapping2cmnd(DECODE_CONFIG, CONFIG_MAPPING))
+            output_tasmotacmnds(mapping2cmnd(CONFIG))
 
     sys.exit(EXIT_CODE)
