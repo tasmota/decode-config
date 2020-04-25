@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.4 [00114]'
+VER = '8.2.0.4 [00115]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3345,14 +3345,16 @@ def mapping2bin(config, jsonconfig, filename=""):
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-        cfg_crc_setting = config['info']['template'].get('cfg_crc', None)
-        if cfg_crc_setting is not None:
-            crc = get_settingcrc(_buffer)
-            struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
+        # CRC32 calc takes precedence over CRC
         cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
         if cfg_crc32_setting is not None:
             crc32 = get_settingcrc32(_buffer)
             struct.pack_into(cfg_crc32_setting[1], _buffer, cfg_crc32_setting[2], crc32)
+        else:
+            cfg_crc_setting = config['info']['template'].get('cfg_crc', None)
+            if cfg_crc_setting is not None:
+                crc = get_settingcrc(_buffer)
+                struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
         return _buffer
 
     else:
