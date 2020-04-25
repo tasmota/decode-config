@@ -3231,12 +3231,12 @@ def bin2mapping(config):
     else:
         cfg_timestamp = int(time.time())
 
-    if config['info']['version'] < 0x0606000B:
-        if cfg_crc != get_settingcrc(config['decode']):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
-    else:
+    if cfg_crc32_fielddef is not None:
         if cfg_crc32 != get_settingcrc32(config['decode']):
             exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+    elif cfg_crc_fielddef is not None:
+        if cfg_crc != get_settingcrc(config['decode']):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
     valuemapping = get_field(config['decode'], 1<<config['info']['platform'], None, (Platform.ALL, config['info']['template'], 0, (None, None, ('System', None))), ignoregroup=True)
