@@ -72,6 +72,7 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
+      * [Save multiple backup at once](#save-multiple-backup-at-once)
     * [Restore backup](#restore-backup)
       * [Restore subset of data](#restore-subset-of-data)
     * [Auto file extensions](#auto-file-extensions)
@@ -280,6 +281,20 @@ decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
 ```
 
 This will create a file like `Config_Tasmota_8.2.0.json` (the part `Tasmota` and `8.2.0` will choosen related to your device configuration).
+
+#### Save multiple backup at once
+
+Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
+
+```bash
+decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
+```
+
+creates three backup files:
+
+* `Config_Tasmota_8.2.0.json` using JSON format
+* `Backup_tasmota-4281.json` using JSON format
+* `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
 ### Restore backup
 
@@ -610,11 +625,11 @@ Backup/Restore:
                         hostname from config, @H=device hostname from device
                         (-d arg only)
   -o, --backup-file <filename>
-                        file to backup configuration to (default: None).
-                        Replacements: @v=firmware version from config,
-                        @f=device friendly name from config, @h=device
-                        hostname from config, @H=device hostname from device
-                        (-d arg only)
+                        file to backup configuration to, can be specified
+                        multiple times (default: None). Replacements:
+                        @v=firmware version from config, @f=device friendly
+                        name from config, @h=device hostname from config,
+                        @H=device hostname from device (-d arg only)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename

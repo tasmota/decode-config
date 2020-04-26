@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00126]'
+VER = '8.2.0.5 [00127]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -78,11 +78,11 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             hostname from config, @H=device hostname from device
                             (-d arg only)
       -o, --backup-file <filename>
-                            file to backup configuration to (default: None).
-                            Replacements: @v=firmware version from config,
-                            @f=device friendly name from config, @h=device
-                            hostname from config, @H=device hostname from device
-                            (-d arg only)
+                            file to backup configuration to, can be specified
+                            multiple times (default: None). Replacements:
+                            @v=firmware version from config, @f=device friendly
+                            name from config, @h=device hostname from config,
+                            @H=device hostname from device (-d arg only)
       -t, --backup-type json|bin|dmp
                             backup filetype (default: 'json')
       -E, --extension       append filetype extension for -i and -o filename
@@ -3681,8 +3681,9 @@ def parseargs():
     backres.add_argument('-o', '--backup-file',
                          metavar='<filename>',
                          dest='backupfile',
+                         action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
@@ -3928,8 +3929,9 @@ if __name__ == "__main__":
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
-        # backup to file
-        backup(ARGS.backupfile, ARGS.backupfileformat, CONFIG)
+        # backup to file(s)
+        for BACKUPFILE in ARGS.backupfile:
+            backup(BACKUPFILE, ARGS.backupfileformat, CONFIG)
 
     if ARGS.restorefile is not None:
         # restore from file
