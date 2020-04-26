@@ -151,11 +151,12 @@ Returns:
     6: unsupported configuration version
     7: configuration file read error
     8: JSON file decoding error
-    9: Restore file data error
-    10: Device data download error
-    11: Device data upload error
+    9: restore file data error
+    10: device data download error
+    11: device data upload error
+    12: invalid configuration data
     20: python module missing
-    21: Internal error
+    21: internal error
     22: HTTP connection error
     >22: python library exit code
     4xx, 5xx: HTTP errors
@@ -3191,7 +3192,7 @@ def bin2mapping(config):
         # read size should be same as definied in setting
         if cfg_size > config['info']['template_size']:
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
         elif cfg_size < config['info']['template_size']:
             # less number of bytes can not be processed
             exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))

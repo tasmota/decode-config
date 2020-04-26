@@ -89,6 +89,7 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [.bin format](#bin-format)
   * [Complete program parameter](#complete-program-parameter)
     * [Parameter notes](#parameter-notes)
+  * [Return codes](#return-codes)
 
 ## Running the program
 
@@ -680,3 +681,59 @@ The **@h** replacement macro uses the hostname configured with the Tasomta Wifi 
 To prevent having a useless % in your filename, **@h** will not replaced by hostname if this contains '%' characters.
   * **@H**
 If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
+
+## Return codes
+
+**decode-config** returns the following error codes:
+
+* **0** - successful:  
+The process has successful finished  
+
+* **1** = restore skipped:  
+Unchanged data, restore not executed  
+
+* **2** = program argument error:  
+Wrong program parameter used (data source missing)  
+
+* **3** = file not found  
+
+* **4** = data size mismatch:  
+The data size read from source does not match the excpected size  
+
+* **5** = data CRC error:  
+The read data contains wrong CRC  
+
+* **6** = unsupported configuration version:  
+The source data contains data from an unsupported (Sonoff-)Tasmota version  
+
+* **7** = configuration file read error:  
+There was an error during read of configuration source file  
+
+* **8** = JSON file decoding error:  
+There was an error within the read JSON file  
+
+* **9** = restore file data error:  
+Error occured by writing new binary data  
+
+* **10** = device data download error:  
+Source device connected but configuration data could not be downloaded (WebServer missing, disabled)  
+
+* **11** = device data upload error:  
+Source device connected but configuration data could not be uploaded (WebServer missing, disabled, connection lost...)  
+
+* **12** = invalid configuration data:  
+The configuration data source contains invalid basic data (wrong platform id...)  
+
+* **20** = python module missing:  
+A neccessary python library module is missing  
+
+* **21** = internal error:  
+An unexpected internal error occured  
+
+* **22** = HTTP connection error:  
+Source device HTTP connection lost or unavailable  
+
+* **23...** = python library exit code:  
+An unexpected internal library error occured  
+
+* **4xx**/**5xx** = HTTP errors  
