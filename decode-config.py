@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00123]'
+VER = '8.2.0.5 [00124]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1698,19 +1698,6 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
         message("Premature exit - {} #{}".format(ExitCode.str(status), status), type_=None, status=None, line=None)
         sys.exit(EXIT_CODE)
 
-def debug(_args):
-    """
-    Get debug level
-
-    @param _args:
-        configargparse.parse_args() result
-
-    @return:
-        debug level
-    """
-    return 0 if _args.debug is None else _args.debug
-
-
 def shorthelp(doexit=True):
     """
     Show short help (usage) only - ued by own -h handling
@@ -2775,8 +2762,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
     format_ = get_fielddef(fielddef, fields='format_')
     formatcnt = get_formatcount(format_)
     singletype, bitsize = get_formattype(format_)
-    if debug(ARGS) >= 2:
-        print("set_fieldvalue(): fielddef {}, addr 0x{:04x}  value {}  formatcnt {}  singletype {}  bitsize {}  ".format(fielddef, addr, value, formatcnt, singletype, bitsize), file=sys.stderr)
     if not format_[-1:].lower() in ['s', 'p']:
         addr += (bitsize // 8) * formatcnt
         for _ in range(0, formatcnt):
@@ -2786,8 +2771,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
             val = value & maxunsigned
             if isinstance(value, int) and value < 0 and val > maxsigned:
                 val = ((maxunsigned+1)-val) * (-1)
-            if debug(ARGS) >= 3:
-                print("set_fieldvalue(): Single type - fielddef {}, addr 0x{:04x}  value {}  singletype {}  bitsize {}".format(fielddef, addr, val, singletype, bitsize), file=sys.stderr)
             try:
                 struct.pack_into(singletype, dobj, addr, val)
             except struct.error as err:
@@ -2798,8 +2781,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
                       line=inspect.getlineno(inspect.currentframe()))
             value >>= bitsize
     else:
-        if debug(ARGS) >= 3:
-            print("set_fieldvalue(): String type - fielddef {}, addr 0x{:04x}  value {}  format_ {}".format(fielddef, addr, value, format_), file=sys.stderr)
         try:
             struct.pack_into(format_, dobj, addr, value)
         except struct.error as err:
@@ -2925,8 +2906,6 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
     # do not write readonly values
     if writeconverter is False:
-        if debug(ARGS) >= 2:
-            print("set_field(): Readonly '{}' using '{}'/{}{} @{} skipped".format(fieldname, format_, arraydef, bits, hex(baseaddr+addroffset)), file=sys.stderr)
         return dobj
 
     # <arraydef> contains a list
@@ -3085,10 +3064,6 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
         if valid:
             if not skip:
-                if debug(ARGS) >= 2:
-                    sbits = " {} bits shift {}".format(bits, bitshift) if bits else ""
-                    strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, int) else _value
-                    print("set_field(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
                 if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
                     if strindex is not None:
                         # do not use address offset for indexed strings
@@ -3103,9 +3078,6 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                         if isinstance(curvalue, str):
                             curvalue = '"{}"'.format(curvalue)
                         message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
-                else:
-                    if debug(ARGS) >= 2:
-                        print("set_field(): Special field '{}' using '{}'/{}{} @{} skipped".format(fieldname, format_, arraydef, bits, hex(baseaddr+addroffset)), file=sys.stderr)
         else:
             sformat = "file '{sfile}' - {{'{sname}': {svalue}}} ({serror})"+errformat
             exit_(ExitCode.RESTORE_DATA_ERROR, sformat.format(sfile=filename, sname=fieldname, serror=err_text, svalue=_value, smin=min_, smax=max_), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
@@ -3839,9 +3811,9 @@ def parseargs():
 
 
     info = PARSER.add_argument_group('Info', 'Extra information')
-    info.add_argument('-D', '--debug',
+    info.add_argument('--debug',
                       dest='debug',
-                      action='count',
+                      action='store_true',
                       help=configargparse.SUPPRESS)
     info.add_argument('-h', '--help',
                       dest='shorthelp',
@@ -3861,15 +3833,9 @@ def parseargs():
 
     _args = PARSER.parse_args()
 
-    if debug(_args) >= 1:
-        print(PARSER.format_values(), file=sys.stderr)
-        print("Settings:", file=sys.stderr)
-        for k in _args.__dict__:
-            print("  "+str(k), "= ", eval('_args.{}'.format(k)), file=sys.stderr)    # pylint: disable=eval-used
-
     if _args.version is not None:
         print(PROG)
-        if _args.version > 1 or debug(_args) >= 1:
+        if _args.version or _args.debug:
             print()
             print("Script:   {}".format(os.path.basename(__file__)))
             print("Python:   {}".format(platform.python_version()))
@@ -3895,7 +3861,7 @@ if __name__ == "__main__":
     # default no configuration available
     CONFIG['encode'] = None
 
-    if debug(ARGS) >= 1:
+    if ARGS.debug:
         print("Checking setting definition")
         check_setting_definition()
 
