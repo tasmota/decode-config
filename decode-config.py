@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00125]'
+VER = '8.2.0.5 [00126]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1540,6 +1540,9 @@ SETTING_8_2_0_4.update             ({
                                     })
 # ======================================================================
 SETTING_8_2_0_5 = copy.deepcopy(SETTING_8_2_0_4)
+SETTING_8_2_0_5['flag4'][1].update ({
+        'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SetOption92 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x8020005,0x1000, SETTING_8_2_0_5),
