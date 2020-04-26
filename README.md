@@ -262,7 +262,7 @@ decode-config -c my.conf -d tasmota-4281
 > Config file syntax allows key=value, flag=true, stuff=[a,b,c].  
 For further details see [https://pypi.org/project/ConfigArgParse](https://pypi.org/project/ConfigArgParse/)).
 
-If parameters ire specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
+If parameters are specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
 
 ```bash
 decode-config -c my.conf -d tasmota-4281 --json-indent 4
@@ -477,7 +477,7 @@ decode-config -c my.conf -d tasmota-4281 --group Wifi --output-format cmnd
   Password1 myWlAnPaszxwo!z
   Password2 myWlAnPaszxwo!z2
   SSId1 wlan.1
-  SSId2 wlan.1
+  SSId2 my-wlan
   WebPassword myPaszxwo!z
   WebServer 2
   WifiConfig 5
@@ -572,7 +572,7 @@ This format is binary with the same structure as the [.dmp](#dmp-format) format.
 The .bin format can be created by **decode-config** using the backup function (`--backup-file <filename>`) with the additional parameter `--backup-type bin`.
 
 This format is actually only used to view the configuration data directly in binary form without conversion.  
-It is hardly possible to change the binary data, since a checksum is formed over the data and this would have to be calculated and adjusted in the event of a change.
+It is hardly possible to change the binary data, since a checksum is formed over the data and this would have to be calculated and adjusted in case of any change.
 
 ## Complete program parameter
 
