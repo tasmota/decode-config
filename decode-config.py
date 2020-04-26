@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00124]'
+VER = '8.2.0.5 [00125]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -209,7 +209,7 @@ class ExitCode:
         @param: code
             int number of code
         """
-        if code >= 0 and code < len(ExitCode.STR):
+        if 0 <= code < len(ExitCode.STR):
             return ExitCode.STR[code]
         return ''
 
@@ -530,7 +530,7 @@ class Platform:
         @return:
             platform string
         """
-        return Platform.STR[version] if version is not None and version >= 0 and version < len(Platform.STR) else Platform.STR[0]
+        return Platform.STR[version] if version is not None and 0 <= version < len(Platform.STR) else Platform.STR[0]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -1885,8 +1885,8 @@ def get_filetype(filename):
                     # check if the binary file has the magic header
                     with open(filename, "rb") as inputfile:
                         inputbin = inputfile.read()
-                    if struct.unpack_from(header_format, inputbin, 0)[0] == BINARYFILE_MAGIC or \
-                       struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
+                    if BINARYFILE_MAGIC in (struct.unpack_from(header_format, inputbin, 0)[0],
+                                            struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0]):
                         filetype = FileType.BIN
                     else:
                         filetype = FileType.INVALID_BIN
@@ -2432,10 +2432,10 @@ def readwrite_converter(value, fielddef, read=True, raw=False):
         try:
             if isinstance(conv, str):
                 # evaluate strings
-                return eval(conv.replace('$', 'value'))     # pylint: disable=eval-used
+                value = eval(conv.replace('$', 'value'))     # pylint: disable=eval-used
             elif callable(conv):
                 # use as format function
-                return conv(value)
+                value = conv(value)
         except Exception as err:    # pylint: disable=broad-except
             exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
@@ -2464,8 +2464,7 @@ def cmnd_converter(valuemapping, value, idx, readconverter, writeconverter, tasm
     if (callable(readconverter) and readconverter == passwordread) or (callable(writeconverter) and writeconverter == passwordwrite):   # pylint: disable=comparison-with-callable
         if value == HIDDEN_PASSWORD:
             return None
-        else:
-            result = value
+        result = value
 
     if tasmotacmnd is not None and (callable(tasmotacmnd) or len(tasmotacmnd) > 0):
         if idx is not None:
@@ -3064,7 +3063,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
         if valid:
             if not skip:
-                if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
+                if fieldname not in ('cfg_crc', 'cfg_crc32', 'cfg_timestamp', '_'):
                     if strindex is not None:
                         # do not use address offset for indexed strings
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr, value)
@@ -3316,8 +3315,7 @@ def mapping2bin(config, jsonconfig, filename=""):
                 struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
         return _buffer
 
-    else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+    exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     return None
 
@@ -3470,7 +3468,7 @@ def restore(restorefile, backupfileformat, config):
             # process binary to binary config
             new_encode_cfg = decrypt_encrypt(decode_cfg)
 
-    elif filetype == FileType.JSON or filetype == FileType.INVALID_JSON:
+    elif filetype in (FileType.JSON, FileType.INVALID_JSON):
         if ARGS.verbose:
             message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
@@ -3496,7 +3494,7 @@ def restore(restorefile, backupfileformat, config):
         new_decode_cfg = decrypt_encrypt(new_encode_cfg)
 
         # Platform compatibility check
-        if filetype == FileType.DMP or filetype == FileType.BIN:
+        if filetype in (FileType.DMP, FileType.BIN):
             platform_new_data = get_config_info(new_decode_cfg)['platform']
         else:
             platform_new_data = jsonconfig.get('config_version', Platform.STR.index("ESP82xx"))
@@ -3510,7 +3508,7 @@ def restore(restorefile, backupfileformat, config):
                 Platform.str(platform_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
         # Data version compatibility check
-        if filetype == FileType.DMP or filetype == FileType.BIN:
+        if filetype in (FileType.DMP, FileType.BIN):
             version_new_data = get_config_info(new_decode_cfg)['version']
             version_device = config['info']['version']
             if version_device != version_new_data:
