@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00129]'
+VER = '8.2.0.5 [00131]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3239,31 +3239,31 @@ def bin2mapping(config):
     # add header info
     valuemapping['header'] = {
         'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-        'format': {
-            'jsonindent':   ARGS.jsonindent,
-            'jsoncompact':  ARGS.jsoncompact,
-            'jsonsort':     ARGS.jsonsort,
-            'jsonhidepw':   ARGS.jsonhidepw,
-        },
-        'template': {
-            'version':  hex(config['info']['template_version']),
-            'crc':      hex(cfg_crc),
-        },
         'data': {
             'crc':      hex(get_settingcrc(config['decode'])),
             'size':     len(config['decode']),
+            'template': {
+                'version':  hex(config['info']['template_version']),
+                'crc':      hex(cfg_crc),
+            },
         },
-        'script': {
-            'name':     os.path.basename(__file__),
-            'version':  VER,
-        },
-        'os': (platform.machine(), platform.system(), platform.release(), platform.version(), platform.platform()),
-        'python': platform.python_version()
+        'env': {
+            'platform': platform.platform(),
+            'system': '{} {} {} {}'.format(platform.system(), platform.machine(), platform.release(), platform.version()),
+            'python': platform.python_version(),
+            'script': '{} v{}'.format(os.path.basename(__file__), VER)
         }
+    }
+    if ARGS.debug:
+        valuemapping['header']['env'].update({'param': {} })
+        for key in ARGS.__dict__:
+            if str(key) != 'password':
+                valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})
+
     if cfg_crc_fielddef is not None and cfg_size is not None:
-        valuemapping['header']['template'].update({'size': cfg_size})
+        valuemapping['header']['data']['template'].update({'size': cfg_size})
     if cfg_crc32_fielddef is not None:
-        valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
+        valuemapping['header']['data']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
@@ -3865,7 +3865,6 @@ if __name__ == "__main__":
     CONFIG['encode'] = None
 
     if ARGS.debug:
-        print("Checking setting definition")
         check_setting_definition()
 
     # pull config from Tasmota device
