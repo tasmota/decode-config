@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00128]'
+VER = '8.2.0.5 [00129]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1738,7 +1738,7 @@ def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
         template sizes as list []
     """
     conv_keys = {}
-    for key in configmapping:
+    for key in list(configmapping):
         if key[0].isupper():
             conv_keys[key] = key.lower()
             configmapping[conv_keys[key]] = configmapping.pop(key)
