@@ -134,7 +134,7 @@ Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and
 After python and pip is installed, install dependencies:
 
 ```shell
-pip3 install requests configargparse
+python -m pip install requests configargparse
 ```
 
 ## Usage
