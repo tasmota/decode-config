@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 VER = '8.3.0.0 [00065]'
 
@@ -78,11 +78,11 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             hostname from config, @H=device hostname from device
                             (-d arg only)
       -o, --backup-file <filename>
-                            file to backup configuration to (default: None).
-                            Replacements: @v=firmware version from config,
-                            @f=device friendly name from config, @h=device
-                            hostname from config, @H=device hostname from device
-                            (-d arg only)
+                            file to backup configuration to, can be specified
+                            multiple times (default: None). Replacements:
+                            @v=firmware version from config, @f=device friendly
+                            name from config, @h=device hostname from config,
+                            @H=device hostname from device (-d arg only)
       -t, --backup-type json|bin|dmp
                             backup filetype (default: 'json')
       -E, --extension       append filetype extension for -i and -o filename
@@ -151,11 +151,12 @@ Returns:
     6: unsupported configuration version
     7: configuration file read error
     8: JSON file decoding error
-    9: Restore file data error
-    10: Device data download error
-    11: Device data upload error
+    9: restore file data error
+    10: device data download error
+    11: device data upload error
+    12: invalid configuration data
     20: python module missing
-    21: Internal error
+    21: internal error
     22: HTTP connection error
     >22: python library exit code
     4xx, 5xx: HTTP errors
@@ -178,9 +179,40 @@ class ExitCode:
     RESTORE_DATA_ERROR = 9
     DOWNLOAD_CONFIG_ERROR = 10
     UPLOAD_CONFIG_ERROR = 11
+    INVALID_DATA = 12
     MODULE_NOT_FOUND = 20
     INTERNAL_ERROR = 21
     HTTP_CONNECTION_ERROR = 22
+    STR = [
+        'OK',
+        'Restore skipped',
+        'Parameter error',
+        'File not found',
+        'Data size mismatch',
+        'Data CRC error',
+        'Unsupported version',
+        'File read error',
+        'JSON read error',
+        'Restore data error',
+        'Download error',
+        'Upload error',
+        'Invaid data',
+        '', '', '', '', '', '', '',
+        'Module not found',
+        'Internal error',
+        'HTTP connection error'
+        ]
+    @staticmethod
+    def str(code):
+        """
+        Program return string by code
+
+        @param: code
+            int number of code
+        """
+        if 0 <= code < len(ExitCode.STR):
+            return ExitCode.STR[code]
+        return ''
 
 # ======================================================================
 # imports
@@ -224,6 +256,7 @@ BINARYFILE_MAGIC = 0x63576223
 STR_ENCODING = 'utf8'
 HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
+VIRTUAL = '*'
 
 DEFAULTS = {
     'source':
@@ -292,11 +325,16 @@ based on this dictionary.
         for simply identifying value from Tasmota configuration this key has the same
         name as the structure element of tasmota/settings.h
 
-    <def>:  ( <format>, <addrdef>, <datadef> [,<converter>] )
-        tuple with 3 or 4 objects which describes the format, address and structure
+    <def>:  ( <platform>, <format>, <addrdef>, <datadef> [,<converter>] )
+        tuple with 4 or 5 objects which describes the format, address and structure
         of the binary source.
         For optional values there are two possibilities: If the definition object is
         mandatory it could be None, for none-mandatory optional objects it can be omit.
+
+            <platform>: <int>
+                platform bitmask validation
+                determines whether the setting is valid for a platform (bit=1) or not (bit=0)
+                bit0=ESP82xx, bit1=ESP32
 
             <format>:   <formatstring> | <setting>
                 data type & format definition
@@ -353,7 +391,7 @@ based on this dictionary.
                         command group
                         There exists two special group names
                         INTERNAL - processed but invisible in group output
-                        '*'      - must be used as group name for nested
+                        VIRTUAL  - must be used as group name for nested
                                    dict definition - invisible in group output
 
                     <tasmotacmnd>:   <function> | (<function>,...)
@@ -460,15 +498,6 @@ def bitsread(value, pos=0, bits=1):
         value &= (1<<bits)-1
     return value
 
-def cmnd_mqttfingerprint(value, idx=None):
-    """
-    Tasmota MqttFingerprint cmnd helper
-    """
-    fingerprint = ""
-    for i in value:
-        fingerprint += "{:02x} ".format(ord(i))
-    return "MqttFingerprint{} {}".format('' if idx is None else idx, fingerprint.strip())
-
 def cmnd_websensor(value, idx):
     """
     Tasmota WebSensor cmnd helper
@@ -481,621 +510,630 @@ def cmnd_websensor(value, idx):
 # ----------------------------------------------------------------------
 # Tasmota configuration data definition
 # ----------------------------------------------------------------------
+
+# Tasmota settings platforms
+class Platform:
+    """
+    Platform constant
+    """
+    ESP82 = 0x1
+    ESP32 = 0x2
+    ALL = 0xf
+    STR = ["ESP82xx", "ESP32"]
+    @staticmethod
+    def str(version):
+        """
+        Create platform string
+
+        @param version:
+            version integer
+
+        @return:
+            platform string
+        """
+        return Platform.STR[version] if version is not None and 0 <= version < len(Platform.STR) else Platform.STR[0]
+
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
-                              # <format>, <addrdef>, <datadef> [,<converter>]
-    'cfg_holder':                   ('<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'save_flag':                    ('<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
-    'version':                      ('<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
-    'bootcount':                    ('<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
-    'flag':                         ({
-        'save_state':               ('<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
-        'button_restrict':          ('<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SetOption1 {}".format($)')) ),
-        'value_units':              ('<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SetOption2 {}".format($)')) ),
-        'mqtt_enabled':             ('<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SetOption3 {}".format($)')) ),
-        'mqtt_response':            ('<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SetOption4 {}".format($)')) ),
-        'mqtt_power_retain':        ('<L', (0x010,1, 5), (None, None,                           ('MQTT',        '"PowerRetain {}".format($)')) ),
-        'mqtt_button_retain':       ('<L', (0x010,1, 6), (None, None,                           ('MQTT',        '"ButtonRetain {}".format($)')) ),
-        'mqtt_switch_retain':       ('<L', (0x010,1, 7), (None, None,                           ('MQTT',        '"SwitchRetain {}".format($)')) ),
-        'temperature_conversion':   ('<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SetOption8 {}".format($)')) ),
-        'mqtt_sensor_retain':       ('<L', (0x010,1, 9), (None, None,                           ('MQTT',        '"SensorRetain {}".format($)')) ),
-        'mqtt_offline':             ('<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SetOption10 {}".format($)')) ),
-        'button_swap':              ('<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SetOption11 {}".format($)')) ),
-        'stop_flash_rotate':        ('<L', (0x010,1,12), (None, None,                           ('Management',  '"SetOption12 {}".format($)')) ),
-        'button_single':            ('<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SetOption13 {}".format($)')) ),
-        'interlock':                ('<L', (0x010,1,14), (None, None,                           ('SetOption',   '"SetOption14 {}".format($)')) ),
-        'pwm_control':              ('<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SetOption15 {}".format($)')) ),
-        'ws_clock_reverse':         ('<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SetOption16 {}".format($)')) ),
-        'decimal_text':             ('<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SetOption17 {}".format($)')) ),
-                                    },      0x010,       (None, None,                           ('*',           None)), (None,      None) ),
-    'save_data':                    ('<h',  0x014,       (None, '0 <= $ <= 3600',               ('Management',  '"SaveData {}".format($)')) ),
-    'timezone':                     ('b',   0x016,       (None, '-13 <= $ <= 13 or $==99',      ('Management',  '"Timezone {}".format($)')) ),
-    'ota_url':                      ('101s',0x017,       (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  ('11s', 0x07C,       ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
-    'seriallog_level':              ('B',   0x09E,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sta_config':                   ('B',   0x09F,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
-    'sta_active':                   ('B',   0x0A0,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
-    'sta_ssid':                     ('33s', 0x0A1,       ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
-    'sta_pwd':                      ('65s', 0x0E3,       ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
-    'hostname':                     ('33s', 0x165,       (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  ('33s', 0x186,       (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'syslog_port':                  ('<H',  0x1A8,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
-    'syslog_level':                 ('B',   0x1AA,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
-    'webserver':                    ('B',   0x1AB,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
-    'weblog_level':                 ('B',   0x1AC,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint':             ('60s', 0x1AD,       (None, None,                           ('MQTT',        None)) ),
-    'mqtt_host':                    ('33s', 0x1E9,       (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_port':                    ('<H',  0x20A,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
-    'mqtt_client':                  ('33s', 0x20C,       (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    ('33s', 0x22D,       (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     ('33s', 0x24E,       (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'mqtt_topic':                   ('33s', 0x26F,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'button_topic':                 ('33s', 0x290,       (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'mqtt_grptopic':                ('33s', 0x2B1,       (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'mqtt_fingerprinth':            ('B',   0x2D2,       ([20], None,                           ('MQTT',        None)) ),
-    'pwm_frequency':                ('<H',  0x2E6,       (None, '$==1 or 100 <= $ <= 4000',     ('Management',  '"PwmFrequency {}".format($)')) ),
-    'power':                        ({
-        'power1':                   ('<L', (0x2E8,1,0),  (None, None,                           ('Control',     '"Power1 {}".format($)')) ),
-        'power2':                   ('<L', (0x2E8,1,1),  (None, None,                           ('Control',     '"Power2 {}".format($)')) ),
-        'power3':                   ('<L', (0x2E8,1,2),  (None, None,                           ('Control',     '"Power3 {}".format($)')) ),
-        'power4':                   ('<L', (0x2E8,1,3),  (None, None,                           ('Control',     '"Power4 {}".format($)')) ),
-        'power5':                   ('<L', (0x2E8,1,4),  (None, None,                           ('Control',     '"Power5 {}".format($)')) ),
-        'power6':                   ('<L', (0x2E8,1,5),  (None, None,                           ('Control',     '"Power6 {}".format($)')) ),
-        'power7':                   ('<L', (0x2E8,1,6),  (None, None,                           ('Control',     '"Power7 {}".format($)')) ),
-        'power8':                   ('<L', (0x2E8,1,7),  (None, None,                           ('Control',     '"Power8 {}".format($)')) ),
-                                    },      0x2E8,       (None, None,                           ('Control',     None)), (None,      None) ),
-    'pwm_value':                    ('<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#,$)')) ),
-    'altitude':                     ('<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
-    'tele_period':                  ('<H',  0x2F8,       (None, '0 <= $ <= 1 or 10 <= $ <= 3600',('MQTT',       '"TelePeriod {}".format($)')) ),
-    'ledstate':                     ('B',   0x2FB,       (None, '0 <= ($ & 0x7) <= 7',          ('Control',     '"LedState {}".format(($ & 0x7))')) ),
-    'param':                        ('B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+31,$)')) ),
-    'state_text':                   ('11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
-    'domoticz_update_timer':        ('<H',  0x340,       (None, '0 <= $ <= 3600',               ('Domoticz',    '"DomoticzUpdateTimer {}".format($)')) ),
-    'pwm_range':                    ('<H',  0x342,       (None, '$==1 or 255 <= $ <= 1023',     ('Management',  '"PwmRange {}".format($)')) ),
-    'domoticz_relay_idx':           ('<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DomoticzIdx{} {}".format(#,$)')) ),
-    'domoticz_key_idx':             ('<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DomoticzKeyIdx{} {}".format(#,$)')) ),
-    'energy_power_calibration':     ('<L',  0x364,       (None, None,                           ('Power',       '"PowerSet {}".format($)')) ),
-    'energy_voltage_calibration':   ('<L',  0x368,       (None, None,                           ('Power',       '"VoltageSet {}".format($)')) ),
-    'energy_current_calibration':   ('<L',  0x36C,       (None, None,                           ('Power',       '"CurrentSet {}".format($)')) ),
-    'energy_kWhtoday':              ('<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhyesterday':          ('<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhdoy':                ('<H',  0x378,       (None, None,                           ('Power',       None)) ),
-    'energy_min_power':             ('<H',  0x37A,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
-    'energy_max_power':             ('<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
-    'energy_min_voltage':           ('<H',  0x37E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
-    'energy_max_voltage':           ('<H',  0x380,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
-    'energy_min_current':           ('<H',  0x382,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
-    'energy_max_current':           ('<H',  0x384,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
-    'energy_max_power_limit':       ('<H',  0x386,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
-    'energy_max_power_limit_hold':  ('<H',  0x388,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
-    'energy_max_power_limit_window':('<H',  0x38A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
-    'energy_max_power_safe_limit':  ('<H',  0x38C,       (None, None,                           ('Power',       '"SavePower {}".format($)')) ),
+                              # <platform>, <format>, <addrdef>, <datadef> [,<converter>]
+    'cfg_holder':                   (Platform.ALL,   '<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'save_flag':                    (Platform.ALL,   '<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+    'version':                      (Platform.ALL,   '<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
+    'bootcount':                    (Platform.ALL,   '<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
+    'flag':                         (Platform.ALL, {
+        'save_state':               (Platform.ALL,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
+        'button_restrict':          (Platform.ALL,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SetOption1 {}".format($)')) ),
+        'value_units':              (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SetOption2 {}".format($)')) ),
+        'mqtt_enabled':             (Platform.ALL,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SetOption3 {}".format($)')) ),
+        'mqtt_response':            (Platform.ALL,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SetOption4 {}".format($)')) ),
+        'mqtt_power_retain':        (Platform.ALL,   '<L', (0x010,1, 5), (None, None,                           ('MQTT',        '"PowerRetain {}".format($)')) ),
+        'mqtt_button_retain':       (Platform.ALL,   '<L', (0x010,1, 6), (None, None,                           ('MQTT',        '"ButtonRetain {}".format($)')) ),
+        'mqtt_switch_retain':       (Platform.ALL,   '<L', (0x010,1, 7), (None, None,                           ('MQTT',        '"SwitchRetain {}".format($)')) ),
+        'temperature_conversion':   (Platform.ALL,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SetOption8 {}".format($)')) ),
+        'mqtt_sensor_retain':       (Platform.ALL,   '<L', (0x010,1, 9), (None, None,                           ('MQTT',        '"SensorRetain {}".format($)')) ),
+        'mqtt_offline':             (Platform.ALL,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SetOption10 {}".format($)')) ),
+        'button_swap':              (Platform.ALL,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SetOption11 {}".format($)')) ),
+        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('Management',  '"SetOption12 {}".format($)')) ),
+        'button_single':            (Platform.ALL,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SetOption13 {}".format($)')) ),
+        'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('SetOption',   '"SetOption14 {}".format($)')) ),
+        'pwm_control':              (Platform.ALL,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SetOption15 {}".format($)')) ),
+        'ws_clock_reverse':         (Platform.ALL,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SetOption16 {}".format($)')) ),
+        'decimal_text':             (Platform.ALL,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SetOption17 {}".format($)')) ),
+                                    },                      0x010,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'save_data':                    (Platform.ALL,   '<h',  0x014,       (None, '0 <= $ <= 3600',               ('Management',  '"SaveData {}".format($)')) ),
+    'timezone':                     (Platform.ALL,   'b',   0x016,       (None, '-13 <= $ <= 13 or $==99',      ('Management',  '"Timezone {}".format($)')) ),
+    'ota_url':                      (Platform.ALL,   '101s',0x017,       (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  (Platform.ALL,   '11s', 0x07C,       ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'seriallog_level':              (Platform.ALL,   'B',   0x09E,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   (Platform.ALL,   'B',   0x09F,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   (Platform.ALL,   'B',   0x0A0,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'sta_ssid':                     (Platform.ALL,   '33s', 0x0A1,       ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      (Platform.ALL,   '65s', 0x0E3,       ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     (Platform.ALL,   '33s', 0x165,       (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  (Platform.ALL,   '33s', 0x186,       (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+    'syslog_port':                  (Platform.ALL,   '<H',  0x1A8,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 (Platform.ALL,   'B',   0x1AA,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    (Platform.ALL,   'B',   0x1AB,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 (Platform.ALL,   'B',   0x1AC,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint':             (Platform.ALL,   'B',   0x1AD,       ([60], None,                           ('MQTT',        '"MqttFingerprint {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'mqtt_host':                    (Platform.ALL,   '33s', 0x1E9,       (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_port':                    (Platform.ALL,   '<H',  0x20A,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'mqtt_client':                  (Platform.ALL,   '33s', 0x20C,       (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    (Platform.ALL,   '33s', 0x22D,       (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     (Platform.ALL,   '33s', 0x24E,       (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_topic':                   (Platform.ALL,   '33s', 0x26F,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 (Platform.ALL,   '33s', 0x290,       (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'mqtt_grptopic':                (Platform.ALL,   '33s', 0x2B1,       (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'mqtt_fingerprinth':            (Platform.ALL,   'B',   0x2D2,       ([20], None,                           ('MQTT',        None)) ),
+    'pwm_frequency':                (Platform.ALL,   '<H',  0x2E6,       (None, '$==1 or 100 <= $ <= 4000',     ('Management',  '"PwmFrequency {}".format($)')) ),
+    'power':                        (Platform.ALL, {
+        'power1':                   (Platform.ALL,   '<L', (0x2E8,1,0),  (None, None,                           ('Control',     '"Power1 {}".format($)')) ),
+        'power2':                   (Platform.ALL,   '<L', (0x2E8,1,1),  (None, None,                           ('Control',     '"Power2 {}".format($)')) ),
+        'power3':                   (Platform.ALL,   '<L', (0x2E8,1,2),  (None, None,                           ('Control',     '"Power3 {}".format($)')) ),
+        'power4':                   (Platform.ALL,   '<L', (0x2E8,1,3),  (None, None,                           ('Control',     '"Power4 {}".format($)')) ),
+        'power5':                   (Platform.ALL,   '<L', (0x2E8,1,4),  (None, None,                           ('Control',     '"Power5 {}".format($)')) ),
+        'power6':                   (Platform.ALL,   '<L', (0x2E8,1,5),  (None, None,                           ('Control',     '"Power6 {}".format($)')) ),
+        'power7':                   (Platform.ALL,   '<L', (0x2E8,1,6),  (None, None,                           ('Control',     '"Power7 {}".format($)')) ),
+        'power8':                   (Platform.ALL,   '<L', (0x2E8,1,7),  (None, None,                           ('Control',     '"Power8 {}".format($)')) ),
+                                    },                      0x2E8,       (None, None,                           ('Control',     None)), (None,      None) ),
+    'pwm_value':                    (Platform.ALL,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#,$)')) ),
+    'altitude':                     (Platform.ALL,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
+    'tele_period':                  (Platform.ALL,   '<H',  0x2F8,       (None, '0 <= $ <= 1 or 10 <= $ <= 3600',('MQTT',       '"TelePeriod {}".format($)')) ),
+    'ledstate':                     (Platform.ALL,   'B',   0x2FB,       (None, '0 <= ($ & 0x7) <= 7',          ('Control',     '"LedState {}".format(($ & 0x7))')) ),
+    'param':                        (Platform.ALL,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+31,$)')) ),
+    'state_text':                   (Platform.ALL,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'domoticz_update_timer':        (Platform.ALL,   '<H',  0x340,       (None, '0 <= $ <= 3600',               ('Domoticz',    '"DomoticzUpdateTimer {}".format($)')) ),
+    'pwm_range':                    (Platform.ALL,   '<H',  0x342,       (None, '$==1 or 255 <= $ <= 1023',     ('Management',  '"PwmRange {}".format($)')) ),
+    'domoticz_relay_idx':           (Platform.ALL,   '<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DomoticzIdx{} {}".format(#,$)')) ),
+    'domoticz_key_idx':             (Platform.ALL,   '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DomoticzKeyIdx{} {}".format(#,$)')) ),
+    'energy_power_calibration':     (Platform.ALL,   '<L',  0x364,       (None, None,                           ('Power',       '"PowerSet {}".format($)')) ),
+    'energy_voltage_calibration':   (Platform.ALL,   '<L',  0x368,       (None, None,                           ('Power',       '"VoltageSet {}".format($)')) ),
+    'energy_current_calibration':   (Platform.ALL,   '<L',  0x36C,       (None, None,                           ('Power',       '"CurrentSet {}".format($)')) ),
+    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhdoy':                (Platform.ALL,   '<H',  0x378,       (None, None,                           ('Power',       None)) ),
+    'energy_min_power':             (Platform.ALL,   '<H',  0x37A,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
+    'energy_max_power':             (Platform.ALL,   '<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
+    'energy_min_voltage':           (Platform.ALL,   '<H',  0x37E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
+    'energy_max_voltage':           (Platform.ALL,   '<H',  0x380,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
+    'energy_min_current':           (Platform.ALL,   '<H',  0x382,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
+    'energy_max_current':           (Platform.ALL,   '<H',  0x384,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
+    'energy_max_power_limit':       (Platform.ALL,   '<H',  0x386,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
+    'energy_max_power_limit_hold':  (Platform.ALL,   '<H',  0x388,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
+    'energy_max_power_limit_window':(Platform.ALL,   '<H',  0x38A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
+    'energy_max_power_safe_limit':  (Platform.ALL,   '<H',  0x38C,       (None, None,                           ('Power',       '"SavePower {}".format($)')) ),
     'energy_max_power_safe_limit_hold':
-                                    ('<H',  0x38E,       (None, None,                           ('Power',       '"SavePowerHold {}".format($)')) ),
+                                    (Platform.ALL,   '<H',  0x38E,       (None, None,                           ('Power',       '"SavePowerHold {}".format($)')) ),
     'energy_max_power_safe_limit_window':
-                                    ('<H',  0x390,       (None, None,                           ('Power',       '"SavePowerWindow {}".format($)')) ),
-    'energy_max_energy':            ('<H',  0x392,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
-    'energy_max_energy_start':      ('<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
-    'mqtt_retry':                   ('<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
-    'poweronstate':                 ('B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
-    'last_module':                  ('B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
-    'blinktime':                    ('<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
-    'blinkcount':                   ('<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 ('33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
-    'switch_topic':                 ('33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'sleep':                        ('B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
-    'domoticz_switch_idx':          ('<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
-    'domoticz_sensor_idx':          ('<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#,$)')) ),
-    'module':                       ('B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
-    'ws_color':                     ('B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
-    'ws_width':                     ('B',   0x481,       ([3],  None,                           ('Light',       None)) ),
-    'my_gp':                        ('B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#-1,$)')) ),
-    'light_pixels':                 ('<H',  0x496,       (None, '1 <= $ <= 512',                ('Light',       '"Pxels {}".format($)')) ),
-    'light_color':                  ('B',   0x498,       ([5],  None,                           ('Light',       None)) ),
-    'light_correction':             ('B',   0x49D     ,  (None, '0 <= $ <= 1',                  ('Light',       '"LedTable {}".format($)')) ),
-    'light_dimmer':                 ('B',   0x49E,       (None, '0 <= $ <= 100',                ('Light',       '"Wakeup {}".format($)')) ),
-    'light_fade':                   ('B',   0x4A1,       (None, '0 <= $ <= 1',                  ('Light',       '"Fade {}".format($)')) ),
-    'light_speed':                  ('B',   0x4A2,       (None, '1 <= $ <= 20',                 ('Light',       '"Speed {}".format($)')) ),
-    'light_scheme':                 ('B',   0x4A3,       (None, None,                           ('Light',       '"Scheme {}".format($)')) ),
-    'light_width':                  ('B',   0x4A4,       (None, '0 <= $ <= 4',                  ('Light',       '"Width {}".format($)')) ),
-    'light_wakeup':                 ('<H',  0x4A6,       (None, '0 <= $ <= 3100',               ('Light',       '"WakeUpDuration {}".format($)')) ),
-    'web_password':                 ('33s', 0x4A9,       (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'switchmode':                   ('B',   0x4CA,       ([4],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
-    'ntp_server':                   ('33s', 0x4CE,       ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
-    'ina219_mode':                  ('B',   0x531,       (None, '0 <= $ <= 7',                  ('Sensor',      '"Sensor13 {}".format($)')) ),
-    'pulse_timer':                  ('<H',  0x532,       ([8],  '0 <= $ <= 64900',              ('Control',     '"PulseTime{} {}".format(#,$)')) ),
-    'ip_address':                   ('<L',  0x544,       ([4],  None,                           ('Wifi',        '"IPAddress{} {}".format(#,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
-    'energy_kWhtotal':              ('<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
-    'mqtt_fulltopic':               ('100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'flag2':                        ({
-        'current_resolution':       ('<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Sensor',      '"AmpRes {}".format($)')) ),
-        'voltage_resolution':       ('<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Sensor',      '"VoltRes {}".format($)')) ),
-        'wattage_resolution':       ('<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Sensor',      '"WattRes {}".format($)')) ),
-        'emulation':                ('<L', (0x5BC,2,21), (None, '0 <= $ <= 2',                  ('Management',  '"Emulation {}".format($)')) ),
-        'energy_resolution':        ('<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Sensor',      '"EnergyRes {}".format($)')) ),
-        'pressure_resolution':      ('<L', (0x5BC,2,26), (None, '0 <= $ <= 3',                  ('Sensor',      '"PressRes {}".format($)')) ),
-        'humidity_resolution':      ('<L', (0x5BC,2,28), (None, '0 <= $ <= 3',                  ('Sensor',      '"HumRes {}".format($)')) ),
-        'temperature_resolution':   ('<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
-                                    },      0x5BC,       (None, None,                           ('*',           None)), (None,      None) ),
-    'pulse_counter':                ('<L',  0x5C0,       ([4],  None,                           ('Sensor',      '"Counter{} {}".format(#,$)')) ),
-    'pulse_counter_type':           ({
-        'pulse_counter_type1':      ('<H', (0x5D0,1,0),  (None, None,                           ('Sensor',      '"CounterType1 {}".format($)')) ),
-        'pulse_counter_type2':      ('<H', (0x5D0,1,1),  (None, None,                           ('Sensor',      '"CounterType2 {}".format($)')) ),
-        'pulse_counter_type3':      ('<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
-        'pulse_counter_type4':      ('<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
-                                    },      0x5D0,       (None, None,                           ('Sensor',      None)), (None,      None) ),
-    'pulse_counter_debounce':       ('<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
-    'rf_code':                      ('B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
+                                    (Platform.ALL,   '<H',  0x390,       (None, None,                           ('Power',       '"SavePowerWindow {}".format($)')) ),
+    'energy_max_energy':            (Platform.ALL,   '<H',  0x392,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
+    'energy_max_energy_start':      (Platform.ALL,   '<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
+    'mqtt_retry':                   (Platform.ALL,   '<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
+    'poweronstate':                 (Platform.ALL,   'B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
+    'last_module':                  (Platform.ALL,   'B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
+    'blinktime':                    (Platform.ALL,   '<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
+    'blinkcount':                   (Platform.ALL,   '<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
+    'friendlyname':                 (Platform.ALL,   '33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'switch_topic':                 (Platform.ALL,   '33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'sleep':                        (Platform.ALL,   'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'domoticz_switch_idx':          (Platform.ALL,   '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#,$)')) ),
+    'domoticz_sensor_idx':          (Platform.ALL,   '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#,$)')) ),
+    'module':                       (Platform.ALL,   'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+    'ws_color':                     (Platform.ALL,   'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
+    'ws_width':                     (Platform.ALL,   'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
+    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#-1,$)')) ),
+    'light_pixels':                 (Platform.ALL,   '<H',  0x496,       (None, '1 <= $ <= 512',                ('Light',       '"Pxels {}".format($)')) ),
+    'light_color':                  (Platform.ALL,   'B',   0x498,       ([5],  None,                           ('Light',       None)) ),
+    'light_correction':             (Platform.ALL,   'B',   0x49D     ,  (None, '0 <= $ <= 1',                  ('Light',       '"LedTable {}".format($)')) ),
+    'light_dimmer':                 (Platform.ALL,   'B',   0x49E,       (None, '0 <= $ <= 100',                ('Light',       '"Wakeup {}".format($)')) ),
+    'light_fade':                   (Platform.ALL,   'B',   0x4A1,       (None, '0 <= $ <= 1',                  ('Light',       '"Fade {}".format($)')) ),
+    'light_speed':                  (Platform.ALL,   'B',   0x4A2,       (None, '1 <= $ <= 20',                 ('Light',       '"Speed {}".format($)')) ),
+    'light_scheme':                 (Platform.ALL,   'B',   0x4A3,       (None, None,                           ('Light',       '"Scheme {}".format($)')) ),
+    'light_width':                  (Platform.ALL,   'B',   0x4A4,       (None, '0 <= $ <= 4',                  ('Light',       '"Width {}".format($)')) ),
+    'light_wakeup':                 (Platform.ALL,   '<H',  0x4A6,       (None, '0 <= $ <= 3100',               ('Light',       '"WakeUpDuration {}".format($)')) ),
+    'web_password':                 (Platform.ALL,   '33s', 0x4A9,       (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x4CA,       ([4],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+    'ntp_server':                   (Platform.ALL,   '33s', 0x4CE,       ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'ina219_mode':                  (Platform.ALL,   'B',   0x531,       (None, '0 <= $ <= 7',                  ('Sensor',      '"Sensor13 {}".format($)')) ),
+    'pulse_timer':                  (Platform.ALL,   '<H',  0x532,       ([8],  '0 <= $ <= 64900',              ('Control',     '"PulseTime{} {}".format(#,$)')) ),
+    'ip_address':                   (Platform.ALL,   '<L',  0x544,       ([4],  None,                           ('Wifi',        '"IPAddress{} {}".format(#,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
+    'mqtt_fulltopic':               (Platform.ALL,   '100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'flag2':                        (Platform.ALL, {
+        'current_resolution':       (Platform.ALL,   '<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Sensor',      '"AmpRes {}".format($)')) ),
+        'voltage_resolution':       (Platform.ALL,   '<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Sensor',      '"VoltRes {}".format($)')) ),
+        'wattage_resolution':       (Platform.ALL,   '<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Sensor',      '"WattRes {}".format($)')) ),
+        'emulation':                (Platform.ALL,   '<L', (0x5BC,2,21), (None, '0 <= $ <= 2',                  ('Management',  '"Emulation {}".format($)')) ),
+        'energy_resolution':        (Platform.ALL,   '<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Sensor',      '"EnergyRes {}".format($)')) ),
+        'pressure_resolution':      (Platform.ALL,   '<L', (0x5BC,2,26), (None, '0 <= $ <= 3',                  ('Sensor',      '"PressRes {}".format($)')) ),
+        'humidity_resolution':      (Platform.ALL,   '<L', (0x5BC,2,28), (None, '0 <= $ <= 3',                  ('Sensor',      '"HumRes {}".format($)')) ),
+        'temperature_resolution':   (Platform.ALL,   '<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
+                                    },                      0x5BC,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'pulse_counter':                (Platform.ALL,   '<L',  0x5C0,       ([4],  None,                           ('Sensor',      '"Counter{} {}".format(#,$)')) ),
+    'pulse_counter_type':           (Platform.ALL, {
+        'pulse_counter_type1':      (Platform.ALL,   '<H', (0x5D0,1,0),  (None, None,                           ('Sensor',      '"CounterType1 {}".format($)')) ),
+        'pulse_counter_type2':      (Platform.ALL,   '<H', (0x5D0,1,1),  (None, None,                           ('Sensor',      '"CounterType2 {}".format($)')) ),
+        'pulse_counter_type3':      (Platform.ALL,   '<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
+        'pulse_counter_type4':      (Platform.ALL,   '<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
+                                    },                      0x5D0,       (None, None,                           ('Sensor',      None)), (None,      None) ),
+    'pulse_counter_debounce':       (Platform.ALL,   '<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
+    'rf_code':                      (Platform.ALL,   'B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
 }
 # ======================================================================
 SETTING_5_11_0 = copy.deepcopy(SETTING_5_10_0)
 SETTING_5_11_0.update               ({
-    'display_model':                ('B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"Model {}".format($)')) ),
-    'display_mode':                 ('B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"Mode {}".format($)')) ),
-    'display_refresh':              ('B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"Refresh {}".format($)')) ),
-    'display_rows':                 ('B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"Rows {}".format($)')) ),
-    'display_cols':                 ('B',   0x2D6,       ([2],  '1 <= $ <= 40',                 ('Display',     '"Cols{} {}".format(#,$)')) ),
-    'display_address':              ('B',   0x2D8,       ([8],  None,                           ('Display',     '"Address{} {}".format(#,$)')) ),
-    'display_dimmer':               ('B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"Dimmer {}".format($)')) ),
-    'display_size':                 ('B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"Size {}".format($)')) ),
+    'display_model':                (Platform.ALL,   'B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"Model {}".format($)')) ),
+    'display_mode':                 (Platform.ALL,   'B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"Mode {}".format($)')) ),
+    'display_refresh':              (Platform.ALL,   'B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"Refresh {}".format($)')) ),
+    'display_rows':                 (Platform.ALL,   'B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"Rows {}".format($)')) ),
+    'display_cols':                 (Platform.ALL,   'B',   0x2D6,       ([2],  '1 <= $ <= 40',                 ('Display',     '"Cols{} {}".format(#,$)')) ),
+    'display_address':              (Platform.ALL,   'B',   0x2D8,       ([8],  None,                           ('Display',     '"Address{} {}".format(#,$)')) ),
+    'display_dimmer':               (Platform.ALL,   'B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"Dimmer {}".format($)')) ),
+    'display_size':                 (Platform.ALL,   'B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"Size {}".format($)')) ),
                                     })
-SETTING_5_11_0['flag'][0].update    ({
-        'light_signal':             ('<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SetOption18 {}".format($)')) ),
+SETTING_5_11_0['flag'][1].update    ({
+        'light_signal':             (Platform.ALL,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SetOption18 {}".format($)')) ),
                                     })
 SETTING_5_11_0.pop('mqtt_fingerprinth',None)
 # ======================================================================
 SETTING_5_12_0 = copy.deepcopy(SETTING_5_11_0)
-SETTING_5_12_0['flag'][0].update    ({
-        'hass_discovery':           ('<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SetOption19 {}".format($)')) ),
-        'not_power_linked':         ('<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SetOption20 {}".format($)')) ),
-        'no_power_on_check':        ('<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SetOption21 {}".format($)')) ),
+SETTING_5_12_0['flag'][1].update    ({
+        'hass_discovery':           (Platform.ALL,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SetOption19 {}".format($)')) ),
+        'not_power_linked':         (Platform.ALL,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SetOption20 {}".format($)')) ),
+        'no_power_on_check':        (Platform.ALL,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SetOption21 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_5_13_1 = copy.deepcopy(SETTING_5_12_0)
-SETTING_5_13_1['flag'][0].update    ({
-        'mqtt_serial':              ('<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SetOption22 {}".format($)')) ),
-        'rules_enabled':            ('<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
-        'rules_once':               ('<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
-        'knx_enabled':              ('<L', (0x010,1,25), (None, None,                           ('KNX',         '"KNX_ENABLED {}".format($)')) ),
+SETTING_5_13_1.pop('mqtt_fingerprint',None)
+SETTING_5_13_1['flag'][1].update    ({
+        'mqtt_serial':              (Platform.ALL,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SetOption22 {}".format($)')) ),
+        'rules_enabled':            (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
+        'rules_once':               (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
+        'knx_enabled':              (Platform.ALL,   '<L', (0x010,1,25), (None, None,                           ('KNX',         '"KNX_ENABLED {}".format($)')) ),
                                     })
 SETTING_5_13_1.update               ({
-    'baudrate':                     ('B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'mqtt_fingerprint':             ('20s', 0x1AD,       ([2],  None,                           ('MQTT',        cmnd_mqttfingerprint)) ),
-    'energy_power_delta':           ('B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
-    'light_rotation':               ('<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
-    'serial_delimiter':             ('B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
-    'sbaudrate':                    ('B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'knx_GA_registered':            ('B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
-    'knx_CB_registered':            ('B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
-    'timer':                        ({
-        '_':                        ('<L',  0x670,       (None, None,                           ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#, arm=bitsread($,31),mode=bitsread($,29,2),tsign="-" if bitsread($,29,2)>0 and bitsread($,0,11)>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((bitsread($,0,11) if bitsread($,29,2)==0 else bitsread($,0,11) if bitsread($,0,11)<=(12*60) else bitsread($,0,11)-(12*60))*60)),window=bitsread($,11,4),repeat=bitsread($,15),days="{:07b}".format(bitsread($,16,7))[::-1],device=bitsread($,23,4)+1,power=bitsread($,27,2) )')), ('"0x{:08x}".format($)', False) ),
-        'time':                     ('<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       None)) ),
-        'window':                   ('<L', (0x670, 4,11),(None, None,                           ('Timer',       None)) ),
-        'repeat':                   ('<L', (0x670, 1,15),(None, None,                           ('Timer',       None)) ),
-        'days':                     ('<L', (0x670, 7,16),(None, None,                           ('Timer',       None)), '"0b{:07b}".format($)' ),
-        'device':                   ('<L', (0x670, 4,23),(None, None,                           ('Timer',       None)) ),
-        'power':                    ('<L', (0x670, 2,27),(None, None,                           ('Timer',       None)) ),
-        'mode':                     ('<L', (0x670, 2,29),(None, '0 <= $ <= 3',                  ('Timer',       None)) ),
-        'arm':                      ('<L', (0x670, 1,31),(None, None,                           ('Timer',       None)) ),
-                                    },      0x670,       ([16], None,                           ('Timer',       None)) ),
-    'latitude':                     ('i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) / 1000000', 'int($ * 1000000)')),
-    'longitude':                    ('i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) / 1000000', 'int($ * 1000000)')),
-    'knx_physsical_addr':           ('<H',  0x6B8,       (None, None,                           ('KNX',         None)) ),
-    'knx_GA_addr':                  ('<H',  0x6BA,       ([10], None,                           ('KNX',         None)) ),
-    'knx_CB_addr':                  ('<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
-    'knx_GA_param':                 ('B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
-    'knx_CB_param':                 ('B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
-    'rules':                        ('512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
+    'baudrate':                     (Platform.ALL,   'B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'mqtt_fingerprint1':            (Platform.ALL,   'B',   0x1AD,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint1"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            (Platform.ALL,   'B',   0x1AD+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint2"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'energy_power_delta':           (Platform.ALL,   'B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
+    'light_rotation':               (Platform.ALL,   '<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
+    'serial_delimiter':             (Platform.ALL,   'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'sbaudrate':                    (Platform.ALL,   'B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'knx_GA_registered':            (Platform.ALL,   'B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
+    'knx_CB_registered':            (Platform.ALL,   'B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
+    'timer':                        (Platform.ALL, {
+        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#, arm=bitsread($,31),mode=bitsread($,29,2),tsign="-" if bitsread($,29,2)>0 and bitsread($,0,11)>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((bitsread($,0,11) if bitsread($,29,2)==0 else bitsread($,0,11) if bitsread($,0,11)<=(12*60) else bitsread($,0,11)-(12*60))*60)),window=bitsread($,11,4),repeat=bitsread($,15),days="{:07b}".format(bitsread($,16,7))[::-1],device=bitsread($,23,4)+1,power=bitsread($,27,2) )')), ('"0x{:08x}".format($)', False) ),
+        'window':                   (Platform.ALL,   '<L', (0x670, 4,11),(None, None,                           ('Timer',       None)) ),
+        'repeat':                   (Platform.ALL,   '<L', (0x670, 1,15),(None, None,                           ('Timer',       None)) ),
+        'days':                     (Platform.ALL,   '<L', (0x670, 7,16),(None, None,                           ('Timer',       None)), '"0b{:07b}".format($)' ),
+        'device':                   (Platform.ALL,   '<L', (0x670, 4,23),(None, None,                           ('Timer',       None)) ),
+        'power':                    (Platform.ALL,   '<L', (0x670, 2,27),(None, None,                           ('Timer',       None)) ),
+        'mode':                     (Platform.ALL,   '<L', (0x670, 2,29),(None, '0 <= $ <= 3',                  ('Timer',       None)) ),
+        'arm':                      (Platform.ALL,   '<L', (0x670, 1,31),(None, None,                           ('Timer',       None)) ),
+                                    },                      0x670,       ([16], None,                           ('Timer',       None)) ),
+    'latitude':                     (Platform.ALL,   'i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) / 1000000', 'int($ * 1000000)')),
+    'longitude':                    (Platform.ALL,   'i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) / 1000000', 'int($ * 1000000)')),
+    'knx_physsical_addr':           (Platform.ALL,   '<H',  0x6B8,       (None, None,                           ('KNX',         None)) ),
+    'knx_GA_addr':                  (Platform.ALL,   '<H',  0x6BA,       ([10], None,                           ('KNX',         None)) ),
+    'knx_CB_addr':                  (Platform.ALL,   '<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
+    'knx_GA_param':                 (Platform.ALL,   'B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
+    'knx_CB_param':                 (Platform.ALL,   'B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
+    'rules':                        (Platform.ALL,   '512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_5_14_0 = copy.deepcopy(SETTING_5_13_1)
-SETTING_5_14_0['flag'][0].update    ({
-        'device_index_enable':      ('<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SetOption26 {}".format($)')) ),
+SETTING_5_14_0['flag'][1].update    ({
+        'device_index_enable':      (Platform.ALL,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SetOption26 {}".format($)')) ),
                                     })
-SETTING_5_14_0['flag'][0].pop('rules_once',None)
+SETTING_5_14_0['flag'][1].pop('rules_once',None)
 SETTING_5_14_0.update               ({
-    'tflag':                        ({
-        'hemis':                    ('<H', (0x2E2,1, 0), (None, None,                           ('Management',  None)) ),
-        'week':                     ('<H', (0x2E2,3, 1), (None, '0 <= $ <= 4',                  ('Management',  None)) ),
-        'month':                    ('<H', (0x2E2,4, 4), (None, '1 <= $ <= 12',                 ('Management',  None)) ),
-        'dow':                      ('<H', (0x2E2,3, 8), (None, '1 <= $ <= 7',                  ('Management',  None)) ),
-        'hour':                     ('<H', (0x2E2,5,11), (None, '0 <= $ <= 23',                 ('Management',  None)) ),
-                                    },      0x2E2,       ([2],  None,                           ('Management',  None)), (None,      None) ),
-    'param':                        ('B',   0x2FC,       ([18], None,                           ('SetOption',   '"SetOption{} {}".format(#+31,$)')) ),
-    'toffset':                      ('<h',  0x30E,       ([2],  None,                           ('Management',  '"{cmnd} {hemis},{week},{month},{dow},{hour},{toffset}".format(cmnd="TimeSTD" if idx==1 else "TimeDST", hemis=@["tflag"][#-1]["hemis"], week=@["tflag"][#-1]["week"], month=@["tflag"][#-1]["month"], dow=@["tflag"][#-1]["dow"], hour=@["tflag"][#-1]["hour"], toffset=value)')) ),
+    'tflag':                        (Platform.ALL, {
+        'hemis':                    (Platform.ALL,   '<H', (0x2E2,1, 0), (None, None,                           ('Management',  None)) ),
+        'week':                     (Platform.ALL,   '<H', (0x2E2,3, 1), (None, '0 <= $ <= 4',                  ('Management',  None)) ),
+        'month':                    (Platform.ALL,   '<H', (0x2E2,4, 4), (None, '1 <= $ <= 12',                 ('Management',  None)) ),
+        'dow':                      (Platform.ALL,   '<H', (0x2E2,3, 8), (None, '1 <= $ <= 7',                  ('Management',  None)) ),
+        'hour':                     (Platform.ALL,   '<H', (0x2E2,5,11), (None, '0 <= $ <= 23',                 ('Management',  None)) ),
+                                    },                      0x2E2,       ([2],  None,                           ('Management',  None)), (None,      None) ),
+    'param':                        (Platform.ALL,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SetOption{} {}".format(#+31,$)')) ),
+    'toffset':                      (Platform.ALL,   '<h',  0x30E,       ([2],  None,                           ('Management',  '"{cmnd} {hemis},{week},{month},{dow},{hour},{toffset}".format(cmnd="TimeSTD" if idx==1 else "TimeDST", hemis=@["tflag"][#-1]["hemis"], week=@["tflag"][#-1]["week"], month=@["tflag"][#-1]["month"], dow=@["tflag"][#-1]["dow"], hour=@["tflag"][#-1]["hour"], toffset=value)')) ),
                                     })
 # ======================================================================
 SETTING_6_0_0 = copy.deepcopy(SETTING_5_14_0)
 SETTING_6_0_0.update({
-    'cfg_holder':                   ('<H',  0x000,       (None, None,                           ('System',      None)), ),
-    'cfg_size':                     ('<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
-    'bootcount':                    ('<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
-    'cfg_crc':                      ('<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
-    'rule_enabled':                 ({
-        'rule1':                    ('B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
-        'rule2':                    ('B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
-        'rule3':                    ('B',  (0x49F,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($)')) ),
-                                    },      0x49F,       (None, None,                           ('Rules',       None)), (None,      None) ),
-    'rule_once':                    ({
-        'rule1':                    ('B',  (0x4A0,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+4)')) ),
-        'rule2':                    ('B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
-        'rule3':                    ('B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
-                                    },      0x4A0,       (None, None,                           ('Rules',       None)), (None,      None) ),
-    'mems':                         ('10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
-    'rules':                        ('512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'cfg_holder':                   (Platform.ALL,   '<H',  0x000,       (None, None,                           ('System',      None)), ),
+    'cfg_size':                     (Platform.ALL,   '<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
+    'bootcount':                    (Platform.ALL,   '<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
+    'cfg_crc':                      (Platform.ALL,   '<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
+    'rule_enabled':                 (Platform.ALL, {
+        'rule1':                    (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
+        'rule2':                    (Platform.ALL,   'B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
+        'rule3':                    (Platform.ALL,   'B',  (0x49F,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($)')) ),
+                                    },                      0x49F,       (None, None,                           ('Rules',       None)), (None,      None) ),
+    'rule_once':                    (Platform.ALL, {
+        'rule1':                    (Platform.ALL,   'B',  (0x4A0,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+4)')) ),
+        'rule2':                    (Platform.ALL,   'B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
+        'rule3':                    (Platform.ALL,   'B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
+                                    },                      0x4A0,       (None, None,                           ('Rules',       None)), (None,      None) ),
+    'mems':                         (Platform.ALL,   '10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
 })
-SETTING_6_0_0['flag'][0].update     ({
-        'knx_enable_enhancement':   ('<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
+SETTING_6_0_0['flag'][1].update     ({
+        'knx_enable_enhancement':   (Platform.ALL,   '<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_1_1 = copy.deepcopy(SETTING_6_0_0)
 SETTING_6_1_1.update                ({
-    'flag3':                        ('<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
-    'mcp230xx_config':              ({
-        '_':                        ('<L',  0x6F6,       (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), ('"0x{:08x}".format($)', False) ),
-        'pinmode':                  ('<L', (0x6F6,3, 0), (None, None,                           ('Sensor',      None)) ),
-        'pullup':                   ('<L', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
-        'saved_state':              ('<L', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
-        'int_report_mode':          ('<L', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
-        'int_report_defer':         ('<L', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
-        'int_count_en':             ('<L', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
-                                     },     0x6F6,       ([16], None,                           ('Sensor',      None)), (None,      None) ),
+    'flag3':                        (Platform.ALL,   '<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+    'mcp230xx_config':              (Platform.ALL, {
+        'pinmode':                  (Platform.ALL,   '<L', (0x6F6,3, 0), (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), '"0x{:08x}".format($)' ),
+        'pullup':                   (Platform.ALL,   '<L', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
+        'saved_state':              (Platform.ALL,   '<L', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
+        'int_report_mode':          (Platform.ALL,   '<L', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
+        'int_report_defer':         (Platform.ALL,   '<L', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
+        'int_count_en':             (Platform.ALL,   '<L', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
+                                     },     0x6F6,       ([16], None,                                           ('Sensor',      None)), (None,      None) ),
                                     })
-SETTING_6_1_1['flag'][0].update     ({
-        'rf_receive_decimal':       ('<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SetOption28 {}".format($)')) ),
-        'ir_receive_decimal':       ('<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SetOption29 {}".format($)')) ),
-        'hass_light':               ('<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SetOption30 {}".format($)')) ),
+SETTING_6_1_1['flag'][1].update     ({
+        'rf_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SetOption28 {}".format($)')) ),
+        'ir_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SetOption29 {}".format($)')) ),
+        'hass_light':               (Platform.ALL,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SetOption30 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1 = copy.deepcopy(SETTING_6_1_1)
 SETTING_6_2_1.update                ({
-    'rule_stop':                    ({
-        'rule1':                    ('B',  (0x1A7,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
-        'rule2':                    ('B',  (0x1A7,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
-        'rule3':                    ('B',  (0x1A7,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+    'rule_stop':                    (Platform.ALL, {
+        'rule1':                    (Platform.ALL,   'B',  (0x1A7,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    (Platform.ALL,   'B',  (0x1A7,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    (Platform.ALL,   'B',  (0x1A7,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
                                      },     0x1A7,        None),
-    'display_rotate':               ('B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"Rotate {}".format($)')) ),
-    'display_font':                 ('B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
-    'flag3':                        ({
-         'timers_enable':           ('<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
-         'user_esp8285_enable':     ('<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
-                                    },      0x3A0,       (None, None,                           ('*',           None)), (None,      None) ),
-    'button_debounce':              ('<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
-    'switch_debounce':              ('<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
-    'mcp230xx_int_prio':            ('B',   0x716,       (None, None,                           ('Sensor',      None)) ),
-    'mcp230xx_int_timer':           ('<H',  0x718,       (None, None,                           ('Sensor',      None)) ),
+    'display_rotate':               (Platform.ALL,   'B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"Rotate {}".format($)')) ),
+    'display_font':                 (Platform.ALL,   'B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
+    'flag3':                        (Platform.ALL, {
+         'timers_enable':           (Platform.ALL,   '<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
+         'user_esp8285_enable':     (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
+                                    },                      0x3A0,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'button_debounce':              (Platform.ALL,   '<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
+    'switch_debounce':              (Platform.ALL,   '<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
+    'mcp230xx_int_prio':            (Platform.ALL,   'B',   0x716,       (None, None,                           ('Sensor',      None)) ),
+    'mcp230xx_int_timer':           (Platform.ALL,   '<H',  0x718,       (None, None,                           ('Sensor',      None)) ),
                                     })
-SETTING_6_2_1['flag'][0].pop('rules_enabled',None)
-SETTING_6_2_1['flag'][0].update     ({
-        'mqtt_serial_raw':          ('<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
-        'global_state':             ('<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SetOption31 {}".format($)')) ),
+SETTING_6_2_1['flag'][1].pop('rules_enabled',None)
+SETTING_6_2_1['flag'][1].update     ({
+        'mqtt_serial_raw':          (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
+        'global_state':             (Platform.ALL,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SetOption31 {}".format($)')) ),
                                     })
-SETTING_6_2_1['flag2'][0].update    ({
+SETTING_6_2_1['flag2'][1].update    ({
     # currently unsupported Tasmota command, should be Sensor32, still needs to implement
-    'axis_resolution':              ('<L', (0x5BC,2,13), (None, None,                           (INTERNAL,      None)) ),
+    'axis_resolution':              (Platform.ALL,   '<L', (0x5BC,2,13), (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_2 = copy.deepcopy(SETTING_6_2_1)
-SETTING_6_2_1_2['flag3'][0].update  ({
-         'user_esp8285_enable':     ('<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
+SETTING_6_2_1_2['flag3'][1].update  ({
+         'user_esp8285_enable':     (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_3 = copy.deepcopy(SETTING_6_2_1_2)
-SETTING_6_2_1_3['flag2'][0].update  ({
-        'frequency_resolution':     ('<L', (0x5BC,2,11), (None, '0 <= $ <= 3',                  ('Power',       '"FreqRes {}".format($)')) ),
+SETTING_6_2_1_3['flag2'][1].update  ({
+        'frequency_resolution':     (Platform.ALL,   '<L', (0x5BC,2,11), (None, '0 <= $ <= 3',                  ('Power',       '"FreqRes {}".format($)')) ),
                                     })
-SETTING_6_2_1_3['flag3'][0].update  ({
-        'time_append_timezone':     ('<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SetOption52 {}".format($)')) ),
+SETTING_6_2_1_3['flag3'][1].update  ({
+        'time_append_timezone':     (Platform.ALL,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SetOption52 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_6 = copy.deepcopy(SETTING_6_2_1_3)
 SETTING_6_2_1_6.update({
-    'energy_power_calibration':     ('<L',  0x364,       (None, None,                           ('Power',       None)) ),
-    'energy_voltage_calibration':   ('<L',  0x368,       (None, None,                           ('Power',       None)) ),
-    'energy_current_calibration':   ('<L',  0x36C,       (None, None,                           ('Power',       None)) ),
-    'energy_frequency_calibration': ('<L',  0x7C8,       (None, '45000 < $ < 65000',            ('Power',       '"FrequencySet {}".format($)')) ),
+    'energy_power_calibration':     (Platform.ALL,   '<L',  0x364,       (None, None,                           ('Power',       None)) ),
+    'energy_voltage_calibration':   (Platform.ALL,   '<L',  0x368,       (None, None,                           ('Power',       None)) ),
+    'energy_current_calibration':   (Platform.ALL,   '<L',  0x36C,       (None, None,                           ('Power',       None)) ),
+    'energy_frequency_calibration': (Platform.ALL,   '<L',  0x7C8,       (None, '45000 < $ < 65000',            ('Power',       '"FrequencySet {}".format($)')) ),
 })
 # ======================================================================
 SETTING_6_2_1_10 = copy.deepcopy(SETTING_6_2_1_6)
 SETTING_6_2_1_10.update({
-    'rgbwwTable':                   ('B',   0x71A,       ([5],  None,                           (INTERNAL,      None)) ), # RGBWWTable 255,135,70,255,255
+    'rgbwwTable':                   (Platform.ALL,   'B',   0x71A,       ([5],  None,                           (INTERNAL,      None)) ), # RGBWWTable 255,135,70,255,255
 })
 # ======================================================================
 SETTING_6_2_1_14 = copy.deepcopy(SETTING_6_2_1_10)
 SETTING_6_2_1_14.update({
-    'weight_reference':             ('<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
-    'weight_calibration':           ('<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
-    'weight_max':                   ('<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
-    'weight_item':                  ('<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
-    'web_refresh':                  ('<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
+    'weight_reference':             (Platform.ALL,   '<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
+    'weight_calibration':           (Platform.ALL,   '<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
+    'weight_max':                   (Platform.ALL,   '<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
+    'weight_item':                  (Platform.ALL,   '<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'web_refresh':                  (Platform.ALL,   '<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
 })
-SETTING_6_2_1_14['flag2'][0].update ({
-        'weight_resolution':        ('<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
+SETTING_6_2_1_14['flag2'][1].update ({
+        'weight_resolution':        (Platform.ALL,   '<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_19 = copy.deepcopy(SETTING_6_2_1_14)
 SETTING_6_2_1_19.update({
-    'weight_item':                  ('<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'weight_item':                  (Platform.ALL,   '<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
 })
 SETTING_6_2_1_20 = SETTING_6_2_1_19
-SETTING_6_2_1_20['flag3'][0].update ({
-        'gui_hostname_ip':          ('<L', (0x3A0,1,3),  (None, None,                           ('SetOption',   '"SetOption53 {}".format($)')) ),
+SETTING_6_2_1_20['flag3'][1].update ({
+        'gui_hostname_ip':          (Platform.ALL,   '<L', (0x3A0,1,3),  (None, None,                           ('SetOption',   '"SetOption53 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         ('<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
+    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update({
-    'timezone_minutes':             ('B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
+    'timezone_minutes':             (Platform.ALL,   'B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
 })
-SETTING_6_3_0_2['flag'][0].pop('rules_once',None)
-SETTING_6_3_0_2['flag'][0].update   ({
-        'pressure_conversion':      ('<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
+SETTING_6_3_0_2['flag'][1].pop('rules_once',None)
+SETTING_6_3_0_2['flag'][1].update   ({
+        'pressure_conversion':      (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
 SETTING_6_3_0_4.update({
-    'drivers':                      ('<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'monitors':                     ('<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'displays':                     ('<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'drivers':                      (Platform.ALL,   '<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'monitors':                     (Platform.ALL,   '<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'displays':                     (Platform.ALL,   '<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
 })
-SETTING_6_3_0_4['flag3'][0].update ({
-        'tuya_apply_o20':           ('<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
+SETTING_6_3_0_4['flag3'][1].update ({
+        'tuya_apply_o20':           (Platform.ALL,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_8 = copy.deepcopy(SETTING_6_3_0_4)
-SETTING_6_3_0_8['flag3'][0].update ({
-        'hass_short_discovery_msg': ('<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
+SETTING_6_3_0_8['flag3'][1].update ({
+        'hass_short_discovery_msg': (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_10 = copy.deepcopy(SETTING_6_3_0_8)
-SETTING_6_3_0_10['flag3'][0].update ({
-        'use_wifi_scan':            ('<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SetOption56 {}".format($)')) ),
-        'use_wifi_rescan':          ('<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SetOption57 {}".format($)')) ),
+SETTING_6_3_0_10['flag3'][1].update ({
+        'use_wifi_scan':            (Platform.ALL,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SetOption56 {}".format($)')) ),
+        'use_wifi_rescan':          (Platform.ALL,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SetOption57 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_11 = copy.deepcopy(SETTING_6_3_0_10)
-SETTING_6_3_0_11['flag3'][0].update ({
-        'receive_raw':          	('<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SetOption58 {}".format($)')) ),
+SETTING_6_3_0_11['flag3'][1].update ({
+        'receive_raw':          	(Platform.ALL,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SetOption58 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_13 = copy.deepcopy(SETTING_6_3_0_11)
-SETTING_6_3_0_13['flag3'][0].update ({
-        'hass_tele_on_power':       ('<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SetOption59 {}".format($)')) ),
+SETTING_6_3_0_13['flag3'][1].update ({
+        'hass_tele_on_power':       (Platform.ALL,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SetOption59 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_14 = copy.deepcopy(SETTING_6_3_0_13)
-SETTING_6_3_0_14['flag2'][0].update ({
-        'calc_resolution':          ('<L', (0x5BC,3, 6), (None, '0 <= $ <= 7',                  ('Rules',       '"CalcRes {}".format($)')) ),
+SETTING_6_3_0_14['flag2'][1].update ({
+        'calc_resolution':          (Platform.ALL,   '<L', (0x5BC,3, 6), (None, '0 <= $ <= 7',                  ('Rules',       '"CalcRes {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_15 = copy.deepcopy(SETTING_6_3_0_14)
-SETTING_6_3_0_15['flag3'][0].update ({
-        'sleep_normal':             ('<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SetOption60 {}".format($)')) ),
+SETTING_6_3_0_15['flag3'][1].update ({
+        'sleep_normal':             (Platform.ALL,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SetOption60 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_16 = copy.deepcopy(SETTING_6_3_0_15)
-SETTING_6_3_0_16['mcp230xx_config'][0].update ({
-        'int_retain_flag':          ('<L', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
+SETTING_6_3_0_16['mcp230xx_config'][1].update ({
+        'int_retain_flag':          (Platform.ALL,   '<L', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
                                     })
-SETTING_6_3_0_16['flag3'][0].update ({
-        'button_switch_force_local':('<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
+SETTING_6_3_0_16['flag3'][1].update ({
+        'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_0_2 = copy.deepcopy(SETTING_6_3_0_16)
-SETTING_6_4_0_2['flag3'][0].pop('hass_short_discovery_msg',None)
+SETTING_6_4_0_2['flag3'][1].pop('hass_short_discovery_msg',None)
 # ======================================================================
 SETTING_6_4_1_4 = copy.deepcopy(SETTING_6_4_0_2)
-SETTING_6_4_1_4['flag3'][0].update ({
-        'mdns_enabled':             ('<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
+SETTING_6_4_1_4['flag3'][1].update ({
+        'mdns_enabled':             (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_7 = copy.deepcopy(SETTING_6_4_1_4)
-SETTING_6_4_1_7['flag3'][0].update ({
-        'no_pullup':                ('<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
+SETTING_6_4_1_7['flag3'][1].update ({
+        'no_pullup':                (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_8 = copy.deepcopy(SETTING_6_4_1_7)
 SETTING_6_4_1_8.update              ({
-    'my_gp':                        ('B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#-1,$)')) ),
+    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([17], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp"]) if i not in [6,7,8,11])) if 1==# else None')) ),
                                     })
-SETTING_6_4_1_8['flag3'][0].update ({
-        'split_interlock':          ('<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
+SETTING_6_4_1_8['flag3'][1].update ({
+        'split_interlock':          (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_11 = copy.deepcopy(SETTING_6_4_1_8)
-SETTING_6_4_1_11['flag3'][0].pop('split_interlock',None)
+SETTING_6_4_1_11['flag3'][1].pop('split_interlock',None)
 SETTING_6_4_1_11.update            ({
-    'interlock':                    ('B',   0x4CA,       ([4],  None,                           ('Control',     None)), '"0x{:02x}".format($)' ),
+    'interlock':                    (Platform.ALL,   'B',   0x4CA,       ([4],  None,                           ('Control',     None)), '"0x{:02x}".format($)' ),
                                     })
-SETTING_6_4_1_11['flag'][0].update ({
-        'interlock':                ('<L', (0x010,1,14), (None, None,                           ('Control',     '"Interlock {}".format($)')) ),
+SETTING_6_4_1_11['flag'][1].update ({
+        'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('Control',     '"Interlock {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_13 = copy.deepcopy(SETTING_6_4_1_11)
 SETTING_6_4_1_13.update            ({
-    'SensorBits1':                 ({
-        'mhz19b_abc_disable':       ('B',  (0x717,1, 7), (None, None,                           ('Sensor',      '"Sensor15 {}".format($)')) ),
-                                    },      0x717,       (None, None,                           ('*',           None)), (None,      None) ),
+    'SensorBits1':                 (Platform.ALL, {
+        'mhz19b_abc_disable':       (Platform.ALL,   'B',  (0x717,1, 7), (None, None,                           ('Sensor',      '"Sensor15 {}".format($)')) ),
+                                    },                      0x717,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_16 = copy.deepcopy(SETTING_6_4_1_13)
-SETTING_6_4_1_16.update             ({
-    'user_template_base':           ('B',   0x71F,       (None,  None,                          ('Management',  '"Template {}".format($)')), ('$ + 1','$ - 1') ),
-    'user_template':                ({
-        'name':                     ('15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
-        'gpio00':                   ('B',   0x72F,       (None, None,                           ('Management',  '"Template {{\\\"GPIO\\\":[{},{},{},{},{},{},{},{},{},{},{},{},{}]}}".format(@["user_template"]["gpio00"],@["user_template"]["gpio01"],@["user_template"]["gpio02"],@["user_template"]["gpio03"],@["user_template"]["gpio04"],@["user_template"]["gpio05"],@["user_template"]["gpio09"],@["user_template"]["gpio10"],@["user_template"]["gpio12"],@["user_template"]["gpio13"],@["user_template"]["gpio14"],@["user_template"]["gpio15"],@["user_template"]["gpio16"])')) ),
-        'gpio01':                   ('B',   0x730,       (None, None,                           ('Management',  None)) ),
-        'gpio02':                   ('B',   0x731,       (None, None,                           ('Management',  None)) ),
-        'gpio03':                   ('B',   0x732,       (None, None,                           ('Management',  None)) ),
-        'gpio04':                   ('B',   0x733,       (None, None,                           ('Management',  None)) ),
-        'gpio05':                   ('B',   0x734,       (None, None,                           ('Management',  None)) ),
-        'gpio09':                   ('B',   0x735,       (None, None,                           ('Management',  None)) ),
-        'gpio10':                   ('B',   0x736,       (None, None,                           ('Management',  None)) ),
-        'gpio12':                   ('B',   0x737,       (None, None,                           ('Management',  None)) ),
-        'gpio13':                   ('B',   0x738,       (None, None,                           ('Management',  None)) ),
-        'gpio14':                   ('B',   0x739,       (None, None,                           ('Management',  None)) ),
-        'gpio15':                   ('B',   0x73A,       (None, None,                           ('Management',  None)) ),
-        'gpio16':                   ('B',   0x73B,       (None, None,                           ('Management',  None)) ),
-        'flag':                     ({
-            '_':                    ('B',   0x73C     ,  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')),(None,  False) ),
-            'adc0':                 ('B',  (0x73C,1,0),  (None, None,                           ('Management',  None)) ),
-            'pullup':               ('B',  (0x73C,1,1),  (None, None,                           ('Management',  None)) ),
-                                    },      0x73C,       (None, None,                           ('Management',  None))
+SETTING_6_4_1_16.update            ({
+    'user_template':               (Platform.ALL, {
+        'base':                     (Platform.ALL,   'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (Platform.ALL,   '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'gpio':                     (Platform.ALL,   'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"]) if 1==# else None')) ),
+        'flag':                     (Platform.ALL, {
+            'adc0':                 (Platform.ALL,   'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+                                    },                      0x73C,       (None, None,                           ('Management',  None))
                                     ),
-                                    },      0x720,       (None, None,                           ('Management',  None))
+                                    },                      0x71F,       (None, None,                           ('Management',  None))
                                     ),
-})
+                                   })
 # ======================================================================
 SETTING_6_4_1_17 = copy.deepcopy(SETTING_6_4_1_16)
-SETTING_6_4_1_17['flag3'][0].pop('no_pullup',None)
+SETTING_6_4_1_17['flag3'][1].pop('no_pullup',None)
 # ======================================================================
 SETTING_6_4_1_18 = copy.deepcopy(SETTING_6_4_1_17)
-SETTING_6_4_1_18['flag3'][0].update ({
-        'no_hold_retain':           ('<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
+SETTING_6_4_1_18['flag3'][1].update ({
+        'no_hold_retain':           (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_3 = copy.deepcopy(SETTING_6_4_1_18)
 SETTING_6_5_0_3.update              ({
-    'novasds_period':               ('B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
+    'novasds_period':               (Platform.ALL,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_6 = copy.deepcopy(SETTING_6_5_0_3)
 SETTING_6_5_0_6.update              ({
-    'web_color':                    ('3B',  0x73E,       ([18], None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
+    'web_color':                    (Platform.ALL,   '3B',  0x73E,       ([18], None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_6_5_0_7 = copy.deepcopy(SETTING_6_5_0_6)
 SETTING_6_5_0_7.update              ({
-    'ledmask':                      ('<H',  0x7BC,       (None, None,                           ('Control',     '"LedMask {}".format($)')), '"0x{:04x}".format($)' ),
+    'ledmask':                      (Platform.ALL,   '<H',  0x7BC,       (None, None,                           ('Control',     '"LedMask {}".format($)')), '"0x{:04x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_6_5_0_9 = copy.deepcopy(SETTING_6_5_0_7)
-SETTING_6_5_0_9['flag3'][0].update ({
-        'no_power_feedback':        ('<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
+SETTING_6_5_0_9['flag3'][1].update ({
+        'no_power_feedback':        (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_10 = copy.deepcopy(SETTING_6_5_0_9)
 SETTING_6_5_0_10.update             ({
-    'my_adc0':                      ('B',   0x495,       (None, None,                           ('Sensor',      '"Adc {}".format($)')) ),
+    'my_adc0':                      (Platform.ALL,   'B',   0x495,       (None, None,                           ('Sensor',      '"Adc {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_11 = copy.deepcopy(SETTING_6_5_0_10)
-SETTING_6_5_0_11['flag3'][0].update ({
-        'use_underscore':           ('<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SetOption64 {}".format($)')) ),
+SETTING_6_5_0_11['flag3'][1].update ({
+        'use_underscore':           (Platform.ALL,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SetOption64 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_12 = copy.deepcopy(SETTING_6_5_0_11)
 SETTING_6_5_0_12.pop('drivers',None)
 SETTING_6_5_0_12.update             ({
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param1':                   ('<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
-    'adc_param2':                   ('<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
-    'adc_param3':                   ('<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
-    'sps30_inuse_hours':            ('B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
+    'adc_param_type':               (Platform.ALL,   'B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
+    'adc_param1':                   (Platform.ALL,   '<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param2':                   (Platform.ALL,   '<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param3':                   (Platform.ALL,   '<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
+    'sps30_inuse_hours':            (Platform.ALL,   'B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_15 = copy.deepcopy(SETTING_6_5_0_12)
-SETTING_6_5_0_15['flag3'][0].update ({
-        'tuya_show_dimmer':         ('<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+SETTING_6_5_0_15['flag3'][1].update ({
+        'tuya_show_dimmer':         (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_1 = copy.deepcopy(SETTING_6_5_0_15)
-SETTING_6_6_0_1['flag3'][0].update ({
-        'tuya_dimmer_range_255':    ('<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
+SETTING_6_6_0_1['flag3'][1].update ({
+        'tuya_dimmer_range_255':    (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_2 = copy.deepcopy(SETTING_6_6_0_1)
-SETTING_6_6_0_2['flag3'][0].update ({
-        'buzzer_enable':            ('<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SetOption67 {}".format($)')) ),
+SETTING_6_6_0_2['flag3'][1].update ({
+        'buzzer_enable':            (Platform.ALL,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SetOption67 {}".format($)')) ),
                                     })
 SETTING_6_6_0_2.update              ({
-    'display_width':                ('<H',  0x774,       (None, None,                           ('Display',     '"DisplayWidth {}".format($)')) ),
-    'display_height':               ('<H',  0x776,       (None, None,                           ('Display',     '"DisplayHeight {}".format($)')) ),
+    'display_width':                (Platform.ALL,   '<H',  0x774,       (None, None,                           ('Display',     '"DisplayWidth {}".format($)')) ),
+    'display_height':               (Platform.ALL,   '<H',  0x776,       (None, None,                           ('Display',     '"DisplayHeight {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_3 = copy.deepcopy(SETTING_6_6_0_2)
-SETTING_6_6_0_3['flag3'][0].update ({
-        'pwm_multi_channels':       ('<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SetOption68 {}".format($)')) ),
+SETTING_6_6_0_3['flag3'][1].update ({
+        'pwm_multi_channels':       (Platform.ALL,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SetOption68 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_5 = copy.deepcopy(SETTING_6_6_0_3)
 SETTING_6_6_0_5.update              ({
-    'sensors':                      ('<L',  0x7A4,       ([3],  None,                           ('Wifi',        cmnd_websensor)), '"0x{:08x}".format($)' ),
+    'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           ('Wifi',        cmnd_websensor)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_6_6_0_5['flag3'][0].update ({
-        'tuya_dimmer_min_limit':    ('<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SetOption69 {}".format($)')) ),
+SETTING_6_6_0_5['flag3'][1].update ({
+        'tuya_dimmer_min_limit':    (Platform.ALL,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SetOption69 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_6 = copy.deepcopy(SETTING_6_6_0_5)
-SETTING_6_6_0_6['flag3'][0].pop('tuya_show_dimmer',None)
-SETTING_6_6_0_6['flag3'][0].update ({
-        'tuya_disable_dimmer':      ('<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+SETTING_6_6_0_6['flag3'][1].pop('tuya_show_dimmer',None)
+SETTING_6_6_0_6['flag3'][1].update ({
+        'tuya_disable_dimmer':      (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_7 = copy.deepcopy(SETTING_6_6_0_6)
 SETTING_6_6_0_7.update              ({
-    'energy_usage':                 ({
-        'usage1_kWhtotal':          ('<L',  0x77C,       (None, None,                           ('Power',       None)) ),
-        'usage1_kWhtoday':          ('<L',  0x780,       (None, None,                           ('Power',       None)) ),
-        'return1_kWhtotal':         ('<L',  0x784,       (None, None,                           ('Power',       None)) ),
-        'return2_kWhtotal':         ('<L',  0x788,       (None, None,                           ('Power',       None)) ),
-        'last_usage_kWhtotal':      ('<L',  0x78C,       (None, None,                           ('Power',       None)) ),
-        'last_return_kWhtotal':     ('<L',  0x790,       (None, None,                           ('Power',       None)) ),
-                                    },      0x77C,       (None, None,                           ('Power',       None)) ),
+    'energy_usage':                 (Platform.ALL, {
+        'usage1_kWhtotal':          (Platform.ALL,   '<L',  0x77C,       (None, None,                           ('Power',       None)) ),
+        'usage1_kWhtoday':          (Platform.ALL,   '<L',  0x780,       (None, None,                           ('Power',       None)) ),
+        'return1_kWhtotal':         (Platform.ALL,   '<L',  0x784,       (None, None,                           ('Power',       None)) ),
+        'return2_kWhtotal':         (Platform.ALL,   '<L',  0x788,       (None, None,                           ('Power',       None)) ),
+        'last_usage_kWhtotal':      (Platform.ALL,   '<L',  0x78C,       (None, None,                           ('Power',       None)) ),
+        'last_return_kWhtotal':     (Platform.ALL,   '<L',  0x790,       (None, None,                           ('Power',       None)) ),
+                                    },                      0x77C,       (None, None,                           ('Power',       None)) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_8 = copy.deepcopy(SETTING_6_6_0_7)
-SETTING_6_6_0_8['flag3'][0].update ({
-        'energy_weekend':           ('<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff3 {}".format($)')) ),
+SETTING_6_6_0_8['flag3'][1].update ({
+        'energy_weekend':           (Platform.ALL,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff3 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_9 = copy.deepcopy(SETTING_6_6_0_8)
 SETTING_6_6_0_9.update              ({
-    'baudrate':                     ('<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'sbaudrate':                    ('<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'baudrate':                     (Platform.ALL,   '<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'sbaudrate':                    (Platform.ALL,   '<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
 SETTING_6_6_0_10 = copy.deepcopy(SETTING_6_6_0_9)
-SETTING_6_6_0_10['flag3'][0].pop('tuya_disable_dimmer',None)
+SETTING_6_6_0_10['flag3'][1].pop('tuya_disable_dimmer',None)
 SETTING_6_6_0_10.update             ({
-    'cfg_timestamp':                ('<L',  0xFF8,       (None, None,                           ('System',      None)) ),
-    'cfg_crc32':                    ('<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
-    'tuya_fnid_map':                ({
-        'fnid':                     ('B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#-1]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#-1]["dpid"]!=0) else None')) ),
-        'dpid':                     ('B',   0xE01,       (None, None,                           ('Management',  None)) ),
-                                    },      0xE00,       ([16], None,                           ('Management',  None)), (None,      None) ),
+    'cfg_timestamp':                (Platform.ALL,   '<L',  0xFF8,       (None, None,                           ('System',      None)) ),
+    'cfg_crc32':                    (Platform.ALL,   '<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'tuya_fnid_map':                (Platform.ALL, {
+        'fnid':                     (Platform.ALL,   'B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#-1]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#-1]["dpid"]!=0) else None')) ),
+        'dpid':                     (Platform.ALL,   'B',   0xE01,       (None, None,                           ('Management',  None)) ),
+                                    },                      0xE00,       ([16], None,                           ('Management',  None)), (None,      None) ),
                                     })
-SETTING_6_6_0_10['flag2'][0].update ({
-        'time_format':              ('<L', (0x5BC,2, 4), (None, None,                           ('Management', '"Time {}".format($+1)')) ),
+SETTING_6_6_0_10['flag2'][1].update ({
+        'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, None,                           ('Management', '"Time {}".format($+1)')) ),
                                     })
-SETTING_6_6_0_10['flag3'][0].pop('tuya_show_dimmer',None)
+SETTING_6_6_0_10['flag3'][1].pop('tuya_show_dimmer',None)
 # ======================================================================
 SETTING_6_6_0_11 = copy.deepcopy(SETTING_6_6_0_10)
 SETTING_6_6_0_11.update             ({
-    'ina226_r_shunt':               ('<H',  0xE20,       ([4], None,                            ('Power',       '"Sensor54 {}1 {}".format(#,$)')) ),
-    'ina226_i_fs':                  ('<H',  0xE28,       ([4], None,                            ('Power',       '"Sensor54 {}2 {}".format(#,$)')) ),
+    'ina226_r_shunt':               (Platform.ALL,   '<H',  0xE20,       ([4], None,                            ('Power',       '"Sensor54 {}1 {}".format(#,$)')) ),
+    'ina226_i_fs':                  (Platform.ALL,   '<H',  0xE28,       ([4], None,                            ('Power',       '"Sensor54 {}2 {}".format(#,$)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_12 = copy.deepcopy(SETTING_6_6_0_11)
 SETTING_6_6_0_12.update             ({
-    'register8_ENERGY_TARIFF1_ST':  ('B',   0x1D6,       (None, None,                           ('Power',       '"Tariff1 {},{}".format($,@["register8_ENERGY_TARIFF1_DS"])')) ),
-    'register8_ENERGY_TARIFF2_ST':  ('B',   0x1D7,       (None, None,                           ('Power',       '"Tariff2 {},{}".format($,@["register8_ENERGY_TARIFF2_DS"])')) ),
-    'register8_ENERGY_TARIFF1_DS':  ('B',   0x1D8,       (None, None,                           ('Power',       None)) ),
-    'register8_ENERGY_TARIFF2_DS':  ('B',   0x1D9,       (None, None,                           ('Power',       None)) ),
+    'register8_ENERGY_TARIFF1_ST':  (Platform.ALL,   'B',   0x1D6,       (None, None,                           ('Power',       '"Tariff1 {},{}".format($,@["register8_ENERGY_TARIFF1_DS"])')) ),
+    'register8_ENERGY_TARIFF2_ST':  (Platform.ALL,   'B',   0x1D7,       (None, None,                           ('Power',       '"Tariff2 {},{}".format($,@["register8_ENERGY_TARIFF2_DS"])')) ),
+    'register8_ENERGY_TARIFF1_DS':  (Platform.ALL,   'B',   0x1D8,       (None, None,                           ('Power',       None)) ),
+    'register8_ENERGY_TARIFF2_DS':  (Platform.ALL,   'B',   0x1D9,       (None, None,                           ('Power',       None)) ),
                                     })
-SETTING_6_6_0_12['flag3'][0].update ({
-        'energy_weekend':           ('<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff9 {}".format($)')) ),
+SETTING_6_6_0_12['flag3'][1].update ({
+        'energy_weekend':           (Platform.ALL,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff9 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_13 = copy.deepcopy(SETTING_6_6_0_12)
-SETTING_6_6_0_13['SensorBits1'][0].update ({
-        'hx711_json_weight_change': ('B',  (0x717,1, 6), (None, None,                           ('Sensor',      '"Sensor34 8 {}".format($)')) ),
+SETTING_6_6_0_13['SensorBits1'][1].update ({
+        'hx711_json_weight_change': (Platform.ALL,   'B',  (0x717,1, 6), (None, None,                           ('Sensor',      '"Sensor34 8 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_14 = copy.deepcopy(SETTING_6_6_0_13)
@@ -1104,141 +1142,142 @@ SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF2_ST',None)
 SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF1_DS',None)
 SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF2_DS',None)
 SETTING_6_6_0_14.update             ({
-    'register8':                    ('B',   0x1D6,       ([16], None,                           ('Power',       None)) ),
-    'tariff1_0':                    ('<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]//60,@["tariff1_0"]%60,@["tariff1_1"]//60,@["tariff1_1"]%60)')) ),
-    'tariff1_1':                    ('<H',  0xE32,       (None, None,                           ('Power',       None)) ),
-    'tariff2_0':                    ('<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
-    'tariff2_1':                    ('<H',  0xE36,       (None, None,                           ('Power',       None)) ),
-    'mqttlog_level':                ('B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'pcf8574_config':               ('B',   0xE88,       ([8],  None,                           ('Sensor',      None)) ),
-    'shutter_accuracy':             ('B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
-    'shutter_opentime':             ('<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#,float($)/10.0)')) ),
-    'shutter_closetime':            ('<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#,float($)/10.0)')) ),
-    'shuttercoeff':                 ('<H',  0xE50,       ([5,4],None,                           ('Shutter',     None)) ),
-    'shutter_invert':               ('B',   0xE78,       ([4],  None,                           ('Shutter',     '"ShutterInvert{} {}".format(#,$)')) ),
-    'shutter_set50percent':         ('B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#,$)')) ),
-    'shutter_position':             ('B',   0xE80,       ([4],  None,                           ('Shutter',     '"ShutterPosition{} {}".format(#,$)')) ),
-    'shutter_startrelay':           ('B',   0xE84,       ([4],  None,                           ('Shutter',     '"ShutterRelay{} {}".format(#,$)')) ),
+    'register8':                    (Platform.ALL,   'B',   0x1D6,       ([16], None,                           ('Power',       None)) ),
+    'tariff1_0':                    (Platform.ALL,   '<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]//60,@["tariff1_0"]%60,@["tariff1_1"]//60,@["tariff1_1"]%60)')) ),
+    'tariff1_1':                    (Platform.ALL,   '<H',  0xE32,       (None, None,                           ('Power',       None)) ),
+    'tariff2_0':                    (Platform.ALL,   '<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
+    'tariff2_1':                    (Platform.ALL,   '<H',  0xE36,       (None, None,                           ('Power',       None)) ),
+    'mqttlog_level':                (Platform.ALL,   'B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
+    'pcf8574_config':               (Platform.ALL,   'B',   0xE88,       ([8],  None,                           ('Sensor',      None)) ),
+    'shutter_accuracy':             (Platform.ALL,   'B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
+    'shutter_opentime':             (Platform.ALL,   '<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#,float($)/10.0)')) ),
+    'shutter_closetime':            (Platform.ALL,   '<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#,float($)/10.0)')) ),
+    'shuttercoeff':                 (Platform.ALL,   '<H',  0xE50,       ([5,4],None,                           ('Shutter',     None)) ),
+    'shutter_invert':               (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     '"ShutterInvert{} {}".format(#,$)')) ),
+    'shutter_set50percent':         (Platform.ALL,   'B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#,$)')) ),
+    'shutter_position':             (Platform.ALL,   'B',   0xE80,       ([4],  None,                           ('Shutter',     '"ShutterPosition{} {}".format(#,$)')) ),
+    'shutter_startrelay':           (Platform.ALL,   'B',   0xE84,       ([4],  None,                           ('Shutter',     '"ShutterRelay{} {}".format(#,$)')) ),
                                     })
-SETTING_6_6_0_14['flag3'][0].update ({
-        'dds2382_model':            ('<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SetOption71 {}".format($)')) ),
-        'shutter_mode':             ('<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SetOption80 {}".format($)')) ),
-        'pcf8574_ports_inverted':   ('<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SetOption81 {}".format($)')) ),
+SETTING_6_6_0_14['flag3'][1].update ({
+        'dds2382_model':            (Platform.ALL,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SetOption71 {}".format($)')) ),
+        'shutter_mode':             (Platform.ALL,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SetOption80 {}".format($)')) ),
+        'pcf8574_ports_inverted':   (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SetOption81 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_15 = copy.deepcopy(SETTING_6_6_0_14)
-SETTING_6_6_0_15['flag3'][0].update ({
-        'hardware_energy_total':    ('<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SetOption72 {}".format($)')) ),
+SETTING_6_6_0_15['flag3'][1].update ({
+        'hardware_energy_total':    (Platform.ALL,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SetOption72 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_18 = copy.deepcopy(SETTING_6_6_0_15)
-SETTING_6_6_0_18['flag3'][0].pop('tuya_dimmer_range_255',None)
-SETTING_6_6_0_18['flag3'][0].pop('tuya_dimmer_min_limit',None)
+SETTING_6_6_0_18['flag3'][1].pop('tuya_dimmer_range_255',None)
+SETTING_6_6_0_18['flag3'][1].pop('tuya_dimmer_min_limit',None)
 SETTING_6_6_0_18.pop('novasds_period',None)
 SETTING_6_6_0_18.update             ({
-    'dimmer_hw_min':                ('<H',  0xE90,       (None, None,                           ('Light',       '"DimmerRange {},{}".format($,@["dimmer_hw_max"])')) ),
-    'dimmer_hw_max':                ('<H',  0xE92,       (None, None,                           ('Light',       None)) ),
-    'deepsleep':                    ('<H',  0xE94,       (None, '0 or 10 <= $ <= 86400',        ('Management',  '"DeepSleepTime {}".format($)')) ),
-    'novasds_startingoffset':       ('B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
+    'dimmer_hw_min':                (Platform.ALL,   '<H',  0xE90,       (None, None,                           ('Light',       '"DimmerRange {},{}".format($,@["dimmer_hw_max"])')) ),
+    'dimmer_hw_max':                (Platform.ALL,   '<H',  0xE92,       (None, None,                           ('Light',       None)) ),
+    'deepsleep':                    (Platform.ALL,   '<H',  0xE94,       (None, '0 or 10 <= $ <= 86400',        ('Management',  '"DeepSleepTime {}".format($)')) ),
+    'novasds_startingoffset':       (Platform.ALL,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_20 = copy.deepcopy(SETTING_6_6_0_18)
-SETTING_6_6_0_20['flag3'][0].update ({
-        'fast_power_cycle_disable': ('<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+SETTING_6_6_0_20['flag3'][1].update ({
+        'fast_power_cycle_disable': (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 SETTING_6_6_0_20.update             ({
-    'energy_power_delta':           ('<H',  0xE98,       (None, '0 <= $ < 32000',               ('Power',       '"PowerDelta {}".format($)')) ),
+    'energy_power_delta':           (Platform.ALL,   '<H',  0xE98,       (None, '0 <= $ < 32000',               ('Power',       '"PowerDelta {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_21 = copy.deepcopy(SETTING_6_6_0_20)
-SETTING_6_6_0_21['flag'][0].pop('value_units',None)
-SETTING_6_6_0_21['flag3'][0].pop('tuya_dimmer_range_255',None)
-SETTING_6_6_0_21['flag3'][0].update ({
-        'tuya_serial_mqtt_publish': ('<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
+SETTING_6_6_0_21['flag'][1].pop('value_units',None)
+SETTING_6_6_0_21['flag3'][1].pop('tuya_dimmer_range_255',None)
+SETTING_6_6_0_21['flag3'][1].update ({
+        'tuya_serial_mqtt_publish': (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_1 = copy.deepcopy(SETTING_6_6_0_21)
 SETTING_7_0_0_1.pop('register8',None)
 SETTING_7_0_0_1.update             ({
-    'shutter_motordelay':           ('B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,float($)/20.0)')) ),
-    'flag4':                        ('<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'shutter_motordelay':           (Platform.ALL,   'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#,float($)/20.0)')) ),
+    'flag4':                        (Platform.ALL,   '<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_7_0_0_1['flag3'][0].update ({
-        'cors_enabled':             ('<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
-        'ds18x20_internal_pullup':  ('<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SetOption74 {}".format($)')) ),
-        'grouptopic_mode':          ('<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SetOption75 {}".format($)')) ),
+SETTING_7_0_0_1['flag3'][1].update ({
+        'cors_enabled':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
+        'ds18x20_internal_pullup':  (Platform.ALL,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SetOption74 {}".format($)')) ),
+        'grouptopic_mode':          (Platform.ALL,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SetOption75 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_2 = copy.deepcopy(SETTING_7_0_0_1)
 SETTING_7_0_0_2.update             ({
-    'web_color2':                   ('3B',  0xEA0,       ([1],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+18,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
+    'web_color2':                   (Platform.ALL,   '3B',  0xEA0,       ([1],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+18,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_3 = copy.deepcopy(SETTING_7_0_0_2)
 SETTING_7_0_0_3.update             ({
-    'i2c_drivers':                  ('<L',  0xFEC,       ([3],  None,                           ('Management',  None)),'"0x{:08x}".format($)' ),
+    'i2c_drivers':                  (Platform.ALL,   '<L',  0xFEC,       ([3],  None,                           ('Management',  None)),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_4 = copy.deepcopy(SETTING_7_0_0_3)
 SETTING_7_0_0_4.update             ({
-    'wifi_output_power':            ('B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'wifi_output_power':            (Platform.ALL,   'B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
                                     })
-SETTING_7_0_0_4['flag3'][0].update ({
-        'bootcount_update':         ('<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
+SETTING_7_0_0_4['flag3'][1].update ({
+        'bootcount_update':         (Platform.ALL,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_5 = copy.deepcopy(SETTING_7_0_0_4)
 SETTING_7_0_0_5.update             ({
-    'temp_comp':                    ('b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
+    'temp_comp':                    (Platform.ALL,   'b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_6 = copy.deepcopy(SETTING_7_0_0_5)
-SETTING_7_0_0_6['flag3'][0].update ({
-        'slider_dimmer_stay_on':    ('<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
+SETTING_7_0_0_6['flag3'][1].update ({
+        'slider_dimmer_stay_on':    (Platform.ALL,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_2 = copy.deepcopy(SETTING_7_0_0_6)
 SETTING_7_1_2_2.update             ({
-    'serial_config':                ('b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'serial_config':                (Platform.ALL,   'b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_3 = copy.deepcopy(SETTING_7_1_2_2)
-SETTING_7_1_2_3['flag3'][0].pop('cors_enabled',None)
+SETTING_7_1_2_3['flag3'][1].pop('cors_enabled',None)
 SETTING_7_1_2_3.update             ({
-    'cors_domain':                  ('33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'weight_change':                ('B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
+    'cors_domain':                  (Platform.ALL,   '33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'weight_change':                (Platform.ALL,   'B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_5 = copy.deepcopy(SETTING_7_1_2_3)
 SETTING_7_1_2_5.update             ({
-    'seriallog_level':              ('B',   0x452,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sta_config':                   ('B',   0xEC7,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
-    'sta_active':                   ('B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
-    'rule_stop':                    ({
-        'rule1':                    ('B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
-        'rule2':                    ('B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
-        'rule3':                    ('B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+    'seriallog_level':              (Platform.ALL,   'B',   0x452,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   (Platform.ALL,   'B',   0xEC7,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   (Platform.ALL,   'B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'rule_stop':                    (Platform.ALL, {
+        'rule1':                    (Platform.ALL,   'B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    (Platform.ALL,   'B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    (Platform.ALL,   'B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
                                      },     0xEC9,        None),
-    'syslog_port':                  ('<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
-    'syslog_level':                 ('B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
-    'webserver':                    ('B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
-    'weblog_level':                 ('B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint':             ('20s', 0xECF,       ([2],  None,                           ('MQTT',        cmnd_mqttfingerprint)) ),
-    'adc_param_type':               ('B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+    'syslog_port':                  (Platform.ALL,   '<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 (Platform.ALL,   'B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    (Platform.ALL,   'B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 (Platform.ALL,   'B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint1':            (Platform.ALL,   'B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint1"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            (Platform.ALL,   'B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format((int(c,0))) for c in @["mqtt_fingerprint2"])) if 1==# else None')), '"0x{:02x}".format($)' ),
+    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
 SETTING_7_1_2_6.update             ({
-    'flag4':                        ('<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'serial_config':                ('b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
-    'wifi_output_power':            ('B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
-    'mqtt_port':                    ('<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
-    'shutter_accuracy':             ('B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
-    'mqttlog_level':                ('B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            ('B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
+    'flag4':                        (Platform.ALL,   '<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'serial_config':                (Platform.ALL,   'b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'wifi_output_power':            (Platform.ALL,   'B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'mqtt_port':                    (Platform.ALL,   '<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'shutter_accuracy':             (Platform.ALL,   'B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
+    'mqttlog_level':                (Platform.ALL,   'B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
+    'sps30_inuse_hours':            (Platform.ALL,   'B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
-SETTING_7_1_2_6['flag3'][0].update ({
-        'compatibility_check':      ('<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
+SETTING_7_1_2_6['flag3'][1].update ({
+        'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 # v8.x.x.x: Index numbers for indexed strings
@@ -1267,77 +1306,77 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
 SETTING_8_0_0_1.update             ({
-    'ota_url':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),
-                                                         (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),
-                                                         ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
-    'sta_ssid':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),
-                                                         ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
-    'sta_pwd':                      ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),
-                                                         ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
-    'hostname':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),
-                                                         (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),
-                                                         (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),
-                                                         (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'cors_domain':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),
-                                                         (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),
-                                                         (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),
-                                                         (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
-                                                         (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
-                                                         (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
-    'mqtt_fulltopic':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
-                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
-                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'button_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),
-                                                         (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),
-                                                         (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
-                                                         (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),
-                                                         ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
-    'ntp_server':                   ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
-                                                         ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
-    'mems':                         ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
-                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
-                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'ota_url':                      (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),
+                                                                         (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),
+                                                                         ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#,$)')) ),
+    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),
+                                                                         ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#,$)')) ),
+    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),
+                                                                         ([2],  None,                           ('Wifi',        '"Password{} {}".format(#,$)')), (passwordread,passwordwrite) ),
+    'hostname':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),
+                                                                         (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),
+                                                                         (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+    'web_password':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),
+                                                                         (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'cors_domain':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),
+                                                                         (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),
+                                                                         (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),
+                                                                         (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
+                                                                         (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
+                                                                        (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'button_topic':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'switch_topic':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'state_text':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),
+                                                                         ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#,$)')) ),
+    'ntp_server':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
+                                                                         ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#,$)')) ),
+    'mems':                         (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
+                                                                         ([16], None,                           ('Rules',       '"Mem{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                                         ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update             ({
-    'friendlyname':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
-                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
-    'button_text':                  ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
-                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+                                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+    'button_text':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
+                                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
-SETTING_8_1_0_1['flag3'][0].update ({
-        'counter_reset_on_tele':    ('<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
+SETTING_8_1_0_1['flag3'][1].update ({
+        'counter_reset_on_tele':    (Platform.ALL,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_2 = copy.deepcopy(SETTING_8_1_0_1)
 SETTING_8_1_0_2.update             ({
-    'hotplug_scan':                 ('B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
-    'shutter_button':               ('<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')),'"0x{:08x}".format($)' ),
+    'hotplug_scan':                 (Platform.ALL,   'B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
+    'shutter_button':               (Platform.ALL,   '<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#,0)')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_8_1_0_3 = copy.deepcopy(SETTING_8_1_0_2)
 SETTING_8_1_0_3.pop('shutter_invert',None)
 SETTING_8_1_0_3.update             ({
-    'shutter_options':              ('B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#,1 if $ & 1 else 0)',\
+    'shutter_options':              (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#,1 if $ & 1 else 0)',\
                                                                                                                  '"ShutterLock{} {}".format(#,1 if $ & 2 else 0)',\
                                                                                                                  '"ShutterEnableEndStopTime{} {}".format(#,1 if $ & 4 else 0)'))) ),
-    'shutter_button':              ({
-        '_':                        ('<L',  0xFDC,       (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
+    'shutter_button':               (Platform.ALL, {
+        '_':                        (Platform.ALL,   '<L',  0xFDC,       (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
                                                                                                                                 x=@["shutter_button"][#-1]["shutter"], \
                                                                                                                                 a=#, \
                                                                                                                                 b=@["shutter_button"][#-1]["press_single"], \
@@ -1351,133 +1390,163 @@ SETTING_8_1_0_3.update             ({
                                                                                                                                 j=@["shutter_button"][#-1]["mqtt_broadcast_all"] \
                                                                                                                                 )')), \
                                                                                                                                 ('"0x{:08x}".format($)', False) ),
-        'shutter':                  ('<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     None)), ('$+1','$-1') ),
-        'press_single':             ('<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_double':             ('<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_triple':             ('<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_hold':               ('<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'mqtt_broadcast_single':    ('<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_double':    ('<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_triple':    ('<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_hold':      ('<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_all':       ('<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
-        'enabled':                  ('<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
-                                     },     0xFDC,       ([4], None,                            ('Shutter',     None)), (None,      None) ),
-    'flag4':                        ({
-         'alexa_ct_range':          ('<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SetOption82 {}".format($)')) ),
-                                    },      0xEF8,       (None, None,                           ('*',           None)), (None,      None) ),
+        'shutter':                  (Platform.ALL,   '<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     None)), ('$+1','$-1') ),
+        'press_single':             (Platform.ALL,   '<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_double':             (Platform.ALL,   '<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_triple':             (Platform.ALL,   '<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_hold':               (Platform.ALL,   '<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'mqtt_broadcast_single':    (Platform.ALL,   '<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_double':    (Platform.ALL,   '<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_triple':    (Platform.ALL,   '<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_hold':      (Platform.ALL,   '<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_all':       (Platform.ALL,   '<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
+        'enabled':                  (Platform.ALL,   '<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
+                                    },                      0xFDC,       ([4], None,                            ('Shutter',     None)), (None,      None) ),
+    'flag4':                        (Platform.ALL, {
+         'alexa_ct_range':          (Platform.ALL,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SetOption82 {}".format($)')) ),
+                                    },                      0xEF8,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_4 = copy.deepcopy(SETTING_8_1_0_3)
 SETTING_8_1_0_4.update             ({
-    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
-    'adc_param_type':               ('B',   0x1D5,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
                                                                                                                   if 6==@["my_adc0"] \
                                                                                                                   else \
                                                                                                                   "AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param4':                   ('<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param4':                   (Platform.ALL,   '<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
                                     })
-SETTING_8_1_0_4['flag4'][0].update ({
-        'zigbee_use_names':         ('<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
+SETTING_8_1_0_4['flag4'][1].update ({
+        'zigbee_use_names':         (Platform.ALL,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_5 = copy.deepcopy(SETTING_8_1_0_4)
-SETTING_8_1_0_5['flag4'][0].update ({
-        'awsiot_shadow':            ('<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
+SETTING_8_1_0_5['flag4'][1].update ({
+        'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_6 = copy.deepcopy(SETTING_8_1_0_5)
 SETTING_8_1_0_6.update             ({
-    'bootcount_reset_time':         ('<L',  0xFD4,       (None, None,                           ('System',      None)) ),
+    'bootcount_reset_time':         (Platform.ALL,   '<L',  0xFD4,       (None, None,                           ('System',      None)) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
 SETTING_8_1_0_9.update             ({
-    'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
-    'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
-    'bri_power_on':                 ('B',   0xF04,       (None, None,                           ('Light',       None)) ),
-    'bri_min':                      ('B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
-    'bri_preset_low':               ('B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
-    'bri_preset_high':              ('B',   0xF07,       (None, None,                           ('Light',       None)) ),
-    'mqtt_grptopicdev':             ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
-                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1,$)')) ),
+    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
+    'bri_power_on':                 (Platform.ALL,   'B',   0xF04,       (None, None,                           ('Light',       None)) ),
+    'bri_min':                      (Platform.ALL,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
+    'bri_preset_low':               (Platform.ALL,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
+    'bri_preset_high':              (Platform.ALL,   'B',   0xF07,       (None, None,                           ('Light',       None)) ),
+    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1,$)')) ),
                                     })
-SETTING_8_1_0_9['flag4'][0].update ({
-        'device_groups_enabled':    ('<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
+SETTING_8_1_0_9['flag4'][1].update ({
+        'device_groups_enabled':    (Platform.ALL,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_10 = copy.deepcopy(SETTING_8_1_0_9)
-SETTING_8_1_0_10['flag2'][0].update ({
-        'speed_conversion':         ('<L', (0x5BC,3, 1), (None, '0 <= $ <= 5',                  ('Sensor',      '"SpeedUnit {}".format($)')) ),
+SETTING_8_1_0_10['flag2'][1].update ({
+        'speed_conversion':         (Platform.ALL,   '<L', (0x5BC,3, 1), (None, '0 <= $ <= 5',                  ('Sensor',      '"SpeedUnit {}".format($)')) ),
                                     })
-SETTING_8_1_0_10['flag4'][0].update ({
-        'led_timeout':              ('<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
-        'powered_off_led':          ('<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
-        'remote_device_mode':       ('<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
-        'zigbee_distinct_topics':   ('<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
+SETTING_8_1_0_10['flag4'][1].update ({
+        'led_timeout':              (Platform.ALL,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
+        'powered_off_led':          (Platform.ALL,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
+        'remote_device_mode':       (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
+        'zigbee_distinct_topics':   (Platform.ALL,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_11 = copy.deepcopy(SETTING_8_1_0_10)
 SETTING_8_1_0_11.update             ({
-    'hum_comp':                     ('b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
+    'hum_comp':                     (Platform.ALL,   'b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
 SETTING_8_2_0_0.update             ({
-    'switchmode':                   ('B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update             ({
-    'templatename':                 ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
-                                                         (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
-    'pulse_counter_debounce_low':   ('<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
-    'pulse_counter_debounce_high':  ('<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
-    'channel':                      ('B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
-    'bssid':                        ('B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
-    'as3935_sensor_cfg':            ('B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
-    'as3935_functions':             ({
-         'nf_autotune':             ('B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
-         'dist_autotune':           ('B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
-         'nf_autotune_both':        ('B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
-         'mqtt_only_Light_Event':   ('B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
-                                    },      0xF15,       (None, None,                           ('*',           None)), (None,      None) ),
-    'as3935_parameter':             ({
-         'nf_autotune_time':        ('<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
-         'dist_autotune_time':      ('<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
-         'nf_autotune_min':         ('<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
-                                    },      0xF16,       (None, None,                           ('*',           None)), (None,      None) ),
-    'zb_ext_panid':                 ('<Q',  0xF18,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_precfgkey_l':               ('<Q',  0xF20,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_precfgkey_h':               ('<Q',  0xF28,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_pan_id':                    ('<H',  0xF30,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_channel':                   ('B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\"}}".format(@["zb_channel"], int(@["zb_pan_id"],0), int(@["zb_ext_panid"],0), int(@["zb_precfgkey_l"],0), int(@["zb_precfgkey_h"],0))')) ),
-    'pms_wake_interval':            ('<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
-    'device_group_share_in':        ('<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
-    'device_group_share_out':       ('<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
-    'device_group_topic':           ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
-                                                         ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#,$ if len($) else "\\"")')) ),
-    'mqtt_grptopic':                ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
-                                                         (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
-    'mqtt_grptopic2':               ('699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
-                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1, "\\"" if len($) == 0 else $)')) ),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
+                                                                         (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
+    'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
+    'pulse_counter_debounce_high':  (Platform.ALL,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
+    'channel':                      (Platform.ALL,   'B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
+    'bssid':                        (Platform.ALL,   'B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'as3935_sensor_cfg':            (Platform.ALL,   'B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
+    'as3935_functions':             (Platform.ALL, {
+         'nf_autotune':             (Platform.ALL,   'B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
+         'dist_autotune':           (Platform.ALL,   'B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
+         'nf_autotune_both':        (Platform.ALL,   'B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
+         'mqtt_only_Light_Event':   (Platform.ALL,   'B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
+                                    },                      0xF15,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'as3935_parameter':             (Platform.ALL, {
+         'nf_autotune_time':        (Platform.ALL,   '<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
+         'dist_autotune_time':      (Platform.ALL,   '<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
+         'nf_autotune_min':         (Platform.ALL,   '<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
+                                    },                      0xF16,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'zb_ext_panid':                 (Platform.ALL,   '<Q',  0xF18,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_l':               (Platform.ALL,   '<Q',  0xF20,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_h':               (Platform.ALL,   '<Q',  0xF28,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_pan_id':                    (Platform.ALL,   '<H',  0xF30,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_channel':                   (Platform.ALL,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\"}}".format(@["zb_channel"], int(@["zb_pan_id"],0), int(@["zb_ext_panid"],0), int(@["zb_precfgkey_l"],0), int(@["zb_precfgkey_h"],0))')) ),
+    'pms_wake_interval':            (Platform.ALL,   '<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
+    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
+    'device_group_topic':           (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
+                                                                         ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#,$ if len($) else "\\"")')) ),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+                                                                         (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
+    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+                                                                         ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1, "\\"" if len($) == 0 else $)')) ),
+    'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp"]) if i not in [6,7,8,11])) if 1==# else None')) ),
+    'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp_esp32"][0:22]) if i not in [6,7,8,11])) if 1==# else "Backlog "+";".join(("Gpio{} {}".format(i+23, x) for i,x in enumerate(@["my_gp_esp32"][23:]))) if 24==# else None')) ),
+    'user_template_esp32':          (Platform.ESP32,{
+        'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'gpio':                     (Platform.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"]) if 1==# else None')) ),
+        'flag':                     (Platform.ESP32,{
+            'adc0':                 (Platform.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+                                    },                      0x5A4,       (None, None,                           ('Management',  None))
+                                    ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None))
+                                    ),
                                     })
-SETTING_8_2_0_3['user_template'][0].update ({
-        'name':                     ('15s', 0x720,       (None, None,                           ('Management',  None )) ),
+SETTING_8_2_0_3['user_template'][1].update ({
+        'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'gpio':                     (Platform.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"]) if 1==# else None')) ),
+        'flag':                     (Platform.ESP82, {
+            'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+                                    },                      0x73C,       (None, None,                           ('Management',  None))
+                                    ),
                                     })
-SETTING_8_2_0_3['flag4'][0].update ({
-        'only_json_message':        ('<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
-        'fade_at_startup':          ('<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
+SETTING_8_2_0_3['flag3'][1].update ({
+        'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
                                     })
-SETTING_8_2_0_3['SensorBits1'][0].update ({
-        'bh1750_resolution':        ('B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
+SETTING_8_2_0_3['flag4'][1].update ({
+        'only_json_message':        (Platform.ALL,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
+        'fade_at_startup':          (Platform.ALL,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
+                                    })
+SETTING_8_2_0_3['SensorBits1'][1].update ({
+        'bh1750_resolution':        (Platform.ALL,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_8_3_0_0 = copy.deepcopy(SETTING_8_2_0_3)
+SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
+SETTING_8_2_0_4.update             ({
+    'config_version':               (Platform.ALL,   'B',   0xF36,       (None, '0 <= $ < len(Platform.STR)',   (INTERNAL,      None)), (None,      False) ),
+                                    })
+# ======================================================================
+SETTING_8_2_0_5 = copy.deepcopy(SETTING_8_2_0_4)
+SETTING_8_2_0_5['flag4'][1].update ({
+        'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SetOption92 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x8030000,0x1000, SETTING_8_3_0_0),
+            (0x8020005,0x1000, SETTING_8_2_0_5),
+            (0x8020004,0x1000, SETTING_8_2_0_4),
             (0x8020003,0x1000, SETTING_8_2_0_3),
             (0x8020000,0x1000, SETTING_8_2_0_0),
             (0x801000B,0x1000, SETTING_8_1_0_11),
@@ -1563,6 +1632,20 @@ SETTINGS = [
            ]
 # pylint: enable=bad-continuation,bad-whitespace,invalid-name
 
+def check_setting_definition():
+    """
+    Check complete setting definition history
+
+    @return: True if ok
+    """
+    for cfg in SETTINGS:
+        setting = cfg[2]
+        for key in setting:
+            fielddef = setting[key]
+            get_fielddef(fielddef)
+
+    return True
+
 # ======================================================================
 # Common helper
 # ======================================================================
@@ -1585,13 +1668,15 @@ def message(msg, type_=None, status=None, line=None):
     @param status:
         status number
     """
-    print('{styp}{sdelimiter}{sstatus}{slineno}{scolon}{smgs}'\
+    sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
+    print('{styp}{sdelimiter1}{sstatus}{sdelimiter2}{slineno}{scolon}{smgs}'\
           .format(styp=type_ if type_ is not None else '',
-                  sdelimiter=' ' if status is not None and status > 0 and type_ is not None else '',
+                  sdelimiter1=sdelimiter,
+                  sdelimiter2=sdelimiter if line is not None else '',
                   sstatus=status if status is not None and status > 0 else '',
                   scolon=': ' if type_ is not None or line is not None else '',
                   smgs=msg,
-                  slineno=' (@{:04d})'.format(line) if line is not None else ''),
+                  slineno='(@{:04d})'.format(line) if line is not None else ''),
           file=sys.stderr)
 
 def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=None):
@@ -1614,21 +1699,8 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
     if doexit:
-        message("Premature exit (code {})".format(status), type_=None, status=None, line=line)
+        message("Premature exit - {} #{}".format(ExitCode.str(status), status), type_=None, status=None, line=None)
         sys.exit(EXIT_CODE)
-
-def debug(_args):
-    """
-    Get debug level
-
-    @param _args:
-        configargparse.parse_args() result
-
-    @return:
-        debug level
-    """
-    return 0 if _args.debug is None else _args.debug
-
 
 def shorthelp(doexit=True):
     """
@@ -1666,7 +1738,7 @@ def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
         template sizes as list []
     """
     conv_keys = {}
-    for key in configmapping:
+    for key in list(configmapping):
         if key[0].isupper():
             conv_keys[key] = key.lower()
             configmapping[conv_keys[key]] = configmapping.pop(key)
@@ -1695,21 +1767,37 @@ def get_templatesizes():
     # return unique sizes only (remove duplicates)
     return list(set(sizes))
 
-def get_templatesetting(decode_cfg):
+def get_config_info(decode_cfg):
     """
-    Search for version, size and settings to be used depending on given binary config data
+    Extract info about loaded config
 
     @param decode_cfg:
         binary config data (decrypted)
 
-    @return:
-        version, size, settings to use; None if version is invalid
+    @return: dict
+        platform         int  config data hardware platform
+        version          int  config data version
+        template_version int  template version number
+        template_size    int  config data size
+        template         dict template dict (from SETTINGS)
     """
     version = 0x0
     size = setting = None
-    version = get_field(decode_cfg, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
+    version = get_field(decode_cfg, Platform.ALL, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
     template_version = version
-    # search setting definition top-down
+
+    # identify platform (config_version)
+    config_version = Platform.STR.index("ESP82xx")  # default legacy
+    for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
+        if version >= cfg[0]:
+            fielddef = cfg[2].get('config_version', None)
+            if fielddef is not None:
+                config_version = get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
+                if config_version >= len(Platform.STR):
+                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(Platform.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    config_version = Platform.STR.index("ESP82xx")
+            break
+    # search setting definition for platform top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             template_version = cfg[0]
@@ -1717,7 +1805,16 @@ def get_templatesetting(decode_cfg):
             setting = cfg[2]
             break
 
-    return template_version, version, size, setting
+    if setting is None:
+        exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version v{} not supported".format(get_versionstr(version)), line=inspect.getlineno(inspect.currentframe()))
+
+    return {
+        'platform': config_version,
+        'version': version,
+        'template_version': template_version,
+        'template_size': size,
+        'template': setting
+        }
 
 def get_grouplist(setting):
     """
@@ -1792,8 +1889,8 @@ def get_filetype(filename):
                     # check if the binary file has the magic header
                     with open(filename, "rb") as inputfile:
                         inputbin = inputfile.read()
-                    if struct.unpack_from(header_format, inputbin, 0)[0] == BINARYFILE_MAGIC or \
-                       struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
+                    if BINARYFILE_MAGIC in (struct.unpack_from(header_format, inputbin, 0)[0],
+                                            struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0]):
                         filetype = FileType.BIN
                     else:
                         filetype = FileType.INVALID_BIN
@@ -1855,13 +1952,16 @@ def make_filename(filename, filetype, configmapping):
     """
     config_version = config_friendlyname = config_hostname = device_hostname = ''
 
-    if 'version' in configmapping:
-        config_version = get_versionstr(int(str(configmapping['version']), 0))
-    if 'friendlyname' in configmapping:
-        config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(configmapping['friendlyname'][0]) if c.isprintable()), 256))).replace(' ', '_')
-    if 'hostname' in configmapping:
-        if str(configmapping['hostname']).find('%') < 0:
-            config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(configmapping['hostname'])).strip('_'))
+    config_version = configmapping.get('version', None)
+    if config_version is not None:
+        config_version = get_versionstr(int(str(config_version), 0))
+    config_friendlyname = configmapping.get('friendlyname', None)
+    if config_friendlyname is not None:
+        config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(config_friendlyname[0]) if c.isprintable()), 256))).replace(' ', '_')
+    config_hostname = configmapping.get('hostname', None)
+    if config_hostname is not None:
+        if str(config_hostname).find('%') < 0:
+            config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_hostname)).strip('_'))
     if filename.find('@H') >= 0 and ARGS.device is not None:
         device_hostname = get_tasmotahostname(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
         if device_hostname is None:
@@ -2011,10 +2111,12 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
     _, body = get_tasmotaconfig("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
         jsonbody = json.loads(str(body, STR_ENCODING))
-        if "StatusNET" in jsonbody and "Hostname" in jsonbody["StatusNET"]:
-            hostname = jsonbody["StatusNET"]["Hostname"]
-            if ARGS.verbose:
-                message("Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
+        statusnet = jsonbody.get('StatusNET', None)
+        if statusnet is not None:
+            hostname = statusnet.get('Hostname', None)
+            if hostname is not None:
+                if ARGS.verbose:
+                    message("Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
 
     return hostname
 
@@ -2079,13 +2181,16 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
     if username is not None and password is not None:
         auth = (username, password)
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=VER), encode_cfg)}
-    res = requests.post(url, auth=auth, files=files)
+    try:
+        res = requests.post(url, auth=auth, files=files)
+    except ConnectionError as err:
+        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
     if not res.ok:
         exit_(res.status_code, "Error on http POST request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if res.headers['Content-Type'] != 'text/html':
-        exit_(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
+        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     body = res.text
 
@@ -2133,9 +2238,9 @@ def get_settingcrc(dobj):
     if isinstance(dobj, str):
         dobj = bytearray(dobj)
 
-    _, _, size, _ = get_templatesetting(dobj)
     crc = 0
-    for i in range(0, size):
+    config_info = get_config_info(dobj)
+    for i in range(0, config_info['template_size']):
         if not i in [14, 15]: # Skip crc
             byte_ = dobj[i]
             crc += byte_ * (i+1)
@@ -2162,7 +2267,7 @@ def get_settingcrc32(dobj):
 
     return ~crc & 0xffffffff
 
-def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
+def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
     """
     Get field definition items
 
@@ -2175,32 +2280,43 @@ def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, s
     @return:
         set of values defined in <fields>
     """
-    format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
+    platform_ = format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
     bits = bitshift = 0
+    raise_error = '<fielddef> error'
 
-    # calling with nothing is wrong
+    # calling with None is wrong
     if fielddef is None:
         print('<fielddef> is None', file=sys.stderr)
-        raise SyntaxError('<fielddef> error')
+        raise SyntaxError(raise_error)
+
+    # check global format
+    if not isinstance(fielddef, (dict, tuple)):
+        print('wrong <fielddef> in setting {}'.format(fielddef), file=sys.stderr)
+        raise SyntaxError(raise_error)
 
     # get top level items
-    if len(fielddef) == 3:
+    if len(fielddef) == 4:
         # converter not present
-        format_, addrdef, datadef = fielddef
-    elif len(fielddef) == 4:
+        platform_, format_, addrdef, datadef = fielddef
+    elif len(fielddef) == 5:
         # converter present
-        format_, addrdef, datadef, converter = fielddef
+        platform_, format_, addrdef, datadef, converter = fielddef
     else:
         print('wrong <fielddef> {} length ({}) in setting'.format(fielddef, len(fielddef)), file=sys.stderr)
-        raise SyntaxError('<fielddef> error')
+        raise SyntaxError(raise_error)
 
     # ignore calls with 'root' setting
     if isinstance(format_, dict) and baseaddr is None and datadef is None:
         return eval(fields)     # pylint: disable=eval-used
 
+    if not isinstance(platform_, int):
+        print("baseaddr: {} datadef: {}".format(baseaddr, datadef))
+        print('<platform> ({}) must be defined as integer in <fielddef> {}'.format(type(platform_), fielddef), file=sys.stderr)
+        raise SyntaxError(raise_error)
+
     if not isinstance(format_, (str, dict)):
         print('wrong <format> {} type {} in <fielddef> {}'.format(format_, type(format_), fielddef), file=sys.stderr)
-        raise SyntaxError('<fielddef> error')
+        raise SyntaxError(raise_error)
 
     # extract addrdef items
     baseaddr = addrdef
@@ -2210,25 +2326,25 @@ def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, s
             baseaddr, bits, bitshift = baseaddr
             if not isinstance(bits, int):
                 print('<bits> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
             if not isinstance(bitshift, int):
                 print('<bitshift> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
         elif len(baseaddr) == 2:
             # baseaddr string definition
             baseaddr, strindex = baseaddr
             if not isinstance(strindex, int):
                 print('<strindex> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
             if strindex >= SETTINGSTEXTINDEX.index('SET_MAX'):
                 print('<strindex> out of range [0, {}] in <fielddef> {}'.format(SETTINGSTEXTINDEX.index('SET_MAX'), fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
-            raise SyntaxError('<fielddef> error')
+            raise SyntaxError(raise_error)
     if not isinstance(baseaddr, int):
         print('<baseaddr> {} must be defined as integer in <fielddef> {}'.format(baseaddr, fielddef), file=sys.stderr)
-        raise SyntaxError('<fielddef> error')
+        raise SyntaxError(raise_error)
 
     # extract datadef items
     arraydef = datadef
@@ -2244,26 +2360,26 @@ def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, s
                 group, tasmotacmnd = cmd
                 if group is not None and not isinstance(group, str):
                     print('wrong <group> {} in <fielddef> {}'.format(group, fielddef), file=sys.stderr)
-                    raise SyntaxError('<fielddef> error')
+                    raise SyntaxError(raise_error)
                 if isinstance(tasmotacmnd, tuple):
                     for tcmnd in tasmotacmnd:
                         if tcmnd is not None and not callable(tcmnd) and not isinstance(tcmnd, str):
                             print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tcmnd, fielddef), file=sys.stderr)
-                            raise SyntaxError('<fielddef> error')
+                            raise SyntaxError(raise_error)
                 else:
                     if tasmotacmnd is not None and not callable(tasmotacmnd) and not isinstance(tasmotacmnd, str):
                         print('wrong <tasmotacmnd> {} in <fielddef> {}'.format(tasmotacmnd, fielddef), file=sys.stderr)
-                        raise SyntaxError('<fielddef> error')
+                        raise SyntaxError(raise_error)
             else:
                 print('wrong <cmd> {} length ({}) in <fielddef> {}'.format(cmd, len(cmd), fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
         else:
             print('wrong <datadef> {} length ({}) in <fielddef> {}'.format(datadef, len(datadef), fielddef), file=sys.stderr)
-            raise SyntaxError('<fielddef> error')
+            raise SyntaxError(raise_error)
 
         if validate is not None and (not isinstance(validate, str) and not callable(validate)):
             print('wrong <validate> {} type {} in <fielddef> {}'.format(validate, type(validate), fielddef), file=sys.stderr)
-            raise SyntaxError('<fielddef> error')
+            raise SyntaxError(raise_error)
 
     # convert single int into one-dimensional list
     if isinstance(arraydef, int):
@@ -2271,7 +2387,7 @@ def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, s
 
     if arraydef is not None and not isinstance(arraydef, (list)):
         print('wrong <arraydef> {} type {} in <fielddef> {}'.format(arraydef, type(arraydef), fielddef), file=sys.stderr)
-        raise SyntaxError('<fielddef> error')
+        raise SyntaxError(raise_error)
 
     # get read/write converter items
     readconverter = converter
@@ -2281,13 +2397,13 @@ def get_fielddef(fielddef, fields="format_, addrdef, baseaddr, bits, bitshift, s
             readconverter, writeconverter = converter
             if readconverter is not None  and not isinstance(readconverter, str) and not callable(readconverter):
                 print('wrong <readconverter> {} type {} in <fielddef> {}'.format(readconverter, type(readconverter), fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
             if writeconverter is not None and (not isinstance(writeconverter, (bool, str)) and not callable(writeconverter)):
                 print('wrong <writeconverter> {} type {} in <fielddef> {}'.format(writeconverter, type(writeconverter), fielddef), file=sys.stderr)
-                raise SyntaxError('<fielddef> error')
+                raise SyntaxError(raise_error)
         else:
             print('wrong <converter> {} length ({}) in <fielddef> {}'.format(converter, len(converter), fielddef), file=sys.stderr)
-            raise SyntaxError('<fielddef> error')
+            raise SyntaxError(raise_error)
 
     return eval(fields)     # pylint: disable=eval-used
 
@@ -2320,10 +2436,10 @@ def readwrite_converter(value, fielddef, read=True, raw=False):
         try:
             if isinstance(conv, str):
                 # evaluate strings
-                return eval(conv.replace('$', 'value'))     # pylint: disable=eval-used
+                value = eval(conv.replace('$', 'value'))     # pylint: disable=eval-used
             elif callable(conv):
                 # use as format function
-                return conv(value)
+                value = conv(value)
         except Exception as err:    # pylint: disable=broad-except
             exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
@@ -2352,8 +2468,7 @@ def cmnd_converter(valuemapping, value, idx, readconverter, writeconverter, tasm
     if (callable(readconverter) and readconverter == passwordread) or (callable(writeconverter) and writeconverter == passwordwrite):   # pylint: disable=comparison-with-callable
         if value == HIDDEN_PASSWORD:
             return None
-        else:
-            result = value
+        result = value
 
     if tasmotacmnd is not None and (callable(tasmotacmnd) or len(tasmotacmnd) > 0):
         if idx is not None:
@@ -2472,8 +2587,9 @@ def get_fieldminmax(fielddef):
     min_ = 0
     max_ = 0
 
-    if format_[-1:] in minmax:
-        min_, max_ = minmax[format_[-1:]]
+    minmax_format = minmax.get(format_[-1:], None)
+    if minmax_format is not None:
+        min_, max_ = minmax_format
         max_ *= get_formatcount(format_)
     elif format_[-1:].lower() in ['s', 'p']:
         # s and p may have a prefix as length
@@ -2492,7 +2608,7 @@ def get_fieldlength(fielddef):
         length of field in bytes
     """
     length = 0
-    format_, addrdef, arraydef = get_fielddef(fielddef, fields='format_, addrdef, arraydef')
+    platform_, format_, addrdef, arraydef = get_fielddef(fielddef, fields='platform_, format_, addrdef, arraydef')
 
     # <arraydef> contains a integer list
     if isinstance(arraydef, list) and len(arraydef) > 0:
@@ -2501,10 +2617,10 @@ def get_fieldlength(fielddef):
         for _ in range(0, arraydef[0]):
             subfielddef = get_subfielddef(fielddef)
             if len(arraydef) > 1:
-                length += get_fieldlength((format_, addrdef, subfielddef))
+                length += get_fieldlength((platform_, format_, addrdef, subfielddef))
             # single array
             else:
-                length += get_fieldlength((format_, addrdef, None))
+                length += get_fieldlength((platform_, format_, addrdef, None))
 
     elif isinstance(format_, dict):
         # -> iterate through format
@@ -2533,7 +2649,7 @@ def get_subfielddef(fielddef):
     @return:
         subfield definition
     """
-    format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='format_, addrdef, datadef, arraydef, validate, cmd, converter')
+    platform_, format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='platform_, format_, addrdef, datadef, arraydef, validate, cmd, converter')
 
     # create new arraydef
     if len(arraydef) > 1:
@@ -2553,9 +2669,9 @@ def get_subfielddef(fielddef):
     # set new field def
     subfielddef = None
     if converter is not None:
-        subfielddef = (format_, addrdef, datadef, converter)
+        subfielddef = (platform_, format_, addrdef, datadef, converter)
     else:
-        subfielddef = (format_, addrdef, datadef)
+        subfielddef = (platform_, format_, addrdef, datadef)
 
     return subfielddef
 
@@ -2572,9 +2688,10 @@ def is_filtergroup(group):
     if ARGS.filter is not None:
         if group is None:
             return False
-        if group == '*':
+        if group == VIRTUAL:
             return True
-        if group.title() == INTERNAL.title() or group.title() not in (groupname.title() for groupname in ARGS.filter):
+        if (INTERNAL.title() not in (groupname.title() for groupname in ARGS.filter) and group.title() == INTERNAL.title()) \
+            or group.title() not in (groupname.title() for groupname in ARGS.filter):
             return False
     return True
 
@@ -2648,8 +2765,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
     format_ = get_fielddef(fielddef, fields='format_')
     formatcnt = get_formatcount(format_)
     singletype, bitsize = get_formattype(format_)
-    if debug(ARGS) >= 2:
-        print("set_fieldvalue(): fielddef {}, addr 0x{:04x}  value {}  formatcnt {}  singletype {}  bitsize {}  ".format(fielddef, addr, value, formatcnt, singletype, bitsize), file=sys.stderr)
     if not format_[-1:].lower() in ['s', 'p']:
         addr += (bitsize // 8) * formatcnt
         for _ in range(0, formatcnt):
@@ -2659,8 +2774,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
             val = value & maxunsigned
             if isinstance(value, int) and value < 0 and val > maxsigned:
                 val = ((maxunsigned+1)-val) * (-1)
-            if debug(ARGS) >= 3:
-                print("set_fieldvalue(): Single type - fielddef {}, addr 0x{:04x}  value {}  singletype {}  bitsize {}".format(fielddef, addr, val, singletype, bitsize), file=sys.stderr)
             try:
                 struct.pack_into(singletype, dobj, addr, val)
             except struct.error as err:
@@ -2671,8 +2784,6 @@ def set_fieldvalue(fielddef, dobj, addr, value):
                       line=inspect.getlineno(inspect.currentframe()))
             value >>= bitsize
     else:
-        if debug(ARGS) >= 3:
-            print("set_fieldvalue(): String type - fielddef {}, addr 0x{:04x}  value {}  format_ {}".format(fielddef, addr, value, format_), file=sys.stderr)
         try:
             struct.pack_into(format_, dobj, addr, value)
         except struct.error as err:
@@ -2684,12 +2795,14 @@ def set_fieldvalue(fielddef, dobj, addr, value):
 
     return dobj
 
-def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False):
+def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False):
     """
     Get field value from definition
 
     @param dobj:
         decrypted binary config data
+    @param platform_bits:
+        platform bits is the bitmask for valid platform for this fielddef
     @param fieldname:
         name of the field
     @param fielddef:
@@ -2709,7 +2822,11 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=Fa
     valuemapping = None
 
     # get field definition
-    format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='format_, baseaddr, strindex, arraydef, group')
+    platform_, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='platform_, format_, baseaddr, strindex, arraydef, group')
+
+    # filter platform
+    if (platform_ & platform_bits) == 0:
+        return valuemapping
 
     # filter groups
     if not ignoregroup and not is_filtergroup(group):
@@ -2724,9 +2841,9 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=Fa
             length = get_fieldlength(subfielddef)
             if length != 0:
                 if strindex is not None:
-                    value = get_field(dobj, fieldname, subfielddef, raw=raw, addroffset=i)
+                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=i)
                 else:
-                    value = get_field(dobj, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
+                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset)
                 valuemapping.append(value)
             offset += length
 
@@ -2736,7 +2853,7 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=Fa
         # -> iterate through format
         for name in format_:
             value = None
-            value = get_field(dobj, name, format_[name], raw=raw, addroffset=addroffset)
+            value = get_field(dobj, platform_bits, name, format_[name], raw=raw, addroffset=addroffset)
             if value is not None:
                 mapping_value[name] = value
         # copy complete returned mapping
@@ -2756,12 +2873,14 @@ def get_field(dobj, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=Fa
 
     return valuemapping
 
-def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=""):
+def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffset=0, filename=""):
     """
     Get field value from definition
 
     @param dobj:
         decrypted binary config data
+    @param platform_bits:
+        platform bits is the bitmask for valid platform for this fielddef
     @param fieldname:
         name of the field
     @param fielddef:
@@ -2776,9 +2895,13 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
     @return:
         new decrypted binary config data
     """
-    format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
+    platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
     # cast unicode
     fieldname = str(fieldname)
+
+    # filter platform
+    if (platform_ & platform_bits) == 0:
+        return dobj
 
     # filter groups
     if not is_filtergroup(group):
@@ -2786,8 +2909,6 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
 
     # do not write readonly values
     if writeconverter is False:
-        if debug(ARGS) >= 2:
-            print("set_field(): Readonly '{}' using '{}'/{}{} @{} skipped".format(fieldname, format_, arraydef, bits, hex(baseaddr+addroffset)), file=sys.stderr)
         return dobj
 
     # <arraydef> contains a list
@@ -2803,16 +2924,17 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
                     break
                 subrestore = restoremapping[i]
                 if strindex is not None:
-                    dobj = set_field(dobj, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                    dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
                 else:
-                    dobj = set_field(dobj, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+                    dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
             offset += length
 
     # <format> contains a dict
     elif isinstance(format_, dict):
-        for name in format_:    # -> iterate through format
-            if name in restoremapping:
-                dobj = set_field(dobj, name, format_[name], restoremapping[name], addroffset=addroffset, filename=filename)
+        for name, rm_fielddef in format_.items():    # -> iterate through format
+            restoremap = restoremapping.get(name, None)
+            if restoremap is not None:
+                dobj = set_field(dobj, platform_bits, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
 
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
@@ -2905,6 +3027,11 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
                 str_ = str(unpackedvalue[0], STR_ENCODING, errors='ignore')
                 # split into separate string values
                 sarray = str_.split('\x00')
+                # limit to SET_MAX
+                if len(sarray) >= SETTINGSTEXTINDEX.index('SET_MAX'):
+                    delrange = len(sarray) - SETTINGSTEXTINDEX.index('SET_MAX')
+                    if delrange > 0:
+                        del sarray[-delrange:]
                 if not isinstance(value, str):
                     value = str(value, STR_ENCODING, errors='ignore')
                 # remember possible value changes
@@ -2913,7 +3040,12 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
                 # change indexed string
                 sarray[strindex+addroffset] = value
                 # convert back to binary string stream
-                value = '\0'.join(sarray).encode(STR_ENCODING)
+                new_value = '\0'.join(sarray).encode(STR_ENCODING)
+                if len(new_value) > get_fieldlength(fielddef):
+                    err_text = "Text pool overflow by {} chars (max {})".format(len(new_value) - get_fieldlength(fielddef), get_fieldlength(fielddef))
+                    valid = False
+                else:
+                    value = new_value
 
         if value is None and not skip:
             # None is an invalid value
@@ -2935,11 +3067,7 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
 
         if valid:
             if not skip:
-                if debug(ARGS) >= 2:
-                    sbits = " {} bits shift {}".format(bits, bitshift) if bits else ""
-                    strvalue = "{} [{}]".format(_value, hex(value)) if isinstance(_value, int) else _value
-                    print("set_field(): Set '{}' using '{}'/{}{} @{} to {}".format(fieldname, format_, arraydef, sbits, hex(baseaddr+addroffset), strvalue), file=sys.stderr)
-                if fieldname != 'cfg_crc' and fieldname != 'cfg_crc32' and fieldname != 'cfg_timestamp'  and fieldname != '_':
+                if fieldname not in ('cfg_crc', 'cfg_crc32', 'cfg_timestamp', '_'):
                     if strindex is not None:
                         # do not use address offset for indexed strings
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr, value)
@@ -2948,22 +3076,25 @@ def set_field(dobj, fieldname, fielddef, restoremapping, addroffset=0, filename=
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr+addroffset, value)
                         curvalue = get_fieldvalue(fielddef, dobj, baseaddr+addroffset)
                     if prevvalue != curvalue and ARGS.verbose:
+                        if isinstance(prevvalue, str):
+                            prevvalue = '"{}"'.format(prevvalue)
+                        if isinstance(curvalue, str):
+                            curvalue = '"{}"'.format(curvalue)
                         message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
-                else:
-                    if debug(ARGS) >= 2:
-                        print("set_field(): Special field '{}' using '{}'/{}{} @{} skipped".format(fieldname, format_, arraydef, bits, hex(baseaddr+addroffset)), file=sys.stderr)
         else:
             sformat = "file '{sfile}' - {{'{sname}': {svalue}}} ({serror})"+errformat
             exit_(ExitCode.RESTORE_DATA_ERROR, sformat.format(sfile=filename, sname=fieldname, serror=err_text, svalue=_value, smin=min_, smax=max_), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     return dobj
 
-def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0, idx=None):
+def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0, idx=None):
     """
     Get Tasmota command mapping from given field value definition
 
     @param cmnds:
         Tasmota command mapping: { 'group': ['cmnd' <,'cmnd'...>] ... }
+    @param platform_bits:
+        platform bits is the bitmask for valid platform for this fielddef
     @param fieldname:
         name of the field
     @param fielddef:
@@ -2995,10 +3126,14 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
                 cmnds[group].append(cmnd)
         return cmnds
 
-    format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
+    platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # cast unicode
     fieldname = str(fieldname)
+
+    # filter platform
+    if (platform_ & platform_bits) == 0:
+        return cmnds
 
     # filter groups
     if not is_filtergroup(group):
@@ -3016,14 +3151,15 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
                 if i >= len(mappedvalue): # mappedvalue data list may be shorter than definition
                     break
                 subrestore = mappedvalue[i]
-                cmnds = set_cmnd(cmnds, fieldname, subfielddef, valuemapping, subrestore, addroffset=addroffset+offset, idx=i)
+                cmnds = set_cmnd(cmnds, platform_bits, fieldname, subfielddef, valuemapping, subrestore, addroffset=addroffset+offset, idx=i)
             offset += length
 
     # <format> contains a dict
     elif isinstance(format_, dict):
-        for name in format_:    # -> iterate through format
-            if name in mappedvalue:
-                cmnds = set_cmnd(cmnds, name, format_[name], valuemapping, mappedvalue[name], addroffset=addroffset, idx=idx)
+        for name, rm_fielddef in format_.items():    # -> iterate through format
+            mapped = mappedvalue.get(name, None)
+            if mapped is not None:
+                cmnds = set_cmnd(cmnds, platform_bits, name, rm_fielddef, valuemapping, mapped, addroffset=addroffset, idx=idx)
 
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
@@ -3038,61 +3174,62 @@ def set_cmnd(cmnds, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0
 
     return cmnds
 
-def bin2mapping(decode_cfg):
+def bin2mapping(config):
     """
     Decodes binary data stream into pyhton mappings dict
 
-    @param decode_cfg:
-        binary config data (decrypted)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
 
     @return:
         valuemapping data as mapping dictionary
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header and template to use
-    template_version, version, size, setting = get_templatesetting(decode_cfg)
-    # if we did not found a mathching setting
-    if setting is None:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version {} not supported".format(version), line=inspect.getlineno(inspect.currentframe()))
-
-    if 'version' in setting:
-        cfg_version = get_field(decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
-
     # check size if exists
-    if 'cfg_size' in setting:
-        cfg_size = get_field(decode_cfg, 'cfg_size', setting['cfg_size'], raw=True, ignoregroup=True)
+    cfg_size = None
+    cfg_size_fielddef = config['info']['template'].get('cfg_size', None)
+    if cfg_size_fielddef is not None:
+        cfg_size = get_field(config['decode'], Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
         # read size should be same as definied in setting
-        if cfg_size > size:
+        if cfg_size > config['info']['template_size']:
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does ot match - read {}, expected {} byte".format(cfg_size, size), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
-        elif cfg_size < size:
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+        elif cfg_size < config['info']['template_size']:
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, size), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
 
-    # check crc if exists
-    if 'cfg_crc' in setting:
-        cfg_crc = get_field(decode_cfg, 'cfg_crc', setting['cfg_crc'], raw=True, ignoregroup=True)
+    # get/calc crc
+    cfg_crc_fielddef = config['info']['template'].get('cfg_crc', None)
+    if cfg_crc_fielddef is not None:
+        cfg_crc = get_field(config['decode'], Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
-        cfg_crc = get_settingcrc(decode_cfg)
-    if 'cfg_crc32' in setting:
-        cfg_crc32 = get_field(decode_cfg, 'cfg_crc32', setting['cfg_crc32'], raw=True, ignoregroup=True)
-    else:
-        cfg_crc32 = get_settingcrc32(decode_cfg)
-    cfg_timestamp = int(time.time())
-    if 'cfg_timestamp' in setting:
-        cfg_timestamp = get_field(decode_cfg, 'cfg_timestamp', setting['cfg_timestamp'], raw=True, ignoregroup=True)
+        cfg_crc = get_settingcrc(config['decode'])
 
-    if version < 0x0606000B:
-        if cfg_crc != get_settingcrc(decode_cfg):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+    # get/calc crc32
+    cfg_crc32_fielddef = config['info']['template'].get('cfg_crc32', None)
+    if cfg_crc32_fielddef is not None:
+        cfg_crc32 = get_field(config['decode'], Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
-        if cfg_crc32 != get_settingcrc32(decode_cfg):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(decode_cfg)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        cfg_crc32 = get_settingcrc32(config['decode'])
+
+    # get config timestamp
+    cfg_timestamp_fielddef = config['info']['template'].get('cfg_timestamp', None)
+    if cfg_timestamp_fielddef is not None:
+        cfg_timestamp = get_field(config['decode'], Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
+    else:
+        cfg_timestamp = int(time.time())
+
+    if cfg_crc32_fielddef is not None:
+        if cfg_crc32 != get_settingcrc32(config['decode']):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+    elif cfg_crc_fielddef is not None:
+        if cfg_crc != get_settingcrc(config['decode']):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
-    valuemapping = get_field(decode_cfg, None, (setting, 0, (None, None, ('System', None))), ignoregroup=True)
+    valuemapping = get_field(config['decode'], 1<<config['info']['platform'], None, (Platform.ALL, config['info']['template'], 0, (None, None, ('System', None))), ignoregroup=True)
 
     # remove keys having empty object
     if valuemapping is not None:
@@ -3102,43 +3239,50 @@ def bin2mapping(decode_cfg):
     # add header info
     valuemapping['header'] = {
         'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
-        'format': {
-            'jsonindent':   ARGS.jsonindent,
-            'jsoncompact':  ARGS.jsoncompact,
-            'jsonsort':     ARGS.jsonsort,
-            'jsonhidepw':   ARGS.jsonhidepw,
-        },
-        'template': {
-            'version':  hex(template_version),
-            'crc':      hex(cfg_crc),
-        },
         'data': {
-            'crc':      hex(get_settingcrc(decode_cfg)),
-            'size':     len(decode_cfg),
+            'crc':      hex(get_settingcrc(config['decode'])),
+            'size':     len(config['decode']),
+            'template': {
+                'version':  hex(config['info']['template_version']),
+                'crc':      hex(cfg_crc),
+            },
         },
-        'script': {
-            'name':     os.path.basename(__file__),
-            'version':  VER,
-        },
-        'os': (platform.machine(), platform.system(), platform.release(), platform.version(), platform.platform()),
-        'python': platform.python_version()
+        'env': {
+            'platform': platform.platform(),
+            'system': '{} {} {} {}'.format(platform.system(), platform.machine(), platform.release(), platform.version()),
+            'python': platform.python_version(),
+            'script': '{} v{}'.format(os.path.basename(__file__), VER)
         }
-    if 'cfg_crc' in setting:
-        valuemapping['header']['template'].update({'size': cfg_size})
-    if 'cfg_crc32' in setting:
-        valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
-        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(decode_cfg))})
-    if 'version' in setting:
-        valuemapping['header']['data'].update({'version': hex(cfg_version)})
+    }
+    if ARGS.debug:
+        valuemapping['header']['env'].update({'param': {} })
+        for key in ARGS.__dict__:
+            if str(key) != 'password':
+                valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})
+
+    if cfg_crc_fielddef is not None and cfg_size is not None:
+        valuemapping['header']['data']['template'].update({'size': cfg_size})
+    if cfg_crc32_fielddef is not None:
+        valuemapping['header']['data']['template'].update({'crc32': hex(cfg_crc32)})
+        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
+    if config['info']['version'] != 0x0:
+        valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
+    cfg_platform_def = config['info']['template'].get('config_version', None)
+    if cfg_platform_def is not None:
+        cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
+        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform)})
 
     return valuemapping
 
-def mapping2bin(decode_cfg, jsonconfig, filename=""):
+def mapping2bin(config, jsonconfig, filename=""):
     """
     Encodes into binary data stream
 
-    @param decode_cfg:
-        binary config data (decrypted)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     @param jsonconfig:
         restore data mapping
     @param filename:
@@ -3147,80 +3291,65 @@ def mapping2bin(decode_cfg, jsonconfig, filename=""):
     @return:
         changed binary config data (decrypted) or None on error
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header data to use the correct version template from device
-    _, version, _, setting = get_templatesetting(decode_cfg)
-
     # make empty binarray array
     _buffer = bytearray()
     # add data
-    _buffer.extend(decode_cfg)
+    _buffer.extend(config['decode'])
 
-    if setting is not None:
+    if config['info']['template'] is not None:
         # iterate through restore data mapping
-        for name in jsonconfig:
+        for name, data in jsonconfig.items():
             # key must exist in both dict
-            if name in setting:
-                set_field(_buffer, name, setting[name], jsonconfig[name], addroffset=0, filename=filename)
+            setting_fielddef = config['info']['template'].get(name, None)
+            if setting_fielddef is not None:
+                set_field(_buffer, 1<<config['info']['platform'], name, setting_fielddef, data, addroffset=0, filename=filename)
             else:
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-        if 'cfg_crc' in setting:
-            crc = get_settingcrc(_buffer)
-            struct.pack_into(setting['cfg_crc'][0], _buffer, setting['cfg_crc'][1], crc)
-        if 'cfg_crc32' in setting:
+        # CRC32 calc takes precedence over CRC
+        cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
+        if cfg_crc32_setting is not None:
             crc32 = get_settingcrc32(_buffer)
-            struct.pack_into(setting['cfg_crc32'][0], _buffer, setting['cfg_crc32'][1], crc32)
+            struct.pack_into(cfg_crc32_setting[1], _buffer, cfg_crc32_setting[2], crc32)
+        else:
+            cfg_crc_setting = config['info']['template'].get('cfg_crc', None)
+            if cfg_crc_setting is not None:
+                crc = get_settingcrc(_buffer)
+                struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
         return _buffer
 
-    else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, version), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+    exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     return None
 
-def mapping2cmnd(decode_cfg, valuemapping, filename=""):
+def mapping2cmnd(config):
     """
     Encodes mapping data into Tasmota command mapping
 
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param valuemapping:
-        data mapping
-    @param filename:
-        name of the restore file (for error output only)
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
 
     @return:
         Tasmota command mapping {group: [cmnd <,cmnd <,...>>]}
     """
-    if isinstance(decode_cfg, str):
-        decode_cfg = bytearray(decode_cfg)
-
-    # get binary header data to use the correct version template from device
-    _, version, _, setting = get_templatesetting(decode_cfg)
-
     cmnds = {}
+    # iterate through restore data mapping
+    for name, mapping in config['mapping'].items():
+        # key must exist in both dict
+        setting_fielddef = config['info']['template'].get(name, None)
+        if setting_fielddef is not None:
+            cmnds = set_cmnd(cmnds, 1<<config['info']['platform'], name, setting_fielddef, config['mapping'], mapping, addroffset=0)
+        else:
+            if name != 'header':
+                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
-    if setting is not None:
-        # iterate through restore data mapping
-        for name in valuemapping:
-            # key must exist in both dict
-            if name in setting:
-                cmnds = set_cmnd(cmnds, name, setting[name], valuemapping, valuemapping[name], addroffset=0)
-            else:
-                if name != 'header':
-                    exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+    return cmnds
 
-        return cmnds
-
-    else:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version 0x{:x} not supported".format(filename, version), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
-
-    return None
-
-def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
+def backup(backupfile, backupfileformat, config):
     """
     Create backup file
 
@@ -3228,26 +3357,25 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         Raw backup filename from program args
     @param backupfileformat:
         Backup file format
-    @param encode_cfg:
-        binary config data (encrypted)
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param configmapping:
-        config data mapppings
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     """
-    def backup_dmp(backup_filename, encode_cfg, _):
+    def backup_dmp(backup_filename, config):
         # do dmp file write
         with open(backup_filename, "wb") as backupfp:
-            backupfp.write(encode_cfg)
-    def backup_bin(backup_filename, _, __):
+            backupfp.write(config['encode'])
+    def backup_bin(backup_filename, config):
         # do bin file write
         with open(backup_filename, "wb") as backupfp:
-            backupfp.write(decode_cfg)
+            backupfp.write(config['decode'])
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
-    def backup_json(backup_filename, _, configmapping):
+    def backup_json(backup_filename, config):
         # do json file write
         with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
-            backupfp.write(get_jsonstr(configmapping, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            backupfp.write(get_jsonstr(config['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
     backups = {
         FileType.DMP.lower():("Tasmota", FileType.DMP, backup_dmp),
@@ -3274,12 +3402,12 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
     if backupfileformat.lower() in backups:
         _backup = backups[backupfileformat.lower()]
         fileformat = _backup[0]
-        backup_filename = make_filename(backupfile, _backup[1], configmapping)
+        backup_filename = make_filename(backupfile, _backup[1], config['mapping'])
         if ARGS.verbose:
             message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
         if not ARGS.dryrun:
             try:
-                _backup[2](backup_filename, encode_cfg, configmapping)
+                _backup[2](backup_filename, config)
             except Exception as err:    # pylint: disable=broad-except
                 exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
@@ -3287,7 +3415,7 @@ def backup(backupfile, backupfileformat, encode_cfg, decode_cfg, configmapping):
         message("{}Backup successful to '{}' ({} format)"\
             .format(dryrun, backup_filename, fileformat), type_=LogType.INFO if ARGS.verbose else None)
 
-def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping):
+def restore(restorefile, backupfileformat, config):
     """
     Restore from file
 
@@ -3295,10 +3423,11 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         binary config data (encrypted)
     @param backupfileformat:
         Backup file format
-    @param decode_cfg:
-        binary config data (decrypted)
-    @param configmapping:
-        config data mapppings
+    @param config: dict
+        'encode': encoded config data
+        "decode": decoded config data
+        "mapping": mapped config data
+        'info': dict about config data (see get_config_info())
     """
     global EXIT_CODE    # pylint: disable=global-statement
 
@@ -3311,7 +3440,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         restorefileformat = FileType.DMP
     elif backupfileformat.lower() == 'json':
         restorefileformat = FileType.JSON
-    restorefilename = make_filename(restorefile, restorefileformat, configmapping)
+    restorefilename = make_filename(restorefile, restorefileformat, config['mapping'])
     filetype = get_filetype(restorefilename)
 
     if filetype == FileType.DMP:
@@ -3343,7 +3472,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
             # process binary to binary config
             new_encode_cfg = decrypt_encrypt(decode_cfg)
 
-    elif filetype == FileType.JSON or filetype == FileType.INVALID_JSON:
+    elif filetype in (FileType.JSON, FileType.INVALID_JSON):
         if ARGS.verbose:
             message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
@@ -3353,7 +3482,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         except ValueError as err:
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # process json config to binary config
-        new_decode_cfg = mapping2bin(decode_cfg, jsonconfig, restorefilename)
+        new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
         new_encode_cfg = decrypt_encrypt(new_decode_cfg)
 
     elif filetype == FileType.FILE_NOT_FOUND:
@@ -3366,14 +3495,38 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         exit_(ExitCode.FILE_READ_ERROR, "File '{}' unknown error".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
 
     if new_encode_cfg is not None:
+        new_decode_cfg = decrypt_encrypt(new_encode_cfg)
+
+        # Platform compatibility check
+        if filetype in (FileType.DMP, FileType.BIN):
+            platform_new_data = get_config_info(new_decode_cfg)['platform']
+        else:
+            platform_new_data = jsonconfig.get('config_version', Platform.STR.index("ESP82xx"))
+        platform_device = config['info']['platform']
+        if platform_device != platform_new_data:
+            exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
+                "File" if ARGS.tasmotafile is not None else "Device",
+                ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+                Platform.str(platform_device),
+                restorefilename,
+                Platform.str(platform_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+
+        # Data version compatibility check
+        if filetype in (FileType.DMP, FileType.BIN):
+            version_new_data = get_config_info(new_decode_cfg)['version']
+            version_device = config['info']['version']
+            if version_device != version_new_data:
+                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore binary data incompatibility: {} '{}' v'{}', restore file '{}' v'{}'".format(\
+                    "File" if ARGS.tasmotafile is not None else "Device",
+                    ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+                    get_versionstr(version_device),
+                    restorefilename,
+                    get_versionstr(version_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+
         if ARGS.verbose:
-            new_decode_cfg = decrypt_encrypt(new_encode_cfg)
             # get binary header and template to use
-            _, _, _, setting = get_templatesetting(new_decode_cfg)
-            # get config file version
-            cfg_version = get_field(new_decode_cfg, 'version', setting['version'], raw=True, ignoregroup=True)
-            message("Config file contains data of Tasmota {}".format(get_versionstr(cfg_version)), type_=LogType.INFO)
-        if ARGS.forcerestore or new_encode_cfg != encode_cfg:
+            message("Config file contains data of Tasmota v{}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
+        if ARGS.forcerestore or new_encode_cfg != config['encode']:
             dryrun = ""
             if ARGS.dryrun:
                 if ARGS.verbose:
@@ -3406,7 +3559,7 @@ def restore(restorefile, backupfileformat, encode_cfg, decode_cfg, configmapping
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
             if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                message("Configuration data leaving unchanged", type_=LogType.INFO if ARGS.verbose else None)
+                message("Restore skipped, configuration data unchanged", type_=LogType.INFO if ARGS.verbose else None)
 
 def output_tasmotacmnds(tasmotacmnds):
     """
@@ -3528,8 +3681,9 @@ def parseargs():
     backres.add_argument('-o', '--backup-file',
                          metavar='<filename>',
                          dest='backupfile',
+                         action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
@@ -3638,8 +3792,8 @@ def parseargs():
                         default=DEFAULTS['common']['outputformat'],
                         help="display output format (default: '{}')".format(DEFAULTS['common']['outputformat']))
     groups = get_grouplist(SETTINGS[0][2])
-    if '*' in groups:
-        groups.remove('*')
+    if VIRTUAL in groups:
+        groups.remove(VIRTUAL)
     common.add_argument('-g', '--group',
                         dest='filter',
                         choices=groups,
@@ -3660,9 +3814,9 @@ def parseargs():
 
 
     info = PARSER.add_argument_group('Info', 'Extra information')
-    info.add_argument('-D', '--debug',
+    info.add_argument('--debug',
                       dest='debug',
-                      action='count',
+                      action='store_true',
                       help=configargparse.SUPPRESS)
     info.add_argument('-h', '--help',
                       dest='shorthelp',
@@ -3682,15 +3836,9 @@ def parseargs():
 
     _args = PARSER.parse_args()
 
-    if debug(_args) >= 1:
-        print(PARSER.format_values(), file=sys.stderr)
-        print("Settings:", file=sys.stderr)
-        for k in _args.__dict__:
-            print("  "+str(k), "= ", eval('_args.{}'.format(k)), file=sys.stderr)    # pylint: disable=eval-used
-
     if _args.version is not None:
         print(PROG)
-        if _args.version > 1 or debug(_args) >= 1:
+        if _args.version or _args.debug:
             print()
             print("Script:   {}".format(os.path.basename(__file__)))
             print("Python:   {}".format(platform.python_version()))
@@ -3710,25 +3858,31 @@ if __name__ == "__main__":
     if ARGS.device is not None and ARGS.tasmotafile is not None:
         exit_(ExitCode.ARGUMENT_ERROR, "Unable to select source, do not use -d and -f together", line=inspect.getlineno(inspect.currentframe()))
 
+    # create global data dict
+    CONFIG = {}
+
     # default no configuration available
-    ENCODE_CONFIG = None
+    CONFIG['encode'] = None
+
+    if ARGS.debug:
+        check_setting_definition()
 
     # pull config from Tasmota device
     if ARGS.tasmotafile is not None:
-        ENCODE_CONFIG = load_tasmotaconfig(ARGS.tasmotafile)
+        CONFIG['encode'] = load_tasmotaconfig(ARGS.tasmotafile)
 
     # load config from Tasmota file
     if ARGS.device is not None:
-        ENCODE_CONFIG = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
+        CONFIG['encode'] = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
 
-    if ENCODE_CONFIG is None:
+    if CONFIG['encode'] is None:
         # no config source given
         shorthelp(False)
         print()
         print(PARSER.epilog)
         sys.exit(ExitCode.OK)
 
-    if len(ENCODE_CONFIG) == 0:
+    if len(CONFIG['encode']) == 0:
         exit_(ExitCode.FILE_READ_ERROR,
               "Unable to read configuration data from {} '{}'"\
               .format('device' if ARGS.device is not None else 'file',
@@ -3736,56 +3890,59 @@ if __name__ == "__main__":
               line=inspect.getlineno(inspect.currentframe()))
 
     # decrypt Tasmota config
-    DECODE_CONFIG = decrypt_encrypt(ENCODE_CONFIG)
+    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'])
+
+    # config dict
+    CONFIG['info'] = get_config_info(CONFIG['decode'])
 
     # decode into mappings dictionary
-    CONFIG_MAPPING = bin2mapping(DECODE_CONFIG)
+    CONFIG['mapping'] = bin2mapping(CONFIG)
 
     # check version compatibility
-    if 'version' in CONFIG_MAPPING:
-        CONFIG_VERSION = int(CONFIG_MAPPING['version'], 0)
+    if CONFIG['info']['version'] is not None:
         if ARGS.verbose:
-            message("{} '{}' is using Tasmota {}"\
+            message("{} '{}' is using Tasmota v{} on {}"\
                 .format('File' if ARGS.tasmotafile is not None else 'Device',
                         ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
-                        get_versionstr(CONFIG_VERSION)),
+                        get_versionstr(CONFIG['info']['version']),
+                        Platform.str(CONFIG['info']['platform'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-        if CONFIG_VERSION > SUPPORTED_VERSION and not ARGS.ignorewarning:
+        if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
             exit_(ExitCode.UNSUPPORTED_VERSION, \
-                  "*** Unsupported Tasmota configuration data version! ***\n"
-                  "\n"
-                  "The read configuration contains data for Tasmota version {}.\n"
-                  "This is newer than Tasmota version {} supported by this program.\n"
-                  "\n"
-                  "With newer Tasmota versions, the data structure may have changed\n"
-                  "so that the data with older versions become incompatible.\n"
-                  "You can force recovery at your own risk by adding --ignore-warnings.\n"
-                  "Be warned that forcing this can lead to unpredictable results for your\n"
-                  "Tasmota device. In the worst case, your Tasmota device will not\n"
-                  "respond and you will have to flash it again using the serial interface.\n"
-                  "\n"
-                  "If you are unsure and do not know the changes in the configuration\n"
-                  "structure, use a developer version of this program that you can download\n"
-                  "from https://github.com/tasmota/decode-config/tree/development.\n"
-                  "\n".format(get_versionstr(CONFIG_VERSION), get_versionstr(SUPPORTED_VERSION)),
+                "Tasmota configuration data v{} currently unsupported!\n"
+                "           The read configuration data is newer than the last\n"
+                "           supported v{} by this program.\n"
+                "           Newer Tasmota versions may contain changed data struc-\n"
+                "           tures so that the data with older versions may become\n"
+                "           incompatible. You can force proceeding at your own risk\n"
+                "           by appending the parameter '--ignore-warnings'\n"
+                "           Be warned: Forcing can lead to unpredictable results for\n"
+                "           your Tasmota device. In the worst case, your Tasmota device\n"
+                "           will not respond and you will have to flash it again using\n"
+                "           the serial interface. If you are unsure and do not know the\n"
+                "           changes in the configuration structure, you may able to use\n"
+                "           the developer version of this program from\n"
+                "           https://github.com/tasmota/decode-config/tree/development."\
+                  .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
-        # backup to file
-        backup(ARGS.backupfile, ARGS.backupfileformat, ENCODE_CONFIG, DECODE_CONFIG, CONFIG_MAPPING)
+        # backup to file(s)
+        for BACKUPFILE in ARGS.backupfile:
+            backup(BACKUPFILE, ARGS.backupfileformat, CONFIG)
 
     if ARGS.restorefile is not None:
         # restore from file
-        restore(ARGS.restorefile, ARGS.backupfileformat, ENCODE_CONFIG, DECODE_CONFIG, CONFIG_MAPPING)
+        restore(ARGS.restorefile, ARGS.backupfileformat, CONFIG)
 
     if (ARGS.backupfile is None and ARGS.restorefile is None) or ARGS.output:
         if ARGS.outputformat == 'json':
             # json screen output
-            print(get_jsonstr(CONFIG_MAPPING, ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            print(get_jsonstr(CONFIG['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
         if ARGS.outputformat == 'cmnd' or ARGS.outputformat == 'command':
             # Tasmota command output
-            output_tasmotacmnds(mapping2cmnd(DECODE_CONFIG, CONFIG_MAPPING))
+            output_tasmotacmnds(mapping2cmnd(CONFIG))
 
     sys.exit(EXIT_CODE)

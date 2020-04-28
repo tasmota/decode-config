@@ -2,6 +2,7 @@
 
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
+<!-- markdownlint-disable MD033 -->
 [![release](https://img.shields.io/badge/release-v8.3.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
@@ -71,6 +72,7 @@ If you want to use a current version than this one (e.g. because you also use a 
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
+      * [Save multiple backup at once](#save-multiple-backup-at-once)
     * [Restore backup](#restore-backup)
       * [Restore subset of data](#restore-subset-of-data)
     * [Auto file extensions](#auto-file-extensions)
@@ -88,6 +90,7 @@ If you want to use a current version than this one (e.g. because you also use a 
     * [.bin format](#bin-format)
   * [Complete program parameter](#complete-program-parameter)
     * [Parameter notes](#parameter-notes)
+  * [Return codes](#return-codes)
 
 ## Running the program
 
@@ -135,18 +138,21 @@ Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and
 After python and pip is installed, install dependencies:
 
 ```shell
-pip3 install requests configargparse
+python -m pip install requests configargparse
 ```
 
 ## Usage
 
 For an overview start the program without any parameter and you will get a short help:
 
+<!-- markdownlint-capture -->
+<!-- markdownlint-disable MD031 -->
 ```bash
 decode-config
 ```
 > replace `decode-config` by the program name your are using:  
 `decode-config.py` when running as Python executable.
+<!-- markdownlint-restore -->
 
 This prints a short help:
 
@@ -260,7 +266,7 @@ decode-config -c my.conf -d tasmota-4281
 > Config file syntax allows key=value, flag=true, stuff=[a,b,c].  
 For further details see [https://pypi.org/project/ConfigArgParse](https://pypi.org/project/ConfigArgParse/)).
 
-If parameters ire specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
+If parameters are specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
 
 ```bash
 decode-config -c my.conf -d tasmota-4281 --json-indent 4
@@ -278,16 +284,30 @@ To save data from a device or [*.dmp](#dmp-format) file into a backup file, use 
 decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
 ```
 
-This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and `8.3.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.2.0.json` (the part `Tasmota` and `8.2.0` will choosen related to your device configuration).
+
+#### Save multiple backup at once
+
+Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
+
+```bash
+decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
+```
+
+creates three backup files:
+
+* `Config_Tasmota_8.2.0.json` using JSON format
+* `Backup_tasmota-4281.json` using JSON format
+* `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
 ### Restore backup
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.3.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.2.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.3.0
+decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.2.0
 ```
 
 Restore operation also allows placeholders **@v**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -461,7 +481,7 @@ decode-config -c my.conf -d tasmota-4281 --group Wifi --output-format cmnd
   Password1 myWlAnPaszxwo!z
   Password2 myWlAnPaszxwo!z2
   SSId1 wlan.1
-  SSId2 wlan.1
+  SSId2 my-wlan
   WebPassword myPaszxwo!z
   WebServer 2
   WifiConfig 5
@@ -556,7 +576,7 @@ This format is binary with the same structure as the [.dmp](#dmp-format) format.
 The .bin format can be created by **decode-config** using the backup function (`--backup-file <filename>`) with the additional parameter `--backup-type bin`.
 
 This format is actually only used to view the configuration data directly in binary form without conversion.  
-It is hardly possible to change the binary data, since a checksum is formed over the data and this would have to be calculated and adjusted in the event of a change.
+It is hardly possible to change the binary data, since a checksum is formed over the data and this would have to be calculated and adjusted in case of any change.
 
 ## Complete program parameter
 
@@ -609,11 +629,11 @@ Backup/Restore:
                         hostname from config, @H=device hostname from device
                         (-d arg only)
   -o, --backup-file <filename>
-                        file to backup configuration to (default: None).
-                        Replacements: @v=firmware version from config,
-                        @f=device friendly name from config, @h=device
-                        hostname from config, @H=device hostname from device
-                        (-d arg only)
+                        file to backup configuration to, can be specified
+                        multiple times (default: None). Replacements:
+                        @v=firmware version from config, @f=device friendly
+                        name from config, @h=device hostname from config,
+                        @H=device hostname from device (-d arg only)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename
@@ -680,3 +700,59 @@ The **@h** replacement macro uses the hostname configured with the Tasomta Wifi 
 To prevent having a useless % in your filename, **@h** will not replaced by hostname if this contains '%' characters.
   * **@H**
 If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
+
+## Return codes
+
+**decode-config** returns the following error codes:
+
+* **0** - successful:  
+The process has successful finished  
+
+* **1** = restore skipped:  
+Unchanged data, restore not executed  
+
+* **2** = program argument error:  
+Wrong program parameter used (data source missing)  
+
+* **3** = file not found  
+
+* **4** = data size mismatch:  
+The data size read from source does not match the excpected size  
+
+* **5** = data CRC error:  
+The read data contains wrong CRC  
+
+* **6** = unsupported configuration version:  
+The source data contains data from an unsupported (Sonoff-)Tasmota version  
+
+* **7** = configuration file read error:  
+There was an error during read of configuration source file  
+
+* **8** = JSON file decoding error:  
+There was an error within the read JSON file  
+
+* **9** = restore file data error:  
+Error occured by writing new binary data  
+
+* **10** = device data download error:  
+Source device connected but configuration data could not be downloaded (WebServer missing, disabled)  
+
+* **11** = device data upload error:  
+Source device connected but configuration data could not be uploaded (WebServer missing, disabled, connection lost...)  
+
+* **12** = invalid configuration data:  
+The configuration data source contains invalid basic data (wrong platform id...)  
+
+* **20** = python module missing:  
+A neccessary python library module is missing  
+
+* **21** = internal error:  
+An unexpected internal error occured  
+
+* **22** = HTTP connection error:  
+Source device HTTP connection lost or unavailable  
+
+* **23...** = python library exit code:  
+An unexpected internal library error occured  
+
+* **4xx**/**5xx** = HTTP errors  
