@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-VER = '8.2.0.5 [00131]'
+from __future__ import print_function
+VER = '8.2.0.5 [00132]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -227,6 +228,9 @@ def module_import_error(module):
 # pylint: disable=wrong-import-position
 import os.path
 import sys
+if sys.version_info[0] < 3:
+    print('Unsupported python version {}.{}.{} (EOL) - python 3.x required!'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2]), file=sys.stderr)
+    sys.exit(ExitCode.UNSUPPORTED_VERSION)
 import platform
 try:
     from datetime import datetime
@@ -3255,10 +3259,10 @@ def bin2mapping(config):
         }
     }
     if ARGS.debug:
-        valuemapping['header']['env'].update({'param': {} })
+        valuemapping['header']['env'].update({'param': {}})
         for key in ARGS.__dict__:
             if str(key) != 'password':
-                valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})
+                valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})  # pylint: disable=eval-used
 
     if cfg_crc_fielddef is not None and cfg_size is not None:
         valuemapping['header']['data']['template'].update({'size': cfg_size})
