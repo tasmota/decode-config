@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.5 [00132]'
+VER = '8.2.0.6 [00133]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1548,7 +1548,20 @@ SETTING_8_2_0_5['flag4'][1].update ({
         'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SetOption92 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_5)
+SETTING_8_2_0_6.update             ({
+    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp_esp32"][0:22]) if i not in [6,7,8,11])) if 1==# else "Backlog "+";".join(("Gpio{} {}".format(i+23, x) for i,x in enumerate(@["my_gp_esp32"][23:]))) if 24==# else None')) ),
+    'user_template_esp32':          (Platform.ESP32,{
+        'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"]) if 1==# else None')) ),
+        'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None))
+                                    ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x8020006,0x1000, SETTING_8_2_0_6),
             (0x8020005,0x1000, SETTING_8_2_0_5),
             (0x8020004,0x1000, SETTING_8_2_0_4),
             (0x8020003,0x1000, SETTING_8_2_0_3),
