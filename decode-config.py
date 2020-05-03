@@ -223,7 +223,7 @@ def module_import_error(module):
     Module import error helper
     """
     errstr = str(module)
-    print('{}, try "pip3 install {}"'.format(errstr, errstr.split(' ')[len(errstr.split(' '))-1]), file=sys.stderr)
+    print('{}, try "python -m pip install {}"'.format(errstr, errstr.split(' ')[len(errstr.split(' '))-1]), file=sys.stderr)
     sys.exit(ExitCode.MODULE_NOT_FOUND)
 # pylint: disable=wrong-import-position
 import os.path
