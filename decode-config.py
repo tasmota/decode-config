@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00134]'
+VER = '8.2.0.6 [00135]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -937,7 +937,7 @@ SETTING_6_3_0_15['flag3'][1].update ({
 # ======================================================================
 SETTING_6_3_0_16 = copy.deepcopy(SETTING_6_3_0_15)
 SETTING_6_3_0_16['mcp230xx_config'][1].update ({
-        'int_retain_flag':          (Platform.ALL,   '<H', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
+        'int_retain_flag':          (Platform.ALL,   '<H', (0x6F6,1,12), (None, None,                           ('Sensor',      '"Sensor29 IntRetain,{pin},{int_retain_flag}".format(pin=#-1, int_retain_flag=@["mcp230xx_config"][#-1]["int_retain_flag"])')) ),
                                     })
 SETTING_6_3_0_16['flag3'][1].update ({
         'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
