@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00133]'
+VER = '8.2.0.6 [00134]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -790,12 +790,12 @@ SETTING_6_1_1.update                ({
     'flag3':                        (Platform.ALL,   '<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#,$)')) ),
     'mcp230xx_config':              (Platform.ALL, {
-        'pinmode':                  (Platform.ALL,   '<L', (0x6F6,3, 0), (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')), '"0x{:08x}".format($)' ),
-        'pullup':                   (Platform.ALL,   '<L', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
-        'saved_state':              (Platform.ALL,   '<L', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
-        'int_report_mode':          (Platform.ALL,   '<L', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
-        'int_report_defer':         (Platform.ALL,   '<L', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
-        'int_count_en':             (Platform.ALL,   '<L', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
+        'pinmode':                  (Platform.ALL,   '<H', (0x6F6,3, 0), (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#-1, pinmode=@["mcp230xx_config"][#-1]["pinmode"], pullup=@["mcp230xx_config"][#-1]["pullup"], intmode=@["mcp230xx_config"][#-1]["int_report_mode"])')) ),
+        'pullup':                   (Platform.ALL,   '<H', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
+        'saved_state':              (Platform.ALL,   '<H', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
+        'int_report_mode':          (Platform.ALL,   '<H', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
+        'int_report_defer':         (Platform.ALL,   '<H', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
+        'int_count_en':             (Platform.ALL,   '<H', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
                                      },     0x6F6,       ([16], None,                                           ('Sensor',      None)), (None,      None) ),
                                     })
 SETTING_6_1_1['flag'][1].update     ({
@@ -937,7 +937,7 @@ SETTING_6_3_0_15['flag3'][1].update ({
 # ======================================================================
 SETTING_6_3_0_16 = copy.deepcopy(SETTING_6_3_0_15)
 SETTING_6_3_0_16['mcp230xx_config'][1].update ({
-        'int_retain_flag':          (Platform.ALL,   '<L', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
+        'int_retain_flag':          (Platform.ALL,   '<H', (0x6F6,1,12), (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_6_3_0_16['flag3'][1].update ({
         'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
