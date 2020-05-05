@@ -160,8 +160,8 @@ usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
+                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
                         [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g [Control,Display,Domoticz,Internal,Knx,Light,
                              Management,Mqtt,Power,Rf,Rules,Sensor,Serial,
@@ -588,8 +588,8 @@ usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
+                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
                         [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
@@ -658,6 +658,7 @@ Tasmota command output:
   --cmnd-nogroups       leave Tasmota commands ungrouped
   --cmnd-sort           sort Tasmota commands (default)
   --cmnd-unsort         leave Tasmota commands unsorted
+  --cmnd-use-backlog    use Backlog for Tasmota commands as much as possible
 
 Common:
   Optional arguments

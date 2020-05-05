@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00135]'
+VER = '8.2.0.6 [00136]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -42,8 +42,8 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
+                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
                         [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
@@ -112,6 +112,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
       --cmnd-nogroups       leave Tasmota commands ungrouped
       --cmnd-sort           sort Tasmota commands (default)
       --cmnd-unsort         leave Tasmota commands unsorted
+      --cmnd-use-backlog    use Backlog for Tasmota commands as much as possible
 
     Common:
       Optional arguments
@@ -255,8 +256,13 @@ except ImportError as err:
 # ======================================================================
 PROG = '{} v{} by Norbert Richter <nr@prsolution.eu>'.format(os.path.basename(sys.argv[0]), VER)
 
+# Tasmota constant
 CONFIG_FILE_XOR = 0x5A
 BINARYFILE_MAGIC = 0x63576223
+MAX_BACKLOG = 30
+MAX_BACKLOGLEN = 320
+
+# decode-config constant
 STR_ENCODING = 'utf8'
 HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
@@ -281,16 +287,17 @@ DEFAULTS = {
     },
     'jsonformat':
     {
-        'jsonindent':   None,
-        'jsoncompact':  False,
-        'jsonsort':     True,
-        'jsonhidepw':   False,
+        'indent':       None,
+        'compact':      False,
+        'sort':         True,
+        'hidepw':       False,
     },
     'cmndformat':
     {
-        'cmndindent':   2,
-        'cmndgroup':    True,
-        'cmndsort':     True,
+        'indent':       2,
+        'group':        True,
+        'sort':         True,
+        'usebacklog':   False,
     },
     'common':
     {
@@ -958,7 +965,7 @@ SETTING_6_4_1_7['flag3'][1].update ({
 # ======================================================================
 SETTING_6_4_1_8 = copy.deepcopy(SETTING_6_4_1_7)
 SETTING_6_4_1_8.update              ({
-    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([17], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp"]) if i not in [6,7,8,11])) if 1==# else None')) ),
+    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
                                     })
 SETTING_6_4_1_8['flag3'][1].update ({
         'split_interlock':          (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
@@ -1333,7 +1340,7 @@ SETTING_8_0_0_1.update             ({
     'mqtt_user':                    (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
                                                                          (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
     'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
-                                                                        (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
+                                                                        (None, None,                            ('MQTT',        '"MqttPassword {}".format($)')), (passwordread,passwordwrite) ),
     'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
                                                                          (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
     'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
@@ -1359,7 +1366,7 @@ SETTING_8_1_0_0.update             ({
     'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
     'button_text':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
-                                                                         ([16], None,                           ('Wifi',        '"WebButton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
+                                                                         ([16], None,                           ('Control',     '"Webbutton{} {}".format(#,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
@@ -1505,8 +1512,8 @@ SETTING_8_2_0_3.update             ({
                                                                          (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
     'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+1, "\\"" if len($) == 0 else $)')) ),
-    'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp"]) if i not in [6,7,8,11])) if 1==# else None')) ),
-    'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp_esp32"][0:22]) if i not in [6,7,8,11])) if 1==# else "Backlog "+";".join(("Gpio{} {}".format(i+23, x) for i,x in enumerate(@["my_gp_esp32"][23:]))) if 24==# else None')) ),
+    'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
         'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
@@ -1550,7 +1557,7 @@ SETTING_8_2_0_5['flag4'][1].update ({
 # ======================================================================
 SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_5)
 SETTING_8_2_0_6.update             ({
-    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Backlog "+";".join(("Gpio{} {}".format(i, x) for i,x in enumerate(@["my_gp_esp32"][0:22]) if i not in [6,7,8,11])) if 1==# else "Backlog "+";".join(("Gpio{} {}".format(i+23, x) for i,x in enumerate(@["my_gp_esp32"][23:]))) if 24==# else None')) ),
+    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
         'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
@@ -3586,12 +3593,39 @@ def output_tasmotacmnds(tasmotacmnds):
         Tasmota command mapping {group: [cmnd <,cmnd <,...>>]}
     """
     def output_tasmotasubcmnds(cmnds):
-        if ARGS.cmndsort:
-            for cmnd in sorted(cmnds, key=lambda cmnd: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]):
-                print("{}{}".format(" "*ARGS.cmndindent, cmnd))
-        else:
-            for cmnd in cmnds:
-                print("{}{}".format(" "*ARGS.cmndindent, cmnd))
+        if ARGS.cmndusebacklog:
+
+            # search for counting cmnds
+            regexp = r'^([A-Za-z]+)\d+\s+\S*'
+            reg = re.compile(regexp)
+            cmnds_counting = list(dict.fromkeys(list(re.search(regexp, item)[1] for item in cmnds if reg.match(item))))
+
+            # iterate through counting commands
+            for cmnd in cmnds_counting:
+
+                # get origin commands from counting matchs
+                reg = re.compile(cmnd+r'\d+\s+\S*')
+                backlog_cmnds = list(filter(reg.match, cmnds))
+
+                # join cmnds with attend Tasmota Backlog limitations
+                i = 0
+                backlog = "Backlog "
+                for backlog_cmnd in backlog_cmnds:
+                    # take into account of max backlog limits
+                    if i >= MAX_BACKLOG or (len(backlog)+len(backlog_cmnd)+1) > MAX_BACKLOGLEN:
+                        cmnds.append(backlog)
+                        i = 0
+                        backlog = "Backlog "
+                    if i > 0:
+                        backlog += ";"
+                    backlog += backlog_cmnd
+                    cmnds.remove(backlog_cmnd)
+                    i += 1
+                if i > 0:
+                    cmnds.append(backlog)
+
+        for cmnd in sorted(cmnds, key=lambda cmnd: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]) if ARGS.cmndsort else cmnds:
+            print("{}{}".format(" "*ARGS.cmndindent, cmnd))
 
     groups = get_grouplist(SETTINGS[0][2])
 
@@ -3729,35 +3763,35 @@ def parseargs():
                             metavar='<indent>',
                             dest='jsonindent',
                             type=int,
-                            default=DEFAULTS['jsonformat']['jsonindent'],
-                            help="pretty-printed JSON output using indent level (default: '{}'). -1 disables indent.".format(DEFAULTS['jsonformat']['jsonindent']))
+                            default=DEFAULTS['jsonformat']['indent'],
+                            help="pretty-printed JSON output using indent level (default: '{}'). -1 disables indent.".format(DEFAULTS['jsonformat']['indent']))
     jsonformat.add_argument('--json-compact',
                             dest='jsoncompact',
                             action='store_true',
-                            default=DEFAULTS['jsonformat']['jsoncompact'],
-                            help="compact JSON output by eliminate whitespace{}".format(' (default)' if DEFAULTS['jsonformat']['jsoncompact'] else ''))
+                            default=DEFAULTS['jsonformat']['compact'],
+                            help="compact JSON output by eliminate whitespace{}".format(' (default)' if DEFAULTS['jsonformat']['compact'] else ''))
 
     jsonformat.add_argument('--json-sort',
                             dest='jsonsort',
                             action='store_true',
-                            default=DEFAULTS['jsonformat']['jsonsort'],
-                            help=configargparse.SUPPRESS) #"sort json keywords{}".format(' (default)' if DEFAULTS['jsonformat']['jsonsort'] else ''))
+                            default=DEFAULTS['jsonformat']['sort'],
+                            help=configargparse.SUPPRESS) #"sort json keywords{}".format(' (default)' if DEFAULTS['jsonformat']['sort'] else ''))
     jsonformat.add_argument('--json-unsort',
                             dest='jsonsort',
                             action='store_false',
-                            default=DEFAULTS['jsonformat']['jsonsort'],
-                            help=configargparse.SUPPRESS) #"do not sort json keywords{}".format(' (default)' if not DEFAULTS['jsonformat']['jsonsort'] else ''))
+                            default=DEFAULTS['jsonformat']['sort'],
+                            help=configargparse.SUPPRESS) #"do not sort json keywords{}".format(' (default)' if not DEFAULTS['jsonformat']['sort'] else ''))
 
     jsonformat.add_argument('--json-hide-pw',
                             dest='jsonhidepw',
                             action='store_true',
-                            default=DEFAULTS['jsonformat']['jsonhidepw'],
-                            help="hide passwords{}".format(' (default)' if DEFAULTS['jsonformat']['jsonhidepw'] else ''))
+                            default=DEFAULTS['jsonformat']['hidepw'],
+                            help="hide passwords{}".format(' (default)' if DEFAULTS['jsonformat']['hidepw'] else ''))
     jsonformat.add_argument('--json-show-pw',
                             dest='jsonhidepw',
                             action='store_false',
-                            default=DEFAULTS['jsonformat']['jsonhidepw'],
-                            help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['jsonhidepw'] else ''))
+                            default=DEFAULTS['jsonformat']['hidepw'],
+                            help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['hidepw'] else ''))
     jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', help=configargparse.SUPPRESS)
 
     cmndformat = PARSER.add_argument_group('Tasmota command output', 'Tasmota command output format specification')
@@ -3765,28 +3799,33 @@ def parseargs():
                             metavar='<indent>',
                             dest='cmndindent',
                             type=int,
-                            default=DEFAULTS['cmndformat']['cmndindent'],
-                            help="Tasmota command grouping indent level (default: '{}'). 0 disables indent".format(DEFAULTS['cmndformat']['cmndindent']))
+                            default=DEFAULTS['cmndformat']['indent'],
+                            help="Tasmota command grouping indent level (default: '{}'). 0 disables indent".format(DEFAULTS['cmndformat']['indent']))
     cmndformat.add_argument('--cmnd-groups',
                             dest='cmndgroup',
                             action='store_true',
-                            default=DEFAULTS['cmndformat']['cmndgroup'],
-                            help="group Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['cmndgroup'] else ''))
+                            default=DEFAULTS['cmndformat']['group'],
+                            help="group Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['group'] else ''))
     cmndformat.add_argument('--cmnd-nogroups',
                             dest='cmndgroup',
                             action='store_false',
-                            default=DEFAULTS['cmndformat']['cmndgroup'],
-                            help="leave Tasmota commands ungrouped{}".format(' (default)' if not DEFAULTS['cmndformat']['cmndgroup'] else ''))
+                            default=DEFAULTS['cmndformat']['group'],
+                            help="leave Tasmota commands ungrouped{}".format(' (default)' if not DEFAULTS['cmndformat']['group'] else ''))
     cmndformat.add_argument('--cmnd-sort',
                             dest='cmndsort',
                             action='store_true',
-                            default=DEFAULTS['cmndformat']['cmndsort'],
-                            help="sort Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['cmndsort'] else ''))
+                            default=DEFAULTS['cmndformat']['sort'],
+                            help="sort Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['sort'] else ''))
     cmndformat.add_argument('--cmnd-unsort',
                             dest='cmndsort',
                             action='store_false',
-                            default=DEFAULTS['cmndformat']['cmndsort'],
-                            help="leave Tasmota commands unsorted{}".format(' (default)' if not DEFAULTS['cmndformat']['cmndsort'] else ''))
+                            default=DEFAULTS['cmndformat']['sort'],
+                            help="leave Tasmota commands unsorted{}".format(' (default)' if not DEFAULTS['cmndformat']['sort'] else ''))
+    cmndformat.add_argument('--cmnd-use-backlog',
+                            dest='cmndusebacklog',
+                            action='store_true',
+                            default=DEFAULTS['cmndformat']['usebacklog'],
+                            help="use Backlog for Tasmota commands as much as possible{}".format(' (default)' if DEFAULTS['cmndformat']['usebacklog'] else ''))
 
     common = PARSER.add_argument_group('Common', 'Optional arguments')
     common.add_argument('-c', '--config',
@@ -3958,7 +3997,7 @@ if __name__ == "__main__":
             # json screen output
             print(get_jsonstr(CONFIG['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
-        if ARGS.outputformat == 'cmnd' or ARGS.outputformat == 'command':
+        if ARGS.outputformat in ('cmnd', 'command'):
             # Tasmota command output
             output_tasmotacmnds(mapping2cmnd(CONFIG))
 
