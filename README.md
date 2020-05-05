@@ -80,6 +80,7 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [Console outputs](#console-outputs)
       * [JSON format](#json-format)
       * [Tasmota web command format](#tasmota-web-command-format)
+        * [Use of 'Backlog' for Tasmota commands](#use-of-backlog-for-tasmota-commands)
     * [Filter by groups](#filter-by-groups)
     * [Usage examples](#usage-examples)
       * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
@@ -482,6 +483,49 @@ decode-config -c my.conf -d tasmota-4281 --group Wifi --output-format cmnd
   WebServer 2
   WifiConfig 5
 ```
+
+##### Use of 'Backlog' for Tasmota commands
+
+Because individual Tasmota commands such as `SetOption`, `WebColor` etc. are often repeat themselves and might want to be used together, commands of the same name can be summarized using the Tasmota `Backlog` command. The **decode-config** parameter `--cmnd-use-backlog` enables the use of Tasmota `Backlog`.
+
+With the use of `--cmnd-use-backlog` our example configuration
+
+```conf
+# Wifi:
+  AP 0
+  Hostname %s-%04d
+  IPAddress1 0.0.0.0
+  IPAddress2 192.168.12.1
+  IPAddress3 255.255.255.0
+  IPAddress4 192.168.12.1
+  NtpServer1 ntp.localnet.home
+  NtpServer2 ntp2.localnet.home
+  NtpServer3 192.168.12.1
+  Password1 myWlAnPaszxwo!z
+  Password2 myWlAnPaszxwo!z2
+  SSId1 wlan.1
+  SSId2 my-wlan
+  WebPassword myPaszxwo!z
+  WebServer 2
+  WifiConfig 5
+```
+
+becomes to
+
+```conf
+# Wifi:
+  AP 0
+  Hostname %s-%04d
+  Backlog IPAddress1 0.0.0.0;IPAddress2 192.168.12.1;IPAddress3 255.255.255.0;IPAddress4 192.168.12.1
+  Backlog NtpServer1 ntp.localnet.home;NtpServer2 ntp2.localnet.home;NtpServer3 192.168.12.1
+  Backlog Password1 myWlAnPaszxwo!z;Password2 myWlAnPaszxwo!z2
+  Backlog SSId1 wlan.1;SSId2 my-wlan
+  WebPassword myPaszxwo!z
+  WebServer 2
+  WifiConfig 5
+```
+
+`--cmnd-use-backlog` gets really interesting for `SetOptionxx`, `WebSensorxx`, `Sensorxx`, `Memxx`, `Gpioxx` and more...
 
 > Note: A very few specific commands are unsupported - these are commands that have a high degree of complexity within Tasmota and whose implementation of the parameters are very hard to sync on Tasmota code changes.  
 **It is recommended not to use the Tasmota command format for back up the configuration data. This can become incompatible if changes in Tasmota are not syncronized with the Tasmota command output handling.**
