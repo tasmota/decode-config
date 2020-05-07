@@ -892,7 +892,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | VoltageLow                  |                        |             |
 |                | VoltRes                     |                        |             |
 |                | WattRes                     |                        |             |
-| **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x\>` |
+| **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
 |                | Fade                        | *CT*                   | `Dimmer`    |
 |                | LedTable                    | *HsbColor*             |             |
 |                | Pixels                      | *Led<x\>*              |             |
@@ -905,7 +905,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **RF**         |                             | *RfRaw*                | `RfCode`    |
 |                |                             |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
-|                |                             |                        | `RfKey<x\>` |
+|                |                             |                        | `RfKey<x>`  |
 |                |                             |                        | `RfLow`     |
 |                |                             |                        | `RfSync`    |
 | **IR**         |                             | *IRsend<x\>*           |             |
@@ -921,8 +921,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DomoticzSwitchIdx<x\>       |                        |             |
 |                | DomoticzUpdateTimer         |                        |             |
 | **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x\>*       | `KNX_PA`    |
-|                | KNX_ENHANCED                | *KnxTx_Val<x\>*        | `KNX_GA<x\>`|
-|                |                             |                        | `KNX_CB<x\>`|
+|                | KNX_ENHANCED                | *KnxTx_Val<x\>*        | `KNX_GA<x>` |
+|                |                             |                        | `KNX_CB<x>` |
 | **Display**    | DisplayAddress              | *Display*              |             |
 |                | DisplayDimmer               | *DisplayText*          |             |
 |                | DisplayMode                 |                        |             |
