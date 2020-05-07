@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00137]'
+VER = '8.2.0.6 [00138]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1578,6 +1578,7 @@ SETTING_8_2_0_6.pop('tariff1_1', None)
 SETTING_8_2_0_6.pop('tariff2_0', None)
 SETTING_8_2_0_6.pop('tariff2_1', None)
 SETTING_8_2_0_6.update             ({
+    'tariff':                       (Platform.ALL,   '<H',  0xE30,       ([4,2],None,                           ('Power',       'list("Tariff{} {:02d}:{:02d},{:02d}:{:02d}".format(i+1, @["tariff"][i][0]//60, @["tariff"][i][0]%60, @["tariff"][i][1]//60, @["tariff"][i][1]%60) for i in range(0, len(@["tariff"][0])))')) ),
     'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#+1, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
@@ -1586,7 +1587,15 @@ SETTING_8_2_0_6.update             ({
         'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None))
                                     ),
-    'tariff':                       (Platform.ALL,   '<H',  0xE30,       ([4,2],None,                           ('Power',       'list("Tariff{} {:02d}:{:02d},{:02d}:{:02d}".format(i+1, @["tariff"][i][0]//60, @["tariff"][i][0]%60, @["tariff"][i][1]//60, @["tariff"][i][1]%60) for i in range(0, len(@["tariff"][0])))')) ),
+    'esp32_webcam_resolution':      (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 10',                  ('Control',    '"Webcam {}".format($)')) ),
+    'windmeter_pulses_x_rot':       (Platform.ALL,   'B',   0xF37,       (None, None,                            ('Sensor',     '"Sensor68 2,{}".format($)')) ),
+    'windmeter_radius':             (Platform.ALL,   '<H',  0xF38,       (None, None,                            ('Sensor',     '"Sensor68 1,{}".format($)')) ),
+    'windmeter_pulse_debounce':     (Platform.ALL,   '<H',  0xF3A,       (None, None,                            ('Sensor',     '"Sensor68 3,{}".format($)')) ),
+    'windmeter_speed_factor':       (Platform.ALL,   '<h',  0xF3C,       (None, None,                            ('Sensor',     '"Sensor68 4,{}".format(float($)/1000)')) ),
+    'windmeter_tele_pchange':       (Platform.ALL,   'B',   0xF3E,       (None, None,                            ('Sensor',     '"Sensor68 5,{}".format($)')) ),
+    'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                            ('Sensor',     '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
+    'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                            ('Sensor',     '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
+    'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                            ('Sensor',     '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
                                     })
 # ======================================================================
 SETTINGS = [

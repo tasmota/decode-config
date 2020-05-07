@@ -781,6 +781,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SwitchDebounce              |                        |             |
 |                | SwitchMode<x\>              |                        |             |
 |                | Webbutton<x\>               |                        |             |
+|                | Webcam<sup>2</sup>          |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | Emulation                   | *Gpios*                |             |
 |                | FriendlyName<x\>            | *I2Cscan*              |             |
@@ -859,6 +860,10 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
 |                | PressRes                    |                        |             |
+|                | OT_Flags                    |                        |             |
+|                | OT_Save_Setpoints           |                        |             |
+|                | OT_TBoiler                  |                        |             |
+|                | OT_TWater                   |                        |             |
 |                | Sensor10                    |                        |             |
 |                | Sensor13                    |                        |             |
 |                | Sensor15                    |                        |             |
@@ -867,6 +872,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Sensor29                    |                        |             |
 |                | Sensor34                    |                        |             |
 |                | Sensor54                    |                        |             |
+|                | Sensor68                    |                        |             |
 |                | SpeedUnit                   |                        |             |
 |                | TempRes                     |                        |             |
 |                | TempOffset                  |                        |             |
@@ -960,7 +966,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Stepper Motors** |                         | *- all -*              |             |
 | **MP3 Player** |                             | *- all -*              |             |
 
-<sup>1</sup> *Sensor60 13* set latitude/longitude - same using *Latitude* and *Logitude* command
+> **Notes**  
+<sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
+<sup>2</sup> ESP32 only
 
 ## Program return codes
 
