@@ -39,7 +39,8 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 This branch does not contain any binaries. If you want to use a precompiled **decode-config** binary
 you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
 
-> If you want to run the development **decode-config.py** from this branch, you need an
+> **Note**  
+If you want to run the development **decode-config.py** from this branch, you need an
 installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 See [Running as Python script](#running-as-python-script) for more details.
 
@@ -91,7 +92,8 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [.bin format](#bin-format)
   * [Complete program parameter](#complete-program-parameter)
     * [Parameter notes](#parameter-notes)
-  * [Return codes](#return-codes)
+  * [Generated Tasmota commands](#generated-tasmota-commands)
+  * [Program return codes](#program-return-codes)
 
 ## Running the program
 
@@ -106,13 +108,15 @@ The program does not have a graphical user interface (GUI), you have to run it f
 * enable web-server admin mode (Tasmota web command [WebServer 2](https://tasmota.github.io/docs/Commands/#webserver))
 * for self-compiled firmware enable web-server with (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 
-> Note: Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so **decode-config** is unable using this way.
+> **Note**  
+Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so **decode-config** is unable using this way.
 
 #### Python
 
 **decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 
-> Note: Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
+> **Note**  
+Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
 ##### Linux
 
@@ -147,7 +151,8 @@ For an overview start the program without any parameter and you will get a short
 ```bash
 decode-config
 ```
-> replace `decode-config` by the program name your are using:  
+> **Note**  
+Replace `decode-config` by the program name your are using:  
 `decode-config.py` when running as Python executable.
 <!-- markdownlint-restore -->
 
@@ -199,7 +204,8 @@ will output a readable configuration in [JSON](http://www.json.org/)-format, e.g
 "ws_width": [1, 3, 5]}
 ```
 
-> The json names (like `"altitude"` or `"blinktime"` are internal names from Tasmotas [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) STRUCT `Settings` and are not the same as known from Tasmota [web-console commands](https://tasmota.github.io/docs/Commands/). However, since most variable names are self-describing, the functional meaning should be given in most cases.
+> **Note**  
+The json names (like `"altitude"` or `"blinktime"` are internal names from Tasmotas [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) STRUCT `Settings` and are not the same as known from Tasmota [web-console commands](https://tasmota.github.io/docs/Commands/). However, since most variable names are self-describing, the functional meaning should be given in most cases.
 
 #### Password protected device
 
@@ -209,7 +215,8 @@ If you try to access data from a device and you get an error like `ERROR 401: Er
 decode-config --device tasmota-4281 --password "myPaszxwo!z"
 ```
 
-> *decode-config* username default is `admin`. For self-compiled binaries using a non-standard web username, use `-u <user>` or `--username <user>`.
+> **Hint**  
+*decode-config* username default is `admin`. For self-compiled binaries using a non-standard web username, use `-u <user>` or `--username <user>`.
 
 ### Format JSON output
 
@@ -252,7 +259,8 @@ password = myPaszxwo!z
 json-indent 2
 ```
 
-> Group names enclosed in square brackets [ ], like `[source]` in the example, are optional and ignored - you can use them to increase readability.
+> **Hint**  
+Group names enclosed in square brackets [ ], like `[source]` in the example, are optional and ignored - you can use them to increase readability.
 
 Now we can use it with `-c` parameter:
 
@@ -260,8 +268,8 @@ Now we can use it with `-c` parameter:
 decode-config -c my.conf -d tasmota-4281
 ```
 
-> Config file syntax allows key=value, flag=true, stuff=[a,b,c].  
-For further details see [https://pypi.org/project/ConfigArgParse](https://pypi.org/project/ConfigArgParse/)).
+> **Note**  
+For further of parameter file syntax see [https://pypi.org/project/ConfigArgParse](https://pypi.org/project/ConfigArgParse/)).
 
 If parameters are specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
 
@@ -275,7 +283,8 @@ Here JSON will be output with indent of 4 spaces instead of the `2` set from `my
 
 To save data from a device or [*.dmp](#dmp-format) file into a backup file, use `--backup-file <filename>`.
 
-> You can use placeholders **@v** for _Tasmota Version_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
+> **Hint**  
+You can use placeholders **@v** for _Tasmota Version_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
 
 ```bash
 decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
@@ -313,7 +322,8 @@ Restore operation also allows placeholders **@v**, **@f**, **@h** or **@H** like
 decode-config -c my.conf -d tasmota-4281 --restore-file Config_@f_@v
 ```
 
-> Placeholders used in restore filenames only work as long as the underlying data of the device has not changed between backup and restore, since **decode-config** first read them from the config file or the device to replace it.
+> **Note**  
+Placeholders used in restore filenames only work as long as the underlying data of the device has not changed between backup and restore, since **decode-config** first read them from the config file or the device to replace it.
 
 #### Restore subset of data
 
@@ -335,7 +345,8 @@ Set this location for a device:
 decode-config -c my.conf -d tasmota-4281 -i location
 ```
 
-> Keep the JSON-format valid e.g. when cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:  
+> **Hint**  
+Keep the JSON-format valid e.g. when cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:  
 Invalid JSON (useless comma in line 3: `...2.294442,`):<pre>{
   "latitude": 48.85836,
   "longitude": 2.294442,
@@ -452,7 +463,8 @@ outputs
 ]
 ```
 
-> JSON output contains all configuration data as default. To [filter](#filter-by-groups) the JSON output by functional groups, use the `-g` or `--group` parameter.
+> **Hint**  
+JSON output contains all configuration data as default. To [filter](#filter-by-groups) the JSON output by functional groups, use the `-g` or `--group` parameter.
 
 #### Tasmota web command format
 
@@ -483,6 +495,9 @@ decode-config -c my.conf -d tasmota-4281 --group Wifi --output-format cmnd
   WebServer 2
   WifiConfig 5
 ```
+
+> **Note**  
+A very few specific commands are [unsupported](#generated-tasmota-commands). These are commands from device-specific groups which are very dependent on the Tasmota program code whose implementation is very complex to keep in sync on Tasmota code changes - see also [Generated Tasmota commands](#generated-tasmota-commands).
 
 ##### Use of 'Backlog' for Tasmota commands
 
@@ -526,9 +541,6 @@ becomes to
 ```
 
 `--cmnd-use-backlog` gets really interesting for `SetOptionxx`, `WebSensorxx`, `Sensorxx`, `Memxx`, `Gpioxx` and more...
-
-> Note: A very few specific commands are unsupported - these are commands that have a high degree of complexity within Tasmota and whose implementation of the parameters are very hard to sync on Tasmota code changes.  
-**It is recommended not to use the Tasmota command format for back up the configuration data. This can become incompatible if changes in Tasmota are not syncronized with the Tasmota command output handling.**
 
 ### Filter by groups
 
@@ -604,7 +616,8 @@ The .json format can be created by **decode-config** using the backup function (
 
 In contrast to the other two binary formats [.dmp](#dmp-format) and [.bin](#bin-format), this type of format also allows the [partial modification](#restore-a-subset-of-backup-data) of configurations.
 
-> Note: The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
+> **Note**  
+The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
 
 ### .bin format
 
@@ -742,9 +755,216 @@ To prevent having a useless % in your filename, **@h** will not replaced by host
   * **@H**
 If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
 
-## Return codes
+## Generated Tasmota commands
 
-**decode-config** returns the following error codes:
+The following table shows the Tasmota command generated by **decode-config**:
+
+* **Supported**  
+These commands will be generated using parameter `--output-format cmnd`.
+* **Ad hoc**  
+These Tasmota commands are used for immediate action and do not change settings - so these cannot be created.
+* **Unsupported**  
+These Tasmota commands are unsupported and not implemented in **decode-config**
+
+| Group          | Supported                   | *Ad hoc*               |`Unsupported`|
+|----------------|-----------------------------|------------------------|-------------|
+| **Control**    | BlinkCount                  | *Backlog*              |             |
+|                | BlinkTime                   | *Buzzer*               |             |
+|                | ButtonDebounce              | *FanSpeed*             |             |
+|                | DevGroupShare               | *LedPower*             |             |
+|                | Interlock                   |                        |             |
+|                | LedMask                     |                        |             |
+|                | LedState                    |                        |             |
+|                | Power<x>                    |                        |             |
+|                | PowerOnState                |                        |             |
+|                | PulseTime<x>                |                        |             |
+|                | SwitchDebounce              |                        |             |
+|                | SwitchMode<x>               |                        |             |
+|                | Webbutton<x>                |                        |             |
+| **Management** | DeepSleepTime               | *Delay*                |             |
+|                | Emulation                   | *Gpios*                |             |
+|                | FriendlyName<x>             | *I2Cscan*              |             |
+|                | Gpio<x>                     | *Modules*              |             |
+|                | I2CDriver<x>                | *Reset*                |             |
+|                | LogHost                     | *Restart*              |             |
+|                | LogPort                     | *State*                |             |
+|                | Module                      | *Status*               |             |
+|                | MqttLog                     | *Upgrade*              |             |
+|                | NtpServer<x>                | *Upload*               |             |
+|                | OtaUrl                      |                        |             |
+|                | Pwm<x>                      |                        |             |
+|                | PwmFrequency                |                        |             |
+|                | PwmRange                    |                        |             |
+|                | SaveData                    |                        |             |
+|                | SerialLog                   |                        |             |
+|                | Sleep                       |                        |             |
+|                | SysLog                      |                        |             |
+|                | Template                    |                        |             |
+|                | Time                        |                        |             |
+|                | TimeSTD                     |                        |             |
+|                | TimeDST                     |                        |             |
+|                | Timezone                    |                        |             |
+|                | TuyaMCU                     |                        |             |
+|                | WebLog                      |                        |             |
+| **WiFi**       | CORS                        | *AP*                   |             |
+|                | Hostname                    | *Ping<x>*              |             |
+|                | IPAddress<x>                | *WebSend*              |             |
+|                | Password<x>                 | *Publish*              |             |
+|                | Ssid<x>                     | *Publish2*             |             |
+|                | WebColor<x>                 |                        |             |
+|                | WebPassword                 |                        |             |
+|                | WebRefresh                  |                        |             |
+|                | WebSensor<x>                |                        |             |
+|                | WebServer                   |                        |             |
+|                | WifiConfig                  |                        |             |
+|                | WifiPower                   |                        |             |
+| **MQTT**       | ButtonRetain                | *Subscribe*            |             |
+|                | ButtonTopic                 | *Unsubscribe*          |             |
+|                | FullTopic                   |                        |             |
+|                | GroupTopic<x>               |                        |             |
+|                | MqttClient                  |                        |             |
+|                | MqttFingerprint             |                        |             |
+|                | MqttHost                    |                        |             |
+|                | MqttPassword                |                        |             |
+|                | MqttPort                    |                        |             |
+|                | MqttRetry                   |                        |             |
+|                | MqttUser                    |                        |             |
+|                | PowerRetain                 |                        |             |
+|                | Prefix<x>                   |                        |             |
+|                | SensorRetain                |                        |             |
+|                | StateText<x>                |                        |             |
+|                | SwitchRetain                |                        |             |
+|                | SwitchTopic                 |                        |             |
+|                | TelePeriod                  |                        |             |
+|                | Topic                       |                        |             |
+| **Rules**      | CalcRes                     | *Add<x>*               |             |
+|                | Mem<x>                      | *Event*                |             |
+|                | Rule<x>                     | *Mult<x>*              |             |
+|                |                             | *RuleTimer<x>*         |             |
+|                |                             | *Scale<x>*             |             |
+|                |                             | *Sub<x>*               |             |
+|                |                             | *Var<x>*               |             |
+| **Timer**      | Latitude                    |                        |             |
+|                | Longitude                   |                        |             |
+|                | Timers                      |                        |             |
+|                | Timer<x>                    |                        |             |
+| **Sensor**     | AdcParam                    | *GlobalHum*            |             |
+|                | Altitude                    | *GlobalTemp*           |             |
+|                | AmpRes                      | *Sensor27*             |             |
+|                | Counter<x>                  | *Sensor50*             |             |
+|                | CounterDebounce             | *Sensor52*             |             |
+|                | CounterDebounceLow          | *Sensor53*             |             |
+|                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
+|                | CounterType<x>              |                        |             |
+|                | HumOffset                   |                        |             |
+|                | HumRes                      |                        |             |
+|                | PressRes                    |                        |             |
+|                | Sensor10                    |                        |             |
+|                | Sensor13                    |                        |             |
+|                | Sensor15                    |                        |             |
+|                | Sensor18                    |                        |             |
+|                | Sensor20                    |                        |             |
+|                | Sensor29                    |                        |             |
+|                | Sensor34                    |                        |             |
+|                | Sensor54                    |                        |             |
+|                | SpeedUnit                   |                        |             |
+|                | TempRes                     |                        |             |
+|                | TempOffset                  |                        |             |
+|                | VoltRes                     |                        |             |
+|                | WattRes                     |                        |             |
+|                | WeightRes                   |                        |             |
+| **Power**      | AmpRes                      | *CurrentSet*           |             |
+|                | CurrentCal                  | *FrequencySet*         |`EnergyReset`|
+|                | CurrentHigh                 | *ModuleAddress*        |             |
+|                | CurrentLow                  | *PowerSet*             |             |
+|                | EnergyRes                   | *Status8*              |             |
+|                | FreqRes                     | *Status9*              |             |
+|                | MaxPower                    | *VoltageSet*           |             |
+|                | MaxPowerHold                |                        |             |
+|                | MaxPowerWindow              |                        |             |
+|                | PowerCal                    |                        |             |
+|                | PowerDelta                  |                        |             |
+|                | PowerHigh                   |                        |             |
+|                | PowerLow                    |                        |             |
+|                | Tariff<x>                   |                        |             |
+|                | VoltageCal                  |                        |             |
+|                | VoltageHigh                 |                        |             |
+|                | VoltageLow                  |                        |             |
+|                | VoltRes                     |                        |             |
+|                | WattRes                     |                        |             |
+| **Light**      | DimmerRange                 | *Channel<x>*           | `Color<x>`  |
+|                | Fade                        | *CT*                   | `Dimmer`    |
+|                | LedTable                    | *HsbColor*             |             |
+|                | Pixels                      | *Led<x>*               |             |
+|                | RGBWWTable                  | *Palette*              |             |
+|                | Rotation                    | *White*                |             |
+|                | Scheme                      |                        |             |
+|                | Speed                       |                        |             |
+|                | Wakeup                      |                        |             |
+|                | WakeupDuration              |                        |             |
+| **RF**         |                             | *RfRaw*                | `RfCode`    |
+|                |                             |                        | `RfHigh`    |
+|                |                             |                        | `RfHost`    |
+|                |                             |                        | `RfKey<x>`  |
+|                |                             |                        | `RfLow`     |
+|                |                             |                        | `RfSync`    |
+| **IR**         |                             | *IRsend<x>*            |             |
+|                |                             | *IRhvac*               |             |
+| **SetOption**  | SetOption<x>                |                        |             |
+| **Serial**     | Baudrate                    | *SerialSend<x>*        |             |
+|                | SBaudrate                   | *SSerialSend<x>*       |             |
+|                | SerialConfig                | *TuyaSend<x>*          |             |
+|                | SerialDelimiter             |                        |             |
+| **Domoticz**   | DomoticzIdx<x>              |                        |             |
+|                | DomoticzKeyIdx<x>           |                        |             |
+|                | DomoticzSensorIdx<x>        |                        |             |
+|                | DomoticzSwitchIdx<x>        |                        |             |
+|                | DomoticzUpdateTimer         |                        |             |
+| **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x>*        | `KNX_PA`    |
+|                | KNX_ENHANCED                | *KnxTx_Val<x>*         | `KNX_GA<x>` |
+|                |                             |                        | `KNX_CB<x>` |
+| **Display**    | DisplayAddress              | *Display*              |             |
+|                | DisplayDimmer               | *DisplayText*          |             |
+|                | DisplayMode                 |                        |             |
+|                | DisplayModel                |                        |             |
+|                | DisplayRefresh              |                        |             |
+|                | DisplaySize                 |                        |             |
+|                | DisplayRotate               |                        |             |
+|                | DisplayCols                 |                        |             |
+|                | DisplayRows                 |                        |             |
+|                | DisplayFont                 |                        |             |
+|                | DisplayWidth                |                        |             |
+|                | DisplayHeight               |                        |             |
+| **Shutter**    | ShutterButton<x>            | *ShutterClose<x>*      |             |
+|                | ShutterCalibration<x>       | *ShutterFrequency<x>*  |             |
+|                | ShutterCloseDuration<x>     | *ShutterOpen<x>*       |             |
+|                | ShutterEnableEndStopTime<x> | *ShutterSetClose<x>*   |             |
+|                | ShutterInvert<x>            | *ShutterStop<x>*       |             |
+|                | ShutterInvertWebButtons<x>  | *ShutterStopClose<x>*  |             |
+|                | ShutterLock<x>              | *ShutterStopOpen<x>*   |             |
+|                | ShutterMotorDelay<x>        | *ShutterStopPosition<x>*|            |
+|                | ShutterOpenDuration<x>      | *ShutterStopToggle<x>* |             |
+|                | ShutterPosition<x>          | *ShutterToggle<x>*     |             |
+|                | ShutterRelay<x>             |                        |             |
+|                | ShutterSetHalfway<x>        |                        |             |
+| **Zigbee**     | ZbConfig                    | *ZbBind*               |             |
+|                |                             | *ZbForget*             |             |
+|                |                             | *ZbLight*              |             |
+|                |                             | *ZbName*               |             |
+|                |                             | *ZbPermitJoin*         |             |
+|                |                             | *ZbPing*               |             |
+|                |                             | *ZbSend*               |             |
+|                |                             | *ZbStatus<x>*          |             |
+|                |                             | *ZbUnbind*             |             |
+| **Bluetooth**  |                             | *- all -*              |             |
+| **Stepper Motors** |                         | *- all -*              |             |
+| **MP3 Player** |                             | *- all -*              |             |
+
+<sup>1</sup> *Sensor60 13* set latitude/longitude - same using *Latitude* and *Logitude* command
+
+## Program return codes
+
+**decode-config** returns the following codes:
 
 * **0** - successful:  
 The process has successful finished  
