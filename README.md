@@ -775,24 +775,24 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Interlock                   |                        |             |
 |                | LedMask                     |                        |             |
 |                | LedState                    |                        |             |
-|                | Power<x>                    |                        |             |
+|                | Power<x\>                   |                        |             |
 |                | PowerOnState                |                        |             |
-|                | PulseTime<x>                |                        |             |
+|                | PulseTime<x\>               |                        |             |
 |                | SwitchDebounce              |                        |             |
-|                | SwitchMode<x>               |                        |             |
-|                | Webbutton<x>                |                        |             |
+|                | SwitchMode<x\>              |                        |             |
+|                | Webbutton<x\>               |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | Emulation                   | *Gpios*                |             |
-|                | FriendlyName<x>             | *I2Cscan*              |             |
-|                | Gpio<x>                     | *Modules*              |             |
-|                | I2CDriver<x>                | *Reset*                |             |
+|                | FriendlyName<x\>            | *I2Cscan*              |             |
+|                | Gpio<x\>                    | *Modules*              |             |
+|                | I2CDriver<x\>               | *Reset*                |             |
 |                | LogHost                     | *Restart*              |             |
 |                | LogPort                     | *State*                |             |
 |                | Module                      | *Status*               |             |
 |                | MqttLog                     | *Upgrade*              |             |
-|                | NtpServer<x>                | *Upload*               |             |
+|                | NtpServer<x\>               | *Upload*               |             |
 |                | OtaUrl                      |                        |             |
-|                | Pwm<x>                      |                        |             |
+|                | Pwm<x\>                     |                        |             |
 |                | PwmFrequency                |                        |             |
 |                | PwmRange                    |                        |             |
 |                | SaveData                    |                        |             |
@@ -807,21 +807,21 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TuyaMCU                     |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
-|                | Hostname                    | *Ping<x>*              |             |
-|                | IPAddress<x>                | *WebSend*              |             |
-|                | Password<x>                 | *Publish*              |             |
-|                | Ssid<x>                     | *Publish2*             |             |
-|                | WebColor<x>                 |                        |             |
+|                | Hostname                    | *Ping<x\>*             |             |
+|                | IPAddress<x\>               | *WebSend*              |             |
+|                | Password<x\>                | *Publish*              |             |
+|                | Ssid<x\>                    | *Publish2*             |             |
+|                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
 |                | WebRefresh                  |                        |             |
-|                | WebSensor<x>                |                        |             |
+|                | WebSensor<x\>               |                        |             |
 |                | WebServer                   |                        |             |
 |                | WifiConfig                  |                        |             |
 |                | WifiPower                   |                        |             |
 | **MQTT**       | ButtonRetain                | *Subscribe*            |             |
 |                | ButtonTopic                 | *Unsubscribe*          |             |
 |                | FullTopic                   |                        |             |
-|                | GroupTopic<x>               |                        |             |
+|                | GroupTopic<x\>              |                        |             |
 |                | MqttClient                  |                        |             |
 |                | MqttFingerprint             |                        |             |
 |                | MqttHost                    |                        |             |
@@ -830,32 +830,32 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | MqttRetry                   |                        |             |
 |                | MqttUser                    |                        |             |
 |                | PowerRetain                 |                        |             |
-|                | Prefix<x>                   |                        |             |
+|                | Prefix<x\>                  |                        |             |
 |                | SensorRetain                |                        |             |
-|                | StateText<x>                |                        |             |
+|                | StateText<x\>               |                        |             |
 |                | SwitchRetain                |                        |             |
 |                | SwitchTopic                 |                        |             |
 |                | TelePeriod                  |                        |             |
 |                | Topic                       |                        |             |
-| **Rules**      | CalcRes                     | *Add<x>*               |             |
-|                | Mem<x>                      | *Event*                |             |
-|                | Rule<x>                     | *Mult<x>*              |             |
-|                |                             | *RuleTimer<x>*         |             |
-|                |                             | *Scale<x>*             |             |
-|                |                             | *Sub<x>*               |             |
-|                |                             | *Var<x>*               |             |
+| **Rules**      | CalcRes                     | *Add<x\>*              |             |
+|                | Mem<x\>                     | *Event*                |             |
+|                | Rule<x\>                    | *Mult<x\>*             |             |
+|                |                             | *RuleTimer<x\>*        |             |
+|                |                             | *Scale<x\>*            |             |
+|                |                             | *Sub<x\>*              |             |
+|                |                             | *Var<x\>*              |             |
 | **Timer**      | Latitude                    |                        |             |
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
-|                | Timer<x>                    |                        |             |
+|                | Timer<x\>                   |                        |             |
 | **Sensor**     | AdcParam                    | *GlobalHum*            |             |
 |                | Altitude                    | *GlobalTemp*           |             |
 |                | AmpRes                      | *Sensor27*             |             |
-|                | Counter<x>                  | *Sensor50*             |             |
+|                | Counter<x\>                 | *Sensor50*             |             |
 |                | CounterDebounce             | *Sensor52*             |             |
 |                | CounterDebounceLow          | *Sensor53*             |             |
 |                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
-|                | CounterType<x>              |                        |             |
+|                | CounterType<x\>             |                        |             |
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
 |                | PressRes                    |                        |             |
@@ -886,16 +886,16 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | PowerDelta                  |                        |             |
 |                | PowerHigh                   |                        |             |
 |                | PowerLow                    |                        |             |
-|                | Tariff<x>                   |                        |             |
+|                | Tariff<x\>                  |                        |             |
 |                | VoltageCal                  |                        |             |
 |                | VoltageHigh                 |                        |             |
 |                | VoltageLow                  |                        |             |
 |                | VoltRes                     |                        |             |
 |                | WattRes                     |                        |             |
-| **Light**      | DimmerRange                 | *Channel<x>*           | `Color<x>`  |
+| **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x\>` |
 |                | Fade                        | *CT*                   | `Dimmer`    |
 |                | LedTable                    | *HsbColor*             |             |
-|                | Pixels                      | *Led<x>*               |             |
+|                | Pixels                      | *Led<x\>*              |             |
 |                | RGBWWTable                  | *Palette*              |             |
 |                | Rotation                    | *White*                |             |
 |                | Scheme                      |                        |             |
@@ -905,24 +905,24 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **RF**         |                             | *RfRaw*                | `RfCode`    |
 |                |                             |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
-|                |                             |                        | `RfKey<x>`  |
+|                |                             |                        | `RfKey<x\>` |
 |                |                             |                        | `RfLow`     |
 |                |                             |                        | `RfSync`    |
-| **IR**         |                             | *IRsend<x>*            |             |
+| **IR**         |                             | *IRsend<x\>*           |             |
 |                |                             | *IRhvac*               |             |
-| **SetOption**  | SetOption<x>                |                        |             |
-| **Serial**     | Baudrate                    | *SerialSend<x>*        |             |
-|                | SBaudrate                   | *SSerialSend<x>*       |             |
-|                | SerialConfig                | *TuyaSend<x>*          |             |
+| **SetOption**  | SetOption<x\>               |                        |             |
+| **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
+|                | SBaudrate                   | *SSerialSend<x\>*      |             |
+|                | SerialConfig                | *TuyaSend<x\>*         |             |
 |                | SerialDelimiter             |                        |             |
-| **Domoticz**   | DomoticzIdx<x>              |                        |             |
-|                | DomoticzKeyIdx<x>           |                        |             |
-|                | DomoticzSensorIdx<x>        |                        |             |
-|                | DomoticzSwitchIdx<x>        |                        |             |
+| **Domoticz**   | DomoticzIdx<x\>             |                        |             |
+|                | DomoticzKeyIdx<x\>          |                        |             |
+|                | DomoticzSensorIdx<x\>       |                        |             |
+|                | DomoticzSwitchIdx<x\>       |                        |             |
 |                | DomoticzUpdateTimer         |                        |             |
-| **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x>*        | `KNX_PA`    |
-|                | KNX_ENHANCED                | *KnxTx_Val<x>*         | `KNX_GA<x>` |
-|                |                             |                        | `KNX_CB<x>` |
+| **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x\>*       | `KNX_PA`    |
+|                | KNX_ENHANCED                | *KnxTx_Val<x\>*        | `KNX_GA<x\>`|
+|                |                             |                        | `KNX_CB<x\>`|
 | **Display**    | DisplayAddress              | *Display*              |             |
 |                | DisplayDimmer               | *DisplayText*          |             |
 |                | DisplayMode                 |                        |             |
@@ -935,18 +935,18 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DisplayFont                 |                        |             |
 |                | DisplayWidth                |                        |             |
 |                | DisplayHeight               |                        |             |
-| **Shutter**    | ShutterButton<x>            | *ShutterClose<x>*      |             |
-|                | ShutterCalibration<x>       | *ShutterFrequency<x>*  |             |
-|                | ShutterCloseDuration<x>     | *ShutterOpen<x>*       |             |
-|                | ShutterEnableEndStopTime<x> | *ShutterSetClose<x>*   |             |
-|                | ShutterInvert<x>            | *ShutterStop<x>*       |             |
-|                | ShutterInvertWebButtons<x>  | *ShutterStopClose<x>*  |             |
-|                | ShutterLock<x>              | *ShutterStopOpen<x>*   |             |
-|                | ShutterMotorDelay<x>        | *ShutterStopPosition<x>*|            |
-|                | ShutterOpenDuration<x>      | *ShutterStopToggle<x>* |             |
-|                | ShutterPosition<x>          | *ShutterToggle<x>*     |             |
-|                | ShutterRelay<x>             |                        |             |
-|                | ShutterSetHalfway<x>        |                        |             |
+| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     |             |
+|                | ShutterCalibration<x\>      | *ShutterFrequency<x\>* |             |
+|                | ShutterCloseDuration<x\>    | *ShutterOpen<x\>*      |             |
+|                | ShutterEnableEndStopTime<x\>| *ShutterSetClose<x\>*  |             |
+|                | ShutterInvert<x\>           | *ShutterStop<x\>*      |             |
+|                | ShutterInvertWebButtons<x\> | *ShutterStopClose<x\>* |             |
+|                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
+|                | ShutterMotorDelay<x\>       | *ShutterStopPosition<x\>*|           |
+|                | ShutterOpenDuration<x\>     | *ShutterStopToggle<x\>*|             |
+|                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
+|                | ShutterRelay<x\>            |                        |             |
+|                | ShutterSetHalfway<x\>       |                        |             |
 | **Zigbee**     | ZbConfig                    | *ZbBind*               |             |
 |                |                             | *ZbForget*             |             |
 |                |                             | *ZbLight*              |             |
@@ -954,7 +954,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             | *ZbPermitJoin*         |             |
 |                |                             | *ZbPing*               |             |
 |                |                             | *ZbSend*               |             |
-|                |                             | *ZbStatus<x>*          |             |
+|                |                             | *ZbStatus<x\>*         |             |
 |                |                             | *ZbUnbind*             |             |
 | **Bluetooth**  |                             | *- all -*              |             |
 | **Stepper Motors** |                         | *- all -*              |             |
