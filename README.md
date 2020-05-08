@@ -781,7 +781,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SwitchDebounce              |                        |             |
 |                | SwitchMode<x\>              |                        |             |
 |                | Webbutton<x\>               |                        |             |
-|                | Webcam<sup>2</sup>          |                        |             |
+|                | WCStream<sup>2</sup>        |                        |             |
+|                | WCMirror<sup>2</sup>        |                        |             |
+|                | WCFlip<sup>2</sup>          |                        |             |
+|                | WCBrightness<sup>2</sup>    |                        |             |
+|                | WCContrast<sup>2</sup>      |                        |             |
+|                | WCSaturation<sup>2</sup>    |                        |             |
+|                | WCResolution<sup>2</sup>    |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | Emulation                   | *Gpios*                |             |
 |                | FriendlyName<x\>            | *I2Cscan*              |             |

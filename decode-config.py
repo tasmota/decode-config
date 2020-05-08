@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00138]'
+VER = '8.2.0.6 [00139]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1537,10 +1537,8 @@ SETTING_8_2_0_3.update             ({
         'gpio':                     (Platform.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32,{
             'adc0':                 (Platform.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
-                                    },                      0x5A4,       (None, None,                           ('Management',  None))
-                                    ),
-                                    },                      0x71F,       (None, None,                           ('Management',  None))
-                                    ),
+                                    },                      0x5A4,       (None, None,                           ('Management',  None)) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
                                     })
 SETTING_8_2_0_3['user_template'][1].update ({
         'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
@@ -1548,8 +1546,7 @@ SETTING_8_2_0_3['user_template'][1].update ({
         'gpio':                     (Platform.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
         'flag':                     (Platform.ESP82, {
             'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
-                                    },                      0x73C,       (None, None,                           ('Management',  None))
-                                    ),
+                                    },                      0x73C,       (None, None,                           ('Management',  None)) ),
                                     })
 SETTING_8_2_0_3['flag3'][1].update ({
         'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
@@ -1585,17 +1582,24 @@ SETTING_8_2_0_6.update             ({
         'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
         'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
-                                    },                      0x71F,       (None, None,                           ('Management',  None))
-                                    ),
-    'esp32_webcam_resolution':      (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 10',                  ('Control',    '"Webcam {}".format($)')) ),
-    'windmeter_pulses_x_rot':       (Platform.ALL,   'B',   0xF37,       (None, None,                            ('Sensor',     '"Sensor68 2,{}".format($)')) ),
-    'windmeter_radius':             (Platform.ALL,   '<H',  0xF38,       (None, None,                            ('Sensor',     '"Sensor68 1,{}".format($)')) ),
-    'windmeter_pulse_debounce':     (Platform.ALL,   '<H',  0xF3A,       (None, None,                            ('Sensor',     '"Sensor68 3,{}".format($)')) ),
-    'windmeter_speed_factor':       (Platform.ALL,   '<h',  0xF3C,       (None, None,                            ('Sensor',     '"Sensor68 4,{}".format(float($)/1000)')) ),
-    'windmeter_tele_pchange':       (Platform.ALL,   'B',   0xF3E,       (None, None,                            ('Sensor',     '"Sensor68 5,{}".format($)')) ),
-    'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                            ('Sensor',     '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
-    'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                            ('Sensor',     '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
-    'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                            ('Sensor',     '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
+    'webcam_config':                (Platform.ESP32, {
+         'stream':                  (Platform.ESP32, '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+         'mirror':                  (Platform.ESP32, '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+         'flip':                    (Platform.ESP32, '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+         'contrast':                (Platform.ESP32, '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+         'brightness':              (Platform.ESP32, '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+         'saturation':              (Platform.ESP32, '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+         'resolution':              (Platform.ESP32, '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+                                    },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None,      None) ),
+    'windmeter_pulses_x_rot':       (Platform.ALL,   'B',   0xF37,       (None, None,                           ('Sensor',      '"Sensor68 2,{}".format($)')) ),
+    'windmeter_radius':             (Platform.ALL,   '<H',  0xF38,       (None, None,                           ('Sensor',      '"Sensor68 1,{}".format($)')) ),
+    'windmeter_pulse_debounce':     (Platform.ALL,   '<H',  0xF3A,       (None, None,                           ('Sensor',      '"Sensor68 3,{}".format($)')) ),
+    'windmeter_speed_factor':       (Platform.ALL,   '<h',  0xF3C,       (None, None,                           ('Sensor',      '"Sensor68 4,{}".format(float($)/1000)')) ),
+    'windmeter_tele_pchange':       (Platform.ALL,   'B',   0xF3E,       (None, None,                           ('Sensor',      '"Sensor68 5,{}".format($)')) ),
+    'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
+    'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
+    'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
                                     })
 # ======================================================================
 SETTINGS = [
