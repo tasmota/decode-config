@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00139]'
+VER = '8.2.0.6 [00140]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -615,7 +615,7 @@ SETTING_5_10_0 = {
                                     },                      0x2E8,       (None, None,                           ('Control',     None)), (None,      None) ),
     'pwm_value':                    (Platform.ALL,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1,$)')) ),
     'altitude':                     (Platform.ALL,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
-    'tele_period':                  (Platform.ALL,   '<H',  0x2F8,       (None, '0 == or 10 <= $ <= 3600',      ('MQTT',       '"TelePeriod {}".format($)')) ),
+    'tele_period':                  (Platform.ALL,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',       '"TelePeriod {}".format($)')) ),
     'ledstate':                     (Platform.ALL,   'B',   0x2FB,       (None, '0 <= $ <= 7',                  ('Control',     '"LedState {}".format(($ & 0x7))')) ),
     'param':                        (Platform.ALL,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
     'state_text':                   (Platform.ALL,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
