@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00140]'
+VER = '8.2.0.6 [00141]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2011,14 +2011,18 @@ def make_filename(filename, filetype, configmapping):
     """
     config_version = config_friendlyname = config_hostname = device_hostname = ''
 
-    config_version = configmapping.get('version', None)
-    if config_version is not None:
+    config_version = configmapping.get('version', '')
+    try:
+        config_version = configmapping['header']['data']['version']
+    except:     # pylint: disable=bare-except
+        config_version = configmapping.get('version', '')
+    if config_version != '':
         config_version = get_versionstr(int(str(config_version), 0))
-    config_friendlyname = configmapping.get('friendlyname', None)
-    if config_friendlyname is not None:
+    config_friendlyname = configmapping.get('friendlyname', '')
+    if config_friendlyname != '':
         config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(config_friendlyname[0]) if c.isprintable()), 256))).replace(' ', '_')
-    config_hostname = configmapping.get('hostname', None)
-    if config_hostname is not None:
+    config_hostname = configmapping.get('hostname', '')
+    if config_hostname != '':
         if str(config_hostname).find('%') < 0:
             config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_hostname)).strip('_'))
     if filename.find('@H') >= 0 and ARGS.device is not None:
