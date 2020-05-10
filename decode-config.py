@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.2.0.6 [00141]'
+VER = '8.2.0.6 [00142]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -263,7 +263,7 @@ MAX_BACKLOG = 30
 MAX_BACKLOGLEN = 320
 
 # decode-config constant
-STR_ENCODING = 'utf8'
+STR_CODING = 'utf-8'
 HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
 VIRTUAL = '*'
@@ -1563,13 +1563,11 @@ SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
 SETTING_8_2_0_4.update             ({
     'config_version':               (Platform.ALL,   'B',   0xF36,       (None, '0 <= $ < len(Platform.STR)',   (INTERNAL,      None)), (None,      False) ),
                                     })
-# ======================================================================
-SETTING_8_2_0_5 = copy.deepcopy(SETTING_8_2_0_4)
-SETTING_8_2_0_5['flag4'][1].update ({
+SETTING_8_2_0_4['flag4'][1].update ({
         'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SetOption92 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_5)
+SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_4)
 SETTING_8_2_0_6.pop('tariff1_0', None)
 SETTING_8_2_0_6.pop('tariff1_1', None)
 SETTING_8_2_0_6.pop('tariff2_0', None)
@@ -1600,11 +1598,14 @@ SETTING_8_2_0_6.update             ({
     'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
     'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
     'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#+1, $ if len($) != 0 else "\\"")')) ),
+                                    })
+SETTING_8_2_0_6['flag4'][1].update ({
+        'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SetOption93 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
             (0x8020006,0x1000, SETTING_8_2_0_6),
-            (0x8020005,0x1000, SETTING_8_2_0_5),
             (0x8020004,0x1000, SETTING_8_2_0_4),
             (0x8020003,0x1000, SETTING_8_2_0_3),
             (0x8020000,0x1000, SETTING_8_2_0_0),
@@ -2173,7 +2174,7 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
     # get hostname
     _, body = get_tasmotaconfig("cm?{}cmnd=status%205".format(loginstr), host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(str(body, STR_ENCODING))
+        jsonbody = json.loads(str(body, STR_CODING))
         statusnet = jsonbody.get('StatusNET', None)
         if statusnet is not None:
             hostname = statusnet.get('Hostname', None)
@@ -2766,10 +2767,12 @@ def is_filtergroup(group):
             return False
     return True
 
-def get_fieldvalue(fielddef, dobj, addr, idxoffset=0):
+def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
     """
     Get single field value from definition
 
+    @param fieldname:
+        name of the field
     @param fielddef:
         see Settings desc
     @param dobj:
@@ -2797,10 +2800,29 @@ def get_fieldvalue(fielddef, dobj, addr, idxoffset=0):
         # max length of this field
         maxlength = get_fieldlength(fielddef)
 
-        # get unpacked binary value as stripped string
-        str_ = str(unpackedvalue[0], STR_ENCODING, errors='ignore')
-        # split into single or multiple list elements delimted by \0
-        sarray = str_.split('\x00', SETTINGSTEXTINDEX.index('SET_MAX'))
+        # pay attention of compressed strings
+        compressed_str = False
+        try:
+            if unpackedvalue[0][0] == 0 and \
+               unpackedvalue[0][1] != 0 and \
+               CONFIG['info']['template']['flag4'][1]['compress_rules_cpu'] and \
+               fieldname == 'rules':
+                compressed_str = True
+        except:     # pylint: disable=bare-except
+            pass
+
+        if compressed_str:
+            # can't use encode()/decode() 'cause of loosing values, we use hex as string
+            data = unpackedvalue[0][1:]
+            # compressed strings (rule) may contain trailing garbadge from uncompressed string after first \x00
+            str_ = data[:data.find(0)].hex()
+            sarray = None
+        else:
+            # get unpacked binary value as stripped string
+            str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
+            # split into single or multiple list elements delimted by \0
+            sarray = str_.split('\x00', SETTINGSTEXTINDEX.index('SET_MAX'))
+
         if isinstance(sarray, list):
             # strip trailing \0 bytes
             sarray = [element.rstrip('\x00') for element in sarray]
@@ -2813,7 +2835,12 @@ def get_fieldvalue(fielddef, dobj, addr, idxoffset=0):
 
         # remove unprintable char
         if maxlength:
-            value_ = "".join(itertools.islice((c for c in str_ if c.isprintable()), maxlength))
+            if compressed_str:
+                # re-combine compressed string: \x00 + data
+                value_ = '\x00' + str_
+                # value_ = bytearray(value_, STR_CODING)
+            else:
+                value_ = "".join(itertools.islice((c for c in str_ if c.isprintable()), maxlength))
 
     return value_
 
@@ -2934,9 +2961,9 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
     elif isinstance(format_, (str, bool, int, float)):
         if get_fieldlength(fielddef) != 0:
             if strindex is not None:
-                value = get_fieldvalue(fielddef, dobj, baseaddr, addroffset)
+                value = get_fieldvalue(fieldname, fielddef, dobj, baseaddr, addroffset)
             else:
-                value = get_fieldvalue(fielddef, dobj, baseaddr+addroffset)
+                value = get_fieldvalue(fieldname, fielddef, dobj, baseaddr+addroffset)
             valuemapping = readwrite_converter(value, fielddef, read=True, raw=raw)
 
     else:
@@ -3020,7 +3047,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
         # simple char value
         if format_[-1:] in ['c']:
             try:
-                value = readwrite_converter(restoremapping.encode(STR_ENCODING)[0], fielddef, read=False)
+                value = readwrite_converter(restoremapping.encode(STR_CODING)[0], fielddef, read=False)
             except Exception as err:    # pylint: disable=broad-except
                 exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 valid = False
@@ -3083,7 +3110,11 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
         # string
         elif format_[-1:].lower() in ['s', 'p']:
-            value = readwrite_converter(restoremapping.encode(STR_ENCODING), fielddef, read=False)
+            # pay attention of compressed strings
+            if len(restoremapping) > 4 and restoremapping[0] == '\x00':
+                value = b'\x00' + bytes.fromhex(restoremapping[1:])
+            else:
+                value = readwrite_converter(restoremapping.encode(STR_CODING), fielddef, read=False)
             err_text = "string length exceeding"
             if value is not None:
                 max_ -= 1
@@ -3095,7 +3126,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
             if strindex is not None:
                 # unpack index str from source baseaddr into str_
                 unpackedvalue = struct.unpack_from(format_, dobj, baseaddr)
-                str_ = str(unpackedvalue[0], STR_ENCODING, errors='ignore')
+                str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
                 # split into separate string values
                 sarray = str_.split('\x00')
                 # limit to SET_MAX
@@ -3104,14 +3135,14 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                     if delrange > 0:
                         del sarray[-delrange:]
                 if not isinstance(value, str):
-                    value = str(value, STR_ENCODING, errors='ignore')
+                    value = str(value, STR_CODING, errors='ignore')
                 # remember possible value changes
                 prevvalue = sarray[strindex+addroffset]
                 curvalue = value
                 # change indexed string
                 sarray[strindex+addroffset] = value
                 # convert back to binary string stream
-                new_value = '\0'.join(sarray).encode(STR_ENCODING)
+                new_value = '\0'.join(sarray).encode(STR_CODING)
                 if len(new_value) > get_fieldlength(fielddef):
                     err_text = "Text pool overflow by {} chars (max {})".format(len(new_value) - get_fieldlength(fielddef), get_fieldlength(fielddef))
                     valid = False
@@ -3143,9 +3174,9 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                         # do not use address offset for indexed strings
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr, value)
                     else:
-                        prevvalue = get_fieldvalue(fielddef, dobj, baseaddr+addroffset)
+                        prevvalue = get_fieldvalue(fieldname, fielddef, dobj, baseaddr+addroffset)
                         dobj = set_fieldvalue(fielddef, dobj, baseaddr+addroffset, value)
-                        curvalue = get_fieldvalue(fielddef, dobj, baseaddr+addroffset)
+                        curvalue = get_fieldvalue(fieldname, fielddef, dobj, baseaddr+addroffset)
                     if prevvalue != curvalue and ARGS.verbose:
                         if isinstance(prevvalue, str):
                             prevvalue = '"{}"'.format(prevvalue)
@@ -3241,7 +3272,7 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
                 cmnds = set_cmnd(cmnds, platform_bits, name, rm_fielddef, valuemapping, mapped, addroffset=addroffset, idx=idx)
 
     # a simple value
-    elif isinstance(format_, (str, bool, int, float)):
+    elif isinstance(mappedvalue, (str, bool, int, float)):
         if group is not None:
             group = group.title()
         if isinstance(tasmotacmnd, tuple):
@@ -3249,7 +3280,9 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
             for tasmotacmnd in tasmotacmnds:
                 cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
         else:
-            cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
+            # pay attention of compressed strings (currently unsupported)
+            if not (isinstance(mappedvalue, str) and len(mappedvalue) > 4 and mappedvalue[0] == '\x00'):
+                cmnds = set_cmnds(cmnds, group, valuemapping, mappedvalue, idx, readconverter, writeconverter, tasmotacmnd)
 
     return cmnds
 
@@ -3456,7 +3489,7 @@ def backup(backupfile, backupfileformat, config):
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
     def backup_json(backup_filename, config):
         # do json file write
-        with codecs.open(backup_filename, "w", encoding="utf-8") as backupfp:
+        with codecs.open(backup_filename, "w", encoding=STR_CODING) as backupfp:
             backupfp.write(get_jsonstr(config['mapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
 
     backups = {
@@ -3558,8 +3591,7 @@ def restore(restorefile, backupfileformat, config):
         if ARGS.verbose:
             message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
-            #with open(restorefilename, "r") as restorefp:
-            with codecs.open(restorefilename, "r", encoding="utf-8") as restorefp:
+            with codecs.open(restorefilename, "r", encoding=STR_CODING) as restorefp:
                 jsonconfig = json.load(restorefp)
         except ValueError as err:
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))

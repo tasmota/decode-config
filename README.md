@@ -846,7 +846,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Topic                       |                        |             |
 | **Rules**      | CalcRes                     | *Add<x\>*              |             |
 |                | Mem<x\>                     | *Event*                |             |
-|                | Rule<x\>                    | *Mult<x\>*             |             |
+|                | Rule<x\><sup>3</sup>        | *Mult<x\>*             |             |
 |                |                             | *RuleTimer<x\>*        |             |
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
@@ -975,6 +975,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 > **Notes**  
 <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
 <sup>2</sup> ESP32 only
+<sup>3</sup> Compressed rules are currently unsupported (backup/restore only)
 
 ## Program return codes
 
