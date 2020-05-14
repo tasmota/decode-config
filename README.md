@@ -297,7 +297,7 @@ This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and
 
 #### Save multiple backup at once
 
-The `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
+Since **decode-config** v8.3.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
 
 ```bash
 decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
@@ -784,7 +784,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SwitchDebounce              |                        |             |
 |                | SwitchMode<x\>              |                        |             |
 |                | Webbutton<x\>               |                        |             |
-|                | Webcam<sup>2</sup>          |                        |             |
+|                | WCStream<sup>2</sup>        |                        |             |
+|                | WCMirror<sup>2</sup>        |                        |             |
+|                | WCFlip<sup>2</sup>          |                        |             |
+|                | WCBrightness<sup>2</sup>    |                        |             |
+|                | WCContrast<sup>2</sup>      |                        |             |
+|                | WCSaturation<sup>2</sup>    |                        |             |
+|                | WCResolution<sup>2</sup>    |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | Emulation                   | *Gpios*                |             |
 |                | FriendlyName<x\>            | *I2Cscan*              |             |
@@ -843,7 +849,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Topic                       |                        |             |
 | **Rules**      | CalcRes                     | *Add<x\>*              |             |
 |                | Mem<x\>                     | *Event*                |             |
-|                | Rule<x\>                    | *Mult<x\>*             |             |
+|                | Rule<x\><sup>3</sup>        | *Mult<x\>*             |             |
 |                |                             | *RuleTimer<x\>*        |             |
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
@@ -972,6 +978,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 > **Notes**  
 <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
 <sup>2</sup> ESP32 only
+<sup>3</sup> Compressed rules are currently unsupported (backup/restore only)
 
 ## Program return codes
 
