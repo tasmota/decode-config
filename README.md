@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v8.3.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v8.3.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -293,11 +293,11 @@ You can use placeholders **@v** for _Tasmota Version_, **@f** for first _Friendl
 decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
 ```
 
-This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and `8.3.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.3.1.json` (the part `Tasmota` and `8.3.1` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
-Since **decode-config** v8.3.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
+Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
 
 ```bash
 decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
@@ -305,7 +305,7 @@ decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_8.3.0.json` using JSON format
+* `Config_Tasmota_8.3.1.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -313,10 +313,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.3.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.3.1.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.3.0
+decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.3.1
 ```
 
 Restore operation also allows placeholders **@v**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -849,7 +849,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Topic                       |                        |             |
 | **Rules**      | CalcRes                     | *Add<x\>*              |             |
 |                | Mem<x\>                     | *Event*                |             |
-|                | Rule<x\><sup>3</sup>        | *Mult<x\>*             |             |
+|                | Rule<x\>                    | *Mult<x\>*             |             |
 |                |                             | *RuleTimer<x\>*        |             |
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
@@ -978,7 +978,6 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 > **Notes**  
 <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
 <sup>2</sup> ESP32 only
-<sup>3</sup> Compressed rules are currently unsupported (backup/restore only)
 
 ## Program return codes
 
