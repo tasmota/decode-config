@@ -284,10 +284,10 @@ Here JSON will be output with indent of 4 spaces instead of the `2` set from `my
 To save data from a device or [*.dmp](#dmp-format) file into a backup file, use `--backup-file <filename>`.
 
 > **Hint**  
-You can use placeholders **@v** for _Tasmota Version_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
+You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicename_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
+decode-config -c my.conf -d tasmota-4281 --backup-file Config_@d_@v
 ```
 
 This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and `8.3.0` will choosen related to your device configuration).
@@ -297,7 +297,7 @@ This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and
 Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
+decode-config -c my.conf -d tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Backup_@H.dmp
 ```
 
 creates three backup files:
@@ -316,10 +316,10 @@ To restore the previously save backup file `Config_Tasmota_8.3.0.json` to device
 decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.3.0
 ```
 
-Restore operation also allows placeholders **@v**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
+Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --restore-file Config_@f_@v
+decode-config -c my.conf -d tasmota-4281 --restore-file Config_@d_@v
 ```
 
 > **Note**  
@@ -573,13 +573,13 @@ Filtering by groups affects the entire output, regardless of whether screen outp
    a) use file extension to choice the file format
 
   ```bash
-  decode-config -c my.conf -d tasmota --backup-file Config_@f_@v.dmp
+  decode-config -c my.conf -d tasmota --backup-file Config_@d_@v.dmp
   ```
 
    b) use args to choice the file format
 
   ```bash
-    decode-config -c my.conf -d tasmota --backup-type dmp --backup-file Config_@f_@v
+    decode-config -c my.conf -d tasmota --backup-type dmp --backup-file Config_@d_@v
   ```
 
 #### Use batch processing
@@ -587,13 +587,13 @@ Filtering by groups affects the entire output, regardless of whether screen outp
 Linux
 
 ```bash
-for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -d $device -o Config_@f_@v
+for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -d $device -o Config_@d_@v
 ```
 
 under Windows
 
 ```batch
-for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -d %device -o Config_@f_@v
+for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -d %device -o Config_@d_@v
 ```
 
 will produce JSON configuration files for host tasmota1, tasmota2 and tasmota3 using friendly name and Tasmota firmware version for backup filenames.
@@ -678,15 +678,16 @@ Backup/Restore:
   -i, --restore-file <filename>
                         file to restore configuration from (default: None).
                         Replacements: @v=firmware version from config,
-                        @f=device friendly name from config, @h=device
-                        hostname from config, @H=device hostname from device
-                        (-d arg only)
+                        @d=devicename, @f=device friendly name from config,
+                        @h=device hostname from config, @H=device hostname
+                        from device (-d arg only)
   -o, --backup-file <filename>
                         file to backup configuration to, can be specified
                         multiple times (default: None). Replacements:
-                        @v=firmware version from config, @f=device friendly
-                        name from config, @h=device hostname from config,
-                        @H=device hostname from device (-d arg only)
+                        @v=firmware version from config, @d=devicename,
+                        @f=device friendly name from config, @h=device
+                        hostname from config, @H=device hostname from device
+                        (-d arg only)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename

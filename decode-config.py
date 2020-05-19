@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.1 [00145]'
+VER = '8.3.1.1 [00146]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -75,15 +75,16 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
       -i, --restore-file <filename>
                             file to restore configuration from (default: None).
                             Replacements: @v=firmware version from config,
-                            @f=device friendly name from config, @h=device
-                            hostname from config, @H=device hostname from device
-                            (-d arg only)
+                            @d=devicename, @f=device friendly name from config,
+                            @h=device hostname from config, @H=device hostname
+                            from device (-d arg only)
       -o, --backup-file <filename>
                             file to backup configuration to, can be specified
                             multiple times (default: None). Replacements:
-                            @v=firmware version from config, @f=device friendly
-                            name from config, @h=device hostname from config,
-                            @H=device hostname from device (-d arg only)
+                            @v=firmware version from config, @d=devicename,
+                            @f=device friendly name from config, @h=device
+                            hostname from config, @H=device hostname from device
+                            (-d arg only)
       -t, --backup-type json|bin|dmp
                             backup filetype (default: 'json')
       -E, --extension       append filetype extension for -i and -o filename
@@ -2478,6 +2479,8 @@ def make_filename(filename, filetype, configmapping):
             Tasmota version from config data
         @f:
             friendlyname from config data
+        @d:
+            devicename from config data
         @h:
             hostname from config data
         @H:
@@ -2544,6 +2547,7 @@ def make_filename(filename, filetype, configmapping):
         pass
 
     filename = filename.replace('@v', config_version)
+    filename = filename.replace('@d', config_friendlyname)
     filename = filename.replace('@f', config_friendlyname)
     filename = filename.replace('@h', config_hostname)
     filename = filename.replace('@H', device_hostname)
@@ -4306,13 +4310,13 @@ def parseargs():
                          metavar='<filename>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<filename>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
