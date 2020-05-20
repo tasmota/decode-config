@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.1 [00146]'
+VER = '8.3.1.1 [00147]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1329,6 +1329,7 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
                     'SET_TEMPLATE_NAME',
                     'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4',
+                    'SET_DEVICENAME',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
@@ -1608,6 +1609,10 @@ SETTING_8_2_0_6['flag4'][1].update ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
+SETTING_8_3_1_1.update             ({
+    'devicename':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEVICENAME')),
+                                                                         (None, None,                           ('Management',  '"DeviceName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x8030101,0x1000, SETTING_8_3_1_1),
@@ -2505,6 +2510,9 @@ def make_filename(filename, filetype, configmapping):
     config_friendlyname = configmapping.get('friendlyname', '')
     if config_friendlyname != '':
         config_friendlyname = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(config_friendlyname[0]) if c.isprintable()), 256))).replace(' ', '_')
+    config_devicename = configmapping.get('devicename', '')
+    if config_devicename != '':
+        config_devicename = re.sub('_{2,}', '_', "".join(itertools.islice((c for c in str(config_devicename) if c.isprintable()), 256))).replace(' ', '_')
     config_hostname = configmapping.get('hostname', '')
     if config_hostname != '':
         if str(config_hostname).find('%') < 0:
@@ -2547,7 +2555,7 @@ def make_filename(filename, filetype, configmapping):
         pass
 
     filename = filename.replace('@v', config_version)
-    filename = filename.replace('@d', config_friendlyname)
+    filename = filename.replace('@d', config_devicename)
     filename = filename.replace('@f', config_friendlyname)
     filename = filename.replace('@h', config_hostname)
     filename = filename.replace('@H', device_hostname)
