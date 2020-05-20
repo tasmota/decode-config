@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.1 [00147]'
+VER = '8.3.1.1 [00148]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1802,6 +1802,7 @@ class Unishox:
     @revised Norbert Richter
     """
 
+    # pylint: disable=bad-continuation,bad-whitespace,line-too-long
     cl_95 = [0x4000 +  3, 0x3F80 + 11, 0x3D80 + 11, 0x3C80 + 10, 0x3BE0 + 12, 0x3E80 + 10, 0x3F40 + 11, 0x3EC0 + 10, 0x3BA0 + 11, 0x3BC0 + 11, 0x3D60 + 11, 0x3B60 + 11, 0x3A80 + 10, 0x3AC0 + 10, 0x3A00 +  9, 0x3B00 + 10, 0x38C0 + 10, 0x3900 + 10, 0x3940 + 11, 0x3960 + 11, 0x3980 + 11, 0x39A0 + 11, 0x39C0 + 11, 0x39E0 + 12, 0x39F0 + 12, 0x3880 + 10, 0x3CC0 + 10, 0x3C00 +  9, 0x3D00 + 10, 0x3E00 +  9, 0x3F00 + 10, 0x3B40 + 11, 0x3BF0 + 12, 0x2B00 +  8, 0x21C0 + 11, 0x20C0 + 10, 0x2100 + 10, 0x2600 +  7, 0x2300 + 11, 0x21E0 + 12, 0x2140 + 11, 0x2D00 +  8, 0x2358 + 13, 0x2340 + 12, 0x2080 + 10, 0x21A0 + 11, 0x2E00 +  8, 0x2C00 +  8, 0x2180 + 11, 0x2350 + 13, 0x2F80 +  9, 0x2F00 +  9, 0x2A00 +  8, 0x2160 + 11, 0x2330 + 12, 0x21F0 + 12, 0x2360 + 13, 0x2320 + 12, 0x2368 + 13, 0x3DE0 + 12, 0x3FA0 + 11, 0x3DF0 + 12, 0x3D40 + 11, 0x3F60 + 11, 0x3FF0 + 12, 0xB000 +  4, 0x1C00 +  7, 0x0C00 +  6, 0x1000 +  6, 0x6000 +  3, 0x3000 +  7, 0x1E00 +  8, 0x1400 +  7, 0xD000 +  4, 0x3580 +  9, 0x3400 +  8, 0x0800 +  6, 0x1A00 +  7, 0xE000 +  4, 0xC000 +  4, 0x1800 +  7, 0x3500 +  9, 0xF800 +  5, 0xF000 +  5, 0xA000 +  4, 0x1600 +  7, 0x3300 +  8, 0x1F00 +  8, 0x3600 +  9, 0x3200 +  8, 0x3680 +  9, 0x3DA0 + 11, 0x3FC0 + 11, 0x3DC0 + 11, 0x3FE0 + 12]
 
     # enum {SHX_STATE_1 = 1, SHX_STATE_2};    // removed Unicode state
@@ -1813,15 +1814,14 @@ class Unishox:
     SHX_SET1B = 2
     SHX_SET2 = 3
 
-    sets = [[0, ' ', 'e', 0, 't', 'a', 'o', 'i', 'n', 's', 'r'],
-            [0, 'l', 'c', 'd', 'h', 'u', 'p', 'm', 'b', 'g', 'w'],
-            ['f', 'y', 'v', 'k', 'q', 'j', 'x', 'z', 0, 0, 0],
-            [0, '9', '0', '1', '2', '3', '4', '5', '6', '7', '8'],
+    sets = [['\0', ' ', 'e', '\0', 't', 'a', 'o', 'i', 'n', 's', 'r'],
+            ['\0', 'l', 'c', 'd', 'h', 'u', 'p', 'm', 'b', 'g', 'w'],
+            ['f', 'y', 'v', 'k', 'q', 'j', 'x', 'z', '\0', '\0', '\0'],
+            ['\0', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8'],
             ['.', ',', '-', '/', '?', '+', ' ', '(', ')', '$', '@'],
             [';', '#', ':', '<', '^', '*', '"', '{', '}', '[', ']'],
             ['=', '%', '\'', '>', '&', '_', '!', '\\', '|', '~', '`']]
 
-    # pylint: disable=bad-continuation,bad-whitespace
     us_vcode = [2 + (0 << 3), 3 + (3 << 3), 3 + (1 << 3), 4 + (6 << 3), 0,
     #           5,            6,            7,            8, 9, 10
                 4 + (4 << 3), 3 + (2 << 3), 4 + (8 << 3), 0, 0,  0,
@@ -2086,6 +2086,8 @@ class Unishox:
         code = 0
         count = 0
         while count < 5:
+            if bit_no_p >= len_:
+                return -1, bit_no_p
             # detect marker
             if self.ESCAPE_MARKER == inn[bit_no_p >> 3]:
                 bit_no_p += 8      # skip marker
@@ -3780,7 +3782,7 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
                 unishox = Unishox()
                 uncompressed_data = bytearray(2048)
                 compressed = bytes.fromhex(mappedvalue[1:])
-                unishox.decompress(compressed[1:], len(compressed[1:])-1, uncompressed_data, len(uncompressed_data))
+                unishox.decompress(compressed[1:], len(compressed[1:]), uncompressed_data, len(uncompressed_data))
                 uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
                 cmnds = set_cmnds(cmnds, group, valuemapping, uncompressed_str, idx, readconverter, writeconverter, tasmotacmnd)
 
