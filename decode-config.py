@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.1 [00148]'
+VER = '8.3.1.2 [00148]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1614,7 +1614,10 @@ SETTING_8_3_1_1.update             ({
                                                                          (None, None,                           ('Management',  '"DeviceName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
+SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
+# ======================================================================
 SETTINGS = [
+            (0x8030102,0x1000, SETTING_8_3_1_2),
             (0x8030101,0x1000, SETTING_8_3_1_1),
             (0x8030100,0x1000, SETTING_8_3_1_0),
             (0x8020006,0x1000, SETTING_8_2_0_6),
