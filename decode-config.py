@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.2 [00148]'
+VER = '8.3.1.2 [00149]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1376,6 +1376,7 @@ SETTING_8_0_0_1.update             ({
                                                                          ([16], None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
                                                                          ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'script_pram':                  (Platform.ALL,   'b',   0x7CE,       ([5,10],None,                          ('Rules',       None )) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
@@ -1447,6 +1448,12 @@ SETTING_8_1_0_4['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_1_0_5 = copy.deepcopy(SETTING_8_1_0_4)
+SETTING_8_1_0_5.update             ({
+    'keeloq_master_msb':            (Platform.ALL,   '<L',  0xFBC,       (None, None,                           ('Shutter',     '"KeeloqSet {} {} {} {}".format(@["keeloq_master_msb"],@["keeloq_master_lsb"],@["keeloq_serial"],@["keeloq_count"])')) ),
+    'keeloq_master_lsb':            (Platform.ALL,   '<L',  0xFC0,       (None, None,                           ('Shutter',     None)) ),
+    'keeloq_serial':                (Platform.ALL,   '<L',  0xFC4,       (None, None,                           ('Shutter',     None)) ),
+    'keeloq_count':                 (Platform.ALL,   '<L',  0xFC8,       (None, None,                           ('Shutter',     None)) ),
+                                    })
 SETTING_8_1_0_5['flag4'][1].update ({
         'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
                                     })
@@ -1503,8 +1510,8 @@ SETTING_8_2_0_3.update             ({
                                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
     'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
     'pulse_counter_debounce_high':  (Platform.ALL,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
-    'channel':                      (Platform.ALL,   'B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
-    'bssid':                        (Platform.ALL,   'B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'wifi_channel':                 (Platform.ALL,   'B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
+    'wifi_bssid':                   (Platform.ALL,   'B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
     'as3935_sensor_cfg':            (Platform.ALL,   'B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
     'as3935_functions':             (Platform.ALL, {
          'nf_autotune':             (Platform.ALL,   'B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
