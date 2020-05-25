@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.2 [00150]'
+VER = '8.3.1.2 [00151]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1628,6 +1628,9 @@ SETTING_8_3_1_2.update             ({
     'ledpwm_mask':                  (Platform.ALL,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
     'ledpwm_on':                    (Platform.ALL,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
     'ledpwm_off':                   (Platform.ALL,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
+                                    })
+SETTING_8_3_1_2['flag2'][1].update ({
+        'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
