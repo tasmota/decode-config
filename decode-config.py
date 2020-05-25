@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.2 [00149]'
+VER = '8.3.1.2 [00150]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1622,6 +1622,13 @@ SETTING_8_3_1_1.update             ({
                                     })
 # ======================================================================
 SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
+SETTING_8_3_1_2.update             ({
+    # 'ledpwm_mask':                  (Platform.ESP82, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if 157 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
+    # 'ledpwm_mask':                  (Platform.ESP32, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if  17 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
+    'ledpwm_mask':                  (Platform.ALL,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
+    'ledpwm_on':                    (Platform.ALL,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
+    'ledpwm_off':                   (Platform.ALL,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x8030102,0x1000, SETTING_8_3_1_2),

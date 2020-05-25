@@ -775,6 +775,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DevGroupShare               | *LedPower*             |             |
 |                | Interlock                   |                        |             |
 |                | LedMask                     |                        |             |
+|                | LedPwmMode<x\>              |                        |             |
+|                | LedPwmOn                    |                        |             |
+|                | LedPwmOff                   |                        |             |
 |                | LedState                    |                        |             |
 |                | Power<x\>                   |                        |             |
 |                | PowerOnState                |                        |             |
@@ -790,15 +793,16 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WCSaturation<sup>2</sup>    |                        |             |
 |                | WCResolution<sup>2</sup>    |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
-|                | Emulation                   | *Gpios*                |             |
-|                | FriendlyName<x\>            | *I2Cscan*              |             |
-|                | Gpio<x\>                    | *Modules*              |             |
-|                | I2CDriver<x\>               | *Reset*                |             |
-|                | LogHost                     | *Restart*              |             |
-|                | LogPort                     | *State*                |             |
-|                | Module                      | *Status*               |             |
-|                | MqttLog                     | *Upgrade*              |             |
-|                | NtpServer<x\>               | *Upload*               |             |
+|                | DeviceName                  | *Gpios*                |             |
+|                | Emulation                   | *I2Cscan*              |             |
+|                | FriendlyName<x\>            | *Modules*              |             |
+|                | Gpio<x\>                    | *Reset*                |             |
+|                | I2CDriver<x\>               | *Restart*              |             |
+|                | LogHost                     | *State*                |             |
+|                | LogPort                     | *Status*               |             |
+|                | Module                      | *Upgrade*              |             |
+|                | MqttLog                     | *Upload*               |             |
+|                | NtpServer<x\>               |                        |             |
 |                | OtaUrl                      |                        |             |
 |                | Pwm<x\>                     |                        |             |
 |                | PwmFrequency                |                        |             |
