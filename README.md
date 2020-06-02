@@ -860,9 +860,10 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
 |                | Timer<x\>                   |                        |             |
-| **Sensor**     | AdcParam                    | *GlobalHum*            |             |
-|                | Altitude                    | *GlobalTemp*           |             |
-|                | AmpRes                      | *Sensor27*             |             |
+| **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
+|                | Altitude                    | *GlobalHum*            |             |
+|                | AmpRes                      | *GlobalTemp*           |             |
+|                | Bh1750Resolution<x\>        | *Sensor27*             |             |
 |                | Counter<x\>                 | *Sensor50*             |             |
 |                | CounterDebounce             | *Sensor52*             |             |
 |                | CounterDebounceLow          | *Sensor53*             |             |
@@ -875,7 +876,6 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | OT_Save_Setpoints           |                        |             |
 |                | OT_TBoiler                  |                        |             |
 |                | OT_TWater                   |                        |             |
-|                | Sensor10                    |                        |             |
 |                | Sensor13                    |                        |             |
 |                | Sensor15                    |                        |             |
 |                | Sensor18                    |                        |             |

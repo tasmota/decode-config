@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.2 [00152]'
+VER = '8.3.1.2 [00153]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1631,6 +1631,11 @@ SETTING_8_3_1_2.update             ({
                                     })
 SETTING_8_3_1_2['flag2'][1].update ({
         'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
+                                    })
+SETTING_8_3_1_2['SensorBits1'][1].pop('bh1750_resolution',None)
+SETTING_8_3_1_2['SensorBits1'][1].update ({
+        'bh1750_2_resolution':      (Platform.ALL,   'B',  (0x717,2, 2), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution2 {}".format($)')) ),
+        'bh1750_1_resolution':      (Platform.ALL,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution1 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
