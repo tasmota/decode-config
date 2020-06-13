@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.2 [00154]'
+VER = '8.3.1.3 [00155]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1641,7 +1641,10 @@ SETTING_8_3_1_2['flag4'][1].update ({
         'max6675':                  (Platform.ALL,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SetOption94 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
+# ======================================================================
 SETTINGS = [
+            (0x8030103,0x1000, SETTING_8_3_1_3),
             (0x8030102,0x1000, SETTING_8_3_1_2),
             (0x8030101,0x1000, SETTING_8_3_1_1),
             (0x8030100,0x1000, SETTING_8_3_1_0),
