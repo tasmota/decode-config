@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v8.3.1.3-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v8.3.1.4-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -819,15 +819,17 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TuyaMCU                     |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
-|                | Hostname                    | *Ping<x\>*             |             |
-|                | IPAddress<x\>               | *WebSend*              |             |
-|                | Password<x\>                | *Publish*              |             |
-|                | Ssid<x\>                    | *Publish2*             |             |
+|                | Ethernet                    | *Ping<x\>*             |             |
+|                | Hostname                    | *WebSend*              |             |
+|                | IPAddress<x\>               | *Publish*              |             |
+|                | Password<x\>                | *Publish2*             |             |
+|                | Ssid<x\>                    |                        |             |
 |                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
 |                | WebRefresh                  |                        |             |
 |                | WebSensor<x\>               |                        |             |
 |                | WebServer                   |                        |             |
+|                | Wifi                        |                        |             |
 |                | WifiConfig                  |                        |             |
 |                | WifiPower                   |                        |             |
 | **MQTT**       | ButtonRetain                | *Subscribe*            |             |
@@ -930,8 +932,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **SetOption**  | SetOption<x\>               |                        |             |
 | **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
 |                | SBaudrate                   | *SSerialSend<x\>*      |             |
-|                | SerialConfig                | *TuyaSend<x\>*         |             |
-|                | SerialDelimiter             |                        |             |
+|                | SerialConfig                | *TCPStart*             |             |
+|                | SerialDelimiter             | *TuyaSend<x\>*         |             |
+|                | TCPBaudrate                 |                        |             |
 | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
 |                | DomoticzKeyIdx<x\>          |                        |             |
 |                | DomoticzSensorIdx<x\>       |                        |             |
