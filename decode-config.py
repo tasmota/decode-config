@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.5 [00158]'
+VER = '8.3.1.6 [00159]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1620,7 +1620,7 @@ SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
 SETTING_8_3_1_1.update             ({
     'devicename':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEVICENAME')),
-                                                                         (None, None,                           ('Management',  '"DeviceName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+                                                                         (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
@@ -1663,12 +1663,18 @@ SETTING_8_3_1_4['flag4'][1].update ({
 # ======================================================================
 SETTING_8_3_1_5 = copy.deepcopy(SETTING_8_3_1_4)
 SETTING_8_3_1_5.update             ({
-    'eth_type':                     (Platform.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'eth_clk_mode':                 (Platform.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'eth_address':                  (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'eth_type':                     (Platform.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_clk_mode':                 (Platform.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'eth_address':                  (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_8_3_1_6 = copy.deepcopy(SETTING_8_3_1_5)
+SETTING_8_3_1_6.update             ({
+    'fallback_module':              (Platform.ALL,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
+            (0x8030106,0x1000, SETTING_8_3_1_6),
             (0x8030105,0x1000, SETTING_8_3_1_5),
             (0x8030104,0x1000, SETTING_8_3_1_4),
             (0x8030103,0x1000, SETTING_8_3_1_3),

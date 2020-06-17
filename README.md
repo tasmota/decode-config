@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v8.3.1.5-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v8.3.1.6-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -802,7 +802,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | LogHost                     | *State*                |             |
 |                | LogPort                     | *Status*               |             |
 |                | Module                      | *Upgrade*              |             |
-|                | MqttLog                     | *Upload*               |             |
+|                | Module2                     | *Upload*               |             |
+|                | MqttLog                     |                        |             |
 |                | NtpServer<x\>               |                        |             |
 |                | OtaUrl                      |                        |             |
 |                | Pwm<x\>                     |                        |             |
