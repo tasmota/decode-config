@@ -645,10 +645,11 @@ usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
-                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
+                        [--cmnd-indent <indent>] [--cmnd-groups]
+                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-use-backlog] [-c <filename>] [-S]
+                        [-T json|cmnd|command]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
 Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -728,7 +729,7 @@ Common:
                         (default do not output on backup or restore usage)
   -T, --output-format json|cmnd|command
                         display output format (default: 'json')
-  -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee}
+  -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee}
                         limit data processing to command groups (default no
                         filter)
   --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -970,6 +971,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
 |                | ShutterRelay<x\>            |                        |             |
 |                | ShutterSetHalfway<x\>       |                        |             |
+| **Telegram**   | TmChatId                    | *TmPoll*               |             |
+|                | TmToken                     | *TmSend*               |             |
+|                |                             | *TmState*              |             |
 | **Zigbee**     | ZbConfig                    | *ZbBind*               |             |
 |                |                             | *ZbForget*             |             |
 |                |                             | *ZbLight*              |             |

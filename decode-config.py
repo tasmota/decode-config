@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.5 [00157]'
+VER = '8.3.1.5 [00158]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -42,10 +42,11 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
-                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
+                        [--cmnd-indent <indent>] [--cmnd-groups]
+                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-use-backlog] [-c <filename>] [-S]
+                        [-T json|cmnd|command]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
     Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
@@ -125,7 +126,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
                             (default do not output on backup or restore usage)
       -T, --output-format json|cmnd|command
                             display output format (default: 'json')
-      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee}
+      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee}
                             limit data processing to command groups (default no
                             filter)
       --ignore-warnings     do not exit on warnings. Not recommended, used by your
@@ -1330,6 +1331,7 @@ SETTINGSTEXTINDEX =['SET_OTAURL',
                     'SET_TEMPLATE_NAME',
                     'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4',
                     'SET_DEVICENAME',
+                    'SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID',
                     'SET_MAX']
 # ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
@@ -1641,7 +1643,16 @@ SETTING_8_3_1_2['flag4'][1].update ({
         'max6675':                  (Platform.ALL,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SetOption94 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_8_3_1_4 = copy.deepcopy(SETTING_8_3_1_2)
+SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
+SETTING_8_3_1_3.update             ({
+    'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TELEGRAM_TOKEN')),
+                                                                         (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
+    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TELEGRAM_CHATID')),
+                                                                         (None, None,                           ('Telegram',    '"TmChatId {}".format("\\"" if len($) == 0 else $)')) ),
+                                    })
+
+# ======================================================================
+SETTING_8_3_1_4 = copy.deepcopy(SETTING_8_3_1_3)
 SETTING_8_3_1_4.update             ({
     'tcp_baudrate':                 (Platform.ALL,   'B',   0xF41,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
@@ -1660,6 +1671,7 @@ SETTING_8_3_1_5.update             ({
 SETTINGS = [
             (0x8030105,0x1000, SETTING_8_3_1_5),
             (0x8030104,0x1000, SETTING_8_3_1_4),
+            (0x8030103,0x1000, SETTING_8_3_1_3),
             (0x8030102,0x1000, SETTING_8_3_1_2),
             (0x8030101,0x1000, SETTING_8_3_1_1),
             (0x8030100,0x1000, SETTING_8_3_1_0),
