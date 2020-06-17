@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.4 [00156]'
+VER = '8.3.1.5 [00157]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1650,7 +1650,15 @@ SETTING_8_3_1_4['flag4'][1].update ({
         'network_ethernet':         (Platform.ESP32, '<L', (0xEF8,1,14), (None, None,                           ('Wifi',        '"Ethernet {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_3_1_5 = copy.deepcopy(SETTING_8_3_1_4)
+SETTING_8_3_1_5.update             ({
+    'eth_type':                     (Platform.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'eth_clk_mode':                 (Platform.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'eth_address':                  (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')), ('$ * 1200','$ // 1200') ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x8030105,0x1000, SETTING_8_3_1_5),
             (0x8030104,0x1000, SETTING_8_3_1_4),
             (0x8030102,0x1000, SETTING_8_3_1_2),
             (0x8030101,0x1000, SETTING_8_3_1_1),

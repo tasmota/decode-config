@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v8.3.1.4-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v8.3.1.5-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -819,10 +819,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TuyaMCU                     |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
-|                | Ethernet                    | *Ping<x\>*             |             |
-|                | Hostname                    | *WebSend*              |             |
-|                | IPAddress<x\>               | *Publish*              |             |
-|                | Password<x\>                | *Publish2*             |             |
+|                | Ethernet<sup>2</sup>        | *Ping<x\>*             |             |
+|                | EthAddress<sup>2</sup>      | *WebSend*              |             |
+|                | EthClockMode<sup>2</sup>    | *Publish*              |             |
+|                | EthType<sup>2</sup>         | *Publish2*             |             |
+|                | Hostname                    |                        |             |
+|                | IPAddress<x\>               |                        |             |
+|                | Password<x\>                |                        |             |
 |                | Ssid<x\>                    |                        |             |
 |                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
