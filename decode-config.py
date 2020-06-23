@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.6 [00159]'
+VER = '8.3.1.6 [00160]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -493,41 +493,11 @@ def passwordwrite(value):
     """
     return None if value == HIDDEN_PASSWORD else value
 
-def bitsread(value, pos=0, bits=1):
-    """
-    Reads bit(s) of a number
-
-    @param value:
-        the number from which to read
-
-    @param pos:
-        which bit position to read
-
-    @param bits:
-        how many bits to read (1 if omitted)
-
-    @return:
-        the bit value(s)
-    """
-    if isinstance(value, str):
-        value = int(value, 0)
-    if isinstance(pos, str):
-        pos = int(pos, 0)
-
-    if pos >= 0:
-        value >>= pos
-    else:
-        value <<= abs(pos)
-    if bits > 0:
-        value &= (1<<bits)-1
-    return value
-
 # ----------------------------------------------------------------------
 # Tasmota configuration data definition
 # ----------------------------------------------------------------------
 # global objects used by eval(<tasmotacmnd>)
 SETTING_OBJECTS = {
-    'bitsread': bitsread,
     'time': time
 }
 # settings platforms
@@ -741,7 +711,7 @@ SETTING_5_13_1.update               ({
     'knx_GA_registered':            (Platform.ALL,   'B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
     'knx_CB_registered':            (Platform.ALL,   'B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
     'timer':                        (Platform.ALL, {
-        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=bitsread($,31),mode=bitsread($,29,2),tsign="-" if bitsread($,29,2)>0 and bitsread($,0,11)>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((bitsread($,0,11) if bitsread($,29,2)==0 else bitsread($,0,11) if bitsread($,0,11)<=(12*60) else bitsread($,0,11)-(12*60))*60)),window=bitsread($,11,4),repeat=bitsread($,15),days="{:07b}".format(bitsread($,16,7))[::-1],device=bitsread($,23,4)+1,power=bitsread($,27,2) )')), ('"0x{:08x}".format($)', False) ),
+        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and int(@["timer"][#]["time"],0)>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((int(@["timer"][#]["time"],0) if @["timer"][#]["mode"]==0 else int(@["timer"][#]["time"],0) if int(@["timer"][#]["time"],0)<=(12*60) else int(@["timer"][#]["time"],0)-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(int(@["timer"][#]["days"],0))[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), ('"0x{:03x}".format($)', False) ),
         'window':                   (Platform.ALL,   '<L', (0x670, 4,11),(None, None,                           ('Timer',       None)) ),
         'repeat':                   (Platform.ALL,   '<L', (0x670, 1,15),(None, None,                           ('Timer',       None)) ),
         'days':                     (Platform.ALL,   '<L', (0x670, 7,16),(None, None,                           ('Timer',       None)), '"0b{:07b}".format($)' ),
@@ -2892,6 +2862,35 @@ def get_settingcrc32(dobj):
             crc = (crc >> 1) ^ (-int(crc & 1) & 0xEDB88320)
 
     return ~crc & 0xffffffff
+
+def bitsread(value, pos=0, bits=1):
+    """
+    Reads bit(s) of a number
+
+    @param value:
+        the number from which to read
+
+    @param pos:
+        which bit position to read
+
+    @param bits:
+        how many bits to read (1 if omitted)
+
+    @return:
+        the bit value(s)
+    """
+    if isinstance(value, str):
+        value = int(value, 0)
+    if isinstance(pos, str):
+        pos = int(pos, 0)
+
+    if pos >= 0:
+        value >>= pos
+    else:
+        value <<= abs(pos)
+    if bits > 0:
+        value &= (1<<bits)-1
+    return value
 
 def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
     """
