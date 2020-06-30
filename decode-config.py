@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.6 [00161]'
+VER = '8.3.1.6 [00162]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -4591,6 +4591,19 @@ if __name__ == "__main__":
 
     # load config from Tasmota file
     if ARGS.device is not None:
+        try:
+            if urllib.parse.urlparse(ARGS.device).scheme in ('https', 'http'):
+                NET = urllib.parse.urlparse(ARGS.device).netloc
+                AUTH = re.search(r'\S://(\S*):(\S*)@(\S*):?(\d*)', NET)
+                if AUTH is not None:
+                    ARGS.username = AUTH.group(1)
+                    ARGS.password = AUTH.group(2)
+                    ARGS.device =  AUTH.group(3)
+                else:
+                    ARGS.device = urllib.parse.urlparse(ARGS.device).netloc
+        except:
+            pass
+
         CONFIG['encode'] = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
 
     if CONFIG['encode'] is None:
