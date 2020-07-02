@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.6 [00162]'
+VER = '8.3.1.6 [00163]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1644,6 +1644,7 @@ SETTING_8_3_1_6.update             ({
                                     })
 SETTING_8_3_1_6['flag4'][1].update ({
         'tuyamcu_baudrate':         (Platform.ALL,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SetOption97 {}".format($)')) ),
+        'rotary_uses_rules':        (Platform.ALL,   '<L', (0xEF8,1,16), (None, None,                           ('SetOption',   '"SetOption98 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
