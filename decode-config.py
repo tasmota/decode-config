@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.6 [00164]'
+VER = '8.3.1.6 [00165]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -28,7 +28,7 @@ Requirements:
         pip3 install requests configargparse
 
 Instructions:
-    Execute decode-config with option -d <ip> or <host> to retrieve config data
+    Execute decode-config with option -d <host|url> to retrieve config data
     from a Tasmota host or use -f <configfile.dmp> to read the configuration
     data from a file previously saved using Tasmota Web-UI
 
@@ -37,7 +37,7 @@ Instructions:
     For help execute command with argument -h (or -H for advanced help)
 
 
-Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
+Usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
@@ -61,7 +61,8 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
       -f, --file <filename>
                             file to retrieve/write Tasmota configuration from/to
                             (default: None)'
-      -d, --device <host>   hostname or IP address to retrieve/send Tasmota
+      -d, --device <host|url>
+                            hostname, IP address or url to retrieve/send Tasmota
                             configuration from/to (default: None)
       -P, --port <port>     TCP/IP port number to use for the host connection
                             (default: 80)
@@ -142,7 +143,7 @@ Usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
       -v, --verbose         produce more output about what the program does
       -V, --version         show program's version number and exit
 
-    Either argument -d <host> or -f <filename> must be given.
+    Either argument -d <host|url> or -f <filename> must be given.
 
 
 Returns:
@@ -4355,7 +4356,7 @@ def parseargs():
 
     global PARSER   # pylint: disable=global-statement
     PARSER = configargparse.ArgumentParser(description='Backup/Restore Tasmota configuration data.',
-                                           epilog='Either argument -d <host> or -f <filename> must be given.',
+                                           epilog='Either argument -d <host|url> or -f <filename> must be given.',
                                            add_help=False,
                                            formatter_class=lambda prog: HelpFormatter(prog))    # pylint: disable=unnecessary-lambda
 
@@ -4367,10 +4368,10 @@ def parseargs():
                         help="file to retrieve/write Tasmota configuration from/to (default: {})'".format(DEFAULTS['source']['tasmotafile']))
     source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
     source.add_argument('-d', '--device',
-                        metavar='<host>',
+                        metavar='<host|url>',
                         dest='device',
                         default=DEFAULTS['source']['device'],
-                        help="hostname or IP address to retrieve/send Tasmota configuration from/to (default: {})".format(DEFAULTS['source']['device']))
+                        help="hostname, IP address or url to retrieve/send Tasmota configuration from/to (default: {})".format(DEFAULTS['source']['device']))
     source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
     source.add_argument('-P', '--port',
                         metavar='<port>',
@@ -4595,15 +4596,16 @@ if __name__ == "__main__":
     # load config from Tasmota file
     if ARGS.device is not None:
         try:
-            if urllib.parse.urlparse(ARGS.device).scheme in ('https', 'http'):
-                NET = urllib.parse.urlparse(ARGS.device).netloc
-                AUTH = re.search(r'\S://(\S*):(\S*)@(\S*):?(\d*)', NET)
-                if AUTH is not None:
-                    ARGS.username = AUTH.group(1)
-                    ARGS.password = AUTH.group(2)
-                    ARGS.device =  AUTH.group(3)
-                else:
-                    ARGS.device = urllib.parse.urlparse(ARGS.device).netloc
+            URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.device, safe='/:@'))
+            if URLPARSE.netloc:
+                if URLPARSE.hostname is not None:
+                    ARGS.device = urllib.parse.unquote(URLPARSE.hostname)
+                if URLPARSE.port is not None:
+                    ARGS.port = URLPARSE.port
+                if URLPARSE.username is not None:
+                    ARGS.username = urllib.parse.unquote(URLPARSE.username)
+                if URLPARSE.password is not None:
+                    ARGS.password = urllib.parse.unquote(URLPARSE.password)
         except:
             pass
 

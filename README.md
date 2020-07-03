@@ -69,6 +69,8 @@ See [Running as Python script](#running-as-python-script) for more details.
   * [Usage](#usage)
     * [Basics](#basics)
       * [Basic example](#basic-example)
+        * [Access an online device](#access-an-online-device)
+        * [Access a config file](#access-a-config-file)
       * [Password protected device](#password-protected-device)
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
@@ -161,17 +163,16 @@ This prints a short help:
 ```help
 Backup/Restore Tasmota configuration data.
 
-usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
+usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
-                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g [Control,Display,Domoticz,Internal,Knx,Light,
-                             Management,Mqtt,Power,Rf,Rules,Sensor,Serial,
-                             Setoption,Shutter,System,Timer,Wifi,Zigbee]
+                        [--cmnd-indent <indent>] [--cmnd-groups]
+                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--cmnd-use-backlog] [-c <filename>] [-S]
+                        [-T json|cmnd|command]
+                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 ```
 
@@ -183,16 +184,25 @@ To get a result, at least pass a Tasmota source where you want to read the confi
 
 Source can be either
 
-* a device hostname or IP available and online within your network:  
-use `--device <host>` or `-d <host>` parameter
+* a device hostname, IP or url available and online within your network:  
+use `--device <host|url>` or `-d <host|url>` parameter
 * a Tasmota configuration file (having extension `.dmp`):  
 use `--file <filename>` or `-f <filename>` parameter
 
 #### Basic example
 
+##### Access an online device
+
 ```bash
 decode-config --device tasmota-4281
 decode-config -d 192.168.10.92
+decode-config --device http://tasmota-4281
+decode-config --device http://admin:myPaszxwo!z@tasmota-4281
+```
+
+##### Access a config file
+
+```bash
 decode-config --file tasmota-4281.dmp
 decode-config -f tasmota-4281.dmp
 ```
@@ -640,7 +650,7 @@ A short list of possible program args is displayed using `-h` or `--help`.
 For advanced help use `-H` or `--full-help`:
 
 ```help
-usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
+usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
@@ -664,7 +674,8 @@ Source:
   -f, --file <filename>
                         file to retrieve/write Tasmota configuration from/to
                         (default: None)'
-  -d, --device <host>   hostname or IP address to retrieve/send Tasmota
+  -d, --device <host|url>
+                        hostname, IP address or url to retrieve/send Tasmota
                         configuration from/to (default: None)
   -P, --port <port>     TCP/IP port number to use for the host connection
                         (default: 80)
@@ -745,7 +756,7 @@ Info:
   -v, --verbose         produce more output about what the program does
   -V, --version         show program's version number and exit
 
-Either argument -d <host> or -f <filename> must be given.
+Either argument -d <host|url> or -f <filename> must be given.
 ```
 
 ### Parameter notes
