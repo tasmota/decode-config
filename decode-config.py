@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.6 [00163]'
+VER = '8.3.1.6 [00164]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1641,6 +1641,8 @@ SETTING_8_3_1_5.update             ({
 SETTING_8_3_1_6 = copy.deepcopy(SETTING_8_3_1_5)
 SETTING_8_3_1_6.update             ({
     'fallback_module':              (Platform.ALL,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
+    'zb_channel':                   (Platform.ALL,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
+    'zb_txradio_dbm':               (Platform.ALL,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], int(@["zb_pan_id"],0), int(@["zb_ext_panid"],0), int(@["zb_precfgkey_l"],0), int(@["zb_precfgkey_h"],0),@["zb_txradio_dbm"])')) ),
                                     })
 SETTING_8_3_1_6['flag4'][1].update ({
         'tuyamcu_baudrate':         (Platform.ALL,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SetOption97 {}".format($)')) ),
