@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0 [00166]'
+VER = '8.4.0 [00167]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3860,7 +3860,12 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
                 uncompressed_data = bytearray(2048)
                 compressed = bytes.fromhex(mappedvalue[1:])
                 unishox.decompress(compressed[1:], len(compressed[1:]), uncompressed_data, len(uncompressed_data))
-                uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
+                try:
+                    uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
+                except UnicodeDecodeError as err:
+                    exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                    uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
+
                 cmnds = set_cmnds(cmnds, group, valuemapping, uncompressed_str, idx, readconverter, writeconverter, tasmotacmnd)
 
     return cmnds
