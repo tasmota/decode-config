@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0 [00169]'
+VER = '8.4.0 [00170]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -250,6 +250,7 @@ try:
     import requests
     import urllib
     import codecs
+    import textwrap
 except ImportError as err:
     module_import_error(err)
 # pylint: enable=wrong-import-position
@@ -499,7 +500,8 @@ def passwordwrite(value):
 # ----------------------------------------------------------------------
 # global objects used by eval(<tasmotacmnd>)
 SETTING_OBJECTS = {
-    'time': time
+    'time': time,
+    'textwrap': textwrap
 }
 # settings platforms
 class Platform:
@@ -1580,7 +1582,7 @@ SETTING_8_2_0_6.update             ({
     'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
     'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
     'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#+1, $ if len($) != 0 else "\\"")')) ),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512)))')) ),
                                     })
 SETTING_8_2_0_6['flag4'][1].update ({
         'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SetOption93 {}".format($)')) ),
@@ -4271,7 +4273,11 @@ def output_tasmotacmnds(tasmotacmnds):
     @param tasmotacmnds:
         Tasmota command mapping {group: [cmnd <,cmnd <,...>>]}
     """
-    def output_tasmotasubcmnds(cmnds):
+    def output_tasmotasubcmnds(cmnds, sort_=False):
+        # check if cmnds contains concatenated rules
+        reg = re.compile(r'Rule[1-3]\s*[+]')
+        concated_rules = any(reg.match(line) for line in cmnds)
+
         if ARGS.cmndusebacklog:
 
             # search for counting cmnds
@@ -4290,20 +4296,24 @@ def output_tasmotacmnds(tasmotacmnds):
                 i = 0
                 backlog = "Backlog "
                 for backlog_cmnd in backlog_cmnds:
-                    # take into account of max backlog limits
-                    if i >= MAX_BACKLOG or (len(backlog)+len(backlog_cmnd)+1) > MAX_BACKLOGLEN:
-                        cmnds.append(backlog)
-                        i = 0
-                        backlog = "Backlog "
-                    if i > 0:
-                        backlog += ";"
-                    backlog += backlog_cmnd
-                    cmnds.remove(backlog_cmnd)
-                    i += 1
+                    # use Backlog for all except concatenated rules
+                    if not (concated_rules and re.search(r'Rule[1-3]{1}\s+[^0-9]', backlog_cmnd) is not None):
+                        # take into account of max backlog limits
+                        if i >= MAX_BACKLOG or (len(backlog)+len(backlog_cmnd)+1) > MAX_BACKLOGLEN:
+                            cmnds.append(backlog)
+                            i = 0
+                            backlog = "Backlog "
+                        if i > 0:
+                            backlog += ";"
+                        backlog += backlog_cmnd
+                        cmnds.remove(backlog_cmnd)
+                        i += 1
                 if i > 0:
                     cmnds.append(backlog)
-
-        for cmnd in sorted(cmnds, key=lambda cmnd: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]) if ARGS.cmndsort else cmnds:
+        if concated_rules:
+            # do not sort group containing concatenated rules
+            sort_ = False
+        for cmnd in sorted(cmnds, key=lambda cmnd: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]) if sort_ else cmnds:
             print("{}{}".format(" "*ARGS.cmndindent, cmnd))
 
     groups = get_grouplist(SETTINGS[0][2])
@@ -4314,14 +4324,14 @@ def output_tasmotacmnds(tasmotacmnds):
                 cmnds = tasmotacmnds[group]
                 print()
                 print("# {}:".format(group))
-                output_tasmotasubcmnds(cmnds)
+                output_tasmotasubcmnds(cmnds, ARGS.cmndsort)
 
     else:
         cmnds = []
         for group in groups:
             if group.title() in (groupname.title() for groupname in tasmotacmnds):
                 cmnds.extend(tasmotacmnds[group])
-        output_tasmotasubcmnds(cmnds)
+        output_tasmotasubcmnds(cmnds, ARGS.cmndsort)
 
 def parseargs():
     """
