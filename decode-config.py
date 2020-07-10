@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0 [00171]'
+VER = '8.4.0 [00172]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -41,109 +41,111 @@ Usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
-                        [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
+                        [--json-show-pw] [--cmnd-indent <indent>]
+                        [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
                         [--cmnd-use-backlog] [-c <filename>] [-S]
                         [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
-                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
+                        [-w] [--dry-run] [-h] [-H] [-v] [-V]
 
-    Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
-    can also be set in a config file (specified via -c). Config file syntax
-    allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
-    https://goo.gl/R74nmi). If an arg is specified in more than one place, then
-    commandline values override config file values which override defaults.
+Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+can also be set in a config file (specified via -c). Config file syntax
+allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+https://goo.gl/R74nmi). If an arg is specified in more than one place, then
+commandline values override config file values which override defaults.
 
-    Source:
-      Read/Write Tasmota configuration from/to
+Source:
+  Read/Write Tasmota configuration from/to
 
-      -f, --file <filename>
-                            file to retrieve/write Tasmota configuration from/to
-                            (default: None)'
-      -d, --device <host|url>
-                            hostname, IP address or url to retrieve/send Tasmota
-                            configuration from/to (default: None)
-      -P, --port <port>     TCP/IP port number to use for the host connection
-                            (default: 80)
-      -u, --username <username>
-                            host HTTP access username (default: admin)
-      -p, --password <password>
-                            host HTTP access password (default: None)
+  -f, --file <filename>
+                        file to retrieve/write Tasmota configuration from/to
+                        (default: None)'
+  -d, --device <host|url>
+                        hostname, IP address or url to retrieve/send Tasmota
+                        configuration from/to (default: None)
+  -P, --port <port>     TCP/IP port number to use for the host connection
+                        (default: 80)
+  -u, --username <username>
+                        host HTTP access username (default: admin)
+  -p, --password <password>
+                        host HTTP access password (default: None)
 
-    Backup/Restore:
-      Backup & restore specification
+Backup/Restore:
+  Backup & restore specification
 
-      -i, --restore-file <filename>
-                            file to restore configuration from (default: None).
-                            Replacements: @v=firmware version from config,
-                            @d=devicename, @f=device friendly name from config,
-                            @h=device hostname from config, @H=device hostname
-                            from device (-d arg only)
-      -o, --backup-file <filename>
-                            file to backup configuration to, can be specified
-                            multiple times (default: None). Replacements:
-                            @v=firmware version from config, @d=devicename,
-                            @f=device friendly name from config, @h=device
-                            hostname from config, @H=device hostname from device
-                            (-d arg only)
-      -t, --backup-type json|bin|dmp
-                            backup filetype (default: 'json')
-      -E, --extension       append filetype extension for -i and -o filename
-                            (default)
-      -e, --no-extension    do not append filetype extension, use -i and -o
-                            filename as passed
-      -F, --force-restore   force restore even configuration is identical
+  -i, --restore-file <filename>
+                        file to restore configuration from (default: None).
+                        Replacements: @v=firmware version from config,
+                        @d=devicename, @f=device friendly name from config,
+                        @h=device hostname from config, @H=device hostname
+                        from device (-d arg only)
+  -o, --backup-file <filename>
+                        file to backup configuration to, can be specified
+                        multiple times (default: None). Replacements:
+                        @v=firmware version from config, @d=devicename,
+                        @f=device friendly name from config, @h=device
+                        hostname from config, @H=device hostname from device
+                        (-d arg only)
+  -t, --backup-type json|bin|dmp
+                        backup filetype (default: 'json')
+  -E, --extension       append filetype extension for -i and -o filename
+                        (default)
+  -e, --no-extension    do not append filetype extension, use -i and -o
+                        filename as passed
+  -F, --force-restore   force restore even configuration is identical
 
-    JSON output:
-      JSON format specification
+JSON output:
+  JSON format specification. To revert an option, insert "dont" or "no"
+  after "json", e.g. --json-no-indent, --json-dont-show-pw
 
-      --json-indent <indent>
-                            pretty-printed JSON output using indent level
-                            (default: 'None'). -1 disables indent.
-      --json-compact        compact JSON output by eliminate whitespace
-      --json-hide-pw        hide passwords
-      --json-show-pw        unhide passwords (default)
+  --json-indent <indent>
+                        pretty-printed JSON output using indent level
+                        (default: 'None'). -1 disables indent.
+  --json-compact        compact JSON output by eliminate whitespace
+  --json-show-pw        unhide passwords (default)
 
-    Tasmota command output:
-      Tasmota command output format specification
+Tasmota command output:
+  Tasmota command output format specification. To revert an option, insert
+  "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
 
-      --cmnd-indent <indent>
-                            Tasmota command grouping indent level (default: '2').
-                            0 disables indent
-      --cmnd-groups         group Tasmota commands (default)
-      --cmnd-nogroups       leave Tasmota commands ungrouped
-      --cmnd-sort           sort Tasmota commands (default)
-      --cmnd-unsort         leave Tasmota commands unsorted
-      --cmnd-use-backlog    use Backlog for Tasmota commands as much as possible
+  --cmnd-indent <indent>
+                        Tasmota command grouping indent level (default: '2').
+                        0 disables indent
+  --cmnd-groups         group Tasmota commands (default)
+  --cmnd-sort           sort Tasmota commands (default)
+  --cmnd-use-rule-concat
+                        use rule concatenation with + for Tasmota 'Rule'
+                        command
+  --cmnd-use-backlog    use 'Backlog' for Tasmota commands as much as possible
 
-    Common:
-      Optional arguments
+Common:
+  Optional arguments
 
-      -c, --config <filename>
-                            program config file - can be used to set default
-                            command parameters (default: None)
-      -S, --output          display output regardsless of backup/restore usage
-                            (default do not output on backup or restore usage)
-      -T, --output-format json|cmnd|command
-                            display output format (default: 'json')
-      -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee}
-                            limit data processing to command groups (default no
-                            filter)
-      --ignore-warnings     do not exit on warnings. Not recommended, used by your
-                            own responsibility!
-      --dry-run             test program without changing configuration data on
-                            device or file
+  -c, --config <filename>
+                        program config file - can be used to set default
+                        command parameters (default: None)
+  -S, --output          display output regardsless of backup/restore usage
+                        (default do not output on backup or restore usage)
+  -T, --output-format json|cmnd|command
+                        display output format (default: 'json')
+  -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee}
+                        limit data processing to command groups (default no
+                        filter)
+  -w, --ignore-warnings
+                        do not exit on warnings. Not recommended, used by your
+                        own responsibility!
+  --dry-run             test program without changing configuration data on
+                        device or file
 
-    Info:
-      Extra information
+Info:
+  Extra information
 
-      -h, --help            show usage help message and exit
-      -H, --full-help       show full help message and exit
-      -v, --verbose         produce more output about what the program does
-      -V, --version         show program's version number and exit
+  -h, --help            show usage help message and exit
+  -H, --full-help       show full help message and exit
+  -v, --verbose         produce more output about what the program does
+  -V, --version         show program's version number and exit
 
-    Either argument -d <host|url> or -f <filename> must be given.
+Either argument -d <host|url> or -f <filename> must be given.
 
 
 Returns:
@@ -4385,7 +4387,9 @@ def parseargs():
                                            add_help=False,
                                            formatter_class=lambda prog: HelpFormatter(prog))    # pylint: disable=unnecessary-lambda
 
-    source = PARSER.add_argument_group('Source', 'Read/Write Tasmota configuration from/to')
+
+    source = PARSER.add_argument_group('Source',
+                                       'Read/Write Tasmota configuration from/to')
     source.add_argument('-f', '--file',
                         metavar='<filename>',
                         dest='tasmotafile',
@@ -4414,7 +4418,9 @@ def parseargs():
                         default=DEFAULTS['source']['password'],
                         help="host HTTP access password (default: {})".format(DEFAULTS['source']['password']))
 
-    backres = PARSER.add_argument_group('Backup/Restore', 'Backup & restore specification')
+
+    backres = PARSER.add_argument_group('Backup/Restore',
+                                        'Backup & restore specification')
     backres.add_argument('-i', '--restore-file',
                          metavar='<filename>',
                          dest='restorefile',
@@ -4449,90 +4455,101 @@ def parseargs():
                          default=DEFAULTS['backup']['forcerestore'],
                          help="force restore even configuration is identical{}".format(' (default)' if DEFAULTS['backup']['forcerestore'] else ''))
 
-    jsonformat = PARSER.add_argument_group('JSON output', 'JSON format specification')
+
+    jsonformat = PARSER.add_argument_group('JSON output',
+                                           'JSON format specification. To revert an option, insert "dont" or "no" after "json", e.g. --json-no-indent, --json-dont-show-pw')
     jsonformat.add_argument('--json-indent',
                             metavar='<indent>',
                             dest='jsonindent',
                             type=int,
                             default=DEFAULTS['jsonformat']['indent'],
                             help="pretty-printed JSON output using indent level (default: '{}'). -1 disables indent.".format(DEFAULTS['jsonformat']['indent']))
+    jsonformat.add_argument('--json-no-indent', '--json-dont-indent', '--jsonno-indent', '--jsondont-indent', '--json-noindent', '--json-dontindent', '--jsonnoindent', '--jsondontindent',
+                            dest='jsonindent',
+                            action='store_const', const=-1,
+                            help=configargparse.SUPPRESS)
+
     jsonformat.add_argument('--json-compact',
                             dest='jsoncompact',
                             action='store_true',
                             default=DEFAULTS['jsonformat']['compact'],
                             help="compact JSON output by eliminate whitespace{}".format(' (default)' if DEFAULTS['jsonformat']['compact'] else ''))
-
-    jsonformat.add_argument('--json-sort',
-                            dest='jsonsort',
-                            action='store_true',
-                            default=DEFAULTS['jsonformat']['sort'],
-                            help=configargparse.SUPPRESS) #"sort json keywords{}".format(' (default)' if DEFAULTS['jsonformat']['sort'] else ''))
-    jsonformat.add_argument('--json-unsort',
-                            dest='jsonsort',
+    jsonformat.add_argument('--json-no-compact', '--json-dont-compact', '--jsonno-compact', '--jsondont-compact', '--json-nocompact', '--json-dontcompact', '--jsonnocompact', '--jsondontcompact',
+                            dest='jsoncompact',
                             action='store_false',
-                            default=DEFAULTS['jsonformat']['sort'],
-                            help=configargparse.SUPPRESS) #"do not sort json keywords{}".format(' (default)' if not DEFAULTS['jsonformat']['sort'] else ''))
+                            help=configargparse.SUPPRESS)
 
-    jsonformat.add_argument('--json-hide-pw',
-                            dest='jsonhidepw',
-                            action='store_true',
-                            default=DEFAULTS['jsonformat']['hidepw'],
-                            help="hide passwords{}".format(' (default)' if DEFAULTS['jsonformat']['hidepw'] else ''))
     jsonformat.add_argument('--json-show-pw',
                             dest='jsonhidepw',
                             action='store_false',
                             default=DEFAULTS['jsonformat']['hidepw'],
                             help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['hidepw'] else ''))
-    jsonformat.add_argument('--json-unhide-pw',
+    jsonformat.add_argument('--json-no-show-pw', '--json-dont-show-pw', '--jsonno-show-pw', '--jsondont-show-pw', '--json-noshow-pw', '--json-dontshow-pw', '--jsonnoshow-pw', '--jsondontshow-pw',
                             dest='jsonhidepw',
-                            action='store_false',
+                            action='store_true',
                             help=configargparse.SUPPRESS)
+    # for backward compatibility only
+    jsonformat.add_argument('--json-hide-pw', dest='jsonhidepw', action='store_true', help=configargparse.SUPPRESS)
+    jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', action='store_false', help=configargparse.SUPPRESS)
 
-    cmndformat = PARSER.add_argument_group('Tasmota command output', 'Tasmota command output format specification')
+    # for backward compatibility only
+    jsonformat.add_argument('--json-sort', dest='jsonsort', action='store_true', default=DEFAULTS['jsonformat']['sort'], help=configargparse.SUPPRESS)
+    jsonformat.add_argument('--json-unsort', '--json-no-sort', '--json-dont-sort', dest='jsonsort', action='store_false', help=configargparse.SUPPRESS)
+
+
+    cmndformat = PARSER.add_argument_group('Tasmota command output',
+                                           'Tasmota command output format specification. To revert an option, insert "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort')
     cmndformat.add_argument('--cmnd-indent',
                             metavar='<indent>',
                             dest='cmndindent',
                             type=int,
                             default=DEFAULTS['cmndformat']['indent'],
                             help="Tasmota command grouping indent level (default: '{}'). 0 disables indent".format(DEFAULTS['cmndformat']['indent']))
+    cmndformat.add_argument('--cmnd-no-indent', '--cmnd-dont-indent', '--cmndno-indent', '--cmnddont-indent', '--cmnd-noindent', '--cmnd-dontindent', '--cmndnoindent', '--cmnddontindent',
+                            dest='cmndindent',
+                            action='store_const', const=0,
+                            help=configargparse.SUPPRESS)
+
     cmndformat.add_argument('--cmnd-groups',
                             dest='cmndgroup',
                             action='store_true',
                             default=DEFAULTS['cmndformat']['group'],
                             help="group Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['group'] else ''))
-    cmndformat.add_argument('--cmnd-nogroups',
+    cmndformat.add_argument('--cmnd-no-groups', '--cmnd-dont-groups', '--cmndno-groups', '--cmnddont-groups', '--cmnd-nogroups', '--cmnd-dontgroups', '--cmndnogroups', '--cmnddontgroups',
                             dest='cmndgroup',
                             action='store_false',
-                            default=DEFAULTS['cmndformat']['group'],
-                            help="leave Tasmota commands ungrouped{}".format(' (default)' if not DEFAULTS['cmndformat']['group'] else ''))
+                            help=configargparse.SUPPRESS)
+
     cmndformat.add_argument('--cmnd-sort',
                             dest='cmndsort',
                             action='store_true',
                             default=DEFAULTS['cmndformat']['sort'],
                             help="sort Tasmota commands{}".format(' (default)' if DEFAULTS['cmndformat']['sort'] else ''))
-    cmndformat.add_argument('--cmnd-unsort',
+    cmndformat.add_argument('--cmnd-no-sort', '--cmnd-dont-sort', '--cmndno-sort', '--cmnddont-sort', '--cmnd-nosort', '--cmnd-dontsort', '--cmndnosort', '--cmnddontsort', '--cmnd-unsort',
                             dest='cmndsort',
                             action='store_false',
-                            default=DEFAULTS['cmndformat']['sort'],
-                            help="leave Tasmota commands unsorted{}".format(' (default)' if not DEFAULTS['cmndformat']['sort'] else ''))
+                            help=configargparse.SUPPRESS)
+
     cmndformat.add_argument('--cmnd-use-rule-concat',
                             dest='cmnduseruleconcat',
                             action='store_true',
                             default=DEFAULTS['cmndformat']['useruleconcat'],
                             help="use rule concatenation with + for Tasmota 'Rule' command{}".format(' (default)' if DEFAULTS['cmndformat']['useruleconcat'] else ''))
-    cmndformat.add_argument('--cmnd-donot-use-rule-concat',
+    cmndformat.add_argument('--cmnd-no-use-rule-concat', '--cmnd-donot-use-rule-concat', '--cmndno-use-rule-concat', '--cmnddonot-use-rule-concat', '--cmnd-nouse-rule-concat', '--cmnd-donotuse-rule-concat', '--cmndnouse-rule-concat', '--cmnddonotuse-rule-concat',
                             dest='cmnduseruleconcat',
                             action='store_false',
                             help=configargparse.SUPPRESS)
+
     cmndformat.add_argument('--cmnd-use-backlog',
                             dest='cmndusebacklog',
                             action='store_true',
                             default=DEFAULTS['cmndformat']['usebacklog'],
                             help="use 'Backlog' for Tasmota commands as much as possible{}".format(' (default)' if DEFAULTS['cmndformat']['usebacklog'] else ''))
-    cmndformat.add_argument('--cmnd-donot-use-backlog',
+    cmndformat.add_argument('--cmnd-no-use-backlog', '--cmnd-donot-use-backlog', '--cmndno-use-backlog', '--cmnddonot-use-backlog', '--cmnd-nouse-backlog', '--cmnd-donotuse-backlog', '--cmndnouse-backlog', '--cmnddonotuse-backlog',
                             dest='cmndusebacklog',
                             action='store_false',
                             help=configargparse.SUPPRESS)
+
 
     common = PARSER.add_argument_group('Common', 'Optional arguments')
     common.add_argument('-c', '--config',
@@ -4564,7 +4581,7 @@ def parseargs():
                         type=lambda s: s.title(),
                         default=DEFAULTS['common']['filter'],
                         help="limit data processing to command groups (default {})".format("no filter" if DEFAULTS['common']['filter'] is None else DEFAULTS['common']['filter']))
-    common.add_argument('--ignore-warnings',
+    common.add_argument('-w', '--ignore-warnings',
                         dest='ignorewarning',
                         action='store_true',
                         default=DEFAULTS['common']['ignorewarning'],

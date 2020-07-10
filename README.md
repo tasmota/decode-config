@@ -165,13 +165,12 @@ usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
-                        [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
-                        [--cmnd-use-rule-concat] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
+                        [--json-show-pw] [--cmnd-indent <indent>]
+                        [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
+                        [--cmnd-use-backlog] [-c <filename>] [-S]
+                        [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
-                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
+                        [-w] [--dry-run] [-h] [-H] [-v] [-V]
 ```
 
 For advanced help run **decode-config** with parameter `--full--help` or `-H`. This will print a [complete program parameter](#complete-program-parameter) list.
@@ -652,13 +651,12 @@ usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
-                        [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups]
-                        [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
-                        [--cmnd-use-rule-concat] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
+                        [--json-show-pw] [--cmnd-indent <indent>]
+                        [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
+                        [--cmnd-use-backlog] [-c <filename>] [-S]
+                        [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
-                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
+                        [-w] [--dry-run] [-h] [-H] [-v] [-V]
 
 Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
 can also be set in a config file (specified via -c). Config file syntax
@@ -707,25 +705,24 @@ Backup/Restore:
   -F, --force-restore   force restore even configuration is identical
 
 JSON output:
-  JSON format specification
+  JSON format specification. To revert an option, insert "dont" or "no"
+  after "json", e.g. --json-no-indent, --json-dont-show-pw
 
   --json-indent <indent>
                         pretty-printed JSON output using indent level
                         (default: 'None'). -1 disables indent.
   --json-compact        compact JSON output by eliminate whitespace
-  --json-hide-pw        hide passwords
   --json-show-pw        unhide passwords (default)
 
 Tasmota command output:
-  Tasmota command output format specification
+  Tasmota command output format specification. To revert an option, insert
+  "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
 
   --cmnd-indent <indent>
                         Tasmota command grouping indent level (default: '2').
                         0 disables indent
   --cmnd-groups         group Tasmota commands (default)
-  --cmnd-nogroups       leave Tasmota commands ungrouped
   --cmnd-sort           sort Tasmota commands (default)
-  --cmnd-unsort         leave Tasmota commands unsorted
   --cmnd-use-rule-concat
                         use rule concatenation with + for Tasmota 'Rule'
                         command
@@ -744,7 +741,8 @@ Common:
   -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee}
                         limit data processing to command groups (default no
                         filter)
-  --ignore-warnings     do not exit on warnings. Not recommended, used by your
+  -w, --ignore-warnings
+                        do not exit on warnings. Not recommended, used by your
                         own responsibility!
   --dry-run             test program without changing configuration data on
                         device or file
