@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0 [00170]'
+VER = '8.4.0 [00171]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -301,6 +301,7 @@ DEFAULTS = {
         'indent':       2,
         'group':        True,
         'sort':         True,
+        'useruleconcat': False,
         'usebacklog':   False,
     },
     'common':
@@ -1582,7 +1583,7 @@ SETTING_8_2_0_6.update             ({
     'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
     'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
     'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512)))')) ),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')) ),
                                     })
 SETTING_8_2_0_6['flag4'][1].update ({
         'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SetOption93 {}".format($)')) ),
@@ -3127,6 +3128,7 @@ def cmnd_converter(valuemapping, value, idx, readconverter, writeconverter, tasm
             tasmotacmnd = tasmotacmnd.replace('#', 'idx')
             scope = locals()
             scope.update(SETTING_OBJECTS)
+            scope.update({"ARGS": ARGS})
             result = eval(tasmotacmnd, scope)      # pylint: disable=eval-used
 
         elif callable(tasmotacmnd):
@@ -4481,7 +4483,10 @@ def parseargs():
                             action='store_false',
                             default=DEFAULTS['jsonformat']['hidepw'],
                             help="unhide passwords{}".format(' (default)' if not DEFAULTS['jsonformat']['hidepw'] else ''))
-    jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', help=configargparse.SUPPRESS)
+    jsonformat.add_argument('--json-unhide-pw',
+                            dest='jsonhidepw',
+                            action='store_false',
+                            help=configargparse.SUPPRESS)
 
     cmndformat = PARSER.add_argument_group('Tasmota command output', 'Tasmota command output format specification')
     cmndformat.add_argument('--cmnd-indent',
@@ -4510,11 +4515,24 @@ def parseargs():
                             action='store_false',
                             default=DEFAULTS['cmndformat']['sort'],
                             help="leave Tasmota commands unsorted{}".format(' (default)' if not DEFAULTS['cmndformat']['sort'] else ''))
+    cmndformat.add_argument('--cmnd-use-rule-concat',
+                            dest='cmnduseruleconcat',
+                            action='store_true',
+                            default=DEFAULTS['cmndformat']['useruleconcat'],
+                            help="use rule concatenation with + for Tasmota 'Rule' command{}".format(' (default)' if DEFAULTS['cmndformat']['useruleconcat'] else ''))
+    cmndformat.add_argument('--cmnd-donot-use-rule-concat',
+                            dest='cmnduseruleconcat',
+                            action='store_false',
+                            help=configargparse.SUPPRESS)
     cmndformat.add_argument('--cmnd-use-backlog',
                             dest='cmndusebacklog',
                             action='store_true',
                             default=DEFAULTS['cmndformat']['usebacklog'],
-                            help="use Backlog for Tasmota commands as much as possible{}".format(' (default)' if DEFAULTS['cmndformat']['usebacklog'] else ''))
+                            help="use 'Backlog' for Tasmota commands as much as possible{}".format(' (default)' if DEFAULTS['cmndformat']['usebacklog'] else ''))
+    cmndformat.add_argument('--cmnd-donot-use-backlog',
+                            dest='cmndusebacklog',
+                            action='store_false',
+                            help=configargparse.SUPPRESS)
 
     common = PARSER.add_argument_group('Common', 'Optional arguments')
     common.add_argument('-c', '--config',

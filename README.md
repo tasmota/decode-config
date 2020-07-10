@@ -161,8 +161,6 @@ Replace `decode-config` by the program name your are using:
 This prints a short help:
 
 ```help
-Backup/Restore Tasmota configuration data.
-
 usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-u <username>] [-p <password>] [-i <filename>]
                         [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
@@ -170,8 +168,8 @@ usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [--json-hide-pw] [--json-show-pw]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
-                        [--cmnd-use-backlog] [-c <filename>] [-S]
-                        [-T json|cmnd|command]
+                        [--cmnd-use-rule-concat] [--cmnd-use-backlog]
+                        [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 ```
@@ -657,8 +655,8 @@ usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [--json-hide-pw] [--json-show-pw]
                         [--cmnd-indent <indent>] [--cmnd-groups]
                         [--cmnd-nogroups] [--cmnd-sort] [--cmnd-unsort]
-                        [--cmnd-use-backlog] [-c <filename>] [-S]
-                        [-T json|cmnd|command]
+                        [--cmnd-use-rule-concat] [--cmnd-use-backlog]
+                        [-c <filename>] [-S] [-T json|cmnd|command]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
 
@@ -728,7 +726,10 @@ Tasmota command output:
   --cmnd-nogroups       leave Tasmota commands ungrouped
   --cmnd-sort           sort Tasmota commands (default)
   --cmnd-unsort         leave Tasmota commands unsorted
-  --cmnd-use-backlog    use Backlog for Tasmota commands as much as possible
+  --cmnd-use-rule-concat
+                        use rule concatenation with + for Tasmota 'Rule'
+                        command
+  --cmnd-use-backlog    use 'Backlog' for Tasmota commands as much as possible
 
 Common:
   Optional arguments
