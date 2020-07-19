@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00173]'
+VER = '8.3.1.7 [00174]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1656,10 +1656,16 @@ SETTING_8_3_1_6['flag4'][1].update ({
         'zerocross_dimmer':         (Platform.ALL,   '<L', (0xEF8,1,17), (None, None,                           ('SetOption',   '"SetOption99 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_6)
+SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
+SETTING_8_3_1_7['flag4'][1].update ({
+        'remove_zbreceived':        (Platform.ALL,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SetOption100 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
 # ======================================================================
 SETTINGS = [
             (0x8040000,0x1000, SETTING_8_4_0_0),
+            (0x8030107,0x1000, SETTING_8_3_1_7),
             (0x8030106,0x1000, SETTING_8_3_1_6),
             (0x8030105,0x1000, SETTING_8_3_1_5),
             (0x8030104,0x1000, SETTING_8_3_1_4),
