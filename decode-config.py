@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00174]'
+VER = '8.3.1.7 [00175]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1659,6 +1659,10 @@ SETTING_8_3_1_6['flag4'][1].update ({
 SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
 SETTING_8_3_1_7['flag4'][1].update ({
         'remove_zbreceived':        (Platform.ALL,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SetOption100 {}".format($)')) ),
+        'zb_index_ep':              (Platform.ALL,   '<L', (0xEF8,1,19), (None, None,                           ('SetOption',   '"SetOption101 {}".format($)')) ),
+                                    })
+SETTING_8_3_1_7['timer'][1].update ({
+        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and int(@["timer"][#]["time"],0)>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((int(@["timer"][#]["time"],0) if @["timer"][#]["mode"]==0 else int(@["timer"][#]["time"],0) if int(@["timer"][#]["time"],0)<=(12*60) else int(@["timer"][#]["time"],0)-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(int(@["timer"][#]["days"],0))[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), ('"0x{:03x}".format($)', False) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
