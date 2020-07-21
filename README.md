@@ -979,9 +979,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
 |                | ShutterMotorDelay<x\>       | *ShutterStopPosition<x\>*|           |
 |                | ShutterOpenDuration<x\>     | *ShutterStopToggle<x\>*|             |
-|                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
-|                | ShutterRelay<x\>            |                        |             |
-|                | ShutterSetHalfway<x\>       |                        |             |
+|                | ShutterPosition<x\>         | *ShutterStopToggleDir<x\>*|          |
+|                | ShutterRelay<x\>            | *ShutterToggle<x\>*    |             |
+|                | ShutterSetHalfway<x\>       | *ShutterToggleDir<x\>* |             |
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmToken                     | *TmSend*               |             |
 |                |                             | *TmState*              |             |
