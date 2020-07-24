@@ -161,9 +161,10 @@ Replace `decode-config` by the program name your are using:
 This prints a short help:
 
 ```help
-usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
-                        [-u <username>] [-p <password>] [-i <filename>]
-                        [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
+usage: decode-config.py [-s <filename|host|url>] [-f <filename>]
+                        [-d <host|url>] [-P <port>] [-u <username>]
+                        [-p <password>] [-i <filename>] [-o <filename>]
+                        [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-show-pw] [--cmnd-indent <indent>]
                         [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
@@ -647,9 +648,10 @@ A short list of possible program args is displayed using `-h` or `--help`.
 For advanced help use `-H` or `--full-help`:
 
 ```help
-usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
-                        [-u <username>] [-p <password>] [-i <filename>]
-                        [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
+usage: decode-config.py [-s <filename|host|url>] [-f <filename>]
+                        [-d <host|url>] [-P <port>] [-u <username>]
+                        [-p <password>] [-i <filename>] [-o <filename>]
+                        [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
                         [--json-show-pw] [--cmnd-indent <indent>]
                         [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
@@ -658,7 +660,7 @@ usage: decode-config.py [-f <filename>] [-d <host|url>] [-P <port>]
                         [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Telegram,Timer,Wifi,Zigbee} ...]]
                         [-w] [--dry-run] [-h] [-H] [-v] [-V]
 
-Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -s)
 can also be set in a config file (specified via -c). Config file syntax
 allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
 https://goo.gl/R74nmi). If an arg is specified in more than one place, then
@@ -667,12 +669,15 @@ commandline values override config file values which override defaults.
 Source:
   Read/Write Tasmota configuration from/to
 
+  -s, --source <filename|host|url>
+                        source used for the Tasmota configuration (default:
+                        None)'
   -f, --file <filename>
-                        file to retrieve/write Tasmota configuration from/to
-                        (default: None)'
+                        file used for the Tasmota configuration (default:
+                        None)'
   -d, --device <host|url>
-                        hostname, IP address or url to retrieve/send Tasmota
-                        configuration from/to (default: None)
+                        hostname, IP-address or url used for the Tasmota
+                        configuration (default: None)
   -P, --port <port>     TCP/IP port number to use for the host connection
                         (default: 80)
   -u, --username <username>
@@ -755,7 +760,7 @@ Info:
   -v, --verbose         produce more output about what the program does
   -V, --version         show program's version number and exit
 
-Either argument -d <host|url> or -f <filename> must be given.
+The arguments -s <filename|host|url> must be given.
 ```
 
 ### Parameter notes

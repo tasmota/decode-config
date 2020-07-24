@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00176]'
+VER = '8.3.1.7 [00177]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -165,6 +165,7 @@ VIRTUAL = '*'
 DEFAULTS = {
     'source':
     {
+        'source':       None,
         'device':       None,
         'port':         80,
         'username':     'admin',
@@ -4279,24 +4280,29 @@ def parseargs():
 
     global PARSER   # pylint: disable=global-statement
     PARSER = configargparse.ArgumentParser(description='Backup/Restore Tasmota configuration data.',
-                                           epilog='Either argument -d <host|url> or -f <filename> must be given.',
+                                           epilog='The arguments -s <filename|host|url> must be given.',
                                            add_help=False,
                                            formatter_class=lambda prog: HelpFormatter(prog))    # pylint: disable=unnecessary-lambda
 
 
     source = PARSER.add_argument_group('Source',
                                        'Read/Write Tasmota configuration from/to')
+    source.add_argument('-s', '--source',
+                        metavar='<filename|host|url>',
+                        dest='source',
+                        default=DEFAULTS['source']['source'],
+                        help="source used for the Tasmota configuration (default: {})'".format(DEFAULTS['source']['source']))
     source.add_argument('-f', '--file',
                         metavar='<filename>',
                         dest='tasmotafile',
                         default=DEFAULTS['source']['tasmotafile'],
-                        help="file to retrieve/write Tasmota configuration from/to (default: {})'".format(DEFAULTS['source']['tasmotafile']))
+                        help="file used for the Tasmota configuration (default: {})'".format(DEFAULTS['source']['tasmotafile']))
     source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
     source.add_argument('-d', '--device',
                         metavar='<host|url>',
                         dest='device',
                         default=DEFAULTS['source']['device'],
-                        help="hostname, IP address or url to retrieve/send Tasmota configuration from/to (default: {})".format(DEFAULTS['source']['device']))
+                        help="hostname, IP-address or url used for the Tasmota configuration (default: {})".format(DEFAULTS['source']['device']))
     source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
     source.add_argument('-P', '--port',
                         metavar='<port>',
@@ -4531,8 +4537,8 @@ if __name__ == "__main__":
         shorthelp()
 
     # check source args
-    if ARGS.device is not None and ARGS.tasmotafile is not None:
-        exit_(ExitCode.ARGUMENT_ERROR, "Unable to select source, do not use -d and -f together", line=inspect.getlineno(inspect.currentframe()))
+    if sum(map(lambda i : i is not None, (ARGS.source, ARGS.device, ARGS.tasmotafile))) > 1:
+        exit_(ExitCode.ARGUMENT_ERROR, "I am confused - several sources have been specified by -s, -d or -f, limit it to only one", line=inspect.getlineno(inspect.currentframe()))
 
     # create global data dict
     CONFIG = {}
@@ -4542,6 +4548,12 @@ if __name__ == "__main__":
 
     if ARGS.debug:
         check_setting_definition()
+
+    if ARGS.source is not None:
+        if os.path.isfile(ARGS.source) and get_filetype(ARGS.source) == FileType.DMP:
+            ARGS.tasmotafile = ARGS.source
+        else:
+            ARGS.device = ARGS.source
 
     # pull config from Tasmota device
     if ARGS.tasmotafile is not None:
