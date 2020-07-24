@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00177]'
+VER = '8.3.1.7 [00178]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -4291,45 +4291,28 @@ def parseargs():
                         metavar='<filename|host|url>',
                         dest='source',
                         default=DEFAULTS['source']['source'],
-                        help="source used for the Tasmota configuration (default: {})'".format(DEFAULTS['source']['source']))
-    source.add_argument('-f', '--file',
-                        metavar='<filename>',
-                        dest='tasmotafile',
-                        default=DEFAULTS['source']['tasmotafile'],
-                        help="file used for the Tasmota configuration (default: {})'".format(DEFAULTS['source']['tasmotafile']))
+                        help="source used for the Tasmota configuration (default: {}). "
+                        "The argument can be a <filename> containing Tasmota .dmp configuation data or "
+                        "a <hostname>, <ip>-address, <url> which means an online tasmota device is used. "
+                        "A url can also contain web login and port data in the format http://<user>:<password>@tasmota:<port>, "
+                        "e. g, http://admin:mypw@mytasmota:8090".format(DEFAULTS['source']['source']))
+    source.add_argument('-f', '--file', dest='tasmotafile', default=DEFAULTS['source']['tasmotafile'], help=configargparse.SUPPRESS)
     source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
-    source.add_argument('-d', '--device',
-                        metavar='<host|url>',
-                        dest='device',
-                        default=DEFAULTS['source']['device'],
-                        help="hostname, IP-address or url used for the Tasmota configuration (default: {})".format(DEFAULTS['source']['device']))
+    source.add_argument('-d', '--device', dest='device',default=DEFAULTS['source']['device'], help=configargparse.SUPPRESS)
     source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
-    source.add_argument('-P', '--port',
-                        metavar='<port>',
-                        dest='port',
-                        default=DEFAULTS['source']['port'],
-                        help="TCP/IP port number to use for the host connection (default: {})".format(DEFAULTS['source']['port']))
-    source.add_argument('-u', '--username',
-                        metavar='<username>',
-                        dest='username',
-                        default=DEFAULTS['source']['username'],
-                        help="host HTTP access username (default: {})".format(DEFAULTS['source']['username']))
-    source.add_argument('-p', '--password',
-                        metavar='<password>',
-                        dest='password',
-                        default=DEFAULTS['source']['password'],
-                        help="host HTTP access password (default: {})".format(DEFAULTS['source']['password']))
-
+    source.add_argument('-P', '--port', dest='port', default=DEFAULTS['source']['port'], help=configargparse.SUPPRESS)
+    source.add_argument('-u', '--username', dest='username', default=DEFAULTS['source']['username'], help=configargparse.SUPPRESS)
+    source.add_argument('-p', '--password', dest='password', default=DEFAULTS['source']['password'], help=configargparse.SUPPRESS)
 
     backres = PARSER.add_argument_group('Backup/Restore',
                                         'Backup & restore specification')
     backres.add_argument('-i', '--restore-file',
-                         metavar='<filename>',
+                         metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
                          help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
-                         metavar='<filename>',
+                         metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
@@ -4455,7 +4438,7 @@ def parseargs():
 
     common = PARSER.add_argument_group('Common', 'Optional arguments')
     common.add_argument('-c', '--config',
-                        metavar='<filename>',
+                        metavar='<configfile>',
                         dest='configfile',
                         default=DEFAULTS['common']['configfile'],
                         is_config_file=True,
@@ -4478,6 +4461,7 @@ def parseargs():
         groups.remove(VIRTUAL)
     common.add_argument('-g', '--group',
                         dest='filter',
+                        metavar='<groupname>',
                         choices=groups,
                         nargs='+',
                         type=lambda s: s.title(),
