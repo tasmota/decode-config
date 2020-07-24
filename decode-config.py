@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00175]'
+VER = '8.3.1.7 [00176]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -4712,22 +4712,20 @@ if __name__ == "__main__":
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
             exit_(ExitCode.UNSUPPORTED_VERSION, \
+                  "\n           ".join(textwrap.wrap(\
                 "Tasmota configuration data v{} currently unsupported!\n"
-                "           The read configuration data is newer than the last\n"
-                "           supported v{} by this program.\n"
-                "           Newer Tasmota versions may contain changed data struc-\n"
-                "           tures so that the data with older versions may become\n"
-                "           incompatible. You can force proceeding at your own risk\n"
-                "           by appending the parameter '--ignore-warnings'\n"
-                "           Be warned: Forcing can lead to unpredictable results for\n"
-                "           your Tasmota device. In the worst case, your Tasmota device\n"
-                "           will not respond and you will have to flash it again using\n"
-                "           the serial interface. If you are unsure and do not know the\n"
-                "           changes in the configuration structure, you may able to use\n"
-                "           the developer version of this program from\n"
-                "           https://github.com/tasmota/decode-config/tree/development."\
-                  .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
-                  type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                "The read configuration data is newer than the last supported v{} by this program. "
+                "Newer Tasmota versions may contain changed data structures so that the data with "
+                "older versions may become incompatible. You can force proceeding at your own risk "
+                "by appending the parameter '--ignore-warnings'. "
+                "Be warned: Forcing can lead to unpredictable results for your Tasmota device. "
+                "In the worst case, your Tasmota device  will not respond and you will have to flash "
+                "it again using the serial interface. If you are unsure and do not know the  changes "
+                "in the configuration structure, you may able to use the developer version of this "
+                "program from https://github.com/tasmota/decode-config/tree/development.", \
+                int(os.popen('stty size', 'r').read().split()[1], 0) - 15)) \
+                .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
+                type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
     if ARGS.backupfile is not None:
         # backup to file(s)
