@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00179]'
+VER = '8.3.1.7 [00180]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2785,12 +2785,21 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
 
     body = res.text
 
-    find_upload = body.find("Upload")
+    find_upload = -1
+    for key in ("Carga", "Caricamento", "Enviar", "Feltöltés", "Ladda upp", "Nahrání...", "Nahrávanie...", "Upload", "Verzenden", "Wgraj", "Yükleme", "Încărcăre", "Ανέβασμα", "Завантажити", "Загрузить", "Зареждане", "העלאה", "上传", "上傳", "업로드"):
+        find_upload = body.find(key)
+        if find_upload >= 0:
+            break
     if find_upload < 0:
         return ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly with upload result page"
 
     body = body[find_upload:]
-    if body.find("Successful") < 0:
+    find_success = -1
+    for key in ("Başarıyla Tamamlandı", "Completato", "Exitosa", "Gelukt", "Lyckat", "Powodzenie", "Réussi", "Sikeres", "Successful", "Successo", "Succes", "erfolgreich", "úspešné.", "úspěšné.", "Επιτυχές", "Успешно", "Успішно", "הצליח", "已成功", "成功", "성공"):
+        find_success = body.find(key)
+        if find_success >= 0:
+            break
+    if find_success < 0:
         errmatch = re.search(r"<font\s*color='[#0-9a-fA-F]+'>(\S*)</font></b><br><br>(.*)<br>", body)
         reason = "Unknown error"
         if errmatch and len(errmatch.groups()) > 1:
