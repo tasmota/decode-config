@@ -60,39 +60,23 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [Table of contents](#table-of-contents)
   * [Running the program](#running-the-program)
     * [Prerequisite](#prerequisite)
-      * [Tasmota WebServer](#tasmota-webserver)
-      * [Python](#python)
-        * [Linux](#linux)
-        * [Windows 10](#windows-10)
-        * [MacOS](#macos)
-        * [All OS](#all-os)
   * [Usage](#usage)
     * [Basics](#basics)
-      * [Basic example](#basic-example)
-        * [Access an online device](#access-an-online-device)
-        * [Access a config file](#access-a-config-file)
-      * [Password protected device](#password-protected-device)
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
-      * [Save multiple backup at once](#save-multiple-backup-at-once)
     * [Restore backup](#restore-backup)
-      * [Restore subset of data](#restore-subset-of-data)
     * [Auto file extensions](#auto-file-extensions)
     * [Test your parameter](#test-your-parameter)
     * [Console outputs](#console-outputs)
-      * [JSON format](#json-format)
-      * [Tasmota web command format](#tasmota-web-command-format)
-        * [Use of 'Backlog' for Tasmota commands](#use-of-backlog-for-tasmota-commands)
     * [Filter by groups](#filter-by-groups)
     * [Usage examples](#usage-examples)
-      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-      * [Use batch processing](#use-batch-processing)
   * [File Formats](#file-formats)
     * [.dmp format](#dmp-format)
-    * [.json format](#json-format-1)
+    * [.json format](#json-format)
     * [.bin format](#bin-format)
   * [Program parameter list](#program-parameter-list)
+    * [--full-help](#--full-help)
     * [Parameter notes](#parameter-notes)
     * [Obsolete parameters](#obsolete-parameters)
   * [Generated Tasmota commands](#generated-tasmota-commands)
@@ -655,7 +639,9 @@ Note: Not even all double dash `--` parameter has a corresponding single dash on
 
 A short list of possible program args is displayed using `-h` or `--help`.
 
-For advanced help use `-H` or `--full-help`:
+### --full-help
+
+For advanced help use parameter `-H` or `--full-help`:
 
 ```help
 usage: decode-config.py [-s <filename|host|url>] [-i <restorefile>]
@@ -782,29 +768,27 @@ If you want to use the network hostname within your filename, use the **@H** rep
 
 The parameters listed here continue to work and are supported, but are no longer listed in the parameter list:
 
-* Source parameters  
-  ```help
-    -f, --file, --tasmota-file, tasmotafile <filename>
-                          file used for the Tasmota configuration (default:
-                          None)'
-    -d, --device, --host <host|url>
-                          hostname, IP-address or url used for the Tasmota
-                          configuration (default: None)
-    -P, --port <port>     TCP/IP port number to use for the host connection
-                          (default: 80)
-    -u, --username <username>
-                          host HTTP access username (default: admin)
-    -p, --password <password>
-                          host HTTP access password (default: None)
-  ```  
-    
-  Use `-s` or `--source` with a [http-url](https://en.wikipedia.org/wiki/URL) instead.
+#### Obsolete source parameters
+
+The following source selection parameters are completely replaced by a single used [`-s`](#--full-help) or [`--source`](#--full-help) parameter; use [`-s`](#--full-help) or [`--source`](#--full-help) with a [http-url](https://en.wikipedia.org/wiki/URL):
+
+* `-f`, `--file`, `--tasmota-file`, `tasmotafile` `<filename>`  
+file used for the Tasmota configuration (default: None)'
+* `-d`, `--device`, `--host` `<host|url>`  
+hostname, IP-address or url used for the Tasmota configuration (default: None)
+* `-P`, `--port` `<port>`  
+TCP/IP port number to use for the host connection (default: 80)
+* `-u`, `--username` `<username>`  
+host HTTP access username (default: admin)
+* `-p`, `--password` `<password>`  
+host HTTP access password (default: None)
+
+#### Obsolete JSON formating parameters
 
 * `--json-unhide-pw` same as `--json-show-pw`
 * `--json-hide-pw` same as `--json-dont-show-pw`
 * `--json-sort` sorts JSON output (this is the default)
 * `--json-unsort` prevents JSON sorting
-
 
 ## Generated Tasmota commands
 
@@ -908,7 +892,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Rules**      | CalcRes                     | *Add<x\>*              |             |
 |                | Mem<x\>                     | *Event*                |             |
 |                | Rule<x\>                    | *Mult<x\>*             |             |
-|                |                             | *RuleTimer<x\>*        |             |
+|                | Script                      | *RuleTimer<x\>*        |             |
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
 |                |                             | *Var<x\>*              |             |
