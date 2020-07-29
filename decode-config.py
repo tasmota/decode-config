@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.3.1.7 [00181]'
+VER = '8.4.0 [00182]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1632,10 +1632,10 @@ SETTING_8_3_1_7['timer'][1].update ({
         'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
                                     })
 # ======================================================================
-SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
+SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_3_1_7)
 # ======================================================================
 SETTINGS = [
-            (0x8040000,0x1000, SETTING_8_4_0_0),
+            (0x8040001,0x1000, SETTING_8_4_0_1),
             (0x8030107,0x1000, SETTING_8_3_1_7),
             (0x8030106,0x1000, SETTING_8_3_1_6),
             (0x8030105,0x1000, SETTING_8_3_1_5),

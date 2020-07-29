@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v8.3.1.7-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v8.4.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -291,7 +291,7 @@ You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicen
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_8.3.0.json` (the part `Tasmota` and `8.3.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.4.0.json` (the part `Tasmota` and `8.4.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -303,7 +303,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_8.3.0.json` using JSON format
+* `Config_Tasmota_8.4.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -311,10 +311,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.3.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.4.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.3.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.4.0
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
