@@ -3,7 +3,7 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v8.3.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v8.4.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -58,39 +58,27 @@ If you want to use a current version than this one (e.g. because you also use a 
     * [Table of contents](#table-of-contents)
   * [Running the program](#running-the-program)
     * [Prerequisite](#prerequisite)
-      * [Tasmota WebServer](#tasmota-webserver)
     * [Running the precompiled binaries](#running-the-precompiled-binaries)
     * [Running as Python script](#running-as-python-script)
-      * [Linux](#linux)
-      * [Windows 10](#windows-10)
-      * [MacOS](#macos)
-      * [All OS](#all-os)
   * [Usage](#usage)
     * [Basics](#basics)
-      * [Basic example](#basic-example)
-      * [Password protected device](#password-protected-device)
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
-      * [Save multiple backup at once](#save-multiple-backup-at-once)
     * [Restore backup](#restore-backup)
-      * [Restore subset of data](#restore-subset-of-data)
     * [Auto file extensions](#auto-file-extensions)
     * [Test your parameter](#test-your-parameter)
     * [Console outputs](#console-outputs)
-      * [JSON format](#json-format)
-      * [Tasmota web command format](#tasmota-web-command-format)
-        * [Use of 'Backlog' for Tasmota commands](#use-of-backlog-for-tasmota-commands)
     * [Filter by groups](#filter-by-groups)
     * [Usage examples](#usage-examples)
-      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
-      * [Use batch processing](#use-batch-processing)
   * [File Formats](#file-formats)
     * [.dmp format](#dmp-format)
-    * [.json format](#json-format-1)
+    * [.json format](#json-format)
     * [.bin format](#bin-format)
-  * [Complete program parameter](#complete-program-parameter)
+  * [Program parameter list](#program-parameter-list)
+    * [--full-help](#--full-help)
     * [Parameter notes](#parameter-notes)
+    * [Obsolete parameters](#obsolete-parameters)
   * [Generated Tasmota commands](#generated-tasmota-commands)
   * [Program return codes](#program-return-codes)
 
@@ -162,23 +150,22 @@ Replace `decode-config` by the program name your are using:
 This prints a short help:
 
 ```help
-Backup/Restore Tasmota configuration data.
-
-usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
-                        [-u <username>] [-p <password>] [-i <filename>]
-                        [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
+usage: decode-config.py [-s <filename|host|url>] [-i <restorefile>]
+                        [-o <backupfile>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
-                        [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
-                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g [Control,Display,Domoticz,Internal,Knx,Light,
-                             Management,Mqtt,Power,Rf,Rules,Sensor,Serial,
-                             Setoption,Shutter,System,Timer,Wifi,Zigbee]
-                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
+                        [--json-show-pw] [--cmnd-indent <indent>]
+                        [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
+                        [--cmnd-use-backlog] [-c <configfile>] [-S]
+                        [-T json|cmnd|command]
+                        [-g <groupname> [<groupname> ...]] [-w] [--dry-run]
+                        [-h] [-H] [-v] [-V]
 ```
 
-For advanced help run **decode-config** with parameter `--full--help` or `-H`. This will print a [complete program parameter](#complete-program-parameter) list.
+For advanced help run **decode-config** with parameter `--full--help` or `-H`. This will print a [Program parameter list](#program-parameter-list).
+
+> **Note**  
+If you miss parameters here that are already in use, don't worry, they are still there.  
+For details see [Obsolete parameters](#obsolete-parameters)
 
 ### Basics
 
@@ -186,18 +173,33 @@ To get a result, at least pass a Tasmota source where you want to read the confi
 
 Source can be either
 
-* a device hostname or IP available and online within your network:  
-use `--device <host>` or `-d <host>` parameter
+* a device hostname, IP or [http-url](https://en.wikipedia.org/wiki/URL) available and online within your network:  
+use `--source <host|url>` or `-s <host|url>` parameter
 * a Tasmota configuration file (having extension `.dmp`):  
-use `--file <filename>` or `-f <filename>` parameter
+use `--source <filename>` or `-s <filename>` parameter
+
+The [http-url](https://en.wikipedia.org/wiki/URL) variant also allows `<user>`, `<password>` and `<port>` number to be specified:
+
+* `--source http://admin:myPaszxwo!z@tasmota-4281`
+* `--source http://tasmota-4281:80`
+* `--source http://admin:myPaszxwo!z@tasmota-4281:80`
 
 #### Basic example
 
+##### Access an online device
+
 ```bash
-decode-config --device tasmota-4281
-decode-config -d 192.168.10.92
-decode-config --file tasmota-4281.dmp
-decode-config -f tasmota-4281.dmp
+decode-config --source tasmota-4281
+decode-config -s 192.168.10.92
+decode-config --source http://tasmota-4281
+decode-config --source http://admin:myPaszxwo!z@tasmota-4281
+```
+
+##### Access a config file
+
+```bash
+decode-config --source tasmota-4281.dmp
+decode-config -s tasmota-4281.dmp
 ```
 
 will output a readable configuration in [JSON](http://www.json.org/)-format, e.g.:
@@ -215,7 +217,7 @@ The json names (like `"altitude"` or `"blinktime"` are internal names from Tasmo
 If you try to access data from a device and you get an error like `ERROR 401: Error on http GET request for http://.../dl - Unauthorized` you need to pass your WebPassword for this device:
 
 ```bash
-decode-config --device tasmota-4281 --password "myPaszxwo!z"
+decode-config --source tasmota-4281 --password "myPaszxwo!z"
 ```
 
 > **Hint**  
@@ -226,7 +228,7 @@ decode-config --device tasmota-4281 --password "myPaszxwo!z"
 The default JSON output can be formatted for better reading using the `--json-indent <n>` parameter:
 
 ```bash
-decode-config --device tasmota-4281 --password "myPaszxwo!z" --json-indent 2
+decode-config --source tasmota-4281 --password "myPaszxwo!z" --json-indent 2
 ```
 
 This will print a pretty better readable format and the example above becomes:
@@ -249,7 +251,7 @@ This will print a pretty better readable format and the example above becomes:
 ### Parameter file
 
 Because the number of parameters are growing, it would be difficult to enter all these parameters again and again. In that case it is best to use a configuration file that contains your standard parameters and which we then have to specify as the only additional parameter.  
-[Program parameter](#complete-program-parameter) starting with `--` (eg. `--username`) can be set into such a configuration file. Simply write each neccessary parameter including possible value without dashes into a text file. For a better identification of this file, extension `.conf` is recommended:
+[Program parameter](#program-parameter-list) starting with `--` (eg. `--username`) can be set into such a configuration file. Simply write each neccessary parameter including possible value without dashes into a text file. For a better identification of this file, extension `.conf` is recommended:
 
 Writing all the previous used device parameter in a file, create the text file `my.conf` and insert:
 
@@ -268,7 +270,7 @@ Group names enclosed in square brackets [ ], like `[source]` in the example, are
 Now we can use it with `-c` parameter:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281
+decode-config -c my.conf -s tasmota-4281
 ```
 
 > **Note**  
@@ -277,7 +279,7 @@ For further of parameter file syntax see [https://pypi.org/project/ConfigArgPars
 If parameters are specified in more than one place (parameter file and command line), the commandline parameters will overrule the file parameters. This is usefull if you use a basic set of parameters and want to change parameter once without the need to edit your configuration file:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --json-indent 4
+decode-config -c my.conf -s tasmota-4281 --json-indent 4
 ```
 
 Here JSON will be output with indent of 4 spaces instead of the `2` set from `my.conf`-
@@ -287,25 +289,25 @@ Here JSON will be output with indent of 4 spaces instead of the `2` set from `my
 To save data from a device or [*.dmp](#dmp-format) file into a backup file, use `--backup-file <filename>`.
 
 > **Hint**  
-You can use placeholders **@v** for _Tasmota Version_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
+You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicename_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --backup-file Config_@f_@v
+decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_8.3.1.json` (the part `Tasmota` and `8.3.1` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.4.0.json` (the part `Tasmota` and `8.4.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
 Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 -o Config_@f_@v -o Backup_@H.json -o Backup_@H.dmp
+decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Backup_@H.dmp
 ```
 
 creates three backup files:
 
-* `Config_Tasmota_8.3.1.json` using JSON format
+* `Config_Tasmota_8.4.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -313,16 +315,16 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.3.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.4.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --restore-file Config_Tasmota_8.3.1
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.4.0
 ```
 
-Restore operation also allows placeholders **@v**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
+Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --restore-file Config_@f_@v
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_@d_@v
 ```
 
 > **Note**  
@@ -345,7 +347,7 @@ Example: You want to change the data for location (altitude, latitude, longitude
 Set this location for a device:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 -i location
+decode-config -c my.conf -s tasmota-4281 -i location
 ```
 
 > **Hint**  
@@ -371,18 +373,18 @@ If you use your own extensions, deactivate the automatic extension using the `--
 
 Examples:
 
-* `decode-config --device tasmota-4281 --backup-file tasmota-4281.bin`<br>
+* `decode-config --source tasmota-4281 --backup-file tasmota-4281.bin`<br>
 is identical with<br>
-`decode-config --device tasmota-4281 --backup-type bin --backup-file tasmota-4281`<br>
+`decode-config --source tasmota-4281 --backup-type bin --backup-file tasmota-4281`<br>
 In both cases the backup file `tasmota-4281.bin` is created.
-* `decode-config --device tasmota-4281 --restore-file tasmota-4281.json`<br>
+* `decode-config --source tasmota-4281 --restore-file tasmota-4281.json`<br>
 is identical with<br>
-`decode-config --device tasmota-4281 --restore-file tasmota-4281`<br>
+`decode-config --source tasmota-4281 --restore-file tasmota-4281`<br>
 In both cases the backup file `tasmota-4281.json` will tried to restore (remember `--backup-type json` is the default)
 * whereas<br>
-`decode-config --device tasmota-4281 --no-extension --restore-file tasmota-4281`<br>
+`decode-config --source tasmota-4281 --no-extension --restore-file tasmota-4281`<br>
 will fail if `tasmota-4281` does not exist and<br>
-`decode-config --device tasmota-4281 --no-extension --backup-file tasmota-4281`<br>
+`decode-config --source tasmota-4281 --no-extension --backup-file tasmota-4281`<br>
 will create a json backup file named `tasmota-4281` (without the extension).
 
 ### Test your parameter
@@ -390,7 +392,7 @@ will create a json backup file named `tasmota-4281` (without the extension).
 To test your parameter append `--dry-run`:
 
 ```bash
-decode-config -d tasmota-4281 -i backupfile --dry-run
+decode-config -s tasmota-4281 -i backupfile --dry-run
 ```
 
 This runs the complete process but prevent writing any changes to a device or file.
@@ -414,7 +416,7 @@ The default console output format is [JSON](#json-format) (optional you can forc
 Example:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --group Wifi
+decode-config -c my.conf -s tasmota-4281 --group Wifi
 ```
 
 will output data like
@@ -453,7 +455,7 @@ will output data like
 This also allows direct processing on the command line, e.g. to display all `ntp_server` only
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 | jq '.ntp_server'
+decode-config -c my.conf -s tasmota-4281 | jq '.ntp_server'
 ```
 
 outputs
@@ -476,7 +478,7 @@ JSON output contains all configuration data as default. To [filter](#filter-by-g
 Example:
 
 ```bash
-decode-config -c my.conf -d tasmota-4281 --group Wifi --output-format cmnd
+decode-config -c my.conf -s tasmota-4281 --group Wifi --output-format cmnd
 ```
 
 ```conf
@@ -556,7 +558,7 @@ These are similary to the categories on [Tasmota Command Documentation](https://
 To filter outputs to a subset of groups, use the `-g` or `--group` parameter, concatenating the groups you want, e. g.
 
 ```bash
-decode-config -d tasmota-4281 -c my.conf --output-format cmnd --group Main MQTT Management Wifi
+decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Main MQTT Management Wifi
 ```
 
 Filtering by groups affects the entire output, regardless of whether screen output or backup file.
@@ -568,7 +570,7 @@ Filtering by groups affects the entire output, regardless of whether screen outp
 1. Restore a Tasmota configuration file
 
   ```bash
-  decode-config -c my.conf -d tasmota --restore-file Config_Tasmota_6.2.1.dmp
+  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_6.2.1.dmp
   ```
 
 1. Backup device using Tasmota configuration compatible format
@@ -576,13 +578,13 @@ Filtering by groups affects the entire output, regardless of whether screen outp
    a) use file extension to choice the file format
 
   ```bash
-  decode-config -c my.conf -d tasmota --backup-file Config_@f_@v.dmp
+  decode-config -c my.conf -s tasmota --backup-file Config_@d_@v.dmp
   ```
 
    b) use args to choice the file format
 
   ```bash
-    decode-config -c my.conf -d tasmota --backup-type dmp --backup-file Config_@f_@v
+    decode-config -c my.conf -s tasmota --backup-type dmp --backup-file Config_@d_@v
   ```
 
 #### Use batch processing
@@ -590,13 +592,13 @@ Filtering by groups affects the entire output, regardless of whether screen outp
 Linux
 
 ```bash
-for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -d $device -o Config_@f_@v
+for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -s $device -o Config_@d_@v
 ```
 
 under Windows
 
 ```batch
-for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -d %device -o Config_@f_@v
+for device in (tasmota1 tasmota2 tasmota3) do decode-config -c my.conf -s %device -o Config_@d_@v
 ```
 
 will produce JSON configuration files for host tasmota1, tasmota2 and tasmota3 using friendly name and Tasmota firmware version for backup filenames.
@@ -634,27 +636,29 @@ The .bin format can be created by **decode-config** using the backup function (`
 This format is actually only used to view the configuration data directly in binary form without conversion.  
 It is hardly possible to change the binary data, since a checksum is formed over the data and this would have to be calculated and adjusted in case of any change.
 
-## Complete program parameter
+## Program parameter list
 
-For better reading each short written arg (minus sign `-`) has a corresponding long version (two minus signs `--`), eg. `--device` for `-d` or `--file` for `-f` (note: not even all `--` arg has a corresponding `-` one).
+For better reading each short written parameter using a single dash `-` has a corresponding long version with two dashes `--`, eg. `--source` for `-s`.  
+Note: Not even all double dash `--` parameter has a corresponding single dash one `-` but each single dash variant has a double dash equivalent.
 
 A short list of possible program args is displayed using `-h` or `--help`.
 
-For advanced help use `-H` or `--full-help`:
+### --full-help
+
+For advanced help use parameter `-H` or `--full-help`:
 
 ```help
-usage: decode-config.py [-f <filename>] [-d <host>] [-P <port>]
-                        [-u <username>] [-p <password>] [-i <filename>]
-                        [-o <filename>] [-t json|bin|dmp] [-E] [-e] [-F]
+usage: decode-config.py [-s <filename|host|url>] [-i <restorefile>]
+                        [-o <backupfile>] [-t json|bin|dmp] [-E] [-e] [-F]
                         [--json-indent <indent>] [--json-compact]
-                        [--json-hide-pw] [--json-show-pw]
-                        [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-nogroups]
-                        [--cmnd-sort] [--cmnd-unsort] [--cmnd-use-backlog]
-                        [-c <filename>] [-S] [-T json|cmnd|command]
-                        [-g {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} [{Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee} ...]]
-                        [--ignore-warnings] [--dry-run] [-h] [-H] [-v] [-V]
+                        [--json-show-pw] [--cmnd-indent <indent>]
+                        [--cmnd-groups] [--cmnd-sort] [--cmnd-use-rule-concat]
+                        [--cmnd-use-backlog] [-c <configfile>] [-S]
+                        [-T json|cmnd|command]
+                        [-g <groupname> [<groupname> ...]] [-w] [--dry-run]
+                        [-h] [-H] [-v] [-V]
 
-Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -f)
+Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -s)
 can also be set in a config file (specified via -c). Config file syntax
 allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
 https://goo.gl/R74nmi). If an arg is specified in more than one place, then
@@ -663,33 +667,32 @@ commandline values override config file values which override defaults.
 Source:
   Read/Write Tasmota configuration from/to
 
-  -f, --file <filename>
-                        file to retrieve/write Tasmota configuration from/to
-                        (default: None)'
-  -d, --device <host>   hostname or IP address to retrieve/send Tasmota
-                        configuration from/to (default: None)
-  -P, --port <port>     TCP/IP port number to use for the host connection
-                        (default: 80)
-  -u, --username <username>
-                        host HTTP access username (default: admin)
-  -p, --password <password>
-                        host HTTP access password (default: None)
+  -s, --source <filename|host|url>
+                        source used for the Tasmota configuration (default:
+                        None). The argument can be a <filename> containing
+                        Tasmota .dmp configuation data or a <hostname>,
+                        <ip>-address, <url> which means an online tasmota
+                        device is used. A url can also contain web login and
+                        port data in the format
+                        http://<user>:<password>@tasmota:<port>, e. g,
+                        http://admin:mypw@mytasmota:8090
 
 Backup/Restore:
   Backup & restore specification
 
-  -i, --restore-file <filename>
+  -i, --restore-file <restorefile>
                         file to restore configuration from (default: None).
                         Replacements: @v=firmware version from config,
+                        @d=devicename, @f=device friendly name from config,
+                        @h=device hostname from config, @H=device hostname
+                        from device (-d arg only)
+  -o, --backup-file <backupfile>
+                        file to backup configuration to, can be specified
+                        multiple times (default: None). Replacements:
+                        @v=firmware version from config, @d=devicename,
                         @f=device friendly name from config, @h=device
                         hostname from config, @H=device hostname from device
                         (-d arg only)
-  -o, --backup-file <filename>
-                        file to backup configuration to, can be specified
-                        multiple times (default: None). Replacements:
-                        @v=firmware version from config, @f=device friendly
-                        name from config, @h=device hostname from config,
-                        @H=device hostname from device (-d arg only)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename
@@ -699,41 +702,44 @@ Backup/Restore:
   -F, --force-restore   force restore even configuration is identical
 
 JSON output:
-  JSON format specification
+  JSON format specification. To revert an option, insert "dont" or "no"
+  after "json", e.g. --json-no-indent, --json-dont-show-pw
 
   --json-indent <indent>
                         pretty-printed JSON output using indent level
                         (default: 'None'). -1 disables indent.
   --json-compact        compact JSON output by eliminate whitespace
-  --json-hide-pw        hide passwords
   --json-show-pw        unhide passwords (default)
 
 Tasmota command output:
-  Tasmota command output format specification
+  Tasmota command output format specification. To revert an option, insert
+  "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
 
   --cmnd-indent <indent>
                         Tasmota command grouping indent level (default: '2').
                         0 disables indent
   --cmnd-groups         group Tasmota commands (default)
-  --cmnd-nogroups       leave Tasmota commands ungrouped
   --cmnd-sort           sort Tasmota commands (default)
-  --cmnd-unsort         leave Tasmota commands unsorted
-  --cmnd-use-backlog    use Backlog for Tasmota commands as much as possible
+  --cmnd-use-rule-concat
+                        use rule concatenation with + for Tasmota 'Rule'
+                        command
+  --cmnd-use-backlog    use 'Backlog' for Tasmota commands as much as possible
 
 Common:
   Optional arguments
 
-  -c, --config <filename>
+  -c, --config <configfile>
                         program config file - can be used to set default
                         command parameters (default: None)
   -S, --output          display output regardsless of backup/restore usage
                         (default do not output on backup or restore usage)
   -T, --output-format json|cmnd|command
                         display output format (default: 'json')
-  -g, --group {Control,Display,Domoticz,Internal,Knx,Light,Management,Mqtt,Power,Rf,Rules,Sensor,Serial,Setoption,Shutter,System,Timer,Wifi,Zigbee}
+  -g, --group <groupname>
                         limit data processing to command groups (default no
                         filter)
-  --ignore-warnings     do not exit on warnings. Not recommended, used by your
+  -w, --ignore-warnings
+                        do not exit on warnings. Not recommended, used by your
                         own responsibility!
   --dry-run             test program without changing configuration data on
                         device or file
@@ -746,17 +752,47 @@ Info:
   -v, --verbose         produce more output about what the program does
   -V, --version         show program's version number and exit
 
-Either argument -d <host> or -f <filename> must be given.
+The arguments -s <filename|host|url> must be given.
 ```
+
+> **Note**  
+If you miss parameters here that are already in use, don't worry, they are still there.  
+For details see [Obsolete parameters](#obsolete-parameters)
 
 ### Parameter notes
 
 * Filename replacement macros **@h** and **@H**:
   * **@h**
-The **@h** replacement macro uses the hostname configured with the Tasomta Wifi `Hostname <host>` command (defaults to `%s-%04d`). It will not use the network hostname of your device because this is not available when working with files only (e.g. `--file <filename>` as source).
+The **@h** replacement macro uses the hostname configured with the Tasomta Wifi `Hostname <host>` command (defaults to `%s-%04d`). It will not use the network hostname of your device because this is not available when working with files only (e.g. `--source <filename>` as source).
 To prevent having a useless % in your filename, **@h** will not replaced by hostname if this contains '%' characters.
   * **@H**
-If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`-d`, `--device`, `--host`); it will not work when using a file as source (`-f`, `--file`)
+If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`<hostname>`, `<ip>`, `<url>`); it will not work when using a file as source (`<filename>`)
+
+### Obsolete parameters
+
+The parameters listed here continue to work and are supported, but are no longer listed in the parameter list:
+
+#### Obsolete source parameters
+
+The following source selection parameters are completely replaced by a single used [`-s`](#--full-help) or [`--source`](#--full-help) parameter; use [`-s`](#--full-help) or [`--source`](#--full-help) with a [http-url](https://en.wikipedia.org/wiki/URL):
+
+* `-f`, `--file`, `--tasmota-file`, `tasmotafile` `<filename>`  
+file used for the Tasmota configuration (default: None)'
+* `-d`, `--device`, `--host` `<host|url>`  
+hostname, IP-address or url used for the Tasmota configuration (default: None)
+* `-P`, `--port` `<port>`  
+TCP/IP port number to use for the host connection (default: 80)
+* `-u`, `--username` `<username>`  
+host HTTP access username (default: admin)
+* `-p`, `--password` `<password>`  
+host HTTP access password (default: None)
+
+#### Obsolete JSON formating parameters
+
+* `--json-unhide-pw` same as `--json-show-pw`
+* `--json-hide-pw` same as `--json-dont-show-pw`
+* `--json-sort` sorts JSON output (this is the default)
+* `--json-unsort` prevents JSON sorting
 
 ## Generated Tasmota commands
 
@@ -777,6 +813,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DevGroupShare               | *LedPower*             |             |
 |                | Interlock                   |                        |             |
 |                | LedMask                     |                        |             |
+|                | LedPwmMode<x\>              |                        |             |
+|                | LedPwmOn                    |                        |             |
+|                | LedPwmOff                   |                        |             |
 |                | LedState                    |                        |             |
 |                | Power<x\>                   |                        |             |
 |                | PowerOnState                |                        |             |
@@ -792,15 +831,17 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WCSaturation<sup>2</sup>    |                        |             |
 |                | WCResolution<sup>2</sup>    |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
-|                | Emulation                   | *Gpios*                |             |
-|                | FriendlyName<x\>            | *I2Cscan*              |             |
-|                | Gpio<x\>                    | *Modules*              |             |
-|                | I2CDriver<x\>               | *Reset*                |             |
-|                | LogHost                     | *Restart*              |             |
-|                | LogPort                     | *State*                |             |
-|                | Module                      | *Status*               |             |
-|                | MqttLog                     | *Upgrade*              |             |
-|                | NtpServer<x\>               | *Upload*               |             |
+|                | DeviceName                  | *Gpios*                |             |
+|                | Emulation                   | *I2Cscan*              |             |
+|                | FriendlyName<x\>            | *Modules*              |             |
+|                | Gpio<x\>                    | *Reset*                |             |
+|                | I2CDriver<x\>               | *Restart*              |             |
+|                | LogHost                     | *State*                |             |
+|                | LogPort                     | *Status*               |             |
+|                | Module                      | *Upgrade*              |             |
+|                | Module2                     | *Upload*               |             |
+|                | MqttLog                     |                        |             |
+|                | NtpServer<x\>               |                        |             |
 |                | OtaUrl                      |                        |             |
 |                | Pwm<x\>                     |                        |             |
 |                | PwmFrequency                |                        |             |
@@ -817,15 +858,20 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TuyaMCU                     |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
-|                | Hostname                    | *Ping<x\>*             |             |
-|                | IPAddress<x\>               | *WebSend*              |             |
-|                | Password<x\>                | *Publish*              |             |
-|                | Ssid<x\>                    | *Publish2*             |             |
+|                | Ethernet<sup>2</sup>        | *Ping<x\>*             |             |
+|                | EthAddress<sup>2</sup>      | *WebSend*              |             |
+|                | EthClockMode<sup>2</sup>    | *Publish*              |             |
+|                | EthType<sup>2</sup>         | *Publish2*             |             |
+|                | Hostname                    |                        |             |
+|                | IPAddress<x\>               |                        |             |
+|                | Password<x\>                |                        |             |
+|                | Ssid<x\>                    |                        |             |
 |                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
 |                | WebRefresh                  |                        |             |
 |                | WebSensor<x\>               |                        |             |
 |                | WebServer                   |                        |             |
+|                | Wifi                        |                        |             |
 |                | WifiConfig                  |                        |             |
 |                | WifiPower                   |                        |             |
 | **MQTT**       | ButtonRetain                | *Subscribe*            |             |
@@ -850,7 +896,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Rules**      | CalcRes                     | *Add<x\>*              |             |
 |                | Mem<x\>                     | *Event*                |             |
 |                | Rule<x\>                    | *Mult<x\>*             |             |
-|                |                             | *RuleTimer<x\>*        |             |
+|                | Script                      | *RuleTimer<x\>*        |             |
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
 |                |                             | *Var<x\>*              |             |
@@ -858,14 +904,15 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
 |                | Timer<x\>                   |                        |             |
-| **Sensor**     | AdcParam                    | *GlobalHum*            |             |
-|                | Altitude                    | *GlobalTemp*           |             |
-|                | AmpRes                      | *Sensor27*             |             |
-|                | Counter<x\>                 | *Sensor50*             |             |
-|                | CounterDebounce             | *Sensor52*             |             |
-|                | CounterDebounceLow          | *Sensor53*             |             |
-|                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
-|                | CounterType<x\>             |                        |             |
+| **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
+|                | Altitude                    | *GlobalHum*            |             |
+|                | AmpRes                      | *GlobalTemp*           |             |
+|                | Bh1750Resolution<x\>        | *Sensor10*             |             |
+|                | Counter<x\>                 | *Sensor27*             |             |
+|                | CounterDebounce             | *Sensor50*             |             |
+|                | CounterDebounceLow          | *Sensor52*             |             |
+|                | CounterDebounceHigh         | *Sensor53*             |             |
+|                | CounterType<x\>             | *Sensor60<sup>1</sup>* |             |
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
 |                | PressRes                    |                        |             |
@@ -873,7 +920,6 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | OT_Save_Setpoints           |                        |             |
 |                | OT_TBoiler                  |                        |             |
 |                | OT_TWater                   |                        |             |
-|                | Sensor10                    |                        |             |
 |                | Sensor13                    |                        |             |
 |                | Sensor15                    |                        |             |
 |                | Sensor18                    |                        |             |
@@ -928,8 +974,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **SetOption**  | SetOption<x\>               |                        |             |
 | **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
 |                | SBaudrate                   | *SSerialSend<x\>*      |             |
-|                | SerialConfig                | *TuyaSend<x\>*         |             |
-|                | SerialDelimiter             |                        |             |
+|                | SerialConfig                | *TCPStart*             |             |
+|                | SerialDelimiter             | *TuyaSend<x\>*         |             |
+|                | TCPBaudrate                 |                        |             |
 | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
 |                | DomoticzKeyIdx<x\>          |                        |             |
 |                | DomoticzSensorIdx<x\>       |                        |             |
@@ -959,9 +1006,12 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
 |                | ShutterMotorDelay<x\>       | *ShutterStopPosition<x\>*|           |
 |                | ShutterOpenDuration<x\>     | *ShutterStopToggle<x\>*|             |
-|                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
-|                | ShutterRelay<x\>            |                        |             |
-|                | ShutterSetHalfway<x\>       |                        |             |
+|                | ShutterPosition<x\>         | *ShutterStopToggleDir<x\>*|          |
+|                | ShutterRelay<x\>            | *ShutterToggle<x\>*    |             |
+|                | ShutterSetHalfway<x\>       | *ShutterToggleDir<x\>* |             |
+| **Telegram**   | TmChatId                    | *TmPoll*               |             |
+|                | TmToken                     | *TmSend*               |             |
+|                |                             | *TmState*              |             |
 | **Zigbee**     | ZbConfig                    | *ZbBind*               |             |
 |                |                             | *ZbForget*             |             |
 |                |                             | *ZbLight*              |             |
