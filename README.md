@@ -903,12 +903,12 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
 |                | Altitude                    | *GlobalHum*            |             |
 |                | AmpRes                      | *GlobalTemp*           |             |
-|                | Bh1750Resolution<x\>        | *Sensor10*             |             |
-|                | Counter<x\>                 | *Sensor27*             |             |
-|                | CounterDebounce             | *Sensor50*             |             |
-|                | CounterDebounceLow          | *Sensor52*             |             |
-|                | CounterDebounceHigh         | *Sensor53*             |             |
-|                | CounterType<x\>             | *Sensor60<sup>1</sup>* |             |
+|                | Bh1750Resolution<x\>        | *Sensor27*             |             |
+|                | Counter<x\>                 | *Sensor50*             |             |
+|                | CounterDebounce             | *Sensor52*             |             |
+|                | CounterDebounceLow          | *Sensor53*             |             |
+|                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
+|                | CounterType<x\>             |                        |             |
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
 |                | PressRes                    |                        |             |
