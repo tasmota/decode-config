@@ -3,6 +3,9 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
+<img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="455" height="270">
+
+<!-- markdownlint-disable MD033 -->
 [![development](https://img.shields.io/badge/development-v8.4.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
