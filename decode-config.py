@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.1 [00182]'
+VER = '8.4.0.1 [00183]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1633,6 +1633,10 @@ SETTING_8_3_1_7['timer'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_3_1_7)
+SETTING_8_4_0_1['flag4'][1].update ({
+        'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
+                                    })
+SETTING_8_4_0_1['flag4'][1].pop('remote_device_mode',None)
 # ======================================================================
 SETTINGS = [
             (0x8040001,0x1000, SETTING_8_4_0_1),
