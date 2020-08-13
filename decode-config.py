@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.1 [00185]'
+VER = '8.4.0.2 [00186]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1636,10 +1636,23 @@ SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_3_1_7)
 SETTING_8_4_0_1['flag4'][1].update ({
         'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
         'teleinfo_baudrate':        (Platform.ALL,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SetOption102 {}".format($)')) ),
+        'mqtt_tls':                 (Platform.ALL,   '<L', (0xEF8,1,21), (None, None,                           ('SetOption',   '"SetOption103 {}".format($)')) ),
+        'mqtt_no_retain':           (Platform.ALL,   '<L', (0xEF8,1,22), (None, None,                           ('SetOption',   '"SetOption104 {}".format($)')) ),
                                     })
 SETTING_8_4_0_1['flag4'][1].pop('remote_device_mode',None)
 # ======================================================================
+SETTING_8_4_0_2 = copy.deepcopy(SETTING_8_4_0_1)
+SETTING_8_4_0_2.update             ({
+    'flag5':                        (Platform.ALL,   '<L',  0xEB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+                                    })
+SETTING_8_4_0_2['flag4'][1].update ({
+        'white_blend_mode':         (Platform.ALL,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SetOption105 {}".format($)')) ),
+        'virtual_ct':               (Platform.ALL,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SetOption106 {}".format($)')) ),
+        'virtual_ct_cw':            (Platform.ALL,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SetOption107 {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x8040002,0x1000, SETTING_8_4_0_2),
             (0x8040001,0x1000, SETTING_8_4_0_1),
             (0x8030107,0x1000, SETTING_8_3_1_7),
             (0x8030106,0x1000, SETTING_8_3_1_6),
