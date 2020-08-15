@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.2 [00186]'
+VER = '8.4.0.2 [00187]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -161,6 +161,8 @@ STR_CODING = 'utf-8'
 HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
 VIRTUAL = '*'
+SETTINGVAR = '$SETTINGVAR'
+DEFAULT_SET_MAX = 79
 
 DEFAULTS = {
     'source':
@@ -1244,84 +1246,83 @@ SETTING_7_1_2_6['flag3'][1].update ({
         'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
-# v8.x.x.x: Index numbers for indexed strings
-SETTINGSTEXTINDEX =['SET_OTAURL',
-                    'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
-                    'SET_STASSID1', 'SET_STASSID2',
-                    'SET_STAPWD1', 'SET_STAPWD2',
-                    'SET_HOSTNAME', 'SET_SYSLOG_HOST',
-                    'SET_WEBPWD', 'SET_CORS',
-                    'SET_MQTT_HOST', 'SET_MQTT_CLIENT',
-                    'SET_MQTT_USER', 'SET_MQTT_PWD',
-                    'SET_MQTT_FULLTOPIC', 'SET_MQTT_TOPIC',
-                    'SET_MQTT_BUTTON_TOPIC', 'SET_MQTT_SWITCH_TOPIC', 'SET_MQTT_GRP_TOPIC',
-                    'SET_STATE_TXT1', 'SET_STATE_TXT2', 'SET_STATE_TXT3', 'SET_STATE_TXT4',
-                    'SET_NTPSERVER1', 'SET_NTPSERVER2', 'SET_NTPSERVER3',
-                    'SET_MEM1', 'SET_MEM2', 'SET_MEM3', 'SET_MEM4', 'SET_MEM5', 'SET_MEM6', 'SET_MEM7', 'SET_MEM8',
-                    'SET_MEM9', 'SET_MEM10', 'SET_MEM11', 'SET_MEM12', 'SET_MEM13', 'SET_MEM14', 'SET_MEM15', 'SET_MEM16',
-                    'SET_FRIENDLYNAME1', 'SET_FRIENDLYNAME2', 'SET_FRIENDLYNAME3', 'SET_FRIENDLYNAME4',
-                    'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
-                    'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
-                    'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
-                    'SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4',
-                    'SET_TEMPLATE_NAME',
-                    'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4',
-                    'SET_DEVICENAME',
-                    'SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID',
-                    'SET_MAX']
-# ----------------------------------------------------------------------
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
 SETTING_8_0_0_1.update             ({
-    'ota_url':                      (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_OTAURL')),
+    # v8.x.x.x: Index numbers for indexed strings
+    SETTINGVAR:
+    {
+        'TEXTINDEX':   ['SET_OTAURL',
+                        'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
+                        'SET_STASSID1', 'SET_STASSID2',
+                        'SET_STAPWD1', 'SET_STAPWD2',
+                        'SET_HOSTNAME', 'SET_SYSLOG_HOST',
+                        'SET_WEBPWD', 'SET_CORS',
+                        'SET_MQTT_HOST', 'SET_MQTT_CLIENT',
+                        'SET_MQTT_USER', 'SET_MQTT_PWD',
+                        'SET_MQTT_FULLTOPIC', 'SET_MQTT_TOPIC',
+                        'SET_MQTT_BUTTON_TOPIC', 'SET_MQTT_SWITCH_TOPIC', 'SET_MQTT_GRP_TOPIC',
+                        'SET_STATE_TXT1', 'SET_STATE_TXT2', 'SET_STATE_TXT3', 'SET_STATE_TXT4',
+                        'SET_NTPSERVER1', 'SET_NTPSERVER2', 'SET_NTPSERVER3',
+                        'SET_MEM1', 'SET_MEM2', 'SET_MEM3', 'SET_MEM4', 'SET_MEM5', 'SET_MEM6', 'SET_MEM7', 'SET_MEM8',
+                        'SET_MEM9', 'SET_MEM10', 'SET_MEM11', 'SET_MEM12', 'SET_MEM13', 'SET_MEM14', 'SET_MEM15', 'SET_MEM16',
+                        'SET_FRIENDLYNAME1', 'SET_FRIENDLYNAME2', 'SET_FRIENDLYNAME3', 'SET_FRIENDLYNAME4',
+                        'SET_FRIENDLYNAME5', 'SET_FRIENDLYNAME6', 'SET_FRIENDLYNAME7', 'SET_FRIENDLYNAME8',
+                        'SET_BUTTON1', 'SET_BUTTON2', 'SET_BUTTON3', 'SET_BUTTON4', 'SET_BUTTON5', 'SET_BUTTON6', 'SET_BUTTON7', 'SET_BUTTON8',
+                        'SET_BUTTON9', 'SET_BUTTON10', 'SET_BUTTON11', 'SET_BUTTON12', 'SET_BUTTON13', 'SET_BUTTON14', 'SET_BUTTON15', 'SET_BUTTON16',
+                        'SET_MAX']
+    }
+                                    })
+SETTING_8_0_0_1.update             ({
+    'ota_url':                      (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_OTAURL')),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTTPREFIX1')),
+    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTTPREFIX1')),
                                                                          ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#+1,$)')) ),
-    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STASSID1')),
+    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STASSID1')),
                                                                          ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#+1,$)')) ),
-    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STAPWD1')),
+    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STAPWD1')),
                                                                          ([2],  None,                           ('Wifi',        '"Password{} {}".format(#+1,$)')), (passwordread, passwordwrite) ),
-    'hostname':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_HOSTNAME')),
+    'hostname':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_HOSTNAME')),
                                                                          (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_SYSLOG_HOST')),
+    'syslog_host':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_SYSLOG_HOST')),
                                                                          (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_WEBPWD')),
+    'web_password':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_WEBPWD')),
                                                                          (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'cors_domain':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_CORS')),
+    'cors_domain':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_CORS')),
                                                                          (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_HOST')),
+    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_HOST')),
                                                                          (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_CLIENT')),
+    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_CLIENT')),
                                                                          (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_USER')),
+    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_USER')),
                                                                          (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_PWD')),
+    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_PWD')),
                                                                         (None, None,                            ('MQTT',        '"MqttPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_FULLTOPIC')),
+    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_FULLTOPIC')),
                                                                          (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_TOPIC')),
+    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_TOPIC')),
                                                                          (None, None,                           ('MQTT',        '"Topic {}".format($)')) ),
-    'button_topic':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_BUTTON_TOPIC')),
+    'button_topic':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_BUTTON_TOPIC')),
                                                                          (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_SWITCH_TOPIC')),
+    'switch_topic':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_SWITCH_TOPIC')),
                                                                          (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC')),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_STATE_TXT1')),
+    'state_text':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STATE_TXT1')),
                                                                          ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
-    'ntp_server':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_NTPSERVER1')),
+    'ntp_server':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_NTPSERVER1')),
                                                                          ([3],  None,                           ('Management',  '"NtpServer{} {}".format(#+1,$)')) ),
-    'mems':                         (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MEM1')),
+    'mems':                         (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MEM1')),
                                                                          ([16], None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_FRIENDLYNAME1')),
                                                                          ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'script_pram':                  (Platform.ALL,   'b',   0x7CE,       ([5,10],None,                          ('Rules',       None )) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update             ({
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_FRIENDLYNAME1')),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_FRIENDLYNAME1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'button_text':                  (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_BUTTON1')),
+    'button_text':                  (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_BUTTON1')),
                                                                          ([16], None,                           ('Control',     '"Webbutton{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
@@ -1402,6 +1403,8 @@ SETTING_8_1_0_6.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4', 'SET_MAX'])
 SETTING_8_1_0_9.update             ({
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
@@ -1409,7 +1412,7 @@ SETTING_8_1_0_9.update             ({
     'bri_min':                      (Platform.ALL,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
     'bri_preset_low':               (Platform.ALL,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
     'bri_preset_high':              (Platform.ALL,   'B',   0xF07,       (None, None,                           ('Light',       None)) ),
-    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC2')),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][1].update ({
@@ -1442,9 +1445,11 @@ SETTING_8_2_0_0.update             ({
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4', 'SET_MAX'])
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update             ({
-    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TEMPLATE_NAME')),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
                                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
     'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
     'pulse_counter_debounce_high':  (Platform.ALL,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
@@ -1470,11 +1475,11 @@ SETTING_8_2_0_3.update             ({
     'pms_wake_interval':            (Platform.ALL,   '<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
-    'device_group_topic':           (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEV_GROUP_NAME1')),
+    'device_group_topic':           (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_DEV_GROUP_NAME1')),
                                                                          ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#+1,$ if len($) else "\\"")')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC')),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC')),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
-    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_MQTT_GRP_TOPIC2')),
+    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC2')),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2, "\\"" if len($) == 0 else $)')) ),
     'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
@@ -1554,8 +1559,10 @@ SETTING_8_2_0_6['flag4'][1].update ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME', 'SET_MAX'])
 SETTING_8_3_1_1.update             ({
-    'devicename':                   (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_DEVICENAME')),
+    'devicename':                   (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].index('SET_DEVICENAME')),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
@@ -1580,10 +1587,12 @@ SETTING_8_3_1_2['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID', 'SET_MAX'])
 SETTING_8_3_1_3.update             ({
-    'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TELEGRAM_TOKEN')),
+    'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_TOKEN')),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
-    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,SETTINGSTEXTINDEX.index('SET_TELEGRAM_CHATID')),
+    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_CHATID')),
                                                                          (None, None,                           ('Telegram',    '"TmChatId {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
@@ -1632,7 +1641,15 @@ SETTING_8_3_1_7['timer'][1].update ({
         'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
                                     })
 # ======================================================================
-SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_3_1_7)
+SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8', 'SET_MAX'])
+SETTING_8_4_0_0.update             ({
+    'adc_param':                    (Platform.ESP32, '699s',(0x017,SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_ADC_PARAM1')),
+                                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+                                    })
+# ======================================================================
+SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_4_0_0)
 SETTING_8_4_0_1['flag4'][1].update ({
         'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
         'teleinfo_baudrate':        (Platform.ALL,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SetOption102 {}".format($)')) ),
@@ -1654,6 +1671,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
 SETTINGS = [
             (0x8040002,0x1000, SETTING_8_4_0_2),
             (0x8040001,0x1000, SETTING_8_4_0_1),
+            (0x8040000,0x1000, SETTING_8_4_0_0),
             (0x8030107,0x1000, SETTING_8_3_1_7),
             (0x8030106,0x1000, SETTING_8_3_1_6),
             (0x8030105,0x1000, SETTING_8_3_1_5),
@@ -1758,8 +1776,9 @@ def check_setting_definition():
     for cfg in SETTINGS:
         setting = cfg[2]
         for key in setting:
-            fielddef = setting[key]
-            get_fielddef(fielddef)
+            if key != SETTINGVAR:
+                fielddef = setting[key]
+                get_fielddef(fielddef)
 
     return True
 
@@ -2425,15 +2444,16 @@ def get_grouplist(setting):
     groups = set()
 
     for name in setting:
-        dev = setting[name]
-        format_, group = get_fielddef(dev, fields="format_, group")
-        if group is not None and len(group) > 0:
-            groups.add(group.title())
-        if isinstance(format_, dict):
-            subgroups = get_grouplist(format_)
-            if subgroups is not None and len(subgroups) > 0:
-                for group in subgroups:
-                    groups.add(group.title())
+        if name != SETTINGVAR:
+            dev = setting[name]
+            format_, group = get_fielddef(dev, fields="format_, group")
+            if group is not None and len(group) > 0:
+                groups.add(group.title())
+            if isinstance(format_, dict):
+                subgroups = get_grouplist(format_)
+                if subgroups is not None and len(subgroups) > 0:
+                    for group in subgroups:
+                        groups.add(group.title())
 
     groups = list(groups)
     groups.sort()
@@ -2812,7 +2832,7 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
         return ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly with upload result page"
 
     body = body[find_upload:]
-    if sum(map(lambda s: body.find(s)>=0, ("Başarıyla Tamamlandı", "Completato", "Exitosa", "Gelukt", "Lyckat", "Powodzenie", "Réussi", "Sikeres", "Successful", "Successo", "Succes", "erfolgreich", "úspešné.", "úspěšné.", "Επιτυχές", "Успешно", "Успішно", "הצליח", "已成功", "成功", "성공"))) < 1:
+    if sum(map(lambda s: body.find(s) >= 0, ("Başarıyla Tamamlandı", "Completato", "Exitosa", "Gelukt", "Lyckat", "Powodzenie", "Réussi", "Sikeres", "Successful", "Successo", "Succes", "erfolgreich", "úspešné.", "úspěšné.", "Επιτυχές", "Успешно", "Успішно", "הצליח", "已成功", "成功", "성공"))) < 1:
         errmatch = re.search(r"<font\s*color='[#0-9a-fA-F]+'>(\S*)</font></b><br><br>(.*)<br>", body)
         reason = "Unknown error"
         if errmatch and len(errmatch.groups()) > 1:
@@ -2978,9 +2998,12 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
             if not isinstance(strindex, int):
                 print('<strindex> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
                 raise SyntaxError(raise_error)
-            if strindex >= SETTINGSTEXTINDEX.index('SET_MAX'):
-                print('<strindex> out of range [0, {}] in <fielddef> {}'.format(SETTINGSTEXTINDEX.index('SET_MAX'), fielddef), file=sys.stderr)
-                raise SyntaxError(raise_error)
+            try:
+                if strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX'):
+                    print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX'), fielddef), file=sys.stderr)
+                    raise SyntaxError(raise_error)
+            except:     # pylint: disable=bare-except
+                pass
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
             raise SyntaxError(raise_error)
@@ -3443,7 +3466,11 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
             # get unpacked binary value as stripped string
             str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
             # split into single or multiple list elements delimted by \0
-            sarray = str_.split('\x00', SETTINGSTEXTINDEX.index('SET_MAX'))
+            try:
+                set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX')
+            except:     # pylint: disable=bare-except
+                set_max = DEFAULT_SET_MAX
+            sarray = str_.split('\x00', set_max)
 
         if isinstance(sarray, list):
             # strip trailing \0 bytes
@@ -3547,6 +3574,9 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
 
     valuemapping = None
 
+    if fieldname == SETTINGVAR:
+        return valuemapping
+
     # get field definition
     platform_, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='platform_, format_, baseaddr, strindex, arraydef, group')
 
@@ -3631,9 +3661,13 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
     @return:
         new decrypted binary config data
     """
-    platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
     # cast unicode
     fieldname = str(fieldname)
+
+    if fieldname == SETTINGVAR:
+        return dobj
+
+    platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
 
     # filter platform
     if (platform_ & platform_bits) == 0:
@@ -3768,8 +3802,12 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 # split into separate string values
                 sarray = str_.split('\x00')
                 # limit to SET_MAX
-                if len(sarray) >= SETTINGSTEXTINDEX.index('SET_MAX'):
-                    delrange = len(sarray) - SETTINGSTEXTINDEX.index('SET_MAX')
+                try:
+                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX')
+                except:     # pylint: disable=bare-except
+                    set_max = DEFAULT_SET_MAX
+                if len(sarray) >= set_max:
+                    delrange = len(sarray) - set_max
                     if delrange > 0:
                         del sarray[-delrange:]
                 if not isinstance(value, str):
@@ -3866,10 +3904,13 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
                 cmnds[group].append(cmnd)
         return cmnds
 
-    platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
-
     # cast unicode
     fieldname = str(fieldname)
+
+    if fieldname == SETTINGVAR:
+        return cmnds
+
+    platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # filter platform
     if (platform_ & platform_bits) == 0:
