@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.2 [00187]'
+VER = '8.4.0.2 [00188]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1666,6 +1666,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
         'white_blend_mode':         (Platform.ALL,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SetOption105 {}".format($)')) ),
         'virtual_ct':               (Platform.ALL,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SetOption106 {}".format($)')) ),
         'virtual_ct_cw':            (Platform.ALL,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SetOption107 {}".format($)')) ),
+        'teleinfo_rawdata':         (Platform.ALL,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SetOption108 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
