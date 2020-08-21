@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.2 [00188]'
+VER = '8.4.0.2 [00189]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -3685,25 +3685,31 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
     # <arraydef> contains a list
     if isinstance(arraydef, list) and len(arraydef) > 0:
         offset = 0
-        if len(restoremapping) > arraydef[0]:
-            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}', array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
-        for i in range(0, arraydef[0]):
-            subfielddef = get_subfielddef(fielddef)
-            length = get_fieldlength(subfielddef)
-            if length != 0:
-                if i >= len(restoremapping): # restoremapping data list may be shorter than definition
-                    break
-                subrestore = restoremapping[i]
-                if strindex is not None:
-                    dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
-                else:
-                    dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
-            offset += length
+        try:
+            if len(restoremapping) > arraydef[0]:
+                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}', array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            for i in range(0, arraydef[0]):
+                subfielddef = get_subfielddef(fielddef)
+                length = get_fieldlength(subfielddef)
+                if length != 0:
+                    if i >= len(restoremapping): # restoremapping data list may be shorter than definition
+                        break
+                    subrestore = restoremapping[i]
+                    if strindex is not None:
+                        dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                    else:
+                        dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+                offset += length
+        except:     # pylint: disable=bare-except
+            pass
 
     # <format> contains a dict
     elif isinstance(format_, dict):
         for name, rm_fielddef in format_.items():    # -> iterate through format
-            restoremap = restoremapping.get(name, None)
+            try:
+                restoremap = restoremapping.get(name, None)
+            except:     # pylint: disable=bare-except
+                restoremap = None
             if restoremap is not None:
                 dobj = set_field(dobj, platform_bits, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
 
@@ -4833,4 +4839,6 @@ if __name__ == "__main__":
             # Tasmota command output
             output_tasmotacmnds(mapping2cmnd(CONFIG))
 
+    if EXIT_CODE != ExitCode.OK and ARGS.ignorewarning:
+        EXIT_CODE = ExitCode.OK
     sys.exit(EXIT_CODE)
