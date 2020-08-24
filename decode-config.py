@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.2 [00189]'
+VER = '8.4.0.2 [00190]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1345,7 +1345,7 @@ SETTING_8_1_0_3.update             ({
                                                                                                                                  '"ShutterEnableEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)'))) ),
     'shutter_button':               (Platform.ALL, {
         'shutter':                  (Platform.ALL,   '<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
-                                                                                                                                    x=@["shutter_button"][#]["shutter"], \
+                                                                                                                                    x=1+@["shutter_button"][#]["shutter"], \
                                                                                                                                     a=#+1, \
                                                                                                                                     b=@["shutter_button"][#]["press_single"], \
                                                                                                                                     c=@["shutter_button"][#]["press_double"], \
