@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.2 [00190]'
+VER = '8.4.0.3 [00191]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1669,7 +1669,13 @@ SETTING_8_4_0_2['flag4'][1].update ({
         'teleinfo_rawdata':         (Platform.ALL,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SetOption108 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
+SETTING_8_4_0_3.update             ({
+    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',               ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x8040003,0x1000, SETTING_8_4_0_3),
             (0x8040002,0x1000, SETTING_8_4_0_2),
             (0x8040001,0x1000, SETTING_8_4_0_1),
             (0x8040000,0x1000, SETTING_8_4_0_0),
@@ -3687,7 +3693,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
         offset = 0
         try:
             if len(restoremapping) > arraydef[0]:
-                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}', array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
             for i in range(0, arraydef[0]):
                 subfielddef = get_subfielddef(fielddef)
                 length = get_fieldlength(subfielddef)
@@ -3701,6 +3707,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                         dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
                 offset += length
         except:     # pylint: disable=bare-except
+            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
             pass
 
     # <format> contains a dict
