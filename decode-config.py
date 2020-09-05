@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.3 [00191]'
+VER = '8.4.0.3 [00192]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1672,6 +1672,12 @@ SETTING_8_4_0_2['flag4'][1].update ({
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update             ({
     'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',               ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+                                    })
+SETTING_8_4_0_3['flag4'][1].update ({
+        'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
+                                    })
+SETTING_8_4_0_3['flag4'][1].update ({
+         'suppress_irq_no_Event':   (Platform.ALL,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
@@ -3708,7 +3714,6 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 offset += length
         except:     # pylint: disable=bare-except
             exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
-            pass
 
     # <format> contains a dict
     elif isinstance(format_, dict):
