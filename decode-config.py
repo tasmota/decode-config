@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.4.0.3 [00192]'
+VER = '8.5.0.1 [00193]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1680,7 +1680,10 @@ SETTING_8_4_0_3['flag4'][1].update ({
          'suppress_irq_no_Event':   (Platform.ALL,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
+# ======================================================================
 SETTINGS = [
+            (0x8050001,0x1000, SETTING_8_5_0_1),
             (0x8040003,0x1000, SETTING_8_4_0_3),
             (0x8040002,0x1000, SETTING_8_4_0_2),
             (0x8040001,0x1000, SETTING_8_4_0_1),
