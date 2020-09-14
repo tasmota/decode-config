@@ -906,11 +906,19 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
 |                | Altitude                    | *GlobalHum*            |             |
 |                | AmpRes                      | *GlobalTemp*           |             |
-|                | Bh1750Resolution<x\>        | *Sensor27*             |             |
-|                | Counter<x\>                 | *Sensor50*             |             |
-|                | CounterDebounce             | *Sensor52*             |             |
-|                | CounterDebounceLow          | *Sensor53*             |             |
-|                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
+|                | AS3935AutoNF                | *Sensor27*             |             |
+|                | AS3935AutoDisturber         | *Sensor50*             |             |
+|                | AS3935AutoNFMax             | *Sensor52*             |             |
+|                | AS3935MQTTEvent             | *Sensor53*             |             |
+|                | AS3935NFTime                | *Sensor60<sup>1</sup>* |             |
+|                | AS3935NoIrqEvent            |                        |             |
+|                | AS3935DistTime              |                        |             |
+|                | AS3935SetMinStage           |                        |             |
+|                | Bh1750Resolution<x\>        |                        |             |
+|                | Counter<x\>                 |                        |             |
+|                | CounterDebounce             |                        |             |
+|                | CounterDebounceLow          |                        |             |
+|                | CounterDebounceHigh         |                        |             |
 |                | CounterType<x\>             |                        |             |
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
@@ -1003,11 +1011,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterInvert<x\>           | *ShutterStop<x\>*      |             |
 |                | ShutterInvertWebButtons<x\> | *ShutterStopClose<x\>* |             |
 |                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
-|                | ShutterMotorDelay<x\>       | *ShutterStopPosition<x\>*|           |
-|                | ShutterOpenDuration<x\>     | *ShutterStopToggle<x\>*|             |
-|                | ShutterPosition<x\>         | *ShutterStopToggleDir<x\>*|          |
-|                | ShutterRelay<x\>            | *ShutterToggle<x\>*    |             |
-|                | ShutterSetHalfway<x\>       | *ShutterToggleDir<x\>* |             |
+|                | ShutterMode<x\>             | *ShutterStopPosition<x\>*|           |
+|                | ShutterMotorDelay<x\>       | *ShutterStopToggle<x\>*|             |
+|                | ShutterOpenDuration<x\>     | *ShutterStopToggleDir<x\>*|          |
+|                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
+|                | ShutterPWMRange<x\>         | *ShutterToggleDir<x\>* |             |
+|                | ShutterRelay<x\>            |                        |             |
+|                | ShutterSetHalfway<x\>       |                        |             |
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmToken                     | *TmSend*               |             |
 |                |                             | *TmState*              |             |

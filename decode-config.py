@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.5.0.1 [00193]'
+VER = '8.5.0.1 [00194]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1671,7 +1671,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
 # ======================================================================
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update             ({
-    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',               ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update ({
         'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
@@ -1681,6 +1681,10 @@ SETTING_8_4_0_3['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
+SETTING_8_5_0_1.update             ({
+    'shutter_mode':                 (Platform.ALL,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',       '"ShutterMode {}".format($)')) ),
+    'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',       'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x8050001,0x1000, SETTING_8_5_0_1),
