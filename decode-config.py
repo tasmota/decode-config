@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.5.0.1 [00194]'
+VER = '8.5.0.1 [00195]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1684,6 +1684,10 @@ SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
 SETTING_8_5_0_1.update             ({
     'shutter_mode':                 (Platform.ALL,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',       '"ShutterMode {}".format($)')) ),
     'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',       'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
+                                    })
+SETTING_8_5_0_1['flag4'][1].update ({
+        'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SetOption110 {}".format($)')) ),
+        'buzzer_freq_mode':         (Platform.ALL,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SetOption111 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
