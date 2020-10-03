@@ -7,7 +7,6 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 
 <!-- markdownlint-disable MD033 -->
 [![release](https://img.shields.io/badge/release-v8.5.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
-tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
