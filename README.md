@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="400" height="320">
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v8.5.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v8.5.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
@@ -298,7 +298,7 @@ You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicen
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_8.5.0.json` (the part `Tasmota` and `8.5.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_8.5.1.json` (the part `Tasmota` and `8.5.1` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -310,7 +310,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_8.5.0.json` using JSON format
+* `Config_Tasmota_8.5.1.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -318,10 +318,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.5.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_8.5.1.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.5.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.5.1
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -482,26 +482,6 @@ Example:
 
 ```bash
 decode-config -c my.conf -s tasmota-4281 --group Wifi --output-format cmnd
-```
-
-```conf
-# Wifi:
-  AP 0
-  Hostname %s-%04d
-  IPAddress1 0.0.0.0
-  IPAddress2 192.168.12.1
-  IPAddress3 255.255.255.0
-  IPAddress4 192.168.12.1
-  NtpServer1 ntp.localnet.home
-  NtpServer2 ntp2.localnet.home
-  NtpServer3 192.168.12.1
-  Password1 myWlAnPaszxwo!z
-  Password2 myWlAnPaszxwo!z2
-  SSId1 wlan.1
-  SSId2 my-wlan
-  WebPassword myPaszxwo!z
-  WebServer 2
-  WifiConfig 5
 ```
 
 > **Note**  
@@ -910,11 +890,19 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
 |                | Altitude                    | *GlobalHum*            |             |
 |                | AmpRes                      | *GlobalTemp*           |             |
-|                | Bh1750Resolution<x\>        | *Sensor27*             |             |
-|                | Counter<x\>                 | *Sensor50*             |             |
-|                | CounterDebounce             | *Sensor52*             |             |
-|                | CounterDebounceLow          | *Sensor53*             |             |
-|                | CounterDebounceHigh         | *Sensor60<sup>1</sup>* |             |
+|                | AS3935AutoNF                | *Sensor27*             |             |
+|                | AS3935AutoDisturber         | *Sensor50*             |             |
+|                | AS3935AutoNFMax             | *Sensor52*             |             |
+|                | AS3935MQTTEvent             | *Sensor53*             |             |
+|                | AS3935NFTime                | *Sensor60<sup>1</sup>* |             |
+|                | AS3935NoIrqEvent            |                        |             |
+|                | AS3935DistTime              |                        |             |
+|                | AS3935SetMinStage           |                        |             |
+|                | Bh1750Resolution<x\>        |                        |             |
+|                | Counter<x\>                 |                        |             |
+|                | CounterDebounce             |                        |             |
+|                | CounterDebounceLow          |                        |             |
+|                | CounterDebounceHigh         |                        |             |
 |                | CounterType<x\>             |                        |             |
 |                | HumOffset                   |                        |             |
 |                | HumRes                      |                        |             |
@@ -1007,11 +995,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterInvert<x\>           | *ShutterStop<x\>*      |             |
 |                | ShutterInvertWebButtons<x\> | *ShutterStopClose<x\>* |             |
 |                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
-|                | ShutterMotorDelay<x\>       | *ShutterStopPosition<x\>*|           |
-|                | ShutterOpenDuration<x\>     | *ShutterStopToggle<x\>*|             |
-|                | ShutterPosition<x\>         | *ShutterStopToggleDir<x\>*|          |
-|                | ShutterRelay<x\>            | *ShutterToggle<x\>*    |             |
-|                | ShutterSetHalfway<x\>       | *ShutterToggleDir<x\>* |             |
+|                | ShutterMode<x\>             | *ShutterStopPosition<x\>*|           |
+|                | ShutterMotorDelay<x\>       | *ShutterStopToggle<x\>*|             |
+|                | ShutterOpenDuration<x\>     | *ShutterStopToggleDir<x\>*|          |
+|                | ShutterPosition<x\>         | *ShutterToggle<x\>*    |             |
+|                | ShutterPWMRange<x\>         | *ShutterToggleDir<x\>* |             |
+|                | ShutterRelay<x\>            |                        |             |
+|                | ShutterSetHalfway<x\>       |                        |             |
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmToken                     | *TmSend*               |             |
 |                |                             | *TmState*              |             |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.5.0 [00068]'
+VER = '8.5.1 [00069]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1671,7 +1671,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
 # ======================================================================
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update             ({
-    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',               ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update ({
         'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
@@ -1680,10 +1680,25 @@ SETTING_8_4_0_3['flag4'][1].update ({
          'suppress_irq_no_Event':   (Platform.ALL,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_8_5_0_0 = copy.deepcopy(SETTING_8_4_0_3)
+SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
+SETTING_8_5_0_1.update             ({
+    'shutter_mode':                 (Platform.ALL,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',     '"ShutterMode {}".format($)')) ),
+    'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
+    'hass_new_discovery':           (Platform.ALL,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
+    'tuyamcu_topic':                (Platform.ALL,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
+
+                                    })
+SETTING_8_5_0_1['flag4'][1].update ({
+        'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SetOption110 {}".format($)')) ),
+        'buzzer_freq_mode':         (Platform.ALL,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SetOption111 {}".format($)')) ),
+        'zb_topic_fname':           (Platform.ALL,   '<L', (0xEF8,1,30), (None, None,                           ('SetOption',   '"SetOption112 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x8050000,0x1000, SETTING_8_5_0_0),
+            (0x8050100,0x1000, SETTING_8_5_1_0),
+            (0x8050001,0x1000, SETTING_8_5_0_1),
             (0x8040003,0x1000, SETTING_8_4_0_3),
             (0x8040002,0x1000, SETTING_8_4_0_2),
             (0x8040001,0x1000, SETTING_8_4_0_1),
