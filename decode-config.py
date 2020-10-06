@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.5.1.0 [00197]'
+VER = '9.0.0.1 [00198]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1485,7 +1485,7 @@ SETTING_8_2_0_3.update             ({
     'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32,{
             'adc0':                 (Platform.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
@@ -1494,7 +1494,7 @@ SETTING_8_2_0_3.update             ({
                                     })
 SETTING_8_2_0_3['user_template'][1].update ({
         'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
         'flag':                     (Platform.ESP82, {
             'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
@@ -1529,7 +1529,7 @@ SETTING_8_2_0_6.update             ({
     'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
@@ -1686,7 +1686,6 @@ SETTING_8_5_0_1.update             ({
     'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
     'hass_new_discovery':           (Platform.ALL,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
     'tuyamcu_topic':                (Platform.ALL,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
-
                                     })
 SETTING_8_5_0_1['flag4'][1].update ({
         'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SetOption110 {}".format($)')) ),
@@ -1696,7 +1695,34 @@ SETTING_8_5_0_1['flag4'][1].update ({
 # ======================================================================
 SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
 # ======================================================================
+SETTING_9_0_0_1 = copy.deepcopy(SETTING_8_5_1_0)
+SETTING_9_0_0_1.pop('my_adc0', None)
+SETTING_9_0_0_1.pop('bri_min', None)
+SETTING_9_0_0_1.update             ({
+    'gpio16_converted':             (Platform.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
+    'my_gp':                        (Platform.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
+                                                                         (None, None,                           ('Management',  None)) ),
+    'user_template':                (Platform.ESP82,{
+        'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template"]["gpio"],@["user_template"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (Platform.ESP82, '<H',  0x3FC,       ([14], None,                           ('Management',  None)) ),
+        'flag':                     (Platform.ESP82, '<H',  0x3FC+(2*14),(None, None,                           ('Management',  None)) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
+    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'user_template_esp32':          (Platform.ESP32,{
+        'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio"],@["user_template_esp32"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag':                     (Platform.ESP32, '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
+    'pwm_dimmer_cfg':               (Platform.ALL, {
+         'pwm_count':               (Platform.ALL,   '<L', (0xF05,3, 0), (None, '0 <= $ <= 4',                  ('Light',       '"PWMDimmerPWMs {}".format($+1)')) ),
+                                    },                      0xF05,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x9000001,0x1000, SETTING_9_0_0_1),
             (0x8050100,0x1000, SETTING_8_5_1_0),
             (0x8050001,0x1000, SETTING_8_5_0_1),
             (0x8040003,0x1000, SETTING_8_4_0_3),
