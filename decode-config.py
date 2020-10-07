@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.0.0.1 [00199]'
+VER = '9.0.0.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -141,6 +141,7 @@ try:
     import urllib
     import codecs
     import textwrap
+    import hashlib
 except ImportError as err:
     module_import_error(err)
 # pylint: enable=wrong-import-position
@@ -148,6 +149,18 @@ except ImportError as err:
 # ======================================================================
 # globals
 # ======================================================================
+try:
+    SHA256 = hashlib.sha256()
+    FNAME = sys.argv[0]
+    if not os.path.isfile(FNAME):
+        FNAME += '.exe'
+    with open(FNAME, "rb") as fp:
+        for block in iter(lambda: fp.read(4096), b''):
+            SHA256.update(block)
+        VER += ' [' + SHA256.hexdigest()[:7] + ']'
+except:     # pylint: disable=bare-except
+    pass
+
 PROG = '{} v{} by Norbert Richter <nr@prsolution.eu>'.format(os.path.basename(sys.argv[0]), VER)
 
 # Tasmota constant
