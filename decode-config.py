@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.0.0.1 [00198]'
+VER = '9.0.0.1 [00199]'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -488,7 +488,10 @@ class Platform:
         @return:
             platform string
         """
-        return Platform.STR[version] if version is not None and 0 <= version < len(Platform.STR) else Platform.STR[0]
+        try:
+            return Platform.STR[version]
+        except:     # pylint: disable=bare-except
+            return Platform.STR[0]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -4373,7 +4376,10 @@ def restore(restorefile, backupfileformat, config):
         if filetype in (FileType.DMP, FileType.BIN):
             platform_new_data = get_config_info(new_decode_cfg)['platform']
         else:
-            platform_new_data = jsonconfig.get('config_version', Platform.STR.index("ESP82xx"))
+            try:
+                platform_new_data = Platform.STR.index(jsonconfig['header']['data']['platform'])
+            except:     # pylint: disable=bare-except
+                platform_new_data = Platform.STR.index("ESP82xx")
         platform_device = config['info']['platform']
         if platform_device != platform_new_data:
             exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
