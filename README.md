@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="400" height="320">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v9.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v9.0.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -903,15 +903,14 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
 |                | Timer<x\>                   |                        |             |
-| **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
-|                | Altitude                    | *GlobalHum*            |             |
-|                | AmpRes                      | *GlobalTemp*           |             |
-|                | AS3935AutoNF                | *Sensor27*             |             |
-|                | AS3935AutoDisturber         | *Sensor50*             |             |
-|                | AS3935AutoNFMax             | *Sensor52*             |             |
-|                | AS3935MQTTEvent             | *Sensor53*             |             |
-|                | AS3935NFTime                | *Sensor60<sup>1</sup>* |             |
-|                | AS3935NoIrqEvent            |                        |             |
+| **Sensor**     | Altitude                    | *Bh1750MTime<x\>*      | `AdcParam`  |
+|                | AmpRes                      | *GlobalHum*            |             |
+|                | AS3935AutoNF                | *GlobalTemp*           |             |
+|                | AS3935AutoDisturber         | *Sensor27*             |             |
+|                | AS3935AutoNFMax             | *Sensor50*             |             |
+|                | AS3935MQTTEvent             | *Sensor52*             |             |
+|                | AS3935NFTime                | *Sensor53*             |             |
+|                | AS3935NoIrqEvent            | *Sensor60<sup>1</sup>* |             |
 |                | AS3935DistTime              |                        |             |
 |                | AS3935SetMinStage           |                        |             |
 |                | Bh1750Resolution<x\>        |                        |             |

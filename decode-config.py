@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.0.0.1'
+VER = '9.0.0.2'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1737,7 +1737,14 @@ SETTING_9_0_0_1.update             ({
                                     },                      0xF05,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
+SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
+SETTING_9_0_0_2.update             ({
+    'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
+    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x9000002,0x1000, SETTING_9_0_0_2),
             (0x9000001,0x1000, SETTING_9_0_0_1),
             (0x8050100,0x1000, SETTING_8_5_1_0),
             (0x8050001,0x1000, SETTING_8_5_0_1),
@@ -3672,7 +3679,7 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
                 if strindex is not None:
                     value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=i, ignoregroup=ignoregroup, converter=converter)
                 else:
-                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, converter=converter)
+                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, ignoregroup=ignoregroup, converter=converter)
                 arraymapping.append(value)
             offset += length
         # filter arrays containing only None
