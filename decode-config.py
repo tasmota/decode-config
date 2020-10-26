@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.0.0.2'
+VER = '9.0.0.3'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1742,8 +1742,14 @@ SETTING_9_0_0_2.update             ({
     'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
     'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
                                     })
+SETTING_9_0_0_2['flag4'][1].update ({
+        'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
 # ======================================================================
 SETTINGS = [
+            (0x9000003,0x1000, SETTING_9_0_0_3),
             (0x9000002,0x1000, SETTING_9_0_0_2),
             (0x9000001,0x1000, SETTING_9_0_0_1),
             (0x8050100,0x1000, SETTING_8_5_1_0),
