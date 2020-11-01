@@ -287,8 +287,17 @@ Here JSON will be output with indent of 4 spaces instead of the `2` set from `my
 
 To save data from a device or [*.dmp](#dmp-format) file into a backup file, use `--backup-file <filename>`.
 
-> **Hint**  
-You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicename_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
+#### Backup filename macros
+
+You can use the following placeholders within backup/restore filenames:
+
+* **@v** is replaced by _Tasmota Version_
+* **@d** is replaced by _Devicename_
+* **@f** is replaced by first _Friendlyname1_
+* **@h** is replaced by the __Hostname__ from configuration data (note: this is the static hostname which is configured by the command __Hostname__, for real hostname from a device use macro the **@H**)
+* **@H** is replaced by the live device hostname note: this can be different to the configured hostname as this can contain also macros). Only valid when using real devices as source
+
+Example:
 
 ```bash
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
@@ -682,16 +691,15 @@ Backup/Restore:
   -i, --restore-file <restorefile>
                         file to restore configuration from (default: None).
                         Replacements: @v=firmware version from config,
-                        @d=devicename, @f=device friendly name from config,
-                        @h=device hostname from config, @H=device hostname
-                        from device (-d arg only)
+                        @d=devicename, @f=friendlyname1, @h=hostname from
+                        config, @H=device hostname (invalid if using a file as
+                        source)
   -o, --backup-file <backupfile>
                         file to backup configuration to, can be specified
                         multiple times (default: None). Replacements:
                         @v=firmware version from config, @d=devicename,
-                        @f=device friendly name from config, @h=device
-                        hostname from config, @H=device hostname from device
-                        (-d arg only)
+                        @f=friendlyname1, @h=hostname from config, @H=device
+                        hostname (invalid if using a file as source)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename

@@ -4608,13 +4608,13 @@ def parseargs():
                          metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
