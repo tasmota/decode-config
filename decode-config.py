@@ -1688,6 +1688,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update             ({
     'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+    'flag5':                        (Platform.ALL,   '<L',  0xFB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update ({
         'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
@@ -1747,6 +1748,12 @@ SETTING_9_0_0_2['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
+SETTING_9_0_0_3.update             ({
+    'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
+    'flag5':                        (Platform.ALL, {
+         'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
+                                    },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x9000003,0x1000, SETTING_9_0_0_3),
