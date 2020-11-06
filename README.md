@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="400" height="320">
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v8.5.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v9.1.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -95,12 +95,6 @@ The program does not have a graphical user interface (GUI), you have to run it f
 
 [Tasmota](https://github.com/arendst/Tasmota) provides its configuration data by http request only. To receive and send configuration data from Tasmota devices directly the http WebServer in Tasmota must be enabled:
 
-* enable web-server admin mode (Tasmota web command [WebServer 2](https://tasmota.github.io/docs/Commands/#webserver))
-* for self-compiled firmware enable web-server with (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
-
-> **Note**  
-Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so **decode-config** is unable using this way.
-
 ### Running the precompiled binaries
 
 To start the program using the command line see [Usage](#usage).
@@ -146,7 +140,7 @@ For an overview start the program without any parameter and you will get a short
 decode-config
 ```
 > **Note**  
-Replace `decode-config` by the program name your are using
+Replace `decode-config` by the [program name](#files) your are using.
 <!-- markdownlint-restore -->
 
 This prints a short help:
@@ -290,14 +284,23 @@ Here JSON will be output with indent of 4 spaces instead of the `2` set from `my
 
 To save data from a device or [*.dmp](#dmp-format) file into a backup file, use `--backup-file <filename>`.
 
-> **Hint**  
-You can use placeholders **@v** for _Tasmota Version_, **@d** for first _Devicename_, **@f** for first _Friendlyname_ and **@h** or **@H** for _Hostname_:
+#### Backup filename macros
+
+You can use the following placeholders within backup/restore filenames:
+
+* **@v** is replaced by _Tasmota Version_
+* **@d** is replaced by _Devicename_
+* **@f** is replaced by first _Friendlyname1_
+* **@h** is replaced by the __Hostname__ from configuration data (note: this is the static hostname which is configured by the command __Hostname__, for real hostname from a device use macro the **@H**)
+* **@H** is replaced by the live device hostname note: this can be different to the configured hostname as this can contain also macros). Only valid when using real devices as source
+
+Example:
 
 ```bash
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_8.5.1.json` (the part `Tasmota` and `8.5.1` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_9.1.0.json` (the part `Tasmota` and `9.1.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -309,7 +312,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_8.5.1.json` using JSON format
+* `Config_Tasmota_9.1.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -317,10 +320,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_8.5.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_9.1.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_8.5.1
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_9.1.0
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -481,6 +484,26 @@ Example:
 
 ```bash
 decode-config -c my.conf -s tasmota-4281 --group Wifi --output-format cmnd
+```
+
+```conf
+# Wifi:
+  AP 0
+  Hostname %s-%04d
+  IPAddress1 0.0.0.0
+  IPAddress2 192.168.12.1
+  IPAddress3 255.255.255.0
+  IPAddress4 192.168.12.1
+  NtpServer1 ntp.localnet.home
+  NtpServer2 ntp2.localnet.home
+  NtpServer3 192.168.12.1
+  Password1 myWlAnPaszxwo!z
+  Password2 myWlAnPaszxwo!z2
+  SSId1 wlan.1
+  SSId2 my-wlan
+  WebPassword myPaszxwo!z
+  WebServer 2
+  WifiConfig 5
 ```
 
 > **Note**  
@@ -665,16 +688,15 @@ Backup/Restore:
   -i, --restore-file <restorefile>
                         file to restore configuration from (default: None).
                         Replacements: @v=firmware version from config,
-                        @d=devicename, @f=device friendly name from config,
-                        @h=device hostname from config, @H=device hostname
-                        from device (-d arg only)
+                        @d=devicename, @f=friendlyname1, @h=hostname from
+                        config, @H=device hostname (invalid if using a file as
+                        source)
   -o, --backup-file <backupfile>
                         file to backup configuration to, can be specified
                         multiple times (default: None). Replacements:
                         @v=firmware version from config, @d=devicename,
-                        @f=device friendly name from config, @h=device
-                        hostname from config, @H=device hostname from device
-                        (-d arg only)
+                        @f=friendlyname1, @h=hostname from config, @H=device
+                        hostname (invalid if using a file as source)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename
@@ -886,15 +908,14 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
 |                | Timer<x\>                   |                        |             |
-| **Sensor**     | AdcParam                    | *Bh1750MTime<x\>*      |             |
-|                | Altitude                    | *GlobalHum*            |             |
-|                | AmpRes                      | *GlobalTemp*           |             |
-|                | AS3935AutoNF                | *Sensor27*             |             |
-|                | AS3935AutoDisturber         | *Sensor50*             |             |
-|                | AS3935AutoNFMax             | *Sensor52*             |             |
-|                | AS3935MQTTEvent             | *Sensor53*             |             |
-|                | AS3935NFTime                | *Sensor60<sup>1</sup>* |             |
-|                | AS3935NoIrqEvent            |                        |             |
+| **Sensor**     | Altitude                    | *Bh1750MTime<x\>*      | `AdcParam`  |
+|                | AmpRes                      | *GlobalHum*            |             |
+|                | AS3935AutoNF                | *GlobalTemp*           |             |
+|                | AS3935AutoDisturber         | *Sensor27*             |             |
+|                | AS3935AutoNFMax             | *Sensor50*             |             |
+|                | AS3935MQTTEvent             | *Sensor52*             |             |
+|                | AS3935NFTime                | *Sensor53*             |             |
+|                | AS3935NoIrqEvent            | *Sensor60<sup>1</sup>* |             |
 |                | AS3935DistTime              |                        |             |
 |                | AS3935SetMinStage           |                        |             |
 |                | Bh1750Resolution<x\>        |                        |             |
@@ -944,11 +965,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | VoltRes                     |                        |             |
 |                | WattRes                     |                        |             |
 | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
-|                | Fade                        | *CT*                   | `Dimmer`    |
-|                | LedTable                    | *HsbColor*             |             |
-|                | Pixels                      | *Led<x\>*              |             |
-|                | RGBWWTable                  | *Palette*              |             |
-|                | Rotation                    | *White*                |             |
+|                | DimmerStep                  | *CT*                   | `Dimmer`    |
+|                | Fade                        | *HsbColor*             |             |
+|                | LedTable                    | *Led<x\>*              |             |
+|                | Pixels                      | *Palette*              |             |
+|                | PWMDimmerPWMs               | *White*                |             |
+|                | RGBWWTable                  |                        |             |
+|                | Rotation                    |                        |             |
 |                | Scheme                      |                        |             |
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |

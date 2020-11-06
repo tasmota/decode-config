@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '8.5.1 [00069]'
+VER = '9.1.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -141,6 +141,7 @@ try:
     import urllib
     import codecs
     import textwrap
+    import hashlib
 except ImportError as err:
     module_import_error(err)
 # pylint: enable=wrong-import-position
@@ -148,6 +149,18 @@ except ImportError as err:
 # ======================================================================
 # globals
 # ======================================================================
+try:
+    SHA256 = hashlib.sha256()
+    FNAME = sys.argv[0]
+    if not os.path.isfile(FNAME):
+        FNAME += '.exe'
+    with open(FNAME, "rb") as fp:
+        for block in iter(lambda: fp.read(4096), b''):
+            SHA256.update(block)
+        VER += ' [' + SHA256.hexdigest()[:7] + ']'
+except:     # pylint: disable=bare-except
+    pass
+
 PROG = '{} v{} by Norbert Richter <nr@prsolution.eu>'.format(os.path.basename(sys.argv[0]), VER)
 
 # Tasmota constant
@@ -488,7 +501,10 @@ class Platform:
         @return:
             platform string
         """
-        return Platform.STR[version] if version is not None and 0 <= version < len(Platform.STR) else Platform.STR[0]
+        try:
+            return Platform.STR[version]
+        except:     # pylint: disable=bare-except
+            return Platform.STR[0]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -1485,7 +1501,7 @@ SETTING_8_2_0_3.update             ({
     'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32,{
             'adc0':                 (Platform.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
@@ -1494,7 +1510,7 @@ SETTING_8_2_0_3.update             ({
                                     })
 SETTING_8_2_0_3['user_template'][1].update ({
         'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
         'flag':                     (Platform.ESP82, {
             'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
@@ -1529,7 +1545,7 @@ SETTING_8_2_0_6.update             ({
     'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
         'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
         'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
@@ -1672,6 +1688,7 @@ SETTING_8_4_0_2['flag4'][1].update ({
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update             ({
     'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+    'flag5':                        (Platform.ALL,   '<L',  0xFB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update ({
         'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
@@ -1686,7 +1703,6 @@ SETTING_8_5_0_1.update             ({
     'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
     'hass_new_discovery':           (Platform.ALL,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
     'tuyamcu_topic':                (Platform.ALL,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
-
                                     })
 SETTING_8_5_0_1['flag4'][1].update ({
         'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SetOption110 {}".format($)')) ),
@@ -1696,105 +1712,153 @@ SETTING_8_5_0_1['flag4'][1].update ({
 # ======================================================================
 SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
 # ======================================================================
-SETTINGS = [
-            (0x8050100,0x1000, SETTING_8_5_1_0),
-            (0x8050001,0x1000, SETTING_8_5_0_1),
-            (0x8040003,0x1000, SETTING_8_4_0_3),
-            (0x8040002,0x1000, SETTING_8_4_0_2),
-            (0x8040001,0x1000, SETTING_8_4_0_1),
-            (0x8040000,0x1000, SETTING_8_4_0_0),
-            (0x8030107,0x1000, SETTING_8_3_1_7),
-            (0x8030106,0x1000, SETTING_8_3_1_6),
-            (0x8030105,0x1000, SETTING_8_3_1_5),
-            (0x8030104,0x1000, SETTING_8_3_1_4),
-            (0x8030103,0x1000, SETTING_8_3_1_3),
-            (0x8030102,0x1000, SETTING_8_3_1_2),
-            (0x8030101,0x1000, SETTING_8_3_1_1),
-            (0x8030100,0x1000, SETTING_8_3_1_0),
-            (0x8020006,0x1000, SETTING_8_2_0_6),
-            (0x8020004,0x1000, SETTING_8_2_0_4),
-            (0x8020003,0x1000, SETTING_8_2_0_3),
-            (0x8020000,0x1000, SETTING_8_2_0_0),
-            (0x801000B,0x1000, SETTING_8_1_0_11),
-            (0x801000A,0x1000, SETTING_8_1_0_10),
-            (0x8010009,0x1000, SETTING_8_1_0_9),
-            (0x8010006,0x1000, SETTING_8_1_0_6),
-            (0x8010005,0x1000, SETTING_8_1_0_5),
-            (0x8010004,0x1000, SETTING_8_1_0_4),
-            (0x8010003,0x1000, SETTING_8_1_0_3),
-            (0x8010002,0x1000, SETTING_8_1_0_2),
-            (0x8010001,0x1000, SETTING_8_1_0_1),
-            (0x8010000,0x1000, SETTING_8_1_0_0),
-            (0x8000001,0x1000, SETTING_8_0_0_1),
-            (0x7010206,0x1000, SETTING_7_1_2_6),
-            (0x7010205,0x1000, SETTING_7_1_2_5),
-            (0x7010203,0x1000, SETTING_7_1_2_3),
-            (0x7010202,0x1000, SETTING_7_1_2_2),
-            (0x7000006,0x1000, SETTING_7_0_0_6),
-            (0x7000005,0x1000, SETTING_7_0_0_5),
-            (0x7000004,0x1000, SETTING_7_0_0_4),
-            (0x7000003,0x1000, SETTING_7_0_0_3),
-            (0x7000002,0x1000, SETTING_7_0_0_2),
-            (0x7000001,0x1000, SETTING_7_0_0_1),
-            (0x6060015,0x1000, SETTING_6_6_0_21),
-            (0x6060014,0x1000, SETTING_6_6_0_20),
-            (0x6060012,0x1000, SETTING_6_6_0_18),
-            (0x606000F,0x1000, SETTING_6_6_0_15),
-            (0x606000E,0x1000, SETTING_6_6_0_14),
-            (0x606000D,0x1000, SETTING_6_6_0_13),
-            (0x606000C,0x1000, SETTING_6_6_0_12),
-            (0x606000B,0x1000, SETTING_6_6_0_11),
-            (0x606000A,0x1000, SETTING_6_6_0_10),
-            (0x6060009,0x1000, SETTING_6_6_0_9),
-            (0x6060008,0x1000, SETTING_6_6_0_8),
-            (0x6060007,0x1000, SETTING_6_6_0_7),
-            (0x6060006, 0xe00, SETTING_6_6_0_6),
-            (0x6060005, 0xe00, SETTING_6_6_0_5),
-            (0x6060003, 0xe00, SETTING_6_6_0_3),
-            (0x6060002, 0xe00, SETTING_6_6_0_2),
-            (0x6060001, 0xe00, SETTING_6_6_0_1),
-            (0x605000F, 0xe00, SETTING_6_5_0_15),
-            (0x605000C, 0xe00, SETTING_6_5_0_12),
-            (0x605000B, 0xe00, SETTING_6_5_0_11),
-            (0x605000A, 0xe00, SETTING_6_5_0_10),
-            (0x6050009, 0xe00, SETTING_6_5_0_9),
-            (0x6050007, 0xe00, SETTING_6_5_0_7),
-            (0x6050006, 0xe00, SETTING_6_5_0_6),
-            (0x6050003, 0xe00, SETTING_6_5_0_3),
-            (0x6040112, 0xe00, SETTING_6_4_1_18),
-            (0x6040111, 0xe00, SETTING_6_4_1_17),
-            (0x6040110, 0xe00, SETTING_6_4_1_16),
-            (0x604010D, 0xe00, SETTING_6_4_1_13),
-            (0x604010B, 0xe00, SETTING_6_4_1_11),
-            (0x6040108, 0xe00, SETTING_6_4_1_8),
-            (0x6040107, 0xe00, SETTING_6_4_1_7),
-            (0x6040104, 0xe00, SETTING_6_4_1_4),
-            (0x6040002, 0xe00, SETTING_6_4_0_2),
-            (0x6030010, 0xe00, SETTING_6_3_0_16),
-            (0x603000F, 0xe00, SETTING_6_3_0_15),
-            (0x603000E, 0xe00, SETTING_6_3_0_14),
-            (0x603000D, 0xe00, SETTING_6_3_0_13),
-            (0x603000B, 0xe00, SETTING_6_3_0_11),
-            (0x603000A, 0xe00, SETTING_6_3_0_10),
-            (0x6030008, 0xe00, SETTING_6_3_0_8),
-            (0x6030004, 0xe00, SETTING_6_3_0_4),
-            (0x6030002, 0xe00, SETTING_6_3_0_2),
-            (0x6030000, 0xe00, SETTING_6_3_0),
-            (0x6020114, 0xe00, SETTING_6_2_1_20),
-            (0x6020113, 0xe00, SETTING_6_2_1_19),
-            (0x602010E, 0xe00, SETTING_6_2_1_14),
-            (0x602010A, 0xe00, SETTING_6_2_1_10),
-            (0x6020106, 0xe00, SETTING_6_2_1_6),
-            (0x6020103, 0xe00, SETTING_6_2_1_3),
-            (0x6020102, 0xe00, SETTING_6_2_1_2),
-            (0x6020100, 0xe00, SETTING_6_2_1),
-            (0x6010100, 0xe00, SETTING_6_1_1),
-            (0x6000000, 0xe00, SETTING_6_0_0),
-            (0x50e0000, 0xa00, SETTING_5_14_0),
-            (0x50d0100, 0xa00, SETTING_5_13_1),
-            (0x50c0000, 0x670, SETTING_5_12_0),
-            (0x50b0000, 0x670, SETTING_5_11_0),
-            (0x50a0000, 0x670, SETTING_5_10_0),
+SETTING_9_0_0_1 = copy.deepcopy(SETTING_8_5_1_0)
+SETTING_9_0_0_1.pop('my_adc0', None)
+SETTING_9_0_0_1.pop('bri_min', None)
+SETTING_9_0_0_1.update             ({
+    'gpio16_converted':             (Platform.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
+    'my_gp':                        (Platform.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
+                                                                         (None, None,                           ('Management',  None)) ),
+    'user_template':                (Platform.ESP82,{
+        'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template"]["gpio"],@["user_template"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (Platform.ESP82, '<H',  0x3FC,       ([14], None,                           ('Management',  None)) ),
+        'flag':                     (Platform.ESP82, '<H',  0x3FC+(2*14),(None, None,                           ('Management',  None)) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
+    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'user_template_esp32':          (Platform.ESP32,{
+        'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio"],@["user_template_esp32"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag':                     (Platform.ESP32, '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
+                                    },                      0x71F,       (None, None,                           ('Management',  None)) ),
+    'pwm_dimmer_cfg':               (Platform.ALL, {
+         'pwm_count':               (Platform.ALL,   '<L', (0xF05,3, 0), (None, '0 <= $ <= 4',                  ('Light',       '"PWMDimmerPWMs {}".format($+1)')) ),
+                                    },                      0xF05,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+# ======================================================================
+SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
+SETTING_9_0_0_2.update             ({
+    'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
+    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
+                                    })
+SETTING_9_0_0_2['flag4'][1].update ({
+        'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
+SETTING_9_0_0_3.update             ({
+    'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
+    'flag5':                        (Platform.ALL, {
+         'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
+                                    },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+# ======================================================================
+SETTING_9_1_0_0 = copy.deepcopy(SETTING_9_0_0_3)
+# ======================================================================
+SETTINGS = [(0x09010000,0x1000, SETTING_9_1_0_0),
+            (0x09000003,0x1000, SETTING_9_0_0_3),
+            (0x09000002,0x1000, SETTING_9_0_0_2),
+            (0x09000001,0x1000, SETTING_9_0_0_1),
+            (0x08050100,0x1000, SETTING_8_5_1_0),
+            (0x08050001,0x1000, SETTING_8_5_0_1),
+            (0x08040003,0x1000, SETTING_8_4_0_3),
+            (0x08040002,0x1000, SETTING_8_4_0_2),
+            (0x08040001,0x1000, SETTING_8_4_0_1),
+            (0x08040000,0x1000, SETTING_8_4_0_0),
+            (0x08030107,0x1000, SETTING_8_3_1_7),
+            (0x08030106,0x1000, SETTING_8_3_1_6),
+            (0x08030105,0x1000, SETTING_8_3_1_5),
+            (0x08030104,0x1000, SETTING_8_3_1_4),
+            (0x08030103,0x1000, SETTING_8_3_1_3),
+            (0x08030102,0x1000, SETTING_8_3_1_2),
+            (0x08030101,0x1000, SETTING_8_3_1_1),
+            (0x08030100,0x1000, SETTING_8_3_1_0),
+            (0x08020006,0x1000, SETTING_8_2_0_6),
+            (0x08020004,0x1000, SETTING_8_2_0_4),
+            (0x08020003,0x1000, SETTING_8_2_0_3),
+            (0x08020000,0x1000, SETTING_8_2_0_0),
+            (0x0801000B,0x1000, SETTING_8_1_0_11),
+            (0x0801000A,0x1000, SETTING_8_1_0_10),
+            (0x08010009,0x1000, SETTING_8_1_0_9),
+            (0x08010006,0x1000, SETTING_8_1_0_6),
+            (0x08010005,0x1000, SETTING_8_1_0_5),
+            (0x08010004,0x1000, SETTING_8_1_0_4),
+            (0x08010003,0x1000, SETTING_8_1_0_3),
+            (0x08010002,0x1000, SETTING_8_1_0_2),
+            (0x08010001,0x1000, SETTING_8_1_0_1),
+            (0x08010000,0x1000, SETTING_8_1_0_0),
+            (0x08000001,0x1000, SETTING_8_0_0_1),
+            (0x07010206,0x1000, SETTING_7_1_2_6),
+            (0x07010205,0x1000, SETTING_7_1_2_5),
+            (0x07010203,0x1000, SETTING_7_1_2_3),
+            (0x07010202,0x1000, SETTING_7_1_2_2),
+            (0x07000006,0x1000, SETTING_7_0_0_6),
+            (0x07000005,0x1000, SETTING_7_0_0_5),
+            (0x07000004,0x1000, SETTING_7_0_0_4),
+            (0x07000003,0x1000, SETTING_7_0_0_3),
+            (0x07000002,0x1000, SETTING_7_0_0_2),
+            (0x07000001,0x1000, SETTING_7_0_0_1),
+            (0x06060015,0x1000, SETTING_6_6_0_21),
+            (0x06060014,0x1000, SETTING_6_6_0_20),
+            (0x06060012,0x1000, SETTING_6_6_0_18),
+            (0x0606000F,0x1000, SETTING_6_6_0_15),
+            (0x0606000E,0x1000, SETTING_6_6_0_14),
+            (0x0606000D,0x1000, SETTING_6_6_0_13),
+            (0x0606000C,0x1000, SETTING_6_6_0_12),
+            (0x0606000B,0x1000, SETTING_6_6_0_11),
+            (0x0606000A,0x1000, SETTING_6_6_0_10),
+            (0x06060009,0x1000, SETTING_6_6_0_9),
+            (0x06060008,0x1000, SETTING_6_6_0_8),
+            (0x06060007,0x1000, SETTING_6_6_0_7),
+            (0x06060006, 0xe00, SETTING_6_6_0_6),
+            (0x06060005, 0xe00, SETTING_6_6_0_5),
+            (0x06060003, 0xe00, SETTING_6_6_0_3),
+            (0x06060002, 0xe00, SETTING_6_6_0_2),
+            (0x06060001, 0xe00, SETTING_6_6_0_1),
+            (0x0605000F, 0xe00, SETTING_6_5_0_15),
+            (0x0605000C, 0xe00, SETTING_6_5_0_12),
+            (0x0605000B, 0xe00, SETTING_6_5_0_11),
+            (0x0605000A, 0xe00, SETTING_6_5_0_10),
+            (0x06050009, 0xe00, SETTING_6_5_0_9),
+            (0x06050007, 0xe00, SETTING_6_5_0_7),
+            (0x06050006, 0xe00, SETTING_6_5_0_6),
+            (0x06050003, 0xe00, SETTING_6_5_0_3),
+            (0x06040112, 0xe00, SETTING_6_4_1_18),
+            (0x06040111, 0xe00, SETTING_6_4_1_17),
+            (0x06040110, 0xe00, SETTING_6_4_1_16),
+            (0x0604010D, 0xe00, SETTING_6_4_1_13),
+            (0x0604010B, 0xe00, SETTING_6_4_1_11),
+            (0x06040108, 0xe00, SETTING_6_4_1_8),
+            (0x06040107, 0xe00, SETTING_6_4_1_7),
+            (0x06040104, 0xe00, SETTING_6_4_1_4),
+            (0x06040002, 0xe00, SETTING_6_4_0_2),
+            (0x06030010, 0xe00, SETTING_6_3_0_16),
+            (0x0603000F, 0xe00, SETTING_6_3_0_15),
+            (0x0603000E, 0xe00, SETTING_6_3_0_14),
+            (0x0603000D, 0xe00, SETTING_6_3_0_13),
+            (0x0603000B, 0xe00, SETTING_6_3_0_11),
+            (0x0603000A, 0xe00, SETTING_6_3_0_10),
+            (0x06030008, 0xe00, SETTING_6_3_0_8),
+            (0x06030004, 0xe00, SETTING_6_3_0_4),
+            (0x06030002, 0xe00, SETTING_6_3_0_2),
+            (0x06030000, 0xe00, SETTING_6_3_0),
+            (0x06020114, 0xe00, SETTING_6_2_1_20),
+            (0x06020113, 0xe00, SETTING_6_2_1_19),
+            (0x0602010E, 0xe00, SETTING_6_2_1_14),
+            (0x0602010A, 0xe00, SETTING_6_2_1_10),
+            (0x06020106, 0xe00, SETTING_6_2_1_6),
+            (0x06020103, 0xe00, SETTING_6_2_1_3),
+            (0x06020102, 0xe00, SETTING_6_2_1_2),
+            (0x06020100, 0xe00, SETTING_6_2_1),
+            (0x06010100, 0xe00, SETTING_6_1_1),
+            (0x06000000, 0xe00, SETTING_6_0_0),
+            (0x050e0000, 0xa00, SETTING_5_14_0),
+            (0x050d0100, 0xa00, SETTING_5_13_1),
+            (0x050c0000, 0x670, SETTING_5_12_0),
+            (0x050b0000, 0x670, SETTING_5_11_0),
+            (0x050a0000, 0x670, SETTING_5_10_0),
            ]
 # pylint: enable=bad-continuation,bad-whitespace,invalid-name
 
@@ -3630,7 +3694,7 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
                 if strindex is not None:
                     value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=i, ignoregroup=ignoregroup, converter=converter)
                 else:
-                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, converter=converter)
+                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, ignoregroup=ignoregroup, converter=converter)
                 arraymapping.append(value)
             offset += length
         # filter arrays containing only None
@@ -4347,7 +4411,10 @@ def restore(restorefile, backupfileformat, config):
         if filetype in (FileType.DMP, FileType.BIN):
             platform_new_data = get_config_info(new_decode_cfg)['platform']
         else:
-            platform_new_data = jsonconfig.get('config_version', Platform.STR.index("ESP82xx"))
+            try:
+                platform_new_data = Platform.STR.index(jsonconfig['header']['data']['platform'])
+            except:     # pylint: disable=bare-except
+                platform_new_data = Platform.STR.index("ESP82xx")
         platform_device = config['info']['platform']
         if platform_device != platform_new_data:
             exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
@@ -4550,13 +4617,13 @@ def parseargs():
                          metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=device friendly name from config, @h=device hostname from config, @H=device hostname from device (-d arg only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
