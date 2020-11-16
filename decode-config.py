@@ -1758,6 +1758,15 @@ SETTING_9_0_0_3.update             ({
 SETTING_9_1_0_0 = copy.deepcopy(SETTING_9_0_0_3)
 # ======================================================================
 SETTING_9_1_0_1 = copy.deepcopy(SETTING_9_1_0_0)
+SETTING_9_1_0_1.update             ({
+    'shd_leading_edge':             (Platform.ALL,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
+    'shd_warmup_brightness':        (Platform.ALL,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
+    'shd_warmup_time':              (Platform.ALL,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
+    'flag5':                        (Platform.ALL, {
+         'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SetOption115 {}".format($)')) ),
+         'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SetOption116 {}".format($)')) ),
+                                    },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09010001,0x1000, SETTING_9_1_0_1),
