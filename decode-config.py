@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.1.0.1'
+VER = '9.1.0.2'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1768,7 +1768,10 @@ SETTING_9_1_0_1.update             ({
                                     },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
+SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
+# ======================================================================
 SETTINGS = [
+            (0x09010002,0x1000, SETTING_9_1_0_2),
             (0x09010001,0x1000, SETTING_9_1_0_1),
             (0x09010000,0x1000, SETTING_9_1_0_0),
             (0x09000003,0x1000, SETTING_9_0_0_3),
