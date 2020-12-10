@@ -1766,6 +1766,7 @@ SETTING_9_1_0_1.update             ({
          'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SetOption115 {}".format($)')) ),
          'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SetOption116 {}".format($)')) ),
                                     },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)

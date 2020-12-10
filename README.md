@@ -979,7 +979,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
-| **RF**         |                             | *RfRaw*                | `RfCode`    |
+| **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
 |                |                             |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
 |                |                             |                        | `RfKey<x>`  |
