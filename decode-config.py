@@ -1770,6 +1770,9 @@ SETTING_9_1_0_1.update             ({
                                     })
 # ======================================================================
 SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
+SETTING_9_1_0_2['flag5'][1].update ({
+         'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09010002,0x1000, SETTING_9_1_0_2),
