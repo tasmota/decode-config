@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.3.0'
+VER = '9.2.0.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1877,67 +1877,10 @@ SETTING_9_1_0_2['flag5'][1].update ({
          'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
-SETTING_9_2_0_2['flag5'][1].update ({
-         'zb_received_as_subtopic': (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SetOption118 {}".format($)')) ),
-         'zb_omit_json_addr':       (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SetOption119 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_9_2_0_3 = copy.deepcopy(SETTING_9_2_0_2)
-SETTING_9_2_0_3.update             ({
-    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'device_group_maps':            (Platform.ALL,   '<L',  0xFB0,       (None, None,                           ('Control',     None)) ),
-                                    })
-SETTING_9_2_0_3['webcam_config'][1].update ({
-         'rtsp':                    (Platform.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
-SETTING_9_2_0_4['flag5'][1].update ({
-         'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SetOption120 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
-SETTING_9_2_0_5.update             ({
-    'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
-                                                                                                                ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
-                                    })
-# ======================================================================
-SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_SHD_PARAM
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT9',  'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_9_2_0_6.update             ({
-    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
-                                                                         ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
-    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
-                                    })
-# ======================================================================
-SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
-SETTING_9_2_0_7.pop('device_group_maps', None)
-SETTING_9_2_0_7.update             ({
-    'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
-                                    })
-# ======================================================================
-SETTING_9_3_0_0 = copy.deepcopy(SETTING_9_2_0_7)
+SETTING_9_2_0_1 = copy.deepcopy(SETTING_9_1_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x09030000,0x1000, SETTING_9_3_0_0),
-            (0x09020007,0x1000, SETTING_9_2_0_7),
-            (0x09020006,0x1000, SETTING_9_2_0_6),
-            (0x09020005,0x1000, SETTING_9_2_0_5),
-            (0x09020004,0x1000, SETTING_9_2_0_4),
-            (0x09020003,0x1000, SETTING_9_2_0_3),
-            (0x09020002,0x1000, SETTING_9_2_0_2),
+            (0x09020001,0x1000, SETTING_9_2_0_1),
             (0x09010002,0x1000, SETTING_9_1_0_2),
             (0x09010001,0x1000, SETTING_9_1_0_1),
             (0x09010000,0x1000, SETTING_9_1_0_0),
