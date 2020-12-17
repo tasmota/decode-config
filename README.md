@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="400" height="320">
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v9.1.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v9.2.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -48,7 +48,6 @@ If you want to use a current version than this one (e.g. because you also use a 
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `decode-config_linux`    | Linux executable running standalone                                     |
-| `decode-config_mac`      | macOS executable running standalone                                     |
 | `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
 | `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
@@ -300,7 +299,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_9.1.0.json` (the part `Tasmota` and `9.1.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_9.2.0.json` (the part `Tasmota` and `9.2.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -312,7 +311,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_9.1.0.json` using JSON format
+* `Config_Tasmota_9.2.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -320,10 +319,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_9.1.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_9.2.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_9.1.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_9.2.0
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -976,7 +975,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
-| **RF**         |                             | *RfRaw*                | `RfCode`    |
+| **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
 |                |                             |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
 |                |                             |                        | `RfKey<x>`  |

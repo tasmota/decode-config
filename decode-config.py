@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.1.0'
+VER = '9.2.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1757,7 +1757,30 @@ SETTING_9_0_0_3.update             ({
 # ======================================================================
 SETTING_9_1_0_0 = copy.deepcopy(SETTING_9_0_0_3)
 # ======================================================================
-SETTINGS = [(0x09010000,0x1000, SETTING_9_1_0_0),
+SETTING_9_1_0_1 = copy.deepcopy(SETTING_9_1_0_0)
+SETTING_9_1_0_1.update             ({
+    'shd_leading_edge':             (Platform.ALL,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
+    'shd_warmup_brightness':        (Platform.ALL,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
+    'shd_warmup_time':              (Platform.ALL,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
+    'flag5':                        (Platform.ALL, {
+         'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SetOption115 {}".format($)')) ),
+         'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SetOption116 {}".format($)')) ),
+                                    },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
+                                    })
+# ======================================================================
+SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
+SETTING_9_1_0_2['flag5'][1].update ({
+         'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_0 = copy.deepcopy(SETTING_9_1_0_2)
+# ======================================================================
+SETTINGS = [
+            (0x09020000,0x1000, SETTING_9_2_0_0),
+            (0x09010002,0x1000, SETTING_9_1_0_2),
+            (0x09010001,0x1000, SETTING_9_1_0_1),
+            (0x09010000,0x1000, SETTING_9_1_0_0),
             (0x09000003,0x1000, SETTING_9_0_0_3),
             (0x09000002,0x1000, SETTING_9_0_0_2),
             (0x09000001,0x1000, SETTING_9_0_0_1),
