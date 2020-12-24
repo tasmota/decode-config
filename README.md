@@ -48,6 +48,7 @@ If you want to use a current version than this one (e.g. because you also use a 
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `decode-config_linux`    | Linux executable running standalone                                     |
+| `decode-config_mac`      | macOS executable running standalone                                     |
 | `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
 | `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
