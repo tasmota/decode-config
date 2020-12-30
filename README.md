@@ -970,12 +970,12 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WattRes                     |                        |             |
 | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
 |                | DimmerStep                  | *CT*                   | `Dimmer`    |
-|                | Fade                        | *HsbColor*             |             |
-|                | LedTable                    | *Led<x\>*              |             |
-|                | Pixels                      | *Palette*              |             |
-|                | PWMDimmerPWMs               | *White*                |             |
-|                | RGBWWTable                  |                        |             |
-|                | Rotation                    |                        |             |
+|                | Fade                        | *CTRange*              |             |
+|                | LedTable                    | *HsbColor*             |             |
+|                | Pixels                      | *Led<x\>*              |             |
+|                | PWMDimmerPWMs               | *Palette*              |             |
+|                | RGBWWTable                  | *White*                |             |
+|                | Rotation                    | *VirtualCT*            |             |
 |                | Scheme                      |                        |             |
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |
