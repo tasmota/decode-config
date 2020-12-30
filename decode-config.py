@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.1'
+VER = '9.2.0.2'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1877,10 +1877,10 @@ SETTING_9_1_0_2['flag5'][1].update ({
          'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_9_2_0_1 = copy.deepcopy(SETTING_9_1_0_2)
+SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x09020001,0x1000, SETTING_9_2_0_1),
+            (0x09020002,0x1000, SETTING_9_2_0_2),
             (0x09010002,0x1000, SETTING_9_1_0_2),
             (0x09010001,0x1000, SETTING_9_1_0_1),
             (0x09010000,0x1000, SETTING_9_1_0_0),
