@@ -3,17 +3,18 @@
 Convert, backup and restore configuration data of devices flashed with [Tasmota firmware](https://github.com/arendst/Tasmota).
 
 <!-- markdownlint-disable MD033 -->
-<img src="https://github.com/curzon01/media/blob/master/pics/deocde-config_overview.png" alt="Overview" title="decode-config Overview" width="400" height="320">
+<img src="https://github.com/curzon01/media/blob/master/pics/decode-config_overview.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v9.2.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v9.2.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
-If you like **decode-config** give it a star or fork it:
+If you like **decode-config** give it a star or fork it and conitrubte:
 
 [![GitHub stars](https://img.shields.io/github/stars/tasmota/decode-config.svg?style=social&label=Star)](https://github.com/tasmota/decode-config/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/tasmota/decode-config.svg?style=social&label=Fork)](https://github.com/tasmota/decode-config/network)
+[![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/norbertrichter42)
 
 In comparison with the [Tasmota](https://github.com/arendst/Tasmota) build-in "*Backup Configuration*" / "*Restore Configuration*" function the **decode-config** tool:
 
