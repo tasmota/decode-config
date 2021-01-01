@@ -6,7 +6,7 @@ VER = '9.2.0.2'
 """
     decode-config.py - Backup/Restore Tasmota configuration data
 
-    Copyright (C) 2020 Norbert Richter <nr@prsolution.eu>
+    Copyright (C) 2021 Norbert Richter <nr@prsolution.eu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
