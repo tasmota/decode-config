@@ -463,12 +463,97 @@ def isscript(value):
         return value
     return False
 
-def isrules(value):
+def rulesread(value):
     """
-    Rules config helper
+    Scripter config helper to read rules
     """
     if CONFIG['valuemapping'].get('scripting_used', 0) == 0:
+        # check if string is compressed
+        if len(value) > 2 and value[0] == '\x00':
+            # uncompress string
+            uncompressed_data = bytearray(3072)
+            compressed = bytes.fromhex(value[3:])
+            try:
+                Unishox().decompress(compressed, len(compressed), uncompressed_data, len(uncompressed_data))
+            except:     # pylint: disable=bare-except
+                return value
+            try:
+                uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
+            except UnicodeDecodeError as err:
+                exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
+            return uncompressed_str
+
+        # return origin str
         return value
+
+    # scripting is enabled, rule space used for script so rule is invalid and disabled
+    return False
+
+def ruleswrite(value):
+    """
+    Scripter config helper to write rules
+
+    compression for Rules, depends on 'compress_rules_cpu' (SetOption93)
+
+    If `SetOption93 0`
+      Rule[x][] = 511 char max NULL terminated string (512 with trailing NULL)
+      Rule[x][0] = 0 if the Rule<x> is empty
+      New: in case the string is empty we also enforce:
+      Rule[x][1] = 0   (i.e. we have two conseutive NULLs)
+
+    If `SetOption93 1`
+      If the rule is smaller than 511, it is stored uncompressed. Rule[x][0] is not null.
+      If the rule is empty, Rule[x][0] = 0 and Rule[x][1] = 0;
+      If the rule is bigger than 511, it is stored compressed
+         The first byte of each Rule is always NULL.
+         Rule[x][0] = 0,  if firmware is downgraded, the rule will be considered as empty
+
+         The second byte contains the size of uncompressed rule in 8-bytes blocks (i.e. (len+7)/8 )
+         Maximum rule size is 2KB (2048 bytes per rule), although there is little chances compression ratio will go down to 75%
+         Rule[x][1] = size uncompressed in dwords. If zero, the rule is empty.
+
+         The remaining bytes contain the compressed rule, NULL terminated
+    """
+    if CONFIG['valuemapping'].get('scripting_used', 0) == 0:
+        fielddef = CONFIG['info']['template'].get('rules', None)
+        if fielddef is None:
+            print("wrong setting for 'rule'", file=sys.stderr)
+            raise SyntaxError('SETTING error')
+        try:
+            subfielddef = get_subfielddef(fielddef)
+            length = get_fieldlength(subfielddef)
+        except:     # pylint: disable=bare-except
+            length = 512
+        # check if string should be compressed
+        try:
+            possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
+        except:     # pylint: disable=bare-except
+            possible_compress = False
+        if possible_compress and value[0] != '\x00' and len(value) >= length:
+            # compressed uncompressed string
+            compressed_data = bytearray(length)
+            if isinstance(value, str):
+                uncompressed_data = bytes(value, STR_CODING)
+            else:
+                uncompressed_data = value
+            try:
+                Unishox().compress(uncompressed_data, len(uncompressed_data), compressed_data, len(compressed_data))
+                index0 = compressed_data.find(b'\x00')
+                if index0 >= 0:
+                    compressed_data = compressed_data[:index0]
+            except:     # pylint: disable=bare-except
+                return value
+
+            return b'\x00' + struct.pack("B", int((len(value)+7)/8)) + compressed_data
+
+        if len(value) == 0:
+            return b'\x00\x00'
+
+        # return origin str
+        return value
+
+    # scripting is enabled, rule space used for script so rule is invalid and disabled
     return False
 
 # ----------------------------------------------------------------------
@@ -1643,7 +1728,7 @@ SETTING_8_3_1_6['flag4'][1].update ({
 # ======================================================================
 SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
 SETTING_8_3_1_7.update             ({
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), isrules),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), (rulesread, ruleswrite)),
     'scripting_used':               (Platform.ALL,   'B',  (0x4A0,1,7),  (None, None,                           ('Rules',       None)), (False, False)),
     'scripting_compressed':         (Platform.ALL,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
     'script_enabled':               (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
