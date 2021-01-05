@@ -531,7 +531,7 @@ def ruleswrite(value):
             possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
         except:     # pylint: disable=bare-except
             possible_compress = False
-        if possible_compress and value[0] != '\x00' and len(value) >= length:
+        if possible_compress and len(value) and value[0] != '\x00' and len(value) >= length:
             # compressed uncompressed string
             compressed_data = bytearray(length)
             if isinstance(value, str):
