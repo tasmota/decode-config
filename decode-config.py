@@ -1878,6 +1878,10 @@ SETTING_9_1_0_2['flag5'][1].update ({
                                     })
 # ======================================================================
 SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
+SETTING_9_2_0_2['flag5'][1].update ({
+         'zb_received_as_subtopic': (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SetOption118 {}".format($)')) ),
+         'zb_omit_json_addr':       (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SetOption119 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09020002,0x1000, SETTING_9_2_0_2),
