@@ -934,7 +934,7 @@ SETTING_6_2_1_20['flag3'][1].update ({
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
+    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
