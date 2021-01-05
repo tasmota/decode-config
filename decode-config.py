@@ -5057,7 +5057,7 @@ if __name__ == "__main__":
                 "it again using the serial interface. If you are unsure and do not know the  changes "
                 "in the configuration structure, you may able to use the developer version of this "
                 "program from https://github.com/tasmota/decode-config/tree/development.", \
-                COLUMNS - 16)) \
+                75)) \
                 .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
