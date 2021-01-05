@@ -3947,40 +3947,46 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
             if isinstance(value, str):
                 value = int(value, 0)
             else:
-                value = int(value)
-            # bits
-            if bits != 0:
-                bitvalue = value
-                value = struct.unpack_from(format_, dobj, baseaddr+addroffset)[0]
-                # validate restoremapping value
-                valid = validate_value(bitvalue, fielddef)
-                if not valid:
-                    err_text = "valid bit range exceeding"
-                    value = bitvalue
-                else:
-                    mask = (1<<bits)-1
-                    if bitvalue > mask:
-                        min_ = 0
-                        max_ = mask
-                        _value = bitvalue
-                        valid = False
-                    else:
-                        if bitshift >= 0:
-                            bitvalue <<= bitshift
-                            mask <<= bitshift
-                        else:
-                            bitvalue >>= abs(bitshift)
-                            mask >>= abs(bitshift)
-                        value &= (0xffffffff ^ mask)
-                        value |= bitvalue
+                try:
+                    value = int(value)
+                except Exception as err:  # pylint: disable=broad-except
+                    err_text = "field '{}' couldn't restore, format may has changed! {}".format(fieldname, err)
+                    valid = False
 
-            # full size values
-            else:
-                # validate restoremapping function
-                valid = validate_value(value, fielddef)
-                if not valid:
-                    err_text = "valid range exceeding"
-                _value = value
+            if valid:
+                # bits
+                if bits != 0:
+                    bitvalue = value
+                    value = struct.unpack_from(format_, dobj, baseaddr+addroffset)[0]
+                    # validate restoremapping value
+                    valid = validate_value(bitvalue, fielddef)
+                    if not valid:
+                        err_text = "valid bit range exceeding"
+                        value = bitvalue
+                    else:
+                        mask = (1<<bits)-1
+                        if bitvalue > mask:
+                            min_ = 0
+                            max_ = mask
+                            _value = bitvalue
+                            valid = False
+                        else:
+                            if bitshift >= 0:
+                                bitvalue <<= bitshift
+                                mask <<= bitshift
+                            else:
+                                bitvalue >>= abs(bitshift)
+                                mask >>= abs(bitshift)
+                            value &= (0xffffffff ^ mask)
+                            value |= bitvalue
+
+                # full size values
+                else:
+                    # validate restoremapping function
+                    valid = validate_value(value, fielddef)
+                    if not valid:
+                        err_text = "valid range exceeding"
+                    _value = value
 
         # float
         elif format_[-1:] in ['f', 'd']:
