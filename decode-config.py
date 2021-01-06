@@ -531,7 +531,7 @@ def ruleswrite(value):
             possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
         except:     # pylint: disable=bare-except
             possible_compress = False
-        if possible_compress and len(value) and value[0] != '\x00' and len(value) >= length:
+        if possible_compress and len(value) > 0 and value[0] != '\x00' and len(value) >= length:
             # compressed uncompressed string
             compressed_data = bytearray(length)
             if isinstance(value, str):
@@ -5057,7 +5057,7 @@ if __name__ == "__main__":
                 "it again using the serial interface. If you are unsure and do not know the  changes "
                 "in the configuration structure, you may able to use the developer version of this "
                 "program from https://github.com/tasmota/decode-config/tree/development.", \
-                75)) \
+                COLUMNS - 16)) \
                 .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
