@@ -530,7 +530,7 @@ def ruleswrite(value):
             possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
         except:     # pylint: disable=bare-except
             possible_compress = False
-        if possible_compress and len(value) and value[0] != '\x00' and len(value) >= length:
+        if possible_compress and len(value) > 0 and value[0] != '\x00' and len(value) >= length:
             # compressed uncompressed string
             compressed_data = bytearray(length)
             if isinstance(value, str):
@@ -5023,6 +5023,10 @@ if __name__ == "__main__":
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
+            try:
+                COLUMNS = os.get_terminal_size()[0]
+            except:     # pylint: disable=bare-except
+                COLUMNS = 80
             exit_(ExitCode.UNSUPPORTED_VERSION, \
                 "\n           ".join(textwrap.wrap(\
                 "Tasmota configuration data v{} currently unsupported!\n"
@@ -5035,7 +5039,7 @@ if __name__ == "__main__":
                 "it again using the serial interface. If you are unsure and do not know the  changes "
                 "in the configuration structure, you may able to use the developer version of this "
                 "program from https://github.com/tasmota/decode-config/tree/development.", \
-                75)) \
+                COLUMNS - 16)) \
                 .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
