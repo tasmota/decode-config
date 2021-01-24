@@ -1873,7 +1873,12 @@ SETTING_9_2_0_3.update             ({
     'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
     'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
     'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'device_group_maps':            (Platform.ALL,   '<L',  0xFB0,       (None, None,                           ('MQTT',        None)) ),
                                     })
+SETTING_9_2_0_3['webcam_config'][1].update ({
+         'rtsp':                    (Platform.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+                                    })
+
 # ======================================================================
 SETTINGS = [
             (0x09020003,0x1000, SETTING_9_2_0_3),

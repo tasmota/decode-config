@@ -834,6 +834,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WCStream<sup>2</sup>        |                        |             |
 |                | WCMirror<sup>2</sup>        |                        |             |
 |                | WCFlip<sup>2</sup>          |                        |             |
+|                | WCRtsp<sup>2</sup>          |                        |             |
 |                | WCBrightness<sup>2</sup>    |                        |             |
 |                | WCContrast<sup>2</sup>      |                        |             |
 |                | WCSaturation<sup>2</sup>    |                        |             |
