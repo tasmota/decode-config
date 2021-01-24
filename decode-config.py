@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.3'
+VER = '9.2.0.4'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1878,9 +1878,11 @@ SETTING_9_2_0_3.update             ({
 SETTING_9_2_0_3['webcam_config'][1].update ({
          'rtsp':                    (Platform.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
                                     })
-
+# ======================================================================
+SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
 # ======================================================================
 SETTINGS = [
+            (0x09020004,0x1000, SETTING_9_2_0_4),
             (0x09020003,0x1000, SETTING_9_2_0_3),
             (0x09020002,0x1000, SETTING_9_2_0_2),
             (0x09010002,0x1000, SETTING_9_1_0_2),
