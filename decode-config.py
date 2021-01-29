@@ -1880,6 +1880,9 @@ SETTING_9_2_0_3['webcam_config'][1].update ({
                                     })
 # ======================================================================
 SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
+SETTING_9_2_0_4['flag5'][1].update ({
+         'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SetOption120 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09020004,0x1000, SETTING_9_2_0_4),
