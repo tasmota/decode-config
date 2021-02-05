@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.4'
+VER = '9.2.0.5'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1899,7 +1899,14 @@ SETTING_9_2_0_4['flag5'][1].update ({
          'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SetOption120 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
+SETTING_9_2_0_5.update             ({
+    'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
+                                                                                                                ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09020005,0x1000, SETTING_9_2_0_5),
             (0x09020004,0x1000, SETTING_9_2_0_4),
             (0x09020003,0x1000, SETTING_9_2_0_3),
             (0x09020002,0x1000, SETTING_9_2_0_2),
