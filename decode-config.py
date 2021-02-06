@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.5'
+VER = '9.2.0.6'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1905,7 +1905,25 @@ SETTING_9_2_0_5.update             ({
                                                                                                                 ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
+SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT9',  'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_9_2_0_6.update             ({
+    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+                                                                         ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09020006,0x1000, SETTING_9_2_0_6),
             (0x09020005,0x1000, SETTING_9_2_0_5),
             (0x09020004,0x1000, SETTING_9_2_0_4),
             (0x09020003,0x1000, SETTING_9_2_0_3),
