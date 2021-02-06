@@ -1507,8 +1507,9 @@ SETTING_8_1_0_6.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4', 'SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_1_0_9.update             ({
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
@@ -1545,12 +1546,13 @@ SETTING_8_1_0_11.update             ({
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
 SETTING_8_2_0_0.update             ({
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ < 14',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4', 'SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update             ({
     'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
@@ -1663,8 +1665,9 @@ SETTING_8_2_0_6['flag4'][1].update ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME', 'SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_3_1_1.update             ({
     'devicename':                   (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].index('SET_DEVICENAME')),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1691,8 +1694,9 @@ SETTING_8_3_1_2['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID', 'SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_3_1_3.update             ({
     'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_TOKEN')),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1746,8 +1750,9 @@ SETTING_8_3_1_7['timer'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8', 'SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_4_0_0.update             ({
     'adc_param':                    (Platform.ESP32, '699s',(0x017,SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_ADC_PARAM1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
@@ -1830,13 +1835,22 @@ SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
 SETTING_9_0_0_2.update             ({
     'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
     'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 SETTING_9_0_0_2['flag4'][1].update ({
         'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_9_0_0_3.update             ({
+    'switchtext':                   (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+                                                                         ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'shelly_dimmer':                (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SHD_PARAM')),
+                                                                         ([8],  None,                           ('Light',       None)) ),
     'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
          'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
