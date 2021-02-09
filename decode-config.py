@@ -175,6 +175,7 @@ HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
 VIRTUAL = '*'
 SETTINGVAR = '$SETTINGVAR'
+SIMULATING = "* Simulating "
 DEFAULT_SET_MAX = 79
 
 DEFAULTS = {
@@ -4488,7 +4489,7 @@ def backup(backupfile, backupfileformat, config):
     if ARGS.dryrun:
         if ARGS.verbose:
             message("Do not write backup files for dry run", type_=LogType.INFO)
-        dryrun = "** Simulating ** "
+        dryrun = SIMULATING
 
     fileformat = None
     if backupfileformat.lower() in backups:
@@ -4625,7 +4626,7 @@ def restore(restorefile, backupfileformat, config):
             if ARGS.dryrun:
                 if ARGS.verbose:
                     message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
-                dryrun = "** Simulating ** "
+                dryrun = SIMULATING
                 error_code = 0
             # write config direct to device via http
             if ARGS.device is not None:
