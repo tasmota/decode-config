@@ -3747,7 +3747,10 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
                 str_ = sarray[0]
             else:
                 # indexed string
-                str_ = sarray[strindex+idxoffset]
+                if (strindex+idxoffset) < len(sarray):
+                    str_ = sarray[strindex+idxoffset]
+                else:
+                    str_ = ""
 
         if maxlength:
             if compressed_str:
