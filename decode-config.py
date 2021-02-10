@@ -3748,9 +3748,9 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
                 str_ = sarray[0]
             else:
                 # indexed string
-                if (strindex+idxoffset) < len(sarray):
+                try:
                     str_ = sarray[strindex+idxoffset]
-                else:
+                except:     # pylint: disable=bare-except
                     str_ = ""
 
         if maxlength:
