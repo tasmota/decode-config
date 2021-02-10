@@ -1851,7 +1851,7 @@ SETTING_9_0_0_3.update             ({
     'switchtext':                   (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'shelly_dimmer':                (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SHD_PARAM')),
-                                                                         ([8],  None,                           ('Light',       None)) ),
+                                                                         (None,  None,                          ('Light',       None)) ),
     'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
          'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
