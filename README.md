@@ -817,7 +817,6 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ButtonDebounce              | *FanSpeed*             |             |
 |                | DevGroupName                | *LedPower*             |             |
 |                | DevGroupShare               |                        |             |
-|                | DevGroupTie                 |                        |             |
 |                | Interlock                   |                        |             |
 |                | LedMask                     |                        |             |
 |                | LedPwmMode<x\>              |                        |             |
