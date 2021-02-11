@@ -818,7 +818,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Control**    | BlinkCount                  | *Backlog*              |             |
 |                | BlinkTime                   | *Buzzer*               |             |
 |                | ButtonDebounce              | *FanSpeed*             |             |
-|                | DevGroupShare               | *LedPower*             |             |
+|                | DevGroupName                | *LedPower*             |             |
+|                | DevGroupShare               |                        |             |
 |                | Interlock                   |                        |             |
 |                | LedMask                     |                        |             |
 |                | LedPwmMode<x\>              |                        |             |
