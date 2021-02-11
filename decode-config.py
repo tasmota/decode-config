@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.6'
+VER = '9.2.0.7'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1922,7 +1922,14 @@ SETTING_9_2_0_6.update             ({
     'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
+SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
+SETTING_9_2_0_7.pop('device_group_maps', None)
+SETTING_9_2_0_7.update             ({
+    'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09020007,0x1000, SETTING_9_2_0_7),
             (0x09020006,0x1000, SETTING_9_2_0_6),
             (0x09020005,0x1000, SETTING_9_2_0_5),
             (0x09020004,0x1000, SETTING_9_2_0_4),
