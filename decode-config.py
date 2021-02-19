@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0'
+VER = '9.3.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
 
-    Copyright (C) 2020 Norbert Richter <nr@prsolution.eu>
+    Copyright (C) 2021 Norbert Richter <nr@prsolution.eu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -175,6 +175,7 @@ HIDDEN_PASSWORD = '********'
 INTERNAL = 'Internal'
 VIRTUAL = '*'
 SETTINGVAR = '$SETTINGVAR'
+SIMULATING = "* Simulating "
 DEFAULT_SET_MAX = 79
 
 DEFAULTS = {
@@ -463,12 +464,97 @@ def isscript(value):
         return value
     return False
 
-def isrules(value):
+def rulesread(value):
     """
-    Rules config helper
+    Scripter config helper to read rules
     """
     if CONFIG['valuemapping'].get('scripting_used', 0) == 0:
+        # check if string is compressed
+        if len(value) > 2 and value[0] == '\x00':
+            # uncompress string
+            uncompressed_data = bytearray(3072)
+            compressed = bytes.fromhex(value[3:])
+            try:
+                Unishox().decompress(compressed, len(compressed), uncompressed_data, len(uncompressed_data))
+            except:     # pylint: disable=bare-except
+                return value
+            try:
+                uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
+            except UnicodeDecodeError as err:
+                exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
+            return uncompressed_str
+
+        # return origin str
         return value
+
+    # scripting is enabled, rule space used for script so rule is invalid and disabled
+    return False
+
+def ruleswrite(value):
+    """
+    Scripter config helper to write rules
+
+    compression for Rules, depends on 'compress_rules_cpu' (SetOption93)
+
+    If `SetOption93 0`
+      Rule[x][] = 511 char max NULL terminated string (512 with trailing NULL)
+      Rule[x][0] = 0 if the Rule<x> is empty
+      New: in case the string is empty we also enforce:
+      Rule[x][1] = 0   (i.e. we have two conseutive NULLs)
+
+    If `SetOption93 1`
+      If the rule is smaller than 511, it is stored uncompressed. Rule[x][0] is not null.
+      If the rule is empty, Rule[x][0] = 0 and Rule[x][1] = 0;
+      If the rule is bigger than 511, it is stored compressed
+         The first byte of each Rule is always NULL.
+         Rule[x][0] = 0,  if firmware is downgraded, the rule will be considered as empty
+
+         The second byte contains the size of uncompressed rule in 8-bytes blocks (i.e. (len+7)/8 )
+         Maximum rule size is 2KB (2048 bytes per rule), although there is little chances compression ratio will go down to 75%
+         Rule[x][1] = size uncompressed in dwords. If zero, the rule is empty.
+
+         The remaining bytes contain the compressed rule, NULL terminated
+    """
+    if CONFIG['valuemapping'].get('scripting_used', 0) == 0:
+        fielddef = CONFIG['info']['template'].get('rules', None)
+        if fielddef is None:
+            print("wrong setting for 'rule'", file=sys.stderr)
+            raise SyntaxError('SETTING error')
+        try:
+            subfielddef = get_subfielddef(fielddef)
+            length = get_fieldlength(subfielddef)
+        except:     # pylint: disable=bare-except
+            length = 512
+        # check if string should be compressed
+        try:
+            possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
+        except:     # pylint: disable=bare-except
+            possible_compress = False
+        if possible_compress and len(value) > 0 and value[0] != '\x00' and len(value) >= length:
+            # compressed uncompressed string
+            compressed_data = bytearray(length)
+            if isinstance(value, str):
+                uncompressed_data = bytes(value, STR_CODING)
+            else:
+                uncompressed_data = value
+            try:
+                Unishox().compress(uncompressed_data, len(uncompressed_data), compressed_data, len(compressed_data))
+                index0 = compressed_data.find(b'\x00')
+                if index0 >= 0:
+                    compressed_data = compressed_data[:index0]
+            except:     # pylint: disable=bare-except
+                return value
+
+            return b'\x00' + struct.pack("B", int((len(value)+7)/8)) + compressed_data
+
+        if len(value) == 0:
+            return b'\x00\x00'
+
+        # return origin str
+        return value
+
+    # scripting is enabled, rule space used for script so rule is invalid and disabled
     return False
 
 # ----------------------------------------------------------------------
@@ -849,7 +935,10 @@ SETTING_6_2_1_20['flag3'][1].update ({
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update({
-    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           (INTERNAL,      None)) ),
+    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
+    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)))')) ),
 })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
@@ -1419,11 +1508,12 @@ SETTING_8_1_0_6.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4', 'SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_1_0_9.update             ({
-    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('MQTT',        '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
-    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('MQTT',        None)) ),
+    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
     'bri_power_on':                 (Platform.ALL,   'B',   0xF04,       (None, None,                           ('Light',       None)) ),
     'bri_min':                      (Platform.ALL,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
     'bri_preset_low':               (Platform.ALL,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
@@ -1457,12 +1547,13 @@ SETTING_8_1_0_11.update             ({
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
 SETTING_8_2_0_0.update             ({
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ < 14',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4', 'SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update             ({
     'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
@@ -1575,8 +1666,9 @@ SETTING_8_2_0_6['flag4'][1].update ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME', 'SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_3_1_1.update             ({
     'devicename':                   (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].index('SET_DEVICENAME')),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1603,8 +1695,9 @@ SETTING_8_3_1_2['flag4'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID', 'SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_3_1_3.update             ({
     'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_TOKEN')),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1643,7 +1736,7 @@ SETTING_8_3_1_6['flag4'][1].update ({
 # ======================================================================
 SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
 SETTING_8_3_1_7.update             ({
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), isrules),
+    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), (rulesread, ruleswrite)),
     'scripting_used':               (Platform.ALL,   'B',  (0x4A0,1,7),  (None, None,                           ('Rules',       None)), (False, False)),
     'scripting_compressed':         (Platform.ALL,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
     'script_enabled':               (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
@@ -1658,8 +1751,9 @@ SETTING_8_3_1_7['timer'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8', 'SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_4_0_0.update             ({
     'adc_param':                    (Platform.ESP32, '699s',(0x017,SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_ADC_PARAM1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
@@ -1742,13 +1836,22 @@ SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
 SETTING_9_0_0_2.update             ({
     'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
     'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
+    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 SETTING_9_0_0_2['flag4'][1].update ({
         'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_9_0_0_3.update             ({
+    'switchtext':                   (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+                                                                         ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'shelly_dimmer':                (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SHD_PARAM')),
+                                                                         (None,  None,                          ('Light',       None)) ),
     'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
          'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
@@ -1774,10 +1877,67 @@ SETTING_9_1_0_2['flag5'][1].update ({
          'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_9_2_0_0 = copy.deepcopy(SETTING_9_1_0_2)
+SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
+SETTING_9_2_0_2['flag5'][1].update ({
+         'zb_received_as_subtopic': (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SetOption118 {}".format($)')) ),
+         'zb_omit_json_addr':       (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SetOption119 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_3 = copy.deepcopy(SETTING_9_2_0_2)
+SETTING_9_2_0_3.update             ({
+    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'device_group_maps':            (Platform.ALL,   '<L',  0xFB0,       (None, None,                           ('Control',     None)) ),
+                                    })
+SETTING_9_2_0_3['webcam_config'][1].update ({
+         'rtsp':                    (Platform.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
+SETTING_9_2_0_4['flag5'][1].update ({
+         'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SetOption120 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
+SETTING_9_2_0_5.update             ({
+    'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
+                                                                                                                ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT9',  'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_9_2_0_6.update             ({
+    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+                                                                         ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
+SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
+SETTING_9_2_0_7.pop('device_group_maps', None)
+SETTING_9_2_0_7.update             ({
+    'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
+                                    })
+# ======================================================================
+SETTING_9_3_0_0 = copy.deepcopy(SETTING_9_2_0_7)
 # ======================================================================
 SETTINGS = [
-            (0x09020000,0x1000, SETTING_9_2_0_0),
+            (0x09030000,0x1000, SETTING_9_3_0_0),
+            (0x09020007,0x1000, SETTING_9_2_0_7),
+            (0x09020006,0x1000, SETTING_9_2_0_6),
+            (0x09020005,0x1000, SETTING_9_2_0_5),
+            (0x09020004,0x1000, SETTING_9_2_0_4),
+            (0x09020003,0x1000, SETTING_9_2_0_3),
+            (0x09020002,0x1000, SETTING_9_2_0_2),
             (0x09010002,0x1000, SETTING_9_1_0_2),
             (0x09010001,0x1000, SETTING_9_1_0_1),
             (0x09010000,0x1000, SETTING_9_1_0_0),
@@ -3598,7 +3758,10 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
                 str_ = sarray[0]
             else:
                 # indexed string
-                str_ = sarray[strindex+idxoffset]
+                try:
+                    str_ = sarray[strindex+idxoffset]
+                except:     # pylint: disable=bare-except
+                    str_ = ""
 
         if maxlength:
             if compressed_str:
@@ -3862,40 +4025,46 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
             if isinstance(value, str):
                 value = int(value, 0)
             else:
-                value = int(value)
-            # bits
-            if bits != 0:
-                bitvalue = value
-                value = struct.unpack_from(format_, dobj, baseaddr+addroffset)[0]
-                # validate restoremapping value
-                valid = validate_value(bitvalue, fielddef)
-                if not valid:
-                    err_text = "valid bit range exceeding"
-                    value = bitvalue
-                else:
-                    mask = (1<<bits)-1
-                    if bitvalue > mask:
-                        min_ = 0
-                        max_ = mask
-                        _value = bitvalue
-                        valid = False
-                    else:
-                        if bitshift >= 0:
-                            bitvalue <<= bitshift
-                            mask <<= bitshift
-                        else:
-                            bitvalue >>= abs(bitshift)
-                            mask >>= abs(bitshift)
-                        value &= (0xffffffff ^ mask)
-                        value |= bitvalue
+                try:
+                    value = int(value)
+                except Exception as err:  # pylint: disable=broad-except
+                    err_text = "field '{}' couldn't restore, format may has changed! {}".format(fieldname, err)
+                    valid = False
 
-            # full size values
-            else:
-                # validate restoremapping function
-                valid = validate_value(value, fielddef)
-                if not valid:
-                    err_text = "valid range exceeding"
-                _value = value
+            if valid:
+                # bits
+                if bits != 0:
+                    bitvalue = value
+                    value = struct.unpack_from(format_, dobj, baseaddr+addroffset)[0]
+                    # validate restoremapping value
+                    valid = validate_value(bitvalue, fielddef)
+                    if not valid:
+                        err_text = "valid bit range exceeding"
+                        value = bitvalue
+                    else:
+                        mask = (1<<bits)-1
+                        if bitvalue > mask:
+                            min_ = 0
+                            max_ = mask
+                            _value = bitvalue
+                            valid = False
+                        else:
+                            if bitshift >= 0:
+                                bitvalue <<= bitshift
+                                mask <<= bitshift
+                            else:
+                                bitvalue >>= abs(bitshift)
+                                mask >>= abs(bitshift)
+                            value &= (0xffffffff ^ mask)
+                            value |= bitvalue
+
+                # full size values
+                else:
+                    # validate restoremapping function
+                    valid = validate_value(value, fielddef)
+                    if not valid:
+                        err_text = "valid range exceeding"
+                    _value = value
 
         # float
         elif format_[-1:] in ['f', 'd']:
@@ -4330,7 +4499,7 @@ def backup(backupfile, backupfileformat, config):
     if ARGS.dryrun:
         if ARGS.verbose:
             message("Do not write backup files for dry run", type_=LogType.INFO)
-        dryrun = "** Simulating ** "
+        dryrun = SIMULATING
 
     fileformat = None
     if backupfileformat.lower() in backups:
@@ -4467,7 +4636,7 @@ def restore(restorefile, backupfileformat, config):
             if ARGS.dryrun:
                 if ARGS.verbose:
                     message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
-                dryrun = "** Simulating ** "
+                dryrun = SIMULATING
                 error_code = 0
             # write config direct to device via http
             if ARGS.device is not None:
@@ -4925,6 +5094,10 @@ if __name__ == "__main__":
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
+            try:
+                COLUMNS = os.get_terminal_size()[0]
+            except:     # pylint: disable=bare-except
+                COLUMNS = 80
             exit_(ExitCode.UNSUPPORTED_VERSION, \
                 "\n           ".join(textwrap.wrap(\
                 "Tasmota configuration data v{} currently unsupported!\n"
@@ -4937,7 +5110,7 @@ if __name__ == "__main__":
                 "it again using the serial interface. If you are unsure and do not know the  changes "
                 "in the configuration structure, you may able to use the developer version of this "
                 "program from https://github.com/tasmota/decode-config/tree/development.", \
-                int(os.popen('stty size', 'r').read().split()[1], 0) - 15)) \
+                COLUMNS - 16)) \
                 .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                   type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
