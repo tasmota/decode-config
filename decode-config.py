@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.2.0.7'
+VER = '9.3.0.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1928,7 +1928,10 @@ SETTING_9_2_0_7.update             ({
     'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
                                     })
 # ======================================================================
+SETTING_9_3_0_1 = copy.deepcopy(SETTING_9_2_0_7)
+# ======================================================================
 SETTINGS = [
+            (0x09030001,0x1000, SETTING_9_3_0_1),
             (0x09020007,0x1000, SETTING_9_2_0_7),
             (0x09020006,0x1000, SETTING_9_2_0_6),
             (0x09020005,0x1000, SETTING_9_2_0_5),
