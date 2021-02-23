@@ -1929,6 +1929,10 @@ SETTING_9_2_0_7.update             ({
                                     })
 # ======================================================================
 SETTING_9_3_0_1 = copy.deepcopy(SETTING_9_2_0_7)
+SETTING_9_3_0_1['flag5'][1].update ({
+         'mqtt_state_retain':       (Platform.ALL,   '<L', (0xFB4,1, 7), (None, None,                           ('MQTT',        '"StateRetain {}".format($)')) ),
+         'mqtt_info_retain':        (Platform.ALL,   '<L', (0xFB4,1, 8), (None, None,                           ('MQTT',        '"InfoRetain {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09030001,0x1000, SETTING_9_3_0_1),
