@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.3.0'
+VER = '9.3.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1928,10 +1928,17 @@ SETTING_9_2_0_7.update             ({
     'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
                                     })
 # ======================================================================
-SETTING_9_3_0_0 = copy.deepcopy(SETTING_9_2_0_7)
+SETTING_9_3_0_1 = copy.deepcopy(SETTING_9_2_0_7)
+SETTING_9_3_0_1['flag5'][1].update ({
+         'mqtt_state_retain':       (Platform.ALL,   '<L', (0xFB4,1, 7), (None, None,                           ('MQTT',        '"StateRetain {}".format($)')) ),
+         'mqtt_info_retain':        (Platform.ALL,   '<L', (0xFB4,1, 8), (None, None,                           ('MQTT',        '"InfoRetain {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_3_1_0 = copy.deepcopy(SETTING_9_3_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x09030000,0x1000, SETTING_9_3_0_0),
+            (0x09030100,0x1000, SETTING_9_3_1_0),
+            (0x09030001,0x1000, SETTING_9_3_0_1),
             (0x09020007,0x1000, SETTING_9_2_0_7),
             (0x09020006,0x1000, SETTING_9_2_0_6),
             (0x09020005,0x1000, SETTING_9_2_0_5),
