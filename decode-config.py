@@ -737,7 +737,7 @@ SETTING_5_10_0 = {
                                     },                      0x5D0,       (None, None,                           ('Sensor',      None)), (None, None) ),
     'pulse_counter_debounce':       (Platform.ALL,   '<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
     'rf_code':                      (Platform.ALL,   'B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
-}
+                                    }
 # ======================================================================
 SETTING_5_11_0 = copy.deepcopy(SETTING_5_10_0)
 SETTING_5_11_0.update               ({
@@ -818,7 +818,7 @@ SETTING_5_14_0.update               ({
                                     })
 # ======================================================================
 SETTING_6_0_0 = copy.deepcopy(SETTING_5_14_0)
-SETTING_6_0_0.update({
+SETTING_6_0_0.update                ({
     'cfg_holder':                   (Platform.ALL,   '<H',  0x000,       (None, None,                           ('System',      None)), ),
     'cfg_size':                     (Platform.ALL,   '<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
     'bootcount':                    (Platform.ALL,   '<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
@@ -835,7 +835,7 @@ SETTING_6_0_0.update({
                                     },                      0x4A0,       (None, None,                           ('Rules',       None)), (None, None) ),
     'mems':                         (Platform.ALL,   '10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-})
+                                    })
 SETTING_6_0_0['flag'][1].update     ({
         'knx_enable_enhancement':   (Platform.ALL,   '<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
                                     })
@@ -900,69 +900,69 @@ SETTING_6_2_1_3['flag3'][1].update  ({
                                     })
 # ======================================================================
 SETTING_6_2_1_6 = copy.deepcopy(SETTING_6_2_1_3)
-SETTING_6_2_1_6.update({
+SETTING_6_2_1_6.update              ({
     'energy_power_calibration':     (Platform.ALL,   '<L',  0x364,       (None, '1000 <= $ <= 32000',           ('Power',       '"PowerCal {}".format($)')) ),
     'energy_voltage_calibration':   (Platform.ALL,   '<L',  0x368,       (None, '1000 <= $ <= 32000',           ('Power',       '"VoltageCal {}".format($)')) ),
     'energy_current_calibration':   (Platform.ALL,   '<L',  0x36C,       (None, '1000 <= $ <= 32000',           ('Power',       '"CurrentCal {}".format($)')) ),
     'energy_frequency_calibration': (Platform.ALL,   '<L',  0x7C8,       (None, '45000 < $ < 65000',            ('Power',       '"FrequencySet {}".format($)')) ),
-})
+                                    })
 # ======================================================================
 SETTING_6_2_1_10 = copy.deepcopy(SETTING_6_2_1_6)
-SETTING_6_2_1_10.update({
+SETTING_6_2_1_10.update             ({
     'rgbwwTable':                   (Platform.ALL,   'B',   0x71A,       ([5],  None,                           ('Light',       '"RGBWWTable {}".format(",".join(str(i) for i in @["rgbwwTable"]))')) ),
-})
+                                    })
 # ======================================================================
 SETTING_6_2_1_14 = copy.deepcopy(SETTING_6_2_1_10)
-SETTING_6_2_1_14.update({
+SETTING_6_2_1_14.update             ({
     'weight_reference':             (Platform.ALL,   '<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
     'weight_calibration':           (Platform.ALL,   '<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
     'weight_max':                   (Platform.ALL,   '<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
     'weight_item':                  (Platform.ALL,   '<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
     'web_refresh':                  (Platform.ALL,   '<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
-})
+                                    })
 SETTING_6_2_1_14['flag2'][1].update ({
         'weight_resolution':        (Platform.ALL,   '<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_19 = copy.deepcopy(SETTING_6_2_1_14)
-SETTING_6_2_1_19.update({
+SETTING_6_2_1_19.update             ({
     'weight_item':                  (Platform.ALL,   '<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
-})
+                                    })
 SETTING_6_2_1_20 = SETTING_6_2_1_19
 SETTING_6_2_1_20['flag3'][1].update ({
         'gui_hostname_ip':          (Platform.ALL,   '<L', (0x3A0,1,3),  (None, None,                           ('SetOption',   '"SetOption53 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
-SETTING_6_3_0.update({
+SETTING_6_3_0.update                ({
     'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
     'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
     'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
     'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)))')) ),
-})
+                                    })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
-SETTING_6_3_0_2.update({
+SETTING_6_3_0_2.update              ({
     'timezone_minutes':             (Platform.ALL,   'B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
-})
+                                    })
 SETTING_6_3_0_2['flag'][1].pop('rules_once',None)
 SETTING_6_3_0_2['flag'][1].update   ({
         'pressure_conversion':      (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
-SETTING_6_3_0_4.update({
+SETTING_6_3_0_4.update              ({
     'drivers':                      (Platform.ALL,   '<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'monitors':                     (Platform.ALL,   '<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'displays':                     (Platform.ALL,   '<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-})
-SETTING_6_3_0_4['flag3'][1].update ({
+                                    })
+SETTING_6_3_0_4['flag3'][1].update  ({
         'tuya_apply_o20':           (Platform.ALL,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_8 = copy.deepcopy(SETTING_6_3_0_4)
-SETTING_6_3_0_8['flag3'][1].update ({
+SETTING_6_3_0_8['flag3'][1].update  ({
         'hass_short_discovery_msg': (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1004,12 +1004,12 @@ SETTING_6_4_0_2 = copy.deepcopy(SETTING_6_3_0_16)
 SETTING_6_4_0_2['flag3'][1].pop('hass_short_discovery_msg',None)
 # ======================================================================
 SETTING_6_4_1_4 = copy.deepcopy(SETTING_6_4_0_2)
-SETTING_6_4_1_4['flag3'][1].update ({
+SETTING_6_4_1_4['flag3'][1].update  ({
         'mdns_enabled':             (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_7 = copy.deepcopy(SETTING_6_4_1_4)
-SETTING_6_4_1_7['flag3'][1].update ({
+SETTING_6_4_1_7['flag3'][1].update  ({
         'no_pullup':                (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1017,29 +1017,29 @@ SETTING_6_4_1_8 = copy.deepcopy(SETTING_6_4_1_7)
 SETTING_6_4_1_8.update              ({
     'my_gp':                        (Platform.ALL,   'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
                                     })
-SETTING_6_4_1_8['flag3'][1].update ({
+SETTING_6_4_1_8['flag3'][1].update  ({
         'split_interlock':          (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_11 = copy.deepcopy(SETTING_6_4_1_8)
 SETTING_6_4_1_11['flag3'][1].pop('split_interlock',None)
-SETTING_6_4_1_11.update            ({
+SETTING_6_4_1_11.update             ({
     'interlock':                    (Platform.ALL,   'B',   0x4CA,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:02x}".format($)' ),
                                     })
-SETTING_6_4_1_11['flag'][1].update ({
+SETTING_6_4_1_11['flag'][1].update  ({
         'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('Control',     '"Interlock {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_13 = copy.deepcopy(SETTING_6_4_1_11)
-SETTING_6_4_1_13.update            ({
-    'SensorBits1':                 (Platform.ALL, {
+SETTING_6_4_1_13.update             ({
+    'SensorBits1':                  (Platform.ALL, {
         'mhz19b_abc_disable':       (Platform.ALL,   'B',  (0x717,1, 7), (None, None,                           ('Sensor',      '"Sensor15 {}".format($)')) ),
                                     },                      0x717,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_16 = copy.deepcopy(SETTING_6_4_1_13)
-SETTING_6_4_1_16.update            ({
-    'user_template':               (Platform.ALL, {
+SETTING_6_4_1_16.update             ({
+    'user_template':                (Platform.ALL, {
         'base':                     (Platform.ALL,   'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
         'name':                     (Platform.ALL,   '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
         'gpio':                     (Platform.ALL,   'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
@@ -1049,7 +1049,7 @@ SETTING_6_4_1_16.update            ({
                                     ),
                                     },                      0x71F,       (None, None,                           ('Management',  None))
                                     ),
-                                   })
+                                    })
 # ======================================================================
 SETTING_6_4_1_17 = copy.deepcopy(SETTING_6_4_1_16)
 SETTING_6_4_1_17['flag3'][1].pop('no_pullup',None)
@@ -1075,7 +1075,7 @@ SETTING_6_5_0_7.update              ({
                                     })
 # ======================================================================
 SETTING_6_5_0_9 = copy.deepcopy(SETTING_6_5_0_7)
-SETTING_6_5_0_9['flag3'][1].update ({
+SETTING_6_5_0_9['flag3'][1].update  ({
         'no_power_feedback':        (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1105,12 +1105,12 @@ SETTING_6_5_0_15['flag3'][1].update ({
                                     })
 # ======================================================================
 SETTING_6_6_0_1 = copy.deepcopy(SETTING_6_5_0_15)
-SETTING_6_6_0_1['flag3'][1].update ({
+SETTING_6_6_0_1['flag3'][1].update  ({
         'tuya_dimmer_range_255':    (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_2 = copy.deepcopy(SETTING_6_6_0_1)
-SETTING_6_6_0_2['flag3'][1].update ({
+SETTING_6_6_0_2['flag3'][1].update  ({
         'buzzer_enable':            (Platform.ALL,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SetOption67 {}".format($)')) ),
                                     })
 SETTING_6_6_0_2.update              ({
@@ -1129,7 +1129,7 @@ SETTING_6_6_0_2.update              ({
                                     })
 # ======================================================================
 SETTING_6_6_0_3 = copy.deepcopy(SETTING_6_6_0_2)
-SETTING_6_6_0_3['flag3'][1].update ({
+SETTING_6_6_0_3['flag3'][1].update  ({
         'pwm_multi_channels':       (Platform.ALL,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SetOption68 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1137,13 +1137,13 @@ SETTING_6_6_0_5 = copy.deepcopy(SETTING_6_6_0_3)
 SETTING_6_6_0_5.update              ({
     'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           ('Wifi',        'list("WebSensor{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
                                     })
-SETTING_6_6_0_5['flag3'][1].update ({
+SETTING_6_6_0_5['flag3'][1].update  ({
         'tuya_dimmer_min_limit':    (Platform.ALL,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SetOption69 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_6 = copy.deepcopy(SETTING_6_6_0_5)
 SETTING_6_6_0_6['flag3'][1].pop('tuya_show_dimmer',None)
-SETTING_6_6_0_6['flag3'][1].update ({
+SETTING_6_6_0_6['flag3'][1].update  ({
         'tuya_disable_dimmer':      (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1160,7 +1160,7 @@ SETTING_6_6_0_7.update              ({
                                     })
 # ======================================================================
 SETTING_6_6_0_8 = copy.deepcopy(SETTING_6_6_0_7)
-SETTING_6_6_0_8['flag3'][1].update ({
+SETTING_6_6_0_8['flag3'][1].update  ({
         'energy_weekend':           (Platform.ALL,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff3 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1272,54 +1272,54 @@ SETTING_7_0_0_1.update             ({
     'shutter_motordelay':           (Platform.ALL,   'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#+1,float($)/20.0)')) ),
     'flag4':                        (Platform.ALL,   '<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_7_0_0_1['flag3'][1].update ({
+SETTING_7_0_0_1['flag3'][1].update  ({
         'cors_enabled':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
         'ds18x20_internal_pullup':  (Platform.ALL,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SetOption74 {}".format($)')) ),
         'grouptopic_mode':          (Platform.ALL,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SetOption75 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_2 = copy.deepcopy(SETTING_7_0_0_1)
-SETTING_7_0_0_2.update             ({
+SETTING_7_0_0_2.update              ({
     'web_color2':                   (Platform.ALL,   '3B',  0xEA0,       ([1],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+19,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_3 = copy.deepcopy(SETTING_7_0_0_2)
-SETTING_7_0_0_3.update             ({
+SETTING_7_0_0_3.update              ({
     'i2c_drivers':                  (Platform.ALL,   '<L',  0xFEC,       ([3],  None,                           ('Management',  'list("I2CDriver{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_4 = copy.deepcopy(SETTING_7_0_0_3)
-SETTING_7_0_0_4.update             ({
+SETTING_7_0_0_4.update              ({
     'wifi_output_power':            (Platform.ALL,   'B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
                                     })
-SETTING_7_0_0_4['flag3'][1].update ({
+SETTING_7_0_0_4['flag3'][1].update  ({
         'bootcount_update':         (Platform.ALL,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_5 = copy.deepcopy(SETTING_7_0_0_4)
-SETTING_7_0_0_5.update             ({
+SETTING_7_0_0_5.update              ({
     'temp_comp':                    (Platform.ALL,   'b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_6 = copy.deepcopy(SETTING_7_0_0_5)
-SETTING_7_0_0_6['flag3'][1].update ({
+SETTING_7_0_0_6['flag3'][1].update  ({
         'slider_dimmer_stay_on':    (Platform.ALL,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_2 = copy.deepcopy(SETTING_7_0_0_6)
-SETTING_7_1_2_2.update             ({
+SETTING_7_1_2_2.update              ({
     'serial_config':                (Platform.ALL,   'b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_3 = copy.deepcopy(SETTING_7_1_2_2)
 SETTING_7_1_2_3['flag3'][1].pop('cors_enabled',None)
-SETTING_7_1_2_3.update             ({
+SETTING_7_1_2_3.update              ({
     'cors_domain':                  (Platform.ALL,   '33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
     'weight_change':                (Platform.ALL,   'B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_5 = copy.deepcopy(SETTING_7_1_2_3)
-SETTING_7_1_2_5.update             ({
+SETTING_7_1_2_5.update              ({
     'seriallog_level':              (Platform.ALL,   'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
     'sta_config':                   (Platform.ALL,   'B',   0xEC7,       (None, '0 <= $ <= 7',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
     'sta_active':                   (Platform.ALL,   'B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
@@ -1338,7 +1338,7 @@ SETTING_7_1_2_5.update             ({
                                     })
 # ======================================================================
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
-SETTING_7_1_2_6.update             ({
+SETTING_7_1_2_6.update              ({
     'flag4':                        (Platform.ALL,   '<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
     'serial_config':                (Platform.ALL,   'b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
     'wifi_output_power':            (Platform.ALL,   'B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
@@ -1347,12 +1347,12 @@ SETTING_7_1_2_6.update             ({
     'mqttlog_level':                (Platform.ALL,   'B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
     'sps30_inuse_hours':            (Platform.ALL,   'B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
-SETTING_7_1_2_6['flag3'][1].update ({
+SETTING_7_1_2_6['flag3'][1].update  ({
         'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
-SETTING_8_0_0_1.update             ({
+SETTING_8_0_0_1.update              ({
     # v8.x.x.x: Index numbers for indexed strings
     SETTINGVAR:
     {
@@ -1377,7 +1377,7 @@ SETTING_8_0_0_1.update             ({
                         'SET_MAX']
     }
                                     })
-SETTING_8_0_0_1.update             ({
+SETTING_8_0_0_1.update              ({
     'ota_url':                      (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_OTAURL')),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
     'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTTPREFIX1')),
@@ -1424,7 +1424,7 @@ SETTING_8_0_0_1.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
-SETTING_8_1_0_0.update             ({
+SETTING_8_1_0_0.update              ({
     'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_FRIENDLYNAME1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'button_text':                  (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_BUTTON1')),
@@ -1432,19 +1432,19 @@ SETTING_8_1_0_0.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
-SETTING_8_1_0_1['flag3'][1].update ({
+SETTING_8_1_0_1['flag3'][1].update  ({
         'counter_reset_on_tele':    (Platform.ALL,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_2 = copy.deepcopy(SETTING_8_1_0_1)
-SETTING_8_1_0_2.update             ({
+SETTING_8_1_0_2.update              ({
     'hotplug_scan':                 (Platform.ALL,   'B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
     'shutter_button':               (Platform.ALL,   '<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#+1, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#+1,0)')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_8_1_0_3 = copy.deepcopy(SETTING_8_1_0_2)
 SETTING_8_1_0_3.pop('shutter_invert',None)
-SETTING_8_1_0_3.update             ({
+SETTING_8_1_0_3.update              ({
     'shutter_options':              (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
                                                                                                                                  '"ShutterLock{} {}".format(#+1,1 if $ & 2 else 0)',\
                                                                                                                                  '"ShutterEnableEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)'))) ),
@@ -1479,7 +1479,7 @@ SETTING_8_1_0_3.update             ({
                                     })
 # ======================================================================
 SETTING_8_1_0_4 = copy.deepcopy(SETTING_8_1_0_3)
-SETTING_8_1_0_4.update             ({
+SETTING_8_1_0_4.update              ({
     'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
                                                                                                                   if 6==@["my_adc0"] \
@@ -1487,23 +1487,23 @@ SETTING_8_1_0_4.update             ({
                                                                                                                   "AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
     'adc_param4':                   (Platform.ALL,   '<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
                                     })
-SETTING_8_1_0_4['flag4'][1].update ({
+SETTING_8_1_0_4['flag4'][1].update  ({
         'zigbee_use_names':         (Platform.ALL,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_5 = copy.deepcopy(SETTING_8_1_0_4)
-SETTING_8_1_0_5.update             ({
+SETTING_8_1_0_5.update              ({
     'keeloq_master_msb':            (Platform.ALL,   '<L',  0xFBC,       (None, None,                           ('Shutter',     '"KeeloqSet {} {} {} {}".format(@["keeloq_master_msb"],@["keeloq_master_lsb"],@["keeloq_serial"],@["keeloq_count"])')) ),
     'keeloq_master_lsb':            (Platform.ALL,   '<L',  0xFC0,       (None, None,                           ('Shutter',     None)) ),
     'keeloq_serial':                (Platform.ALL,   '<L',  0xFC4,       (None, None,                           ('Shutter',     None)) ),
     'keeloq_count':                 (Platform.ALL,   '<L',  0xFC8,       (None, None,                           ('Shutter',     None)) ),
                                     })
-SETTING_8_1_0_5['flag4'][1].update ({
+SETTING_8_1_0_5['flag4'][1].update  ({
         'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_6 = copy.deepcopy(SETTING_8_1_0_5)
-SETTING_8_1_0_6.update             ({
+SETTING_8_1_0_6.update              ({
     'bootcount_reset_time':         (Platform.ALL,   '<L',  0xFD4,       (None, None,                           ('System',      None)) ),
                                     })
 # ======================================================================
@@ -1511,7 +1511,7 @@ SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
 SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
 SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_8_1_0_9.update             ({
+SETTING_8_1_0_9.update              ({
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
     'bri_power_on':                 (Platform.ALL,   'B',   0xF04,       (None, None,                           ('Light',       None)) ),
@@ -1521,7 +1521,7 @@ SETTING_8_1_0_9.update             ({
     'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC2')),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2,$)')) ),
                                     })
-SETTING_8_1_0_9['flag4'][1].update ({
+SETTING_8_1_0_9['flag4'][1].update  ({
         'device_groups_enabled':    (Platform.ALL,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -1546,7 +1546,7 @@ SETTING_8_1_0_11.update             ({
                                     })
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
-SETTING_8_2_0_0.update             ({
+SETTING_8_2_0_0.update              ({
     'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 # ======================================================================
@@ -1555,7 +1555,7 @@ SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
 SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
-SETTING_8_2_0_3.update             ({
+SETTING_8_2_0_3.update              ({
     'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
                                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
     'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
@@ -1607,10 +1607,10 @@ SETTING_8_2_0_3['user_template'][1].update ({
             'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x73C,       (None, None,                           ('Management',  None)) ),
                                     })
-SETTING_8_2_0_3['flag3'][1].update ({
+SETTING_8_2_0_3['flag3'][1].update  ({
         'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
                                     })
-SETTING_8_2_0_3['flag4'][1].update ({
+SETTING_8_2_0_3['flag4'][1].update  ({
         'only_json_message':        (Platform.ALL,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
         'fade_at_startup':          (Platform.ALL,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
                                     })
@@ -1619,11 +1619,83 @@ SETTING_8_2_0_3['SensorBits1'][1].update ({
                                     })
 # ======================================================================
 SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
-SETTING_8_2_0_4.update             ({
+SETTING_8_2_0_4.update              ({
     'config_version':               (Platform.ALL,   'B',   0xF36,       (None, '0 <= $ < len(Platform.STR)',   (INTERNAL,      None)), (None,      False) ),
                                     })
-SETTING_8_2_0_4['flag4'][1].update ({
-        'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SetOption92 {}".format($)')) ),
+SETTING_8_2_0_4.update              ({
+    'param':                        (Platform.ALL,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SO{} {}".format(#+32,$)')) ),
+                                    })
+SETTING_8_2_0_4['flag'][1].update   ({
+        'save_state':               (Platform.ALL,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SO0 {}".format($)')) ),
+        'button_restrict':          (Platform.ALL,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SO1 {}".format($)')) ),
+        'value_units':              (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
+        'mqtt_enabled':             (Platform.ALL,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SO3 {}".format($)')) ),
+        'mqtt_response':            (Platform.ALL,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SO4 {}".format($)')) ),
+        'temperature_conversion':   (Platform.ALL,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SO8 {}".format($)')) ),
+        'mqtt_offline':             (Platform.ALL,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SO10 {}".format($)')) ),
+        'button_swap':              (Platform.ALL,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SO11 {}".format($)')) ),
+        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SO12 {}".format($)')) ),
+        'button_single':            (Platform.ALL,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SO13 {}".format($)')) ),
+        'pwm_control':              (Platform.ALL,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SO15 {}".format($)')) ),
+        'ws_clock_reverse':         (Platform.ALL,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SO16 {}".format($)')) ),
+        'decimal_text':             (Platform.ALL,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SO17 {}".format($)')) ),
+        'light_signal':             (Platform.ALL,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SO18 {}".format($)')) ),
+        'hass_discovery':           (Platform.ALL,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SO19 {}".format($)')) ),
+        'not_power_linked':         (Platform.ALL,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SO20 {}".format($)')) ),
+        'no_power_on_check':        (Platform.ALL,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SO21 {}".format($)')) ),
+        'mqtt_serial':              (Platform.ALL,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SO22 {}".format($)')) ),
+        'mqtt_serial_raw':          (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SO23 {}".format($)')) ),
+        'pressure_conversion':      (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SO24 {}".format($)')) ),
+        'device_index_enable':      (Platform.ALL,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SO26 {}".format($)')) ),
+        'rf_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SO28 {}".format($)')) ),
+        'ir_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SO29 {}".format($)')) ),
+        'hass_light':               (Platform.ALL,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SO30 {}".format($)')) ),
+        'global_state':             (Platform.ALL,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SO31 {}".format($)')) ),
+                                    })
+SETTING_8_2_0_4['flag3'][1].update  ({
+        'user_esp8285_enable':      (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SO51 {}".format($)')) ),
+        'time_append_timezone':     (Platform.ALL,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SO52 {}".format($)')) ),
+        'gui_hostname_ip':          (Platform.ALL,   '<L', (0x3A0,1, 3), (None, None,                           ('SetOption',   '"SO53 {}".format($)')) ),
+        'tuya_apply_o20':           (Platform.ALL,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SO54 {}".format($)')) ),
+        'mdns_enabled':             (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SO55 {}".format($)')) ),
+        'use_wifi_scan':            (Platform.ALL,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SO56 {}".format($)')) ),
+        'use_wifi_rescan':          (Platform.ALL,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SO57 {}".format($)')) ),
+        'receive_raw':          	(Platform.ALL,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SO58 {}".format($)')) ),
+        'hass_tele_on_power':       (Platform.ALL,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SO59 {}".format($)')) ),
+        'sleep_normal':             (Platform.ALL,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SO60 {}".format($)')) ),
+        'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SO61 {}".format($)')) ),
+        'no_hold_retain':           (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SO62 {}".format($)')) ),
+        'no_power_feedback':        (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SO63 {}".format($)')) ),
+        'use_underscore':           (Platform.ALL,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SO64 {}".format($)')) ),
+        'fast_power_cycle_disable': (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SO65 {}".format($)')) ),
+        'tuya_serial_mqtt_publish': (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SO66 {}".format($)')) ),
+        'buzzer_enable':            (Platform.ALL,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SO67 {}".format($)')) ),
+        'pwm_multi_channels':       (Platform.ALL,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SO68 {}".format($)')) ),
+        'tuya_dimmer_min_limit':    (Platform.ALL,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
+        'dds2382_model':            (Platform.ALL,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SO71 {}".format($)')) ),
+        'hardware_energy_total':    (Platform.ALL,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SO72 {}".format($)')) ),
+        'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SO73 {}".format($)')) ),
+        'ds18x20_internal_pullup':  (Platform.ALL,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SO74 {}".format($)')) ),
+        'grouptopic_mode':          (Platform.ALL,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SO75 {}".format($)')) ),
+        'bootcount_update':         (Platform.ALL,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SO76 {}".format($)')) ),
+        'slider_dimmer_stay_on':    (Platform.ALL,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SO77 {}".format($)')) ),
+        'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SO78 {}".format($)')) ),
+        'counter_reset_on_tele':    (Platform.ALL,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SO79 {}".format($)')) ),
+        'shutter_mode':             (Platform.ALL,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SO80 {}".format($)')) ),
+        'pcf8574_ports_inverted':   (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SO81 {}".format($)')) ),
+                                    })
+SETTING_8_2_0_4['flag4'][1].update  ({
+         'alexa_ct_range':          (Platform.ALL,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SO82 {}".format($)')) ),
+        'zigbee_use_names':         (Platform.ALL,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SO83 {}".format($)')) ),
+        'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SO84 {}".format($)')) ),
+        'device_groups_enabled':    (Platform.ALL,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SO85 {}".format($)')) ),
+        'led_timeout':              (Platform.ALL,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SO86 {}".format($)')) ),
+        'powered_off_led':          (Platform.ALL,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SO87 {}".format($)')) ),
+        'remote_device_mode':       (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
+        'zigbee_distinct_topics':   (Platform.ALL,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SO89 {}".format($)')) ),
+        'only_json_message':        (Platform.ALL,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SO90 {}".format($)')) ),
+        'fade_at_startup':          (Platform.ALL,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SO91 {}".format($)')) ),
+        'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SO92 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_4)
@@ -1631,7 +1703,7 @@ SETTING_8_2_0_6.pop('tariff1_0', None)
 SETTING_8_2_0_6.pop('tariff1_1', None)
 SETTING_8_2_0_6.pop('tariff2_0', None)
 SETTING_8_2_0_6.pop('tariff2_1', None)
-SETTING_8_2_0_6.update             ({
+SETTING_8_2_0_6.update              ({
     'tariff':                       (Platform.ALL,   '<H',  0xE30,       ([4,2],None,                           ('Power',       'list("Tariff{} {:02d}:{:02d},{:02d}:{:02d}".format(i+1, @["tariff"][i][0]//60, @["tariff"][i][0]%60, @["tariff"][i][1]//60, @["tariff"][i][1]%60) for i in range(0, len(@["tariff"][0])))')) ),
     'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'user_template_esp32':          (Platform.ESP32,{
@@ -1659,8 +1731,8 @@ SETTING_8_2_0_6.update             ({
     'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
     'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')) ),
                                     })
-SETTING_8_2_0_6['flag4'][1].update ({
-        'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SetOption93 {}".format($)')) ),
+SETTING_8_2_0_6['flag4'][1].update  ({
+        'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SO93 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
@@ -1669,20 +1741,20 @@ SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
 SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME'])
 SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_8_3_1_1.update             ({
+SETTING_8_3_1_1.update              ({
     'devicename':                   (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].index('SET_DEVICENAME')),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
-SETTING_8_3_1_2.update             ({
+SETTING_8_3_1_2.update              ({
     # 'ledpwm_mask':                  (Platform.ESP82, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if 157 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
     # 'ledpwm_mask':                  (Platform.ESP32, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if  17 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
     'ledpwm_mask':                  (Platform.ALL,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
     'ledpwm_on':                    (Platform.ALL,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
     'ledpwm_off':                   (Platform.ALL,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
                                     })
-SETTING_8_3_1_2['flag2'][1].update ({
+SETTING_8_3_1_2['flag2'][1].update  ({
         'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
                                     })
 SETTING_8_3_1_2['SensorBits1'][1].pop('bh1750_resolution',None)
@@ -1690,15 +1762,15 @@ SETTING_8_3_1_2['SensorBits1'][1].update ({
         'bh1750_2_resolution':      (Platform.ALL,   'B',  (0x717,2, 2), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution2 {}".format($)')) ),
         'bh1750_1_resolution':      (Platform.ALL,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution1 {}".format($)')) ),
                                     })
-SETTING_8_3_1_2['flag4'][1].update ({
-        'max6675':                  (Platform.ALL,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SetOption94 {}".format($)')) ),
+SETTING_8_3_1_2['flag4'][1].update  ({
+        'max6675':                  (Platform.ALL,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SO94 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
 SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
 SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_8_3_1_3.update             ({
+SETTING_8_3_1_3.update              ({
     'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_TOKEN')),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
     'telegram_chatid':              (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_CHATID')),
@@ -1707,46 +1779,46 @@ SETTING_8_3_1_3.update             ({
 
 # ======================================================================
 SETTING_8_3_1_4 = copy.deepcopy(SETTING_8_3_1_3)
-SETTING_8_3_1_4.update             ({
+SETTING_8_3_1_4.update              ({
     'tcp_baudrate':                 (Platform.ALL,   'B',   0xF41,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
-SETTING_8_3_1_4['flag4'][1].update ({
+SETTING_8_3_1_4['flag4'][1].update  ({
         'network_wifi':             (Platform.ALL,   '<L', (0xEF8,1,13), (None, None,                           ('Wifi',        '"Wifi {}".format($)')) ),
         'network_ethernet':         (Platform.ESP32, '<L', (0xEF8,1,14), (None, None,                           ('Wifi',        '"Ethernet {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_5 = copy.deepcopy(SETTING_8_3_1_4)
-SETTING_8_3_1_5.update             ({
+SETTING_8_3_1_5.update              ({
     'eth_type':                     (Platform.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_clk_mode':                 (Platform.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
     'eth_address':                  (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_6 = copy.deepcopy(SETTING_8_3_1_5)
-SETTING_8_3_1_6.update             ({
+SETTING_8_3_1_6.update              ({
     'fallback_module':              (Platform.ALL,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
     'zb_channel':                   (Platform.ALL,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
     'zb_txradio_dbm':               (Platform.ALL,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
                                     })
-SETTING_8_3_1_6['flag4'][1].update ({
-        'tuyamcu_baudrate':         (Platform.ALL,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SetOption97 {}".format($)')) ),
-        'rotary_uses_rules':        (Platform.ALL,   '<L', (0xEF8,1,16), (None, None,                           ('SetOption',   '"SetOption98 {}".format($)')) ),
-        'zerocross_dimmer':         (Platform.ALL,   '<L', (0xEF8,1,17), (None, None,                           ('SetOption',   '"SetOption99 {}".format($)')) ),
+SETTING_8_3_1_6['flag4'][1].update  ({
+        'tuyamcu_baudrate':         (Platform.ALL,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SO97 {}".format($)')) ),
+        'rotary_uses_rules':        (Platform.ALL,   '<L', (0xEF8,1,16), (None, None,                           ('SetOption',   '"SO98 {}".format($)')) ),
+        'zerocross_dimmer':         (Platform.ALL,   '<L', (0xEF8,1,17), (None, None,                           ('SetOption',   '"SO99 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
-SETTING_8_3_1_7.update             ({
+SETTING_8_3_1_7.update              ({
     'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), (rulesread, ruleswrite)),
     'scripting_used':               (Platform.ALL,   'B',  (0x4A0,1,7),  (None, None,                           ('Rules',       None)), (False, False)),
     'scripting_compressed':         (Platform.ALL,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
     'script_enabled':               (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
     'script':                       (Platform.ALL,  '1536s',0x800,       (None, None,                           ('Rules',       None)), (scriptread, scriptwrite)),
                                     })
-SETTING_8_3_1_7['flag4'][1].update ({
-        'remove_zbreceived':        (Platform.ALL,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SetOption100 {}".format($)')) ),
-        'zb_index_ep':              (Platform.ALL,   '<L', (0xEF8,1,19), (None, None,                           ('SetOption',   '"SetOption101 {}".format($)')) ),
+SETTING_8_3_1_7['flag4'][1].update  ({
+        'remove_zbreceived':        (Platform.ALL,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SO100 {}".format($)')) ),
+        'zb_index_ep':              (Platform.ALL,   '<L', (0xEF8,1,19), (None, None,                           ('SetOption',   '"SO101 {}".format($)')) ),
                                     })
-SETTING_8_3_1_7['timer'][1].update ({
+SETTING_8_3_1_7['timer'][1].update  ({
         'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
                                     })
 # ======================================================================
@@ -1754,54 +1826,54 @@ SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
 SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
 SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_8_4_0_0.update             ({
+SETTING_8_4_0_0.update              ({
     'adc_param':                    (Platform.ESP32, '699s',(0x017,SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_ADC_PARAM1')),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_4_0_0)
-SETTING_8_4_0_1['flag4'][1].update ({
-        'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
-        'teleinfo_baudrate':        (Platform.ALL,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SetOption102 {}".format($)')) ),
-        'mqtt_tls':                 (Platform.ALL,   '<L', (0xEF8,1,21), (None, None,                           ('SetOption',   '"SetOption103 {}".format($)')) ),
-        'mqtt_no_retain':           (Platform.ALL,   '<L', (0xEF8,1,22), (None, None,                           ('SetOption',   '"SetOption104 {}".format($)')) ),
+SETTING_8_4_0_1['flag4'][1].update  ({
+        'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
+        'teleinfo_baudrate':        (Platform.ALL,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SO102 {}".format($)')) ),
+        'mqtt_tls':                 (Platform.ALL,   '<L', (0xEF8,1,21), (None, None,                           ('SetOption',   '"SO103 {}".format($)')) ),
+        'mqtt_no_retain':           (Platform.ALL,   '<L', (0xEF8,1,22), (None, None,                           ('SetOption',   '"SO104 {}".format($)')) ),
                                     })
 SETTING_8_4_0_1['flag4'][1].pop('remote_device_mode',None)
 # ======================================================================
 SETTING_8_4_0_2 = copy.deepcopy(SETTING_8_4_0_1)
-SETTING_8_4_0_2.update             ({
+SETTING_8_4_0_2.update              ({
     'flag5':                        (Platform.ALL,   '<L',  0xEB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_8_4_0_2['flag4'][1].update ({
-        'white_blend_mode':         (Platform.ALL,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SetOption105 {}".format($)')) ),
-        'virtual_ct':               (Platform.ALL,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SetOption106 {}".format($)')) ),
-        'virtual_ct_cw':            (Platform.ALL,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SetOption107 {}".format($)')) ),
-        'teleinfo_rawdata':         (Platform.ALL,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SetOption108 {}".format($)')) ),
+SETTING_8_4_0_2['flag4'][1].update  ({
+        'white_blend_mode':         (Platform.ALL,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SO105 {}".format($)')) ),
+        'virtual_ct':               (Platform.ALL,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SO106 {}".format($)')) ),
+        'virtual_ct_cw':            (Platform.ALL,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SO107 {}".format($)')) ),
+        'teleinfo_rawdata':         (Platform.ALL,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SO108 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
-SETTING_8_4_0_3.update             ({
+SETTING_8_4_0_3.update              ({
     'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
     'flag5':                        (Platform.ALL,   '<L',  0xFB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_8_4_0_3['flag4'][1].update ({
-        'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SetOption109 {}".format($)')) ),
+SETTING_8_4_0_3['flag4'][1].update  ({
+        'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SO109 {}".format($)')) ),
                                     })
-SETTING_8_4_0_3['flag4'][1].update ({
+SETTING_8_4_0_3['flag4'][1].update  ({
          'suppress_irq_no_Event':   (Platform.ALL,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
-SETTING_8_5_0_1.update             ({
+SETTING_8_5_0_1.update              ({
     'shutter_mode':                 (Platform.ALL,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',     '"ShutterMode {}".format($)')) ),
     'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
     'hass_new_discovery':           (Platform.ALL,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
     'tuyamcu_topic':                (Platform.ALL,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
                                     })
-SETTING_8_5_0_1['flag4'][1].update ({
-        'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SetOption110 {}".format($)')) ),
-        'buzzer_freq_mode':         (Platform.ALL,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SetOption111 {}".format($)')) ),
-        'zb_topic_fname':           (Platform.ALL,   '<L', (0xEF8,1,30), (None, None,                           ('SetOption',   '"SetOption112 {}".format($)')) ),
+SETTING_8_5_0_1['flag4'][1].update  ({
+        'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SO110 {}".format($)')) ),
+        'buzzer_freq_mode':         (Platform.ALL,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SO111 {}".format($)')) ),
+        'zb_topic_fname':           (Platform.ALL,   '<L', (0xEF8,1,30), (None, None,                           ('SetOption',   '"SO112 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
@@ -1809,7 +1881,7 @@ SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
 SETTING_9_0_0_1 = copy.deepcopy(SETTING_8_5_1_0)
 SETTING_9_0_0_1.pop('my_adc0', None)
 SETTING_9_0_0_1.pop('bri_min', None)
-SETTING_9_0_0_1.update             ({
+SETTING_9_0_0_1.update              ({
     'gpio16_converted':             (Platform.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
     'my_gp':                        (Platform.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
@@ -1833,13 +1905,13 @@ SETTING_9_0_0_1.update             ({
                                     })
 # ======================================================================
 SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
-SETTING_9_0_0_2.update             ({
+SETTING_9_0_0_2.update              ({
     'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
     'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
     'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
-SETTING_9_0_0_2['flag4'][1].update ({
-        'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SetOption113 {}".format($)')) ),
+SETTING_9_0_0_2['flag4'][1].update  ({
+        'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SO113 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
@@ -1847,44 +1919,44 @@ SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
 SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
 SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
 SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_9_0_0_3.update             ({
+SETTING_9_0_0_3.update              ({
     'switchtext':                   (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'shelly_dimmer':                (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SHD_PARAM')),
                                                                          (None,  None,                          ('Light',       None)) ),
     'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
-         'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SetOption114 {}".format($)')) ),
+         'mqtt_switches':           (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SO114 {}".format($)')) ),
                                     },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_9_1_0_0 = copy.deepcopy(SETTING_9_0_0_3)
 # ======================================================================
 SETTING_9_1_0_1 = copy.deepcopy(SETTING_9_1_0_0)
-SETTING_9_1_0_1.update             ({
+SETTING_9_1_0_1.update              ({
     'shd_leading_edge':             (Platform.ALL,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
     'shd_warmup_brightness':        (Platform.ALL,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
     'shd_warmup_time':              (Platform.ALL,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
-         'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SetOption115 {}".format($)')) ),
-         'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SetOption116 {}".format($)')) ),
+         'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SO115 {}".format($)')) ),
+         'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SO116 {}".format($)')) ),
                                     },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
     'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
-SETTING_9_1_0_2['flag5'][1].update ({
-         'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SetOption117 {}".format($)')) ),
+SETTING_9_1_0_2['flag5'][1].update  ({
+         'fade_fixed_duration':     (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SO117 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
-SETTING_9_2_0_2['flag5'][1].update ({
-         'zb_received_as_subtopic': (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SetOption118 {}".format($)')) ),
-         'zb_omit_json_addr':       (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SetOption119 {}".format($)')) ),
+SETTING_9_2_0_2['flag5'][1].update  ({
+         'zb_received_as_subtopic': (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SO118 {}".format($)')) ),
+         'zb_omit_json_addr':       (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SO119 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_3 = copy.deepcopy(SETTING_9_2_0_2)
-SETTING_9_2_0_3.update             ({
+SETTING_9_2_0_3.update              ({
     'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
     'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
     'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
@@ -1895,8 +1967,8 @@ SETTING_9_2_0_3['webcam_config'][1].update ({
                                     })
 # ======================================================================
 SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
-SETTING_9_2_0_4['flag5'][1].update ({
-         'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SetOption120 {}".format($)')) ),
+SETTING_9_2_0_4['flag5'][1].update  ({
+         'zb_topic_endpoint':       (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SO120 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
@@ -1913,7 +1985,7 @@ SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT17', 'SET_SWITCH
 SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
 SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
 SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
-SETTING_9_2_0_6.update             ({
+SETTING_9_2_0_6.update              ({
     'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
                                                                          ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
@@ -1924,12 +1996,12 @@ SETTING_9_2_0_6.update             ({
 # ======================================================================
 SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
 SETTING_9_2_0_7.pop('device_group_maps', None)
-SETTING_9_2_0_7.update             ({
+SETTING_9_2_0_7.update              ({
     'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
                                     })
 # ======================================================================
 SETTING_9_3_0_1 = copy.deepcopy(SETTING_9_2_0_7)
-SETTING_9_3_0_1['flag5'][1].update ({
+SETTING_9_3_0_1['flag5'][1].update  ({
          'mqtt_state_retain':       (Platform.ALL,   '<L', (0xFB4,1, 7), (None, None,                           ('MQTT',        '"StateRetain {}".format($)')) ),
          'mqtt_info_retain':        (Platform.ALL,   '<L', (0xFB4,1, 8), (None, None,                           ('MQTT',        '"InfoRetain {}".format($)')) ),
                                     })
