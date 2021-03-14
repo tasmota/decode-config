@@ -612,7 +612,7 @@ SETTING_5_10_0 = {
         'mqtt_sensor_retain':       (Platform.ALL,   '<L', (0x010,1, 9), (None, None,                           ('MQTT',        '"SensorRetain {}".format($)')) ),
         'mqtt_offline':             (Platform.ALL,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SetOption10 {}".format($)')) ),
         'button_swap':              (Platform.ALL,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SetOption11 {}".format($)')) ),
-        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('Management',  '"SetOption12 {}".format($)')) ),
+        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SetOption12 {}".format($)')) ),
         'button_single':            (Platform.ALL,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SetOption13 {}".format($)')) ),
         'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('SetOption',   '"SetOption14 {}".format($)')) ),
         'pwm_control':              (Platform.ALL,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SetOption15 {}".format($)')) ),
@@ -888,7 +888,7 @@ SETTING_6_2_1['flag2'][1].update    ({
 # ======================================================================
 SETTING_6_2_1_2 = copy.deepcopy(SETTING_6_2_1)
 SETTING_6_2_1_2['flag3'][1].update  ({
-         'user_esp8285_enable':     (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
+        'user_esp8285_enable':      (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_3 = copy.deepcopy(SETTING_6_2_1_2)
