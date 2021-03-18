@@ -1937,11 +1937,11 @@ SETTING_9_1_0_1.update              ({
     'shd_leading_edge':             (Platform.ALL,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
     'shd_warmup_brightness':        (Platform.ALL,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
     'shd_warmup_time':              (Platform.ALL,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
-    'flag5':                        (Platform.ALL, {
+    'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
+                                    })
+SETTING_9_1_0_1['flag5'][1].update  ({
          'mi32_enable':             (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SO115 {}".format($)')) ),
          'zb_disable_autoquery':    (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SO116 {}".format($)')) ),
-                                    },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
