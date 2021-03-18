@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.3.1.1'
+VER = '9.3.1.2'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2018,7 +2018,14 @@ SETTING_9_3_1_1['flag5'][1].update  ({
          'wiegand_keypad_to_tag':   (Platform.ALL,   '<L', (0xFB4,1,10), (None, None,                           ('SetOption',   '"SO124 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_9_3_1_2 = copy.deepcopy(SETTING_9_3_1_1)
+SETTING_9_3_1_2.update              ({
+    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive{}".format($)')) ),
+    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout{}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
             (0x09030001,0x1000, SETTING_9_3_0_1),
             (0x09020007,0x1000, SETTING_9_2_0_7),
