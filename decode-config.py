@@ -2007,6 +2007,16 @@ SETTING_9_3_0_1['flag5'][1].update  ({
                                     })
 # ======================================================================
 SETTING_9_3_1_1 = copy.deepcopy(SETTING_9_3_0_1)
+SETTING_9_3_1_1.update              ({
+    'display_options':              (Platform.ALL, {
+         'ilimode':                 (Platform.ALL,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayILIMode {}".format($)')) ),
+         'invert':                  (Platform.ALL,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
+                                    },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+SETTING_9_3_1_1['flag5'][1].update  ({
+         'wiegand_hex_output':      (Platform.ALL,   '<L', (0xFB4,1, 9), (None, None,                           ('SetOption',   '"SO123 {}".format($)')) ),
+         'wiegand_keypad_to_tag':   (Platform.ALL,   '<L', (0xFB4,1,10), (None, None,                           ('SetOption',   '"SO124 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09030101,0x1000, SETTING_9_3_1_1),
