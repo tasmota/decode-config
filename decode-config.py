@@ -2023,6 +2023,12 @@ SETTING_9_3_1_2.update              ({
     'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive{}".format($)')) ),
     'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout{}".format($)')) ),
                                     })
+SETTING_9_3_1_2['flag5'][1].update  ({
+         'zigbee_hide_bridge_topic':(Platform.ALL,   '<L', (0xFB4,1,11), (None, None,                           ('SetOption',   '"SO125 {}".format($)')) ),
+                                    })
+SETTING_9_3_1_2['mcp230xx_config'][1].update ({
+        'keep_output':              (Platform.ALL,   '<H', (0x6F6,1,13), (None, None,                           ('Sensor',      None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09030102,0x1000, SETTING_9_3_1_2),
