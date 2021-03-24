@@ -2029,6 +2029,13 @@ SETTING_9_3_1_2['flag5'][1].update  ({
 SETTING_9_3_1_2['mcp230xx_config'][1].update ({
         'keep_output':              (Platform.ALL,   '<H', (0x6F6,1,13), (None, None,                           ('Sensor',      None)) ),
                                     })
+SETTING_9_3_1_2.pop('display_options',None)
+SETTING_9_3_1_2.update              ({
+    'display_options':              (Platform.ALL, {
+         'type':                    (Platform.ALL,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayType {}".format($)')) ),
+         'invert':                  (Platform.ALL,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
+                                    },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09030102,0x1000, SETTING_9_3_1_2),
