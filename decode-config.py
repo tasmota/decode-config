@@ -938,7 +938,7 @@ SETTING_6_3_0.update                ({
     'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
     'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
     'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
