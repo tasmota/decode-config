@@ -4825,7 +4825,7 @@ def output_tasmotacmnds(tasmotacmnds):
         for cmnd in sorted(cmnds, key=lambda cmnd: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', cmnd)]) if sort_ else cmnds:
             print("{}{}".format(" "*ARGS.cmndindent, cmnd))
 
-    groups = get_grouplist(SETTINGS[0][2])
+    groups = get_grouplist(CONFIG['info']['template'])
 
     if ARGS.cmndgroup:
         for group in groups:
