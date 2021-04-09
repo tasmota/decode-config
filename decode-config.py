@@ -2045,6 +2045,10 @@ SETTING_9_3_1_2.update              ({
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
+SETTING_9_3_1_3 = copy.deepcopy(SETTING_9_3_1_2)
+SETTING_9_3_1_3['flag5'][1].pop('teleinfo_baudrate',None)
+SETTING_9_3_1_3['flag5'][1].pop('teleinfo_rawdata',None)
+# ======================================================================
 SETTINGS = [
             (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
