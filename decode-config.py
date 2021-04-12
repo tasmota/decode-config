@@ -2031,7 +2031,7 @@ SETTING_9_3_1_2.update              ({
                                     },                      0xFA4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 SETTING_9_3_1_2['flag5'][1].update  ({
-         'zigbee_hide_bridge_topic':(Platform.ALL,   '<L', (0xFB4,1,11), (None, None,                           ('SetOption',   '"SO125 {}".format($)')) ),
+         'zigbee_hide_-bridge_topic':(Platform.ALL,   '<L', (0xFB4,1,11), (None, None,                           ('SetOption',   '"SO125 {}".format($)')) ),
          'ds18x20_mean':            (Platform.ALL,   '<L', (0xFB4,1,12), (None, None,                           ('SetOption',   '"SO126 {}".format($)')) ),
                                     })
 SETTING_9_3_1_2['mcp230xx_config'][1].update ({
@@ -2044,10 +2044,6 @@ SETTING_9_3_1_2.update              ({
          'invert':                  (Platform.ALL,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
-# ======================================================================
-SETTING_9_3_1_3 = copy.deepcopy(SETTING_9_3_1_2)
-SETTING_9_3_1_3['flag5'][1].pop('teleinfo_baudrate',None)
-SETTING_9_3_1_3['flag5'][1].pop('teleinfo_rawdata',None)
 # ======================================================================
 SETTINGS = [
             (0x09030102,0x1000, SETTING_9_3_1_2),
