@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.3.1.3'
+VER = '9.3.1.4'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2047,10 +2047,15 @@ SETTING_9_3_1_2.update              ({
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
-SETTING_9_3_1_3 = copy.deepcopy(SETTING_9_3_1_2)
+SETTING_9_3_1_4 = copy.deepcopy(SETTING_9_3_1_2)
+SETTING_9_3_1_4.update              ({
+    'mbflag2':                      (Platform.ALL, {
+        'temperature_set_res':      (Platform.ALL,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management', '"TuyaTempSetRes {}".format($)')) ),
+                                    },                      0xFD8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x09030103,0x1000, SETTING_9_3_1_3),
+            (0x09030104,0x1000, SETTING_9_3_1_4),
             (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
             (0x09030001,0x1000, SETTING_9_3_0_1),
