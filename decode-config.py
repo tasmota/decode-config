@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.3.1.4'
+VER = '9.4.0.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -1991,7 +1991,7 @@ SETTING_9_2_0_6.update              ({
     'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
-    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock_esp32"])')), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
@@ -2047,15 +2047,15 @@ SETTING_9_3_1_2.update              ({
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
-SETTING_9_3_1_4 = copy.deepcopy(SETTING_9_3_1_2)
-SETTING_9_3_1_4.update              ({
+SETTING_9_4_0_0 = copy.deepcopy(SETTING_9_3_1_2)
+SETTING_9_4_0_0.update              ({
     'mbflag2':                      (Platform.ALL, {
         'temperature_set_res':      (Platform.ALL,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management', '"TuyaTempSetRes {}".format($)')) ),
                                     },                      0xFD8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTINGS = [
-            (0x09030104,0x1000, SETTING_9_3_1_4),
+            (0x09040000,0x1000, SETTING_9_4_0_0),
             (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
             (0x09030001,0x1000, SETTING_9_3_0_1),
