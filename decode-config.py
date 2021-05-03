@@ -2054,7 +2054,17 @@ SETTING_9_4_0_0.update              ({
                                     },                      0xFD8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
+SETTING_9_4_0_3 = copy.deepcopy(SETTING_9_4_0_0)
+SETTING_9_4_0_3.update              ({
+    'sbflag1':                      (Platform.ALL, {
+        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0), (None, '0 <= $ <= 1',                  ('Telegram', '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1), (None, '0 <= $ <= 1',                  ('Telegram', '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2), (None, '0 <= $ <= 1',                  ('Telegram', '"TmState {}".format($+4)')) ),
+                                    },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09040003,0x1000, SETTING_9_4_0_3),
             (0x09040000,0x1000, SETTING_9_4_0_0),
             (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
