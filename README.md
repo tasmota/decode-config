@@ -100,7 +100,7 @@ The program does not have a graphical user interface (GUI), you have to run it f
 * for self-compiled firmware enable web-server with (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 
 > **Note**  
-Using MQTT for exchanging Tasmota configuration data is not support by Tasmota itself; so **decode-config** is unable using this way.
+Using MQTT for exchanging Tasmota configuration data is supported by Tasmota since v9.4.0.3; **decode-config** will be able using MQTT in future supporting configuration data exchange this way too.
 
 #### Python
 
