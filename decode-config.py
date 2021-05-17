@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.4.0.0'
+VER = '9.4.0.3'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
