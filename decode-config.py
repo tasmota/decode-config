@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.4.0.6'
+VER = '9.5.0.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2070,7 +2070,13 @@ SETTING_9_4_0_6.update              ({
     'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '100 <= $ <= 20000',           ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
                                     })
 # ======================================================================
+SETTING_9_5_0_0 = copy.deepcopy(SETTING_9_4_0_6)
+# ======================================================================
+SETTING_9_5_0_1 = copy.deepcopy(SETTING_9_5_0_0)
+# ======================================================================
 SETTINGS = [
+            (0x09050001,0x1000, SETTING_9_5_0_1),
+            (0x09050000,0x1000, SETTING_9_5_0_0),
             (0x09040006,0x1000, SETTING_9_4_0_6),
             (0x09040005,0x1000, SETTING_9_4_0_5),
             (0x09040003,0x1000, SETTING_9_4_0_3),
