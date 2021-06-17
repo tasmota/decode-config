@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.4.0'
+VER = '9.5.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2050,11 +2050,33 @@ SETTING_9_3_1_2.update              ({
 SETTING_9_4_0_0 = copy.deepcopy(SETTING_9_3_1_2)
 SETTING_9_4_0_0.update              ({
     'mbflag2':                      (Platform.ALL, {
-        'temperature_set_res':      (Platform.ALL,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management', '"TuyaTempSetRes {}".format($)')) ),
+        'temperature_set_res':      (Platform.ALL,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management',  '"TuyaTempSetRes {}".format($)')) ),
                                     },                      0xFD8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
+SETTING_9_4_0_3 = copy.deepcopy(SETTING_9_4_0_0)
+SETTING_9_4_0_3.update              ({
+    'sbflag1':                      (Platform.ALL, {
+        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+                                    },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+# ======================================================================
+SETTING_9_4_0_5 = copy.deepcopy(SETTING_9_4_0_3)
+# ======================================================================
+SETTING_9_4_0_6 = copy.deepcopy(SETTING_9_4_0_5)
+SETTING_9_4_0_6.update              ({
+    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '100 <= $ <= 20000',           ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
+                                    })
+# ======================================================================
+SETTING_9_5_0_0 = copy.deepcopy(SETTING_9_4_0_6)
+# ======================================================================
 SETTINGS = [
+            (0x09050000,0x1000, SETTING_9_5_0_0),
+            (0x09040006,0x1000, SETTING_9_4_0_6),
+            (0x09040005,0x1000, SETTING_9_4_0_5),
+            (0x09040003,0x1000, SETTING_9_4_0_3),
             (0x09040000,0x1000, SETTING_9_4_0_0),
             (0x09030102,0x1000, SETTING_9_3_1_2),
             (0x09030101,0x1000, SETTING_9_3_1_1),
