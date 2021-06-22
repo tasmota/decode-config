@@ -2067,7 +2067,7 @@ SETTING_9_4_0_5 = copy.deepcopy(SETTING_9_4_0_3)
 # ======================================================================
 SETTING_9_4_0_6 = copy.deepcopy(SETTING_9_4_0_5)
 SETTING_9_4_0_6.update              ({
-    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '100 <= $ <= 20000',           ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
+    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '1 <= $ <= 200',               ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
                                     })
 # ======================================================================
 SETTING_9_5_0_0 = copy.deepcopy(SETTING_9_4_0_6)
