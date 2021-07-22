@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0.2'
+VER = '9.5.0.3'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2075,7 +2075,13 @@ SETTING_9_5_0_2['flag5'][1].update  ({
          'wifi_no_sleep':           (Platform.ALL,   '<L', (0xFB4,1,13), (None, None,                           ('SetOption',   '"SO127 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_9_5_0_3 = copy.deepcopy(SETTING_9_5_0_2)
+SETTING_9_5_0_3.update              ({
+    'sensors':                      (Platform.ALL,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09050003,0x1000, SETTING_9_5_0_3),
             (0x09050002,0x1000, SETTING_9_5_0_2),
             (0x09040006,0x1000, SETTING_9_4_0_6),
             (0x09040005,0x1000, SETTING_9_4_0_5),
