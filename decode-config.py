@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0.3'
+VER = '9.5.0.4'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2080,7 +2080,14 @@ SETTING_9_5_0_3.update              ({
     'sensors':                      (Platform.ALL,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
+SETTING_9_5_0_4 = copy.deepcopy(SETTING_9_5_0_3)
+SETTING_9_5_0_4.update              ({
+    'ip_address':                   (Platform.ALL,   '<L',  0x544,       ([5],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0xF9C,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09050004,0x1000, SETTING_9_5_0_4),
             (0x09050003,0x1000, SETTING_9_5_0_3),
             (0x09050002,0x1000, SETTING_9_5_0_2),
             (0x09040006,0x1000, SETTING_9_4_0_6),
