@@ -1974,7 +1974,7 @@ SETTING_9_2_0_4['flag5'][1].update  ({
 SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
 SETTING_9_2_0_5.update             ({
     'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
-                                                                                                                ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
+                                                                                                                ('Control',     'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
@@ -2067,7 +2067,7 @@ SETTING_9_4_0_5 = copy.deepcopy(SETTING_9_4_0_3)
 # ======================================================================
 SETTING_9_4_0_6 = copy.deepcopy(SETTING_9_4_0_5)
 SETTING_9_4_0_6.update              ({
-    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '1 <= $ <= 200',               ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
+    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '1 <= $ <= 200',                ('MQTT',        '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
                                     })
 # ======================================================================
 SETTING_9_5_0_2 = copy.deepcopy(SETTING_9_4_0_6)

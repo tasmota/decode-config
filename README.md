@@ -868,6 +868,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TimeDST                     |                        |             |
 |                | Timezone                    |                        |             |
 |                | TuyaMCU                     |                        |             |
+|                | TuyaTempSetRes              |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
 |                | Ethernet<sup>2</sup>        | *Ping<x\>*             |             |
@@ -892,16 +893,21 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ButtonTopic                 | *Unsubscribe*          |             |
 |                | FullTopic                   |                        |             |
 |                | GroupTopic<x\>              |                        |             |
+|                | InfoRetain                  |                        |             |
 |                | MqttClient                  |                        |             |
 |                | MqttFingerprint             |                        |             |
 |                | MqttHost                    |                        |             |
+|                | MqttKeepAlive               |                        |             |
 |                | MqttPassword                |                        |             |
 |                | MqttPort                    |                        |             |
 |                | MqttRetry                   |                        |             |
 |                | MqttUser                    |                        |             |
+|                | MqttTimeout                 |                        |             |
+|                | MqttWifiTimeout             |                        |             |
 |                | PowerRetain                 |                        |             |
 |                | Prefix<x\>                  |                        |             |
 |                | SensorRetain                |                        |             |
+|                | StateRetain                 |                        |             |
 |                | StateText<x\>               |                        |             |
 |                | SwitchRetain                |                        |             |
 |                | SwitchTopic                 |                        |             |
@@ -914,6 +920,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
 |                |                             | *Var<x\>*              |             |
+| **Telegram**   | TmState                     |                        |             |
 | **Timer**      | Latitude                    |                        |             |
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
@@ -983,6 +990,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | RGBWWTable                  | *White*                |             |
 |                | Rotation                    | *VirtualCT*            |             |
 |                | Scheme                      |                        |             |
+|                | ShdLeadingEdge              |                        |             |
+|                | ShdWarmupBrightness         |                        |             |
+|                | ShdWarmupTime               |                        |             |
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
@@ -1010,10 +1020,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             |                        | `KNX_CB<x>` |
 | **Display**    | DisplayAddress              | *Display*              |             |
 |                | DisplayDimmer               | *DisplayText*          |             |
+|                | DisplayILIMode              |                        |             |
+|                | DisplayInvert               |                        |             |
 |                | DisplayMode                 |                        |             |
 |                | DisplayModel                |                        |             |
 |                | DisplayRefresh              |                        |             |
 |                | DisplaySize                 |                        |             |
+|                | DisplayType                 |                        |             |
 |                | DisplayRotate               |                        |             |
 |                | DisplayCols                 |                        |             |
 |                | DisplayRows                 |                        |             |
