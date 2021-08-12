@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0.4'
+VER = '9.5.0.5'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2057,9 +2057,9 @@ SETTING_9_4_0_0.update              ({
 SETTING_9_4_0_3 = copy.deepcopy(SETTING_9_4_0_0)
 SETTING_9_4_0_3.update              ({
     'sbflag1':                      (Platform.ALL, {
-        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
-        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
-        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
                                     },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2086,7 +2086,15 @@ SETTING_9_5_0_4.update              ({
     'energy_kWhtotal':              (Platform.ALL,   '<L',  0xF9C,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
                                     })
 # ======================================================================
+SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
+SETTING_9_5_0_5['sbflag1'][1].update  ({
+        'range_extender':           (Platform.ALL,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
+        'range_extender_napt':      (Platform.ALL,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
+        'sonoff_l1_music_sync':     (Platform.ALL,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09050005,0x1000, SETTING_9_5_0_5),
             (0x09050004,0x1000, SETTING_9_5_0_4),
             (0x09050003,0x1000, SETTING_9_5_0_3),
             (0x09050002,0x1000, SETTING_9_5_0_2),
