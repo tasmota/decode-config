@@ -2087,10 +2087,19 @@ SETTING_9_5_0_4.update              ({
                                     })
 # ======================================================================
 SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
+SETTING_9_5_0_5.update              ({
+    'influxdb_port':                (Platform.ALL,   '<H',  0x4CE,       (None, None,                           ('Management',  '"IfxPort {}".format($)')) ),
+    'influxdb_version':             (Platform.ALL,   'B',   0xEF7,       (None, None,                           ('Management',  None)) ),
+    'ipv4_rgx_address':             (Platform.ALL,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'ipv4_rgx_subnetmask':          (Platform.ALL,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+
+                                    })
 SETTING_9_5_0_5['sbflag1'][1].update  ({
         'range_extender':           (Platform.ALL,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
         'range_extender_napt':      (Platform.ALL,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
         'sonoff_l1_music_sync':     (Platform.ALL,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
+        'influxdb_default':         (Platform.ALL,   '<L', (0xFA0,1,6), (None, '0 <= $ <= 1',                   ('Management',  None)) ),
+        'influxdb_state':           (Platform.ALL,   '<L', (0xFA0,1,7), (None, '0 <= $ <= 1',                   ('Management',  '"Ifx {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [

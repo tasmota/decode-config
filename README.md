@@ -878,8 +878,10 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Hostname                    |                        |             |
 |                | IPAddress<x\>               |                        |             |
 |                | Password<x\>                |                        |             |
+|                | RgxAddress                  |                        |             |
 |                | RgxNAPT                     |                        |             |
 |                | RgxState                    |                        |             |
+|                | RgxSubnet                   |                        |             |
 |                | Ssid<x\>                    |                        |             |
 |                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
