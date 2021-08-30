@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config_overview.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v9.5.0.5-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v9.5.0.7-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -847,10 +847,16 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | FriendlyName<x\>            | *Modules*              |             |
 |                | Gpio<x\>                    | *Reset*                |             |
 |                | I2CDriver<x\>               | *Restart*              |             |
-|                | L1MusicSync                 | *State*                |             |
-|                | LogHost                     | *Status*               |             |
-|                | LogPort                     | *Upgrade*              |             |
-|                | Module                      | *Upload*               |             |
+|                | Ifx                         | *State*                |             |
+|                | IfxBucket                   | *Status*               |             |
+|                | IfxHost                     | *Upgrade*              |             |
+|                | IfxPassword                 | *Upload*               |             |
+|                | IfxPort                     |                        |             |
+|                | IfxUser                     |                        |             |
+|                | L1MusicSync                 |                        |             |
+|                | LogHost                     |                        |             |
+|                | LogPort                     |                        |             |
+|                | Module                      |                        |             |
 |                | Module2                     |                        |             |
 |                | MqttLog                     |                        |             |
 |                | NtpServer<x\>               |                        |             |
@@ -880,6 +886,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Password<x\>                |                        |             |
 |                | RgxAddress                  |                        |             |
 |                | RgxNAPT                     |                        |             |
+|                | RgxPassword                 |                        |             |
+|                | RgxSsid                     |                        |             |
 |                | RgxState                    |                        |             |
 |                | RgxSubnet                   |                        |             |
 |                | Ssid<x\>                    |                        |             |
