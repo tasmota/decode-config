@@ -3232,11 +3232,12 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     """
     # read config direct from device via http
     url = make_url(host, port, cmnd)
+    referer = make_url(host, port)
     auth = None
     if username is not None and password is not None:
         auth = (username, password)
     try:
-        res = requests.get(url, auth=auth)
+        res = requests.get(url, auth=auth, headers={'referer': referer})
     except requests.exceptions.ConnectionError as _:
         exit_(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
 
