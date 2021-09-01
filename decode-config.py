@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0.7'
+VER = '9.5.0.8'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2169,13 +2169,17 @@ SETTING_9_5_0_5['sbflag1'][1].update  ({
         'influxdb_state':           (Platform.ALL,   '<L', (0xFA0,1,7), (None, '0 <= $ <= 1',                   ('Management',  '"Ifx {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_9_5_0_6 = copy.deepcopy(SETTING_9_5_0_5)
+SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_5)
 # ======================================================================
-SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_6)
+SETTING_9_5_0_8 = copy.deepcopy(SETTING_9_5_0_7)
+SETTING_9_5_0_8['flag'][1].update   ({
+        'mqtt_add_global_info':     (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
+                                    })
+SETTING_9_5_0_8['flag'][1].pop('value_units',None)
 # ======================================================================
 SETTINGS = [
+            (0x09050008,0x1000, SETTING_9_5_0_8),
             (0x09050007,0x1000, SETTING_9_5_0_7),
-            (0x09050006,0x1000, SETTING_9_5_0_6),
             (0x09050005,0x1000, SETTING_9_5_0_5),
             (0x09050004,0x1000, SETTING_9_5_0_4),
             (0x09050003,0x1000, SETTING_9_5_0_3),
