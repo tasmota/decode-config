@@ -2054,8 +2054,8 @@ SETTING_9_3_1_2 = copy.deepcopy(SETTING_9_3_1_1)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_baudrate',None)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_rawdata',None)
 SETTING_9_3_1_2.update              ({
-    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive{}".format($)')) ),
-    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout{}".format($)')) ),
+    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive {}".format($)')) ),
+    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout {}".format($)')) ),
     'teleinfo':                     (Platform.ALL, {
          'raw_skip':                (Platform.ALL,   '<L', (0xFA4,8, 0), (None, None,                           ('Power',       None)) ),
          'raw_report_changed':      (Platform.ALL,   '<L', (0xFA4,1, 8), (None, None,                           ('Power',       None)) ),
