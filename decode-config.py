@@ -2172,6 +2172,10 @@ SETTING_9_5_0_5['sbflag1'][1].update  ({
 SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_5)
 # ======================================================================
 SETTING_9_5_0_8 = copy.deepcopy(SETTING_9_5_0_7)
+SETTING_9_5_0_8.pop('display_dimmer', None)
+SETTING_9_5_0_8.update              ({
+    'display_dimmer_protected':     (Platform.ALL,   'b',   0x2E0,       (None, '-100 <= $ <= 15',              ('Display',     '"DisplayDimmer {}".format(abs($))')) ),
+                                    })
 SETTING_9_5_0_8['flag'][1].update   ({
         'mqtt_add_global_info':     (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
                                     })
