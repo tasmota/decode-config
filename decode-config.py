@@ -2187,6 +2187,9 @@ SETTING_9_5_0_9.update              ({
     'energy_kWhtoday_ph':           (Platform.ALL,   '<L',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       None)) ),
     'energy_kWhtotal_ph':           (Platform.ALL,   '<L',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       None)) ),
                                     })
+SETTING_9_5_0_9['flag5'][1].update  ({
+         'energy_phase':            (Platform.ALL,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09050009,0x1000, SETTING_9_5_0_9),
