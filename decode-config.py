@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0.8'
+VER = '9.5.0.9'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2181,7 +2181,15 @@ SETTING_9_5_0_8['flag'][1].update   ({
                                     })
 SETTING_9_5_0_8['flag'][1].pop('value_units',None)
 # ======================================================================
+SETTING_9_5_0_9 = copy.deepcopy(SETTING_9_5_0_8)
+SETTING_9_5_0_9.update              ({
+    'energy_kWhtoday_ph':           (Platform.ALL,   '<L',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       None)) ),
+    'energy_kWhtoday_ph':           (Platform.ALL,   '<L',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       None)) ),
+    'energy_kWhtotal_ph':           (Platform.ALL,   '<L',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       None)) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x09050009,0x1000, SETTING_9_5_0_9),
             (0x09050008,0x1000, SETTING_9_5_0_8),
             (0x09050007,0x1000, SETTING_9_5_0_7),
             (0x09050005,0x1000, SETTING_9_5_0_5),
