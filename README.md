@@ -977,8 +977,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | CurrentHigh                 | *ModuleAddress*        |             |
 |                | CurrentLow                  | *PowerSet*             |             |
 |                | EnergyRes                   | *Status8*              |             |
-|                | FreqRes                     | *Status9*              |             |
-|                | MaxPower                    | *VoltageSet*           |             |
+|                | EnergyToday                 | *Status9*              |             |
+|                | EnergyTotal                 | *VoltageSet*           |             |
+|                | EnergyYesterday             |                        |             |
+|                | FreqRes                     |                        |             |
+|                | MaxPower                    |                        |             |
 |                | MaxPowerHold                |                        |             |
 |                | MaxPowerWindow              |                        |             |
 |                | PowerCal                    |                        |             |
