@@ -2182,6 +2182,10 @@ SETTING_9_5_0_8['flag'][1].update   ({
 SETTING_9_5_0_8['flag'][1].pop('value_units',None)
 # ======================================================================
 SETTING_9_5_0_9 = copy.deepcopy(SETTING_9_5_0_8)
+SETTING_9_5_0_9['flag5'][1].update  ({
+         'energy_phase':            (Platform.ALL,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
+         'show_heap_with_timestamp':(Platform.ALL,   '<L', (0xFB4,1,16), (None, None,                           ('SetOption',   '"SO130 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x09050009,0x1000, SETTING_9_5_0_9),
