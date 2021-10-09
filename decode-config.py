@@ -3258,7 +3258,7 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
         auth = (username, password)
     try:
         res = requests.get(url, auth=auth, headers={'referer': referer})
-    except requests.exceptions.ConnectionError as _:
+    except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as _:
         exit_(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
 
     if not res.ok:
