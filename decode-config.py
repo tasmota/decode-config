@@ -2183,9 +2183,9 @@ SETTING_9_5_0_8['flag'][1].pop('value_units',None)
 # ======================================================================
 SETTING_9_5_0_9 = copy.deepcopy(SETTING_9_5_0_8)
 SETTING_9_5_0_9.update              ({
-    'energy_kWhtoday_ph':           (Platform.ALL,   '<L',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyToday{} {}".format(#+1,int(round(float($)//100)))')) ),
-    'energy_kWhyesterday_ph':       (Platform.ALL,   '<L',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyYesterday{} {}".format(#+1,int(round(float($)//100)))')) ),
-    'energy_kWhtotal_ph':           (Platform.ALL,   '<L',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyTotal{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhtoday_ph':           (Platform.ALL,   '<l',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyToday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhyesterday_ph':       (Platform.ALL,   '<l',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyYesterday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhtotal_ph':           (Platform.ALL,   '<l',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyTotal{} {}".format(#+1,int(round(float($)//100)))')) ),
                                     })
 SETTING_9_5_0_9['flag5'][1].update  ({
          'energy_phase':            (Platform.ALL,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
