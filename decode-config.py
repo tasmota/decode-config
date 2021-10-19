@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '9.5.0'
+VER = '10.0.0'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -176,7 +176,6 @@ INTERNAL = 'Internal'
 VIRTUAL = '*'
 SETTINGVAR = '$SETTINGVAR'
 SIMULATING = "* Simulating "
-DEFAULT_SET_MAX = 79
 
 DEFAULTS = {
     'source':
@@ -286,8 +285,9 @@ based on this dictionary.
                     <bitshift> >= 0: shift the result right
                     <bitshift> <  0: shift the result left
 
-                <strindex>: <int>
-                    index into a set of strings delimited by \0
+                <strindex>: <str>
+                    name of the index into a set of strings delimited by \0
+                    This will be dynamically extracted from the corresponding platform index array for strings
 
 
             <datadef>:  <arraydef> | (<arraydef>, <validate> [,cmd])
@@ -575,7 +575,7 @@ class Platform:
     ESP82 = 0x1
     ESP32 = 0x2
     ALL = 0xf
-    STR = ["ESP82xx", "ESP32"]
+    STR = ["ESP82xx", "ESP32", "ALL"]
     @staticmethod
     def str(version):
         """
@@ -588,9 +588,9 @@ class Platform:
             platform string
         """
         try:
-            return Platform.STR[version]
+            return Platform.STR[version-1]
         except:     # pylint: disable=bare-except
-            return Platform.STR[0]
+            return Platform.STR[len(Platform.STR)-1]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -1356,7 +1356,8 @@ SETTING_8_0_0_1.update              ({
     # v8.x.x.x: Index numbers for indexed strings
     SETTINGVAR:
     {
-        'TEXTINDEX':   ['SET_OTAURL',
+        'TEXTINDEX_'+Platform.str(Platform.ALL):
+                       ['SET_OTAURL',
                         'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
                         'SET_STASSID1', 'SET_STASSID2',
                         'SET_STAPWD1', 'SET_STAPWD2',
@@ -1377,57 +1378,59 @@ SETTING_8_0_0_1.update              ({
                         'SET_MAX']
     }
                                     })
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
 SETTING_8_0_0_1.update              ({
-    'ota_url':                      (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_OTAURL')),
+    'ota_url':                      (Platform.ALL,   '699s',(0x017,'SET_OTAURL'),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTTPREFIX1')),
+    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,'SET_MQTTPREFIX1'),
                                                                          ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#+1,$)')) ),
-    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STASSID1')),
+    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,'SET_STASSID1'),
                                                                          ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#+1,$)')) ),
-    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STAPWD1')),
+    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,'SET_STAPWD1'),
                                                                          ([2],  None,                           ('Wifi',        '"Password{} {}".format(#+1,$)')), (passwordread, passwordwrite) ),
-    'hostname':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_HOSTNAME')),
+    'hostname':                     (Platform.ALL,   '699s',(0x017,'SET_HOSTNAME'),
                                                                          (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_SYSLOG_HOST')),
+    'syslog_host':                  (Platform.ALL,   '699s',(0x017,'SET_SYSLOG_HOST'),
                                                                          (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_WEBPWD')),
+    'web_password':                 (Platform.ALL,   '699s',(0x017,'SET_WEBPWD'),
                                                                          (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'cors_domain':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_CORS')),
+    'cors_domain':                  (Platform.ALL,   '699s',(0x017,'SET_CORS'),
                                                                          (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_HOST')),
+    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,'SET_MQTT_HOST'),
                                                                          (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_CLIENT')),
+    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,'SET_MQTT_CLIENT'),
                                                                          (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_USER')),
+    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,'SET_MQTT_USER'),
                                                                          (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_PWD')),
+    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,'SET_MQTT_PWD'),
                                                                         (None, None,                            ('MQTT',        '"MqttPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_FULLTOPIC')),
+    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,'SET_MQTT_FULLTOPIC'),
                                                                          (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_TOPIC')),
+    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,'SET_MQTT_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"Topic {}".format($)')) ),
-    'button_topic':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_BUTTON_TOPIC')),
+    'button_topic':                 (Platform.ALL,   '699s',(0x017,'SET_MQTT_BUTTON_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_SWITCH_TOPIC')),
+    'switch_topic':                 (Platform.ALL,   '699s',(0x017,'SET_MQTT_SWITCH_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC')),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_STATE_TXT1')),
+    'state_text':                   (Platform.ALL,   '699s',(0x017,'SET_STATE_TXT1'),
                                                                          ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
-    'ntp_server':                   (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_NTPSERVER1')),
+    'ntp_server':                   (Platform.ALL,   '699s',(0x017,'SET_NTPSERVER1'),
                                                                          ([3],  None,                           ('Management',  '"NtpServer{} {}".format(#+1,$)')) ),
-    'mems':                         (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_MEM1')),
+    'mems':                         (Platform.ALL,   '699s',(0x017,'SET_MEM1'),
                                                                          ([16], None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX'].index('SET_FRIENDLYNAME1')),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,'SET_FRIENDLYNAME1'),
                                                                          ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
     'script_pram':                  (Platform.ALL,   'b',   0x7CE,       ([5,10],None,                          ('Rules',       None )) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update              ({
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_FRIENDLYNAME1')),
+    'friendlyname':                 (Platform.ALL,   '699s',(0x017,'SET_FRIENDLYNAME1'),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'button_text':                  (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_BUTTON1')),
+    'button_text':                  (Platform.ALL,   '699s',(0x017,'SET_BUTTON1'),
                                                                          ([16], None,                           ('Control',     '"Webbutton{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
@@ -1508,9 +1511,11 @@ SETTING_8_1_0_6.update              ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
 SETTING_8_1_0_9.update              ({
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
@@ -1518,7 +1523,7 @@ SETTING_8_1_0_9.update              ({
     'bri_min':                      (Platform.ALL,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
     'bri_preset_low':               (Platform.ALL,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
     'bri_preset_high':              (Platform.ALL,   'B',   0xF07,       (None, None,                           ('Light',       None)) ),
-    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC2')),
+    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][1].update  ({
@@ -1551,12 +1556,14 @@ SETTING_8_2_0_0.update              ({
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update              ({
-    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,'SET_TEMPLATE_NAME'),
                                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
     'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
     'pulse_counter_debounce_high':  (Platform.ALL,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
@@ -1582,11 +1589,11 @@ SETTING_8_2_0_3.update              ({
     'pms_wake_interval':            (Platform.ALL,   '<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
-    'device_group_topic':           (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_DEV_GROUP_NAME1')),
+    'device_group_topic':           (Platform.ALL,   '699s',(0x017,'SET_DEV_GROUP_NAME1'),
                                                                          ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#+1,$ if len($) else "\\"")')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC')),
+    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
-    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_MQTT_GRP_TOPIC2')),
+    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2, "\\"" if len($) == 0 else $)')) ),
     'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
@@ -1738,11 +1745,13 @@ SETTING_8_2_0_6['flag4'][1].update  ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_DEVICENAME'])
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
 SETTING_8_3_1_1.update              ({
-    'devicename':                   (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX'].index('SET_DEVICENAME')),
+    'devicename':                   (Platform.ALL,   '699s',(0x017,'SET_DEVICENAME'),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
@@ -1767,13 +1776,15 @@ SETTING_8_3_1_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
 SETTING_8_3_1_3.update              ({
-    'telegram_token':               (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_TOKEN')),
+    'telegram_token':               (Platform.ALL,   '699s',(0x017,'SET_TELEGRAM_TOKEN'),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
-    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX'].index('SET_TELEGRAM_CHATID')),
+    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,'SET_TELEGRAM_CHATID'),
                                                                          (None, None,                           ('Telegram',    '"TmChatId {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
@@ -1823,12 +1834,18 @@ SETTING_8_3_1_7['timer'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
 SETTING_8_4_0_0.update              ({
-    'adc_param':                    (Platform.ESP32, '699s',(0x017,SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX'].index('SET_ADC_PARAM1')),
-                                                                         ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'adc_param':                    (Platform.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
+                                                                         ([8],  None,                           ('Management',  None)) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_4_0_0)
@@ -1884,7 +1901,7 @@ SETTING_9_0_0_1.pop('bri_min', None)
 SETTING_9_0_0_1.update              ({
     'gpio16_converted':             (Platform.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
     'my_gp':                        (Platform.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'templatename':                 (Platform.ALL,   '699s',(0x017,SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_TEMPLATE_NAME')),
+    'templatename':                 (Platform.ALL,   '699s',(0x017,'SET_TEMPLATE_NAME'),
                                                                          (None, None,                           ('Management',  None)) ),
     'user_template':                (Platform.ESP82,{
         'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template"]["gpio"],@["user_template"]["flag"],$)')), ('$+1','$-1') ),
@@ -1915,14 +1932,22 @@ SETTING_9_0_0_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()    # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
 SETTING_9_0_0_3.update              ({
-    'switchtext':                   (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+    'switchtext':                   (Platform.ALL, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'shelly_dimmer':                (Platform.ALL, '699s',(0x017,SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX'].index('SET_SHD_PARAM')),
+    'shelly_dimmer':                (Platform.ALL, '699s',(0x017,'SET_SHD_PARAM'),
                                                                          (None,  None,                          ('Light',       None)) ),
     'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
     'flag5':                        (Platform.ALL, {
@@ -1974,20 +1999,27 @@ SETTING_9_2_0_4['flag5'][1].update  ({
 SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
 SETTING_9_2_0_5.update             ({
     'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
-                                                                                                                ('Control',  'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
+                                                                                                                ('Control',     'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_MAX
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].pop()  # SET_SHD_PARAM
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT9',  'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_SHD_PARAM'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].extend(['SET_MAX'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
+                                                       'SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24',
+                                                       'SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+
 SETTING_9_2_0_6.update              ({
-    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX'].index('SET_SWITCH_TXT1')),
+    'switchtext':                   (Platform.ESP82, '699s',(0x017,'SET_SWITCH_TXT1'),
+                                                                         ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'shelly_dimmer':                (Platform.ESP82, '699s',(0x017,'SET_SHD_PARAM'),
+                                                                         (None,  None,                          ('Light',       None)) ),
+    'shelly_dimmer_esp32':          (Platform.ESP32, '699s',(0x017,'SET_SHD_PARAM'),
+                                                                         (None,  None,                          ('Light',       None)) ),
     'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
@@ -2022,8 +2054,8 @@ SETTING_9_3_1_2 = copy.deepcopy(SETTING_9_3_1_1)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_baudrate',None)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_rawdata',None)
 SETTING_9_3_1_2.update              ({
-    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive{}".format($)')) ),
-    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout{}".format($)')) ),
+    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive {}".format($)')) ),
+    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout {}".format($)')) ),
     'teleinfo':                     (Platform.ALL, {
          'raw_skip':                (Platform.ALL,   '<L', (0xFA4,8, 0), (None, None,                           ('Power',       None)) ),
          'raw_report_changed':      (Platform.ALL,   '<L', (0xFA4,1, 8), (None, None,                           ('Power',       None)) ),
@@ -2057,9 +2089,9 @@ SETTING_9_4_0_0.update              ({
 SETTING_9_4_0_3 = copy.deepcopy(SETTING_9_4_0_0)
 SETTING_9_4_0_3.update              ({
     'sbflag1':                      (Platform.ALL, {
-        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
-        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
-        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2), (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
                                     },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2067,13 +2099,110 @@ SETTING_9_4_0_5 = copy.deepcopy(SETTING_9_4_0_3)
 # ======================================================================
 SETTING_9_4_0_6 = copy.deepcopy(SETTING_9_4_0_5)
 SETTING_9_4_0_6.update              ({
-    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '100 <= $ <= 20000',           ('MQTT',       '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
+    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '1 <= $ <= 200',                ('MQTT',        '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
                                     })
 # ======================================================================
-SETTING_9_5_0_0 = copy.deepcopy(SETTING_9_4_0_6)
+SETTING_9_5_0_2 = copy.deepcopy(SETTING_9_4_0_6)
+SETTING_9_5_0_2['flag5'][1].update  ({
+         'wifi_no_sleep':           (Platform.ALL,   '<L', (0xFB4,1,13), (None, None,                           ('SetOption',   '"SO127 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_5_0_3 = copy.deepcopy(SETTING_9_5_0_2)
+SETTING_9_5_0_3.update              ({
+    'sensors':                      (Platform.ALL,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
+                                    })
+# ======================================================================
+SETTING_9_5_0_4 = copy.deepcopy(SETTING_9_5_0_3)
+SETTING_9_5_0_4.update              ({
+    'ip_address':                   (Platform.ALL,   '<L',  0x544,       ([5],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
+    'energy_kWhtotal':              (Platform.ALL,   '<L',  0xF9C,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+                                    })
+# ======================================================================
+SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()    # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+SETTING_9_5_0_5.update              ({
+    'ipv4_rgx_address':             (Platform.ALL,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'ipv4_rgx_subnetmask':          (Platform.ALL,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'influxdb_version':             (Platform.ALL,   'B',   0xEF7,       (None, None,                           ('Management',  None)) ),
+    'influxdb_port':                (Platform.ALL,   '<H',  0x4CE,       (None, None,                           ('Management',  '"IfxPort {}".format($)')) ),
+    'influxdb_host':                (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_HOST'),
+                                                                         (None,  None,                          ('Management',  '"IfxHost {}".format("\\"" if len($) == 0 else $)')) ),
+    'influxdb_host32':              (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_HOST'),
+                                                                         (None,  None,                          ('Management',  '"IfxHost {}".format("\\"" if len($) == 0 else $)')) ),
+    'influxdb_org':                 (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_ORG'),
+                                                                         (None,  None,                          ('Management',  '"Ifx{} {}".format("Org" if @["influxdb_version"] == 2 else "User", "\\"" if len($) == 0 else $)')) ),
+    'influxdb_org32':               (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_ORG'),
+                                                                         (None,  None,                          ('Management',  '"Ifx{} {}".format("Org" if @["influxdb_version"] == 2 else "User", "\\"" if len($) == 0 else $)')) ),
+    'influxdb_token':               (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
+                                                                         (None,  None,                          ('Management',  '"Ifx{} {}".format("Token" if @["influxdb_version"] == 2 else "Password", "\\"" if len($) == 0 else $)')) ),
+    'influxdb_token32':             (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
+                                                                         (None,  None,                          ('Management',  '"Ifx{} {}".format("Token" if @["influxdb_version"] == 2 else "Password", "\\"" if len($) == 0 else $)')) ),
+    'influxdb_bucket':              (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
+                                                                         (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $$)')) ),
+    'influxdb_bucket32':            (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
+                                                                         (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $)')) ),
+    'rgx_ssid':                     (Platform.ESP82, '699s',(0x017,'SET_RGX_SSID'),
+                                                                         (None,  None,                          ('Wifi',        '"RgxSSId {}".format("\\"" if len($) == 0 else $)')) ),
+    'rgx_ssid_esp32':               (Platform.ESP32, '699s',(0x017,'SET_RGX_SSID'),
+                                                                         (None,  None,                          ('Wifi',        '"RgxSSId {}".format("\\"" if len($) == 0 else $)')) ),
+    'rgx_pwassword':                (Platform.ESP82, '699s',(0x017,'SET_RGX_PASSWORD'),
+                                                                         (None,  None,                          ('Wifi',        '"RgxPassword {}".format("\\"" if len($) == 0 else $)')) ),
+    'rgx_pwassword_esp32':          (Platform.ESP32, '699s',(0x017,'SET_RGX_PASSWORD'),
+                                                                         (None,  None,                          ('Wifi',        '"RgxPassword {}".format("\\"" if len($) == 0 else $)')) ),
+                                    })
+SETTING_9_5_0_5['flag5'][1].update  ({
+         'disable_referer_chk':     (Platform.ALL,   '<L', (0xFB4,1,14), (None, None,                           ('SetOption',   '"SO128 {}".format($)')) ),
+                                    })
+SETTING_9_5_0_5['sbflag1'][1].update  ({
+        'range_extender':           (Platform.ALL,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
+        'range_extender_napt':      (Platform.ALL,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
+        'sonoff_l1_music_sync':     (Platform.ALL,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
+        'influxdb_default':         (Platform.ALL,   '<L', (0xFA0,1,6), (None, '0 <= $ <= 1',                   ('Management',  None)) ),
+        'influxdb_state':           (Platform.ALL,   '<L', (0xFA0,1,7), (None, '0 <= $ <= 1',                   ('Management',  '"Ifx {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_5)
+# ======================================================================
+SETTING_9_5_0_8 = copy.deepcopy(SETTING_9_5_0_7)
+SETTING_9_5_0_8.pop('display_dimmer', None)
+SETTING_9_5_0_8.update              ({
+    'display_dimmer_protected':     (Platform.ALL,   'b',   0x2E0,       (None, '-100 <= $ <= 15',              ('Display',     '"DisplayDimmer {}".format(abs($))')) ),
+                                    })
+SETTING_9_5_0_8['flag'][1].update   ({
+        'mqtt_add_global_info':     (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
+                                    })
+SETTING_9_5_0_8['flag'][1].pop('value_units',None)
+# ======================================================================
+SETTING_9_5_0_9 = copy.deepcopy(SETTING_9_5_0_8)
+SETTING_9_5_0_9.update              ({
+    'energy_kWhtoday_ph':           (Platform.ALL,   '<l',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyToday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhyesterday_ph':       (Platform.ALL,   '<l',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyYesterday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhtotal_ph':           (Platform.ALL,   '<l',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyTotal{} {}".format(#+1,int(round(float($)//100)))')) ),
+                                    })
+SETTING_9_5_0_9['flag5'][1].update  ({
+         'energy_phase':            (Platform.ALL,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
+         'show_heap_with_timestamp':(Platform.ALL,   '<L', (0xFB4,1,16), (None, None,                           ('SetOption',   '"SO130 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_10_0_0_0 = copy.deepcopy(SETTING_9_5_0_9)
 # ======================================================================
 SETTINGS = [
-            (0x09050000,0x1000, SETTING_9_5_0_0),
+            (0x0A000000,0x1000, SETTING_10_0_0_0),
+            (0x09050009,0x1000, SETTING_9_5_0_9),
+            (0x09050008,0x1000, SETTING_9_5_0_8),
+            (0x09050007,0x1000, SETTING_9_5_0_7),
+            (0x09050005,0x1000, SETTING_9_5_0_5),
+            (0x09050004,0x1000, SETTING_9_5_0_4),
+            (0x09050003,0x1000, SETTING_9_5_0_3),
+            (0x09050002,0x1000, SETTING_9_5_0_2),
             (0x09040006,0x1000, SETTING_9_4_0_6),
             (0x09040005,0x1000, SETTING_9_4_0_5),
             (0x09040003,0x1000, SETTING_9_4_0_3),
@@ -3126,12 +3255,13 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     """
     # read config direct from device via http
     url = make_url(host, port, cmnd)
+    referer = make_url(host, port)
     auth = None
     if username is not None and password is not None:
         auth = (username, password)
     try:
-        res = requests.get(url, auth=auth)
-    except requests.exceptions.ConnectionError as _:
+        res = requests.get(url, auth=auth, headers={'referer': referer})
+    except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as _:
         exit_(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
 
     if not res.ok:
@@ -3356,6 +3486,24 @@ def bitsread(value, pos=0, bits=1):
         value &= (1<<bits)-1
     return value
 
+def get_strindex(platform_, strindex_name):
+    """
+    Get the platform corresponding string index for variable strings
+
+    @param platform_:
+        platfrom id
+    @param strindex_name:
+        name of the index to find within string definition
+
+    @return:
+        index of the string or -1 on error
+    """
+    # platform_ = get_fielddef(fielddef, fields='platform_')
+    try:
+        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index(strindex_name)
+    except:     # pylint: disable=bare-except
+        return -1
+
 def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
     """
     Get field definition items
@@ -3421,16 +3569,18 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
                 raise SyntaxError(raise_error)
         elif len(baseaddr) == 2:
             # baseaddr string definition
-            baseaddr, strindex = baseaddr
-            if not isinstance(strindex, int):
-                print('<strindex> must be defined as integer in <fielddef> {}'.format(fielddef), file=sys.stderr)
-                raise SyntaxError(raise_error)
-            try:
-                if strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX'):
-                    print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX'), fielddef), file=sys.stderr)
+            baseaddr, strindex_name = baseaddr
+            if 'strindex' in fields:
+                if not isinstance(strindex_name, str):
+                    print('<strindex> must be defined as named index string in <fielddef> {}'.format(fielddef), file=sys.stderr)
                     raise SyntaxError(raise_error)
-            except:     # pylint: disable=bare-except
-                pass
+                try:
+                    strindex = get_strindex(platform_, strindex_name)
+                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index('SET_MAX'):
+                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index('SET_MAX'), fielddef), file=sys.stderr)
+                        raise SyntaxError(raise_error)
+                except:     # pylint: disable=bare-except
+                    pass
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
             raise SyntaxError(raise_error)
@@ -3846,7 +3996,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
     @return:
         value read from dobj
     """
-    format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='format_, bits, bitshift, strindex')
+    platform_, format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='platform_, format_, bits, bitshift, strindex')
 
     value_ = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
@@ -3893,10 +4043,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
             # get unpacked binary value as stripped string
             str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
             # split into single or multiple list elements delimted by \0
-            try:
-                set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX')
-            except:     # pylint: disable=bare-except
-                set_max = DEFAULT_SET_MAX
+            set_max = get_strindex(platform_, 'SET_MAX')
             sarray = str_.split('\x00', set_max)
 
         if isinstance(sarray, list):
@@ -4245,9 +4392,9 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 sarray = str_.split('\x00')
                 # limit to SET_MAX
                 try:
-                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX'].index('SET_MAX')
+                    set_max = get_strindex(platform_, 'SET_MAX')
                 except:     # pylint: disable=bare-except
-                    set_max = DEFAULT_SET_MAX
+                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].index('SET_MAX')
                 if len(sarray) >= set_max:
                     delrange = len(sarray) - set_max
                     if delrange > 0:
@@ -4519,7 +4666,7 @@ def bin2mapping(config, raw=False):
     cfg_platform_def = config['info']['template'].get('config_version', None)
     if cfg_platform_def is not None:
         cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
-        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform)})
+        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform+1)})
 
     return valuemapping
 

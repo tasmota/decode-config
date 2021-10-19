@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config_overview.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v9.5.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![release](https://img.shields.io/badge/release-v10.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -844,10 +844,17 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | FriendlyName<x\>            | *Modules*              |             |
 |                | Gpio<x\>                    | *Reset*                |             |
 |                | I2CDriver<x\>               | *Restart*              |             |
-|                | LogHost                     | *State*                |             |
-|                | LogPort                     | *Status*               |             |
-|                | Module                      | *Upgrade*              |             |
-|                | Module2                     | *Upload*               |             |
+|                | Ifx                         | *State*                |             |
+|                | IfxBucket                   | *Status*               |             |
+|                | IfxHost                     | *Upgrade*              |             |
+|                | IfxPassword                 | *Upload*               |             |
+|                | IfxPort                     |                        |             |
+|                | IfxUser                     |                        |             |
+|                | L1MusicSync                 |                        |             |
+|                | LogHost                     |                        |             |
+|                | LogPort                     |                        |             |
+|                | Module                      |                        |             |
+|                | Module2                     |                        |             |
 |                | MqttLog                     |                        |             |
 |                | NtpServer<x\>               |                        |             |
 |                | OtaUrl                      |                        |             |
@@ -864,6 +871,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TimeDST                     |                        |             |
 |                | Timezone                    |                        |             |
 |                | TuyaMCU                     |                        |             |
+|                | TuyaTempSetRes              |                        |             |
 |                | WebLog                      |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
 |                | Ethernet<sup>2</sup>        | *Ping<x\>*             |             |
@@ -873,6 +881,12 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Hostname                    |                        |             |
 |                | IPAddress<x\>               |                        |             |
 |                | Password<x\>                |                        |             |
+|                | RgxAddress                  |                        |             |
+|                | RgxNAPT                     |                        |             |
+|                | RgxPassword                 |                        |             |
+|                | RgxSsid                     |                        |             |
+|                | RgxState                    |                        |             |
+|                | RgxSubnet                   |                        |             |
 |                | Ssid<x\>                    |                        |             |
 |                | WebColor<x\>                |                        |             |
 |                | WebPassword                 |                        |             |
@@ -886,16 +900,21 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ButtonTopic                 | *Unsubscribe*          |             |
 |                | FullTopic                   |                        |             |
 |                | GroupTopic<x\>              |                        |             |
+|                | InfoRetain                  |                        |             |
 |                | MqttClient                  |                        |             |
 |                | MqttFingerprint             |                        |             |
 |                | MqttHost                    |                        |             |
+|                | MqttKeepAlive               |                        |             |
 |                | MqttPassword                |                        |             |
 |                | MqttPort                    |                        |             |
 |                | MqttRetry                   |                        |             |
 |                | MqttUser                    |                        |             |
+|                | MqttTimeout                 |                        |             |
+|                | MqttWifiTimeout             |                        |             |
 |                | PowerRetain                 |                        |             |
 |                | Prefix<x\>                  |                        |             |
 |                | SensorRetain                |                        |             |
+|                | StateRetain                 |                        |             |
 |                | StateText<x\>               |                        |             |
 |                | SwitchRetain                |                        |             |
 |                | SwitchTopic                 |                        |             |
@@ -908,6 +927,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             | *Scale<x\>*            |             |
 |                |                             | *Sub<x\>*              |             |
 |                |                             | *Var<x\>*              |             |
+| **Telegram**   | TmState                     |                        |             |
 | **Timer**      | Latitude                    |                        |             |
 |                | Longitude                   |                        |             |
 |                | Timers                      |                        |             |
@@ -954,8 +974,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | CurrentHigh                 | *ModuleAddress*        |             |
 |                | CurrentLow                  | *PowerSet*             |             |
 |                | EnergyRes                   | *Status8*              |             |
-|                | FreqRes                     | *Status9*              |             |
-|                | MaxPower                    | *VoltageSet*           |             |
+|                | EnergyToday                 | *Status9*              |             |
+|                | EnergyTotal                 | *VoltageSet*           |             |
+|                | EnergyYesterday             |                        |             |
+|                | FreqRes                     |                        |             |
+|                | MaxPower                    |                        |             |
 |                | MaxPowerHold                |                        |             |
 |                | MaxPowerWindow              |                        |             |
 |                | PowerCal                    |                        |             |
@@ -977,6 +1000,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | RGBWWTable                  | *White*                |             |
 |                | Rotation                    | *VirtualCT*            |             |
 |                | Scheme                      |                        |             |
+|                | ShdLeadingEdge              |                        |             |
+|                | ShdWarmupBrightness         |                        |             |
+|                | ShdWarmupTime               |                        |             |
 |                | Speed                       |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
@@ -1004,10 +1030,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             |                        | `KNX_CB<x>` |
 | **Display**    | DisplayAddress              | *Display*              |             |
 |                | DisplayDimmer               | *DisplayText*          |             |
+|                | DisplayILIMode              |                        |             |
+|                | DisplayInvert               |                        |             |
 |                | DisplayMode                 |                        |             |
 |                | DisplayModel                |                        |             |
 |                | DisplayRefresh              |                        |             |
 |                | DisplaySize                 |                        |             |
+|                | DisplayType                 |                        |             |
 |                | DisplayRotate               |                        |             |
 |                | DisplayCols                 |                        |             |
 |                | DisplayRows                 |                        |             |
