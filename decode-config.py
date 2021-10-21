@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '10.0.0.0'
+VER = '10.0.0.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2192,10 +2192,10 @@ SETTING_9_5_0_9['flag5'][1].update  ({
          'show_heap_with_timestamp':(Platform.ALL,   '<L', (0xFB4,1,16), (None, None,                           ('SetOption',   '"SO130 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_10_0_0_0 = copy.deepcopy(SETTING_9_5_0_9)
+SETTING_10_0_0_1 = copy.deepcopy(SETTING_9_5_0_9)
 # ======================================================================
 SETTINGS = [
-            (0x0A000000,0x1000, SETTING_10_0_0_0),
+            (0x0A000001,0x1000, SETTING_10_0_0_1),
             (0x09050009,0x1000, SETTING_9_5_0_9),
             (0x09050008,0x1000, SETTING_9_5_0_8),
             (0x09050007,0x1000, SETTING_9_5_0_7),
