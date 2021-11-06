@@ -1023,6 +1023,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SerialConfig                | *TCPStart*             |             |
 |                | SerialDelimiter             | *TuyaSend<x\>*         |             |
 |                | TCPBaudrate                 |                        |             |
+|                | TCPConfig                   |                        |             |
 | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
 |                | DomoticzKeyIdx<x\>          |                        |             |
 |                | DomoticzSensorIdx<x\>       |                        |             |
