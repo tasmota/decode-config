@@ -1047,7 +1047,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DisplayFont                 |                        |             |
 |                | DisplayWidth                |                        |             |
 |                | DisplayHeight               |                        |             |
-| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     |             |
+| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     | `ShutterTiltConfig` |
 |                | ShutterCalibration<x\>      | *ShutterFrequency<x\>* |             |
 |                | ShutterCloseDuration<x\>    | *ShutterOpen<x\>*      |             |
 |                | ShutterEnableEndStopTime<x\>| *ShutterSetClose<x\>*  |             |
