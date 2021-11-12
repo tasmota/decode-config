@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '10.0.0.1'
+VER = '10.0.0.2'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2195,7 +2195,7 @@ SETTING_9_5_0_9['flag5'][1].update  ({
 SETTING_10_0_0_1 = copy.deepcopy(SETTING_9_5_0_9)
 SETTING_10_0_0_1.update             ({
     'tcp_config':                   (Platform.ALL,   'B',   0xF5F,       (None, '0 <= $ <= 23',                 ('Serial',      '"TCPConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
-    'shutter_tilt_config':          (Platform.ALL,   'b',   0x508,       ([4],  None,                           ('Shutter',     None)) ),
+    'shutter_tilt_config':          (Platform.ALL,   'b',   0x508,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
     'shutter_tilt_pos':             (Platform.ALL,   'b',   0x51C,       ([4],  None,                           ('Shutter',     None)) ),
                                     })
 # ======================================================================

@@ -1047,7 +1047,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | DisplayFont                 |                        |             |
 |                | DisplayWidth                |                        |             |
 |                | DisplayHeight               |                        |             |
-| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     | `ShutterTiltConfig` |
+| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     |             |
 |                | ShutterCalibration<x\>      | *ShutterFrequency<x\>* |             |
 |                | ShutterCloseDuration<x\>    | *ShutterOpen<x\>*      |             |
 |                | ShutterEnableEndStopTime<x\>| *ShutterSetClose<x\>*  |             |
@@ -1061,6 +1061,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterPWMRange<x\>         | *ShutterToggleDir<x\>* |             |
 |                | ShutterRelay<x\>            |                        |             |
 |                | ShutterSetHalfway<x\>       |                        |             |
+|                | ShutterTiltConfig<x\>       |                        |             |
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmState                     | *TmSend*               |             |
 |                | TmToken                     |                        |             |
