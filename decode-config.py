@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '10.0.0.2'
+VER = '10.0.0.3'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2199,10 +2199,10 @@ SETTING_10_0_0_1.update             ({
     'shutter_tilt_pos':             (Platform.ALL,   'b',   0x51C,       ([4],  None,                           ('Shutter',     None)) ),
                                     })
 # ======================================================================
-SETTING_10_0_0_2 = copy.deepcopy(SETTING_10_0_0_1)
+SETTING_10_0_0_3 = copy.deepcopy(SETTING_10_0_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0A000002,0x1000, SETTING_10_0_0_2),
+            (0x0A000003,0x1000, SETTING_10_0_0_3),
             (0x0A000001,0x1000, SETTING_10_0_0_1),
             (0x09050009,0x1000, SETTING_9_5_0_9),
             (0x09050008,0x1000, SETTING_9_5_0_8),
