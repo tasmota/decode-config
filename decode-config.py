@@ -2200,6 +2200,10 @@ SETTING_10_0_0_1.update             ({
                                     })
 # ======================================================================
 SETTING_10_0_0_3 = copy.deepcopy(SETTING_10_0_0_1)
+SETTING_10_0_0_3.update             ({
+    'light_step_pixels':            (Platform.ALL,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
+    'influxdb_period':              (Platform.ALL,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0A000003,0x1000, SETTING_10_0_0_3),

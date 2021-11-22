@@ -853,6 +853,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | IfxPassword                 | *Upload*               |             |
 |                | IfxPort                     |                        |             |
 |                | IfxUser                     |                        |             |
+|                | IfxPeriod                   |                        |             |
 |                | L1MusicSync                 |                        |             |
 |                | LogHost                     |                        |             |
 |                | LogPort                     |                        |             |
@@ -1007,6 +1008,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShdWarmupBrightness         |                        |             |
 |                | ShdWarmupTime               |                        |             |
 |                | Speed                       |                        |             |
+|                | StepPixels                  |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
 | **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
