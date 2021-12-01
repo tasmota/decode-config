@@ -2204,6 +2204,9 @@ SETTING_10_0_0_3.update             ({
     'light_step_pixels':            (Platform.ALL,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
     'influxdb_period':              (Platform.ALL,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
                                     })
+SETTING_10_0_0_3['flag5'][1].update ({
+         'tuya_allow_dimmer_0':     (Platform.ALL,   '<L', (0xFB4,1,17), (None, None,                           ('SetOption',   '"SO131 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0A000003,0x1000, SETTING_10_0_0_3),
