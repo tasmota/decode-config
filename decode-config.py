@@ -2209,6 +2209,9 @@ SETTING_10_0_0_3['flag5'][1].update ({
                                     })
 # ======================================================================
 SETTING_10_0_0_4 = copy.deepcopy(SETTING_10_0_0_3)
+SETTING_10_0_0_4['flag5'][1].update ({
+         'tls_use_fingerprint':     (Platform.ALL,   '<L', (0xFB4,1,18), (None, None,                           ('SetOption',   '"SO132 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0A000004,0x1000, SETTING_10_0_0_4),
