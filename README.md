@@ -851,11 +851,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | IfxBucket                   | *Status*               |             |
 |                | IfxHost                     | *Upgrade*              |             |
 |                | IfxPassword                 | *Upload*               |             |
-|                | IfxPort                     |                        |             |
-|                | IfxUser                     |                        |             |
-|                | IfxPeriod                   |                        |             |
-|                | L1MusicSync                 |                        |             |
-|                | LogHost                     |                        |             |
+|                | IfxPort                     | *SSPMLog<sup>2</sup>*  |             |
+|                | IfxUser                     | *SSPEnergy<sup>2</sup>*|             |
+|                | IfxPeriod                   | *SSPHistory<sup>2</sup>*|            |
+|                | L1MusicSync                 | *SSPScan<sup>2</sup>*  |             |
+|                | LogHost                     | *SSPIamHere<sup>2</sup>*|            |
 |                | LogPort                     |                        |             |
 |                | Module                      |                        |             |
 |                | Module2                     |                        |             |
@@ -868,6 +868,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SaveData                    |                        |             |
 |                | SerialLog                   |                        |             |
 |                | Sleep                       |                        |             |
+|                | SSPMDisplay<sup>2</sup>     |                        |             |
 |                | SysLog                      |                        |             |
 |                | Template                    |                        |             |
 |                | Time                        |                        |             |
