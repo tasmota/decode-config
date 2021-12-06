@@ -968,6 +968,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Sensor34                    |                        |             |
 |                | Sensor54                    |                        |             |
 |                | Sensor68                    |                        |             |
+|                | Shift595DeviceCount         |                        |             |
 |                | SpeedUnit                   |                        |             |
 |                | TempRes                     |                        |             |
 |                | TempOffset                  |                        |             |

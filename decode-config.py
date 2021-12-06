@@ -2210,14 +2210,14 @@ SETTING_10_0_0_3['flag5'][1].update ({
 # ======================================================================
 SETTING_10_0_0_4 = copy.deepcopy(SETTING_10_0_0_3)
 SETTING_10_0_0_4.update             ({
-    'shift595':                     (Platform.ALL,   'B',   0xEC6,       (None, None,                           ('Management',  None)) ),
+    'shift595_device_count':        (Platform.ALL,   'B',   0xEC6,       (None, None,                           ('Sensor',     '"Shift595DeviceCount {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['sbflag1'][1].update({
-        'sspm_display':             (Platform.ESP32, '<L', (0xFA0,1,8), (None, '0 <= $ <= 1',                   ('Management',  '"SSPMDisplay {}".format($)')) ),
+        'sspm_display':             (Platform.ESP32, '<L', (0xFA0,1,8),  (None, '0 <= $ <= 1',                  ('Management',  '"SSPMDisplay {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['flag5'][1].update ({
         'tls_use_fingerprint':      (Platform.ALL,   '<L', (0xFB4,1,18), (None, None,                           ('SetOption',   '"SO132 {}".format($)')) ),
-        'shift595_option':          (Platform.ALL,   '<L', (0xFB4,1,19), (None, None,                           ('SetOption',   '"SO133 {}".format($)')) ),
+        'shift595_invert_outputs':  (Platform.ALL,   '<L', (0xFB4,1,19), (None, None,                           ('SetOption',   '"SO133 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
