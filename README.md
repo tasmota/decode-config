@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config_overview.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![release](https://img.shields.io/badge/release-v10.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![development](https://img.shields.io/badge/development-v10.1.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -14,7 +14,7 @@ If you like **decode-config** give it a star or fork it and contribute:
 
 [![GitHub stars](https://img.shields.io/github/stars/tasmota/decode-config.svg?style=social&label=Star)](https://github.com/tasmota/decode-config/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/tasmota/decode-config.svg?style=social&label=Fork)](https://github.com/tasmota/decode-config/network)
-[![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/norbertrichter42)
+[![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/NorbertRichterDE)
 
 In comparison with the [Tasmota](https://github.com/arendst/Tasmota) build-in "*Backup Configuration*" / "*Restore Configuration*" function the **decode-config** tool:
 
@@ -38,9 +38,15 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Content
 
-**This is the master branch which contains decode-config matching the latest Tasmota release version.**
+**This is the developer branch which contains decode-config matching the latest Tasmota developer version.**
 
-If you want to use a current version than this one (e.g. because you also use a Tasmota version from the developer branch) then use the _decode-config_ [developer branch](https://github.com/tasmota/decode-config/tree/development). This usually contains an up-to-date version of **decode-config** that corresponds to the latest Tasmota developer version.
+This branch does not contain any binaries. If you want to use a precompiled **decode-config** binary
+you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
+
+> **Note**  
+If you want to run the development **decode-config.py** from this branch, you need an
+installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+See [Running as Python script](#running-as-python-script) for more details.
 
 ### Files
 
@@ -48,10 +54,6 @@ If you want to use a current version than this one (e.g. because you also use a 
 |:-------------------------|:------------------------------------------------------------------------|
 | `build`                  | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
-| `decode-config_linux`    | Linux executable running standalone                                     |
-| `decode-config_mac`      | macOS executable running standalone                                     |
-| `decode-config_win32.exe`| Windows 32bit executable running standalone                             |
-| `decode-config_win64.exe`| Windows 64bit executable running standalone                             |
 | `README.md`              | This content                                                            |
 
 ### Table of contents
@@ -62,8 +64,6 @@ If you want to use a current version than this one (e.g. because you also use a 
     * [Table of contents](#table-of-contents)
   * [Running the program](#running-the-program)
     * [Prerequisite](#prerequisite)
-    * [Running the precompiled binaries](#running-the-precompiled-binaries)
-    * [Running as Python script](#running-as-python-script)
   * [Usage](#usage)
     * [Basics](#basics)
     * [Format JSON output](#format-json-output)
@@ -96,18 +96,20 @@ The program does not have a graphical user interface (GUI), you have to run it f
 
 [Tasmota](https://github.com/arendst/Tasmota) provides its configuration data by http request only. To receive and send configuration data from Tasmota devices directly the http WebServer in Tasmota must be enabled:
 
-### Running the precompiled binaries
+* enable web-server admin mode (Tasmota web command [WebServer 2](https://tasmota.github.io/docs/Commands/#webserver))
+* for self-compiled firmware enable web-server with (`#define USE_WEBSERVER` and `#define WEB_SERVER 2`).
 
-To start the program using the command line see [Usage](#usage).
+> **Note**  
+Using MQTT for exchanging Tasmota configuration data is supported by Tasmota since v9.4.0.3; **decode-config** will be able using MQTT in future supporting configuration data exchange this way too.
 
-### Running as Python script
+#### Python
 
 **decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 
 > **Note**  
 Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
-#### Linux
+##### Linux
 
 Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library installation for all OS](#all-os) below.
 
@@ -115,15 +117,15 @@ Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library
 sudo apt-get install python3 python3-pip
 ```
 
-#### Windows 10
+##### Windows 10
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) as described and follow [library installation for all OS](#all-os) below.
 
-#### MacOS
+##### MacOS
 
 Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and follow [library installation for all OS](#all-os) below.
 
-#### All OS
+##### All OS
 
 After python and pip is installed, install dependencies:
 
@@ -141,7 +143,8 @@ For an overview start the program without any parameter and you will get a short
 decode-config
 ```
 > **Note**  
-Replace `decode-config` by the [program name](#files) your are using.
+Replace `decode-config` by the program name your are using:  
+`decode-config.py` when running as Python executable.
 <!-- markdownlint-restore -->
 
 This prints a short help:
@@ -301,7 +304,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_9.5.0.json` (the part `Tasmota` and `9.5.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_10.1.0.json` (the part `Tasmota` and `10.1.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -313,7 +316,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_9.5.0.json` using JSON format
+* `Config_Tasmota_10.1.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -321,10 +324,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_9.5.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_10.1.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_9.5.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_10.1.0
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -848,10 +851,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | IfxBucket                   | *Status*               |             |
 |                | IfxHost                     | *Upgrade*              |             |
 |                | IfxPassword                 | *Upload*               |             |
-|                | IfxPort                     |                        |             |
-|                | IfxUser                     |                        |             |
-|                | L1MusicSync                 |                        |             |
-|                | LogHost                     |                        |             |
+|                | IfxPort                     | *SSPMLog<sup>2</sup>*  |             |
+|                | IfxUser                     | *SSPEnergy<sup>2</sup>*|             |
+|                | IfxPeriod                   | *SSPHistory<sup>2</sup>*|            |
+|                | L1MusicSync                 | *SSPScan<sup>2</sup>*  |             |
+|                | LogHost                     | *SSPIamHere<sup>2</sup>*|            |
 |                | LogPort                     |                        |             |
 |                | Module                      |                        |             |
 |                | Module2                     |                        |             |
@@ -864,6 +868,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SaveData                    |                        |             |
 |                | SerialLog                   |                        |             |
 |                | Sleep                       |                        |             |
+|                | SSPMDisplay<sup>2</sup>     |                        |             |
 |                | SysLog                      |                        |             |
 |                | Template                    |                        |             |
 |                | Time                        |                        |             |
@@ -963,6 +968,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Sensor34                    |                        |             |
 |                | Sensor54                    |                        |             |
 |                | Sensor68                    |                        |             |
+|                | Shift595DeviceCount         |                        |             |
 |                | SpeedUnit                   |                        |             |
 |                | TempRes                     |                        |             |
 |                | TempOffset                  |                        |             |
@@ -1004,6 +1010,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShdWarmupBrightness         |                        |             |
 |                | ShdWarmupTime               |                        |             |
 |                | Speed                       |                        |             |
+|                | StepPixels                  |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
 | **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
@@ -1020,6 +1027,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SerialConfig                | *TCPStart*             |             |
 |                | SerialDelimiter             | *TuyaSend<x\>*         |             |
 |                | TCPBaudrate                 |                        |             |
+|                | TCPConfig                   |                        |             |
 | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
 |                | DomoticzKeyIdx<x\>          |                        |             |
 |                | DomoticzSensorIdx<x\>       |                        |             |
@@ -1057,6 +1065,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | ShutterPWMRange<x\>         | *ShutterToggleDir<x\>* |             |
 |                | ShutterRelay<x\>            |                        |             |
 |                | ShutterSetHalfway<x\>       |                        |             |
+|                | ShutterTiltConfig<x\>       |                        |             |
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmState                     | *TmSend*               |             |
 |                | TmToken                     |                        |             |
