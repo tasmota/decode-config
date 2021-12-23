@@ -4669,10 +4669,10 @@ def bin2mapping(config, raw=False):
         'data': {
             'crc':      hex(get_settingcrc(config['decode'])),
             'size':     len(config['decode']),
-            'template': {
-                'version':  hex(config['info']['template_version']),
-                'crc':      hex(cfg_crc),
-            },
+        },
+        'template': {
+            'version':  hex(config['info']['template_version']),
+            'crc':      hex(cfg_crc),
         },
         'env': {
             'platform': platform.platform(),
@@ -4688,9 +4688,9 @@ def bin2mapping(config, raw=False):
                 valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})  # pylint: disable=eval-used
 
     if cfg_crc_fielddef is not None and cfg_size is not None:
-        valuemapping['header']['data']['template'].update({'size': cfg_size})
+        valuemapping['header']['template'].update({'size': cfg_size})
     if cfg_crc32_fielddef is not None:
-        valuemapping['header']['data']['template'].update({'crc32': hex(cfg_crc32)})
+        valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
