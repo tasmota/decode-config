@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '10.1.0.2'
+VER = '10.1.0.3'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2220,10 +2220,10 @@ SETTING_10_0_0_4['flag5'][1].update ({
         'shift595_invert_outputs':  (Platform.ALL,   '<L', (0xFB4,1,19), (None, None,                           ('SetOption',   '"SO133 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_10_1_0_2 = copy.deepcopy(SETTING_10_0_0_4)
+SETTING_10_1_0_3 = copy.deepcopy(SETTING_10_0_0_4)
 # ======================================================================
 SETTINGS = [
-            (0x0A010002,0x1000, SETTING_10_1_0_2),
+            (0x0A010003,0x1000, SETTING_10_1_0_3),
             (0x0A000004,0x1000, SETTING_10_0_0_4),
             (0x0A000003,0x1000, SETTING_10_0_0_3),
             (0x0A000001,0x1000, SETTING_10_0_0_1),
