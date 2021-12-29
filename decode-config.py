@@ -1308,7 +1308,7 @@ SETTING_7_0_0_6['flag3'][1].update  ({
 # ======================================================================
 SETTING_7_1_2_2 = copy.deepcopy(SETTING_7_0_0_6)
 SETTING_7_1_2_2.update              ({
-    'serial_config':                (Platform.ALL,   'b',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'serial_config':                (Platform.ALL,   'B',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_3 = copy.deepcopy(SETTING_7_1_2_2)
@@ -1340,7 +1340,7 @@ SETTING_7_1_2_5.update              ({
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
 SETTING_7_1_2_6.update              ({
     'flag4':                        (Platform.ALL,   '<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'serial_config':                (Platform.ALL,   'b',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'serial_config':                (Platform.ALL,   'B',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
     'wifi_output_power':            (Platform.ALL,   'B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
     'mqtt_port':                    (Platform.ALL,   '<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
     'shutter_accuracy':             (Platform.ALL,   'B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
@@ -2221,6 +2221,9 @@ SETTING_10_0_0_4['flag5'][1].update ({
                                     })
 # ======================================================================
 SETTING_10_1_0_3 = copy.deepcopy(SETTING_10_0_0_4)
+SETTING_10_1_0_3.update             ({
+    'sserial_config':               (Platform.ALL,   'B',   0x33E,       (None, None,                           ('Serial',      '"SSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0A010003,0x1000, SETTING_10_1_0_3),
