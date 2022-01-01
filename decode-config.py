@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '10.1.0.3'
+VER = '2022.01.1'
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -2225,7 +2225,10 @@ SETTING_10_1_0_3.update             ({
     'sserial_config':               (Platform.ALL,   'B',   0x33E,       (None, None,                           ('Serial',      '"SSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
+SETTING_2022_01_1 = copy.deepcopy(SETTING_10_0_0_4)
+# ======================================================================
 SETTINGS = [
+            (0x14160101,0x1000, SETTING_2022_01_1),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
             (0x0A000004,0x1000, SETTING_10_0_0_4),
             (0x0A000003,0x1000, SETTING_10_0_0_3),
@@ -3135,7 +3138,11 @@ def get_versionstr(version):
             subreleasestr = str(chr(subrelease+ord('a')-1))
         else:
             subreleasestr = ''
-    return "{:d}.{:d}.{:d}{}{}".format(major, minor, release, '.' if (major >= 6 and subreleasestr != '') else '', subreleasestr)
+    if major >= 20 and minor >= 22:
+        version_format = "{:02d}{:02d}.{:d}{}{}"
+    else:
+        version_format = "{:d}.{:d}.{:d}{}{}"
+    return version_format.format(major, minor, release, '.' if (major >= 6 and subreleasestr != '') else '', subreleasestr)
 
 def make_filename(filename, filetype, configmapping):
     """
