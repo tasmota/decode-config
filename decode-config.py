@@ -4682,6 +4682,7 @@ def bin2mapping(config, raw=False):
         },
         'template': {
             'version':  hex(config['info']['template_version']),
+            'versionstr':get_versionstr(config['info']['template_version']),
             'crc':      hex(cfg_crc),
         },
         'env': {
@@ -4704,6 +4705,7 @@ def bin2mapping(config, raw=False):
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
+        valuemapping['header']['data'].update({'versionstr': get_versionstr(config['info']['version'])})
     cfg_platform_def = config['info']['template'].get('config_version', None)
     if cfg_platform_def is not None:
         cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
