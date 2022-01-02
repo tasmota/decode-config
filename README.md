@@ -52,7 +52,7 @@ See [Running as Python script](#running-as-python-script) for more details.
 
 | File                     | Description |
 |:-------------------------|:------------------------------------------------------------------------|
-| `build`                  | contains files to build executables                                     |
+| `build-executables`      | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `README.md`              | This content                                                            |
 
