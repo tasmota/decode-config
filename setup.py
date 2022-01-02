@@ -21,6 +21,7 @@ setuptools.setup(
     license='GPLv3',
     description='Backup/restore and decode configuration tool for Tasmota.',
     author='Norbert Richter',
+    author_email='nr@prsolution.eu',
     url='https://github.com/tasmota/decode-config',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
