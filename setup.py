@@ -2,7 +2,8 @@ from typing import List
 
 import setuptools
 
-__version__ = '2022.01.1'
+
+decode_config = __import__('decode-config')
 
 
 def get_long_description() -> str:
@@ -17,7 +18,7 @@ def get_required() -> List[str]:
 
 setuptools.setup(
     name='decode-config',
-    version=__version__,
+    version=decode_config.VER,
     license='GPLv3',
     description='Backup/restore and decode configuration tool for Tasmota.',
     author='Norbert Richter',
