@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-VER = '2022.01.2'
+METADATA = {
+    'VERSION': '2022.01.2',
+    'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
+    'CLASSIFIER': 'Development Status :: 4 - Beta',
+    'URL': 'https://github.com/tasmota/decode-config',
+    'AUTHOR': 'Norbert Richter',
+    'AUTHOR_EMAIL': 'nr@prsolution.eu',
+}
 
 """
     decode-config.py - Backup/Restore Tasmota configuration data
@@ -55,7 +62,6 @@ Returns:
     22: HTTP connection error
     >22: python library exit code
     4xx, 5xx: HTTP errors
-
 """
 
 class ExitCode:
@@ -149,6 +155,8 @@ except ImportError as err:
 # ======================================================================
 # globals
 # ======================================================================
+METADATA['BUILD'] = ''
+METADATA['VERSION_BUILD'] = METADATA['VERSION']
 try:
     SHA256 = hashlib.sha256()
     FNAME = sys.argv[0]
@@ -157,11 +165,12 @@ try:
     with open(FNAME, "rb") as fp:
         for block in iter(lambda: fp.read(4096), b''):
             SHA256.update(block)
-        VER += ' [' + SHA256.hexdigest()[:7] + ']'
+        METADATA['BUILD'] = SHA256.hexdigest()[:7]
+        METADATA['VERSION_BUILD'] = METADATA['VERSION'] + ' [' + METADATA['BUILD'] + ']'
 except:     # pylint: disable=bare-except
     pass
 
-PROG = '{} v{} by Norbert Richter <nr@prsolution.eu>'.format(os.path.basename(sys.argv[0]), VER)
+PROG = '{} v{} by {} {}'.format(os.path.basename(sys.argv[0]), METADATA['VERSION_BUILD'], METADATA['AUTHOR'], METADATA['AUTHOR_EMAIL'])
 
 # Tasmota constant
 CONFIG_FILE_XOR = 0x5A
@@ -3407,7 +3416,7 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
     auth = None
     if username is not None and password is not None:
         auth = (username, password)
-    files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=VER), encode_cfg)}
+    files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=METADATA['VERSION_BUILD']), encode_cfg)}
     try:
         res = requests.post(url, auth=auth, files=files)
     except ConnectionError as err:
@@ -4689,7 +4698,7 @@ def bin2mapping(config, raw=False):
             'platform': platform.platform(),
             'system': '{} {} {} {}'.format(platform.system(), platform.machine(), platform.release(), platform.version()),
             'python': platform.python_version(),
-            'script': '{} v{}'.format(os.path.basename(__file__), VER)
+            'script': '{} v{}'.format(os.path.basename(__file__), METADATA['VERSION_BUILD'])
         }
     }
     if ARGS.debug:
