@@ -52,7 +52,7 @@ See [Running as Python script](#running-as-python-script) for more details.
 
 | File                     | Description |
 |:-------------------------|:------------------------------------------------------------------------|
-| `build`                  | contains files to build executables                                     |
+| `build-executables`      | contains files to build executables                                     |
 | `decode-config.py`       | Python source file running under your local Python environment          |
 | `README.md`              | This content                                                            |
 
@@ -64,25 +64,45 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [Table of contents](#table-of-contents)
   * [Running the program](#running-the-program)
     * [Prerequisite](#prerequisite)
+      * [Tasmota WebServer](#tasmota-webserver)
+      * [Python](#python)
+        * [Linux](#linux)
+        * [Windows 10](#windows-10)
+        * [MacOS](#macos)
+        * [All OS](#all-os)
   * [Usage](#usage)
     * [Basics](#basics)
+      * [Basic example](#basic-example)
+        * [Access an online device](#access-an-online-device)
+        * [Access a config file](#access-a-config-file)
+      * [Password protected device](#password-protected-device)
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
+      * [Backup filename macros](#backup-filename-macros)
+      * [Save multiple backup at once](#save-multiple-backup-at-once)
     * [Restore backup](#restore-backup)
+      * [Restore subset of data](#restore-subset-of-data)
     * [Auto file extensions](#auto-file-extensions)
     * [Test your parameter](#test-your-parameter)
     * [Console outputs](#console-outputs)
+      * [JSON format](#json-format)
+      * [Tasmota web command format](#tasmota-web-command-format)
+        * [Use of 'Backlog' for Tasmota commands](#use-of-backlog-for-tasmota-commands)
     * [Filter by groups](#filter-by-groups)
     * [Usage examples](#usage-examples)
+      * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+      * [Use batch processing](#use-batch-processing)
   * [File Formats](#file-formats)
     * [.dmp format](#dmp-format)
-    * [.json format](#json-format)
+    * [.json format](#json-format-1)
     * [.bin format](#bin-format)
   * [Program parameter list](#program-parameter-list)
     * [--full-help](#--full-help)
     * [Parameter notes](#parameter-notes)
     * [Obsolete parameters](#obsolete-parameters)
+      * [Obsolete source parameters](#obsolete-source-parameters)
+      * [Obsolete JSON formating parameters](#obsolete-json-formating-parameters)
   * [Generated Tasmota commands](#generated-tasmota-commands)
   * [Program return codes](#program-return-codes)
 
