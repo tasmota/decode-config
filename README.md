@@ -903,6 +903,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | EthAddress<sup>2</sup>      | *WebSend*              |             |
 |                | EthClockMode<sup>2</sup>    | *Publish*              |             |
 |                | EthType<sup>2</sup>         | *Publish2*             |             |
+|                | EthIPAddress<sup>2</sup>    |                        |             |
+|                | EthSubnetmask<sup>2</sup>   |                        |             |
+|                | EthGateway<sup>2</sup>      |                        |             |
+|                | EthDNSServer<sup>2</sup>    |                        |             |
+|                | EthDNSServer2<sup>2</sup>   |                        |             |
 |                | Hostname                    |                        |             |
 |                | IPAddress<x\>               |                        |             |
 |                | Password<x\>                |                        |             |

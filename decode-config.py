@@ -2235,6 +2235,9 @@ SETTING_10_1_0_3.update             ({
                                     })
 # ======================================================================
 SETTING_2022_01_2 = copy.deepcopy(SETTING_10_1_0_3)
+SETTING_2022_01_2.update            ({
+    'eth_ipv4_address':             (Platform.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',      'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x14160102,0x1000, SETTING_2022_01_2),
