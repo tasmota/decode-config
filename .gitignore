@@ -1,0 +1,11 @@
+# local conf files
+*.conf
+
+# pyinstaller
+__pycache__/
+
+# pypi setup
+/dist/
+/*.egg-info/
+/build/
+/.venv/
