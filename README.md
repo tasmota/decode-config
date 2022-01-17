@@ -48,19 +48,10 @@ If you want to run the development **decode-config.py** from this branch, you ne
 installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 See [Running as Python script](#running-as-python-script) for more details.
 
-### Files
-
-| File                     | Description |
-|:-------------------------|:------------------------------------------------------------------------|
-| `build-executables`      | contains files to build executables                                     |
-| `decode-config.py`       | Python source file running under your local Python environment          |
-| `README.md`              | This content                                                            |
-
 ### Table of contents
 
 * [decode-config](#decode-config)
   * [Content](#content)
-    * [Files](#files)
     * [Table of contents](#table-of-contents)
   * [Running the program](#running-the-program)
     * [Prerequisite](#prerequisite)
