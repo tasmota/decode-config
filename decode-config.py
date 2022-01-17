@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '2022.01.2',
+    'VERSION': '2022.01.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2236,10 +2236,17 @@ SETTING_10_1_0_3.update             ({
 # ======================================================================
 SETTING_2022_01_2 = copy.deepcopy(SETTING_10_1_0_3)
 SETTING_2022_01_2.update            ({
-    'eth_ipv4_address':             (Platform.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',      'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'eth_ipv4_address':             (Platform.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',        'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+                                    })
+# ======================================================================
+SETTING_2022_01_3 = copy.deepcopy(SETTING_2022_01_2)
+SETTING_2022_01_3.update            ({
+    'web_time_start':               (Platform.ALL,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
+    'web_time_end':                 (Platform.ALL,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
                                     })
 # ======================================================================
 SETTINGS = [
+            (0x14160103,0x1000, SETTING_2022_01_3),
             (0x14160102,0x1000, SETTING_2022_01_2),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
             (0x0A000004,0x1000, SETTING_10_0_0_4),
