@@ -118,10 +118,16 @@ Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and
 
 ##### All OS
 
-After python and pip is installed, install dependencies:
+After python and pip is installed, install with pip:
 
 ```shell
-python -m pip install requests configargparse
+python -m pip install decode-config
+```
+
+Alternatively using [pipx](https://pypa.github.io/pipx/):
+
+```shell
+pipx install decode-config
 ```
 
 ## Usage
