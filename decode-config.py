@@ -2243,6 +2243,7 @@ SETTING_2022_01_3 = copy.deepcopy(SETTING_2022_01_2)
 SETTING_2022_01_3.update            ({
     'web_time_start':               (Platform.ALL,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
     'web_time_end':                 (Platform.ALL,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
+    'pwm_value_ext':                (Platform.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
                                     })
 SETTING_2022_01_3['flag5'][1].update({
         'pwm_force_same_phase':     (Platform.ALL,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
