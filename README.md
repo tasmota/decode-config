@@ -157,18 +157,28 @@ To get a program result, pass at least a Tasmota source from which you want to r
 #### Tasmota source
 
 The Tasmota source determines where the configuration data should be loaded from and saved to.
-This can be
+Sourcec can be
 
-* a Tasmota configuration file (having extension `.dmp`):  
-use `--source <filename|file-url>` parameter
-* a HTTP connection to a running Tasmota device, specifying the hostname, IP o or [http-url](https://en.wikipedia.org/wiki/URL) of the Tasmota device:  
-use `--source <host|ip|http-scheme-url>` parameter
-* a MQTT topic of a MQTT server where a Tasmota device is connected to, specifying a [mttq-url](https://en.wikipedia.org/wiki/URL) of the MQTT server/broker:  
-use `--source <mqtt-scheme-url>` parameter. You have to specify the Tasmota topic either using the[URL path](https://en.wikipedia.org/wiki/URL#Syntax) component or the optional `--fulltopic` parameter. The topic itself must be the full topic of the Tasmota device without the trailing command or result part. You can use any of the prefixed topic (cmnd, stat or tele topic) oruse the placeholder %prefix% for it e.g. `%prefix%/tasmota-4281` or `tele/tasmota-4281` ae valid topics but `cmnd/tasmota-4281/POWER` or `tele/tasmota-4281/STATE` or not due to the trailing part. *decode-config* cannot recognize what belongs to a base-topic and what is appended by Tasmota. If the Tasmota device addressed via the topic uses a different password than decode-config for the MQTT connection, pass the different Tasmota password with the parameter `--password`.
+* **.dmp File**: Source is a Tasmota configuration file (having extension `.dmp`):  
+use `--source <filename|file-url>` parameter  
+  
+* **HTTP connection**: Source is a HTTP connection to a running Tasmota device, specifying the hostname, IP o or [http-url](https://en.wikipedia.org/wiki/URL) of the Tasmota device:  
+use `--source <host|ip|http-scheme-url>` parameter  
+  
+* **MQTT transission**: Source is a MQTT topic of a MQTT server where a Tasmota device is connected to, specifying a [mttq-url](https://en.wikipedia.org/wiki/URL) of the MQTT server/broker:  
+use `--source <mqtt-scheme-url>` parameter.  
+You have to specify the Tasmota topic either using the [URL path](https://en.wikipedia.org/wiki/URL#Syntax) component or the optional `--fulltopic` parameter.  
+The topic must be the full topic of the Tasmota device without any trailing command or result part. You can use any of the prefixed topic (*cmnd*, *stat* or *tele* topic) or use the placeholder *%prefix%* for it, example  
+`%prefix%/tasmota-4281` or `tele/tasmota-4281` are valid topics  
+`cmnd/tasmota-4281/POWER` or `tele/tasmota-4281/STATE` are valid topics due to the trailing part.  
+*decode-config* cannot recognize what belongs to a base-topic and what is appended by Tasmota.  
+If the Tasmota device addressed via the topic uses a different password than decode-config for the MQTT connection, pass the different Tasmota password with the parameter `--password`.
 
-When using an MQTT source a [URL with scheme](https://en.wikipedia.org/wiki/URL) is mandatory. For HTTP and file sources, **decode-config** tries to determine the source type itself as best it can. When in doubt, always use a URL with scheme.
+When using a MQTT source, a [URL with scheme](https://en.wikipedira.org/wiki/) is mandatory.
 
-##### Access a binary configuartion (*.dmp) file
+For HTTP and file sources, **decode-config** try to determine the source type itself as best it can. When in doubt, always use a [URL with scheme](https://en.wikipedira.org/wiki/).
+
+#### Configuration data from a binary (*.dmp) file
 
 To read from a binary Tasmota configuration file, pass the filename directly or as an URL:
 
@@ -177,7 +187,7 @@ decode-config --source tasmota-4281.dmp
 decode-config -s file://path/to/tasmota-4281.dmp
 ```
 
-##### Access configuration data using HTTP connection
+#### Configuration data using HTTP connection
 
 To read from the Tasmota HTTP interface you need the hostname or IP and optionally the web interface username and password. An http path appended to the URL is ignored:
 
@@ -189,14 +199,14 @@ decode-config --source http://admin:myPaszxwo!z@tasmota-4281
 decode-config --source http://admin:myPaszxwo!z@tasmota-4281:8000/cs?
 ```
 
-##### Access configuration data using MQTT
+#### Configuration data using MQTT
 
 To read the Tasmota configuration via an MQTT server, you need the hostname or IP of the MQTT server and optionally the username and password for it.  
 If Tasmota's password for the MQTT server connection differs from the password that decode-config should use, this must be passed as an optional parameter using `--password`.
 
 MQTT connections from decode-config to the MQTT server also allow the use of SSL/TLS:
 
-###### Connect decode-config without SSL/TLS
+##### Connect MQTT without SSL/TLS
 
 ```bash
 decode-config --source mqtt://mybroker.example.com/%prefx%/tasmota-4281
@@ -205,7 +215,7 @@ decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com  -
 decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/tasmota-4281 --password myTasmotaMQTTPaszxwo!z
 ```
 
-###### Connect decode-config with SSL/TLS
+##### Connect MQTT with SSL/TLS
 
 ```bash
 decode-config --source mqtts://mybroker.example.com/%prefx%/tasmota-4281
