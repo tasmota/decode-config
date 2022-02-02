@@ -1,2 +1,4 @@
 requests
 configargparse
+paho-mqtt
+json

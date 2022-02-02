@@ -1,5 +1,7 @@
 # local conf files
 *.conf
+*.dmp
+*.json
 
 # pyinstaller
 __pycache__/

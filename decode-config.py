@@ -32,7 +32,7 @@ METADATA = {
 Requirements:
     - Python 3.x and Pip:
         sudo apt-get install python3 python3-pip
-        pip3 install requests configargparse
+        pip3 install requests configargparse paho-mqtt json
 
 Instructions:
     Execute decode-config with option -d <host|url> to retrieve config data
@@ -60,7 +60,8 @@ Returns:
     20: python module missing
     21: internal error
     22: HTTP connection error
-    >22: python library exit code
+    23: MQTT connection error
+    >23: python library exit code
     4xx, 5xx: HTTP errors
 """
 
@@ -84,6 +85,7 @@ class ExitCode:
     MODULE_NOT_FOUND = 20
     INTERNAL_ERROR = 21
     HTTP_CONNECTION_ERROR = 22
+    MQTT_CONNECTION_ERROR = 23
     STR = [
         'OK',
         'Restore skipped',
@@ -101,7 +103,8 @@ class ExitCode:
         '', '', '', '', '', '', '',
         'Module not found',
         'Internal error',
-        'HTTP connection error'
+        'HTTP connection error',
+        'MQTT connection error'
         ]
     @staticmethod
     def str(code):
@@ -134,6 +137,8 @@ if sys.version_info[0] < 3:
 import platform
 try:
     from datetime import datetime
+    import paho.mqtt.client as mqtt
+    import base64
     import time
     import copy
     import struct
@@ -150,6 +155,12 @@ try:
     import hashlib
 except ImportError as err:
     module_import_error(err)
+try:
+    import ssl
+    SSL_MODULE = True
+except ImportError:
+    SSL_MODULE = False
+
 # pylint: enable=wrong-import-position
 
 # ======================================================================
@@ -177,6 +188,9 @@ CONFIG_FILE_XOR = 0x5A
 BINARYFILE_MAGIC = 0x63576223
 MAX_BACKLOG = 30
 MAX_BACKLOGLEN = 320
+MQTT_MESSAGE_MAX_SIZE = 700
+MQTT_TIMEOUT = 5000
+MQTT_FILETYPE = 2
 
 # decode-config constant
 STR_CODING = 'utf-8'
@@ -186,15 +200,27 @@ VIRTUAL = '*'
 SETTINGVAR = '$SETTINGVAR'
 SIMULATING = "* Simulating "
 
+DEFAULT_PORT_HTTP = 80
+DEFAULT_PORT_HTTPS = 443
+DEFAULT_PORT_MQTT = 1883
+DEFAULT_PORT_MQTTS = 8883
+
 DEFAULTS = {
     'source':
     {
         'source':       None,
-        'device':       None,
-        'port':         80,
+        'filesource':  None,
+        'httpsource':   None,
+        'mqttsource':   None,
+        'port':         None,
         'username':     'admin',
         'password':     None,
-        'tasmotafile':  None,
+        'fulltopic':    '',
+        'cafile':       None,
+        'certfile':     None,
+        'keyfile':      None,
+        'insecure':     False,
+        'keepalive':    60,
     },
     'backup':
     {
@@ -585,6 +611,7 @@ class Platform:
     ESP32 = 0x2
     ALL = 0xf
     STR = ["ESP82xx", "ESP32", "ALL"]
+    DESC = ["ESP82xx", "ESP32", "ESP82xx or ESP32"]
     @staticmethod
     def str(version):
         """
@@ -597,9 +624,23 @@ class Platform:
             platform string
         """
         try:
-            return Platform.STR[version-1]
+            return Platform.STR[version]
         except:     # pylint: disable=bare-except
             return Platform.STR[len(Platform.STR)-1]
+    def desc(version):
+        """
+        Create platform description
+
+        @param version:
+            version integer
+
+        @return:
+            platform description
+        """
+        try:
+            return Platform.DESC[version]
+        except:     # pylint: disable=bare-except
+            return Platform.DESC[len(Platform.DESC)-1]
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
@@ -1365,7 +1406,7 @@ SETTING_8_0_0_1.update              ({
     # v8.x.x.x: Index numbers for indexed strings
     SETTINGVAR:
     {
-        'TEXTINDEX_'+Platform.str(Platform.ALL):
+        'TEXTINDEX_'+Platform.str(Platform.ALL-1):
                        ['SET_OTAURL',
                         'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
                         'SET_STASSID1', 'SET_STASSID2',
@@ -1387,8 +1428,8 @@ SETTING_8_0_0_1.update              ({
                         'SET_MAX']
     }
                                     })
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
 SETTING_8_0_0_1.update              ({
     'ota_url':                      (Platform.ALL,   '699s',(0x017,'SET_OTAURL'),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
@@ -1520,11 +1561,11 @@ SETTING_8_1_0_6.update              ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
 SETTING_8_1_0_9.update              ({
     'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
@@ -1565,11 +1606,11 @@ SETTING_8_2_0_0.update              ({
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update              ({
     'templatename':                 (Platform.ALL,   '699s',(0x017,'SET_TEMPLATE_NAME'),
@@ -1754,11 +1795,11 @@ SETTING_8_2_0_6['flag4'][1].update  ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_DEVICENAME'])
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
 SETTING_8_3_1_1.update              ({
     'devicename':                   (Platform.ALL,   '699s',(0x017,'SET_DEVICENAME'),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1785,11 +1826,11 @@ SETTING_8_3_1_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)])})
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
 SETTING_8_3_1_3.update              ({
     'telegram_token':               (Platform.ALL,   '699s',(0x017,'SET_TELEGRAM_TOKEN'),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1843,15 +1884,15 @@ SETTING_8_3_1_7['timer'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
 SETTING_8_4_0_0.update              ({
     'adc_param':                    (Platform.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
                                                                          ([8],  None,                           ('Management',  None)) ),
@@ -1941,18 +1982,18 @@ SETTING_9_0_0_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()    # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()    # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
 SETTING_9_0_0_3.update              ({
     'switchtext':                   (Platform.ALL, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
@@ -2012,13 +2053,13 @@ SETTING_9_2_0_5.update             ({
                                     })
 # ======================================================================
 SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_SHD_PARAM
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
                                                        'SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24',
                                                        'SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_SHD_PARAM'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
 
 SETTING_9_2_0_6.update              ({
     'switchtext':                   (Platform.ESP82, '699s',(0x017,'SET_SWITCH_TXT1'),
@@ -2128,15 +2169,15 @@ SETTING_9_5_0_4.update              ({
                                     })
 # ======================================================================
 SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].pop()    # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()    # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
 SETTING_9_5_0_5.update              ({
     'ipv4_rgx_address':             (Platform.ALL,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
     'ipv4_rgx_subnetmask':          (Platform.ALL,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
@@ -3210,8 +3251,9 @@ def make_filename(filename, filetype, configmapping):
     if config_hostname != '':
         if str(config_hostname).find('%') < 0:
             config_hostname = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_hostname)).strip('_'))
-    if filename.find('@H') >= 0 and ARGS.device is not None:
-        device_hostname = get_tasmotahostname(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
+    if filename.find('@H') >= 0 and ARGS.httpsource is not None:
+        _, http_host, http_port, http_username, http_password = get_http_parts()
+        device_hostname = get_tasmotahostname(http_host, http_port, username=http_username, password=http_password)
         if device_hostname is None:
             device_hostname = ''
 
@@ -3275,6 +3317,97 @@ def make_url(host, port=80, location=''):
             sport=port if port != 80 else '',
             slocation=location)
 
+def get_http_parts():
+    """
+    Get http connection parameter parts from url/hostnme/ip and optional arguments
+
+    @return
+        http_host, http_port, http_username, http_password
+    """
+    http_scheme = 'http'
+    http_host = ARGS.httpsource
+    http_port = ARGS.port
+    http_username = ARGS.username
+    http_password = ARGS.password
+    try:
+        URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.httpsource, safe='/:@'))
+        if URLPARSE.netloc:
+            if URLPARSE.scheme is not None:
+                http_scheme = URLPARSE.scheme
+            if URLPARSE.hostname is not None:
+                http_host = urllib.parse.unquote(URLPARSE.hostname)
+            if URLPARSE.port is not None:
+                http_port = URLPARSE.port
+            if URLPARSE.username is not None:
+                http_username = urllib.parse.unquote(URLPARSE.username)
+            if URLPARSE.password is not None:
+                http_password = urllib.parse.unquote(URLPARSE.password)
+    except:     # pylint: disable=bare-except
+        pass
+    if not SSL_MODULE:
+        exit_(ExitCode.MODULE_NOT_FOUND,
+            "Missing python SSL module - HTTP scheme '{}' not possible, use http instead".format(http_scheme),
+            type_=LogType.WARNING,
+            doexit=not ARGS.ignorewarning,
+            line=inspect.getlineno(inspect.currentframe()))
+        ARGS.httpsource = ARGS.httpsource.replace('https', 'http')
+        http_scheme = 'http'
+    if http_port is None:
+        try:
+            http_port = DEFAULT_PORT_HTTPS if http_scheme[-1] == 's' else DEFAULT_PORT_HTTP
+        except:     # pylint: disable=bare-except
+            http_port = DEFAULT_PORT_HTTP
+
+    return http_scheme, http_host, http_port, http_username, http_password
+
+def get_mqtt_parts():
+    """
+    Get mqtt connection parameter parts from url/hostnme/ip and optional arguments
+
+    @return
+        mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, http_password
+    """
+    mqtt_scheme = 'mqtt'
+    mqtt_host = ARGS.mqttsource
+    mqtt_port = ARGS.port
+    mqtt_topic =  ARGS.fulltopic
+    mqtt_username = ARGS.username
+    mqtt_password = ARGS.password
+    http_password = ARGS.password
+    try:
+        URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.mqttsource, safe='/:@'))
+        if URLPARSE.netloc:
+            if URLPARSE.scheme is not None:
+                mqtt_scheme = URLPARSE.scheme
+            if URLPARSE.hostname is not None:
+                mqtt_host = urllib.parse.unquote(URLPARSE.hostname)
+            if URLPARSE.port is not None:
+                mqtt_port = URLPARSE.port
+            if URLPARSE.path is not None:
+                mqtt_topic = urllib.parse.unquote(URLPARSE.path)[1:]
+            if URLPARSE.username is not None:
+                mqtt_username = urllib.parse.unquote(URLPARSE.username)
+            if URLPARSE.password is not None:
+                mqtt_password = urllib.parse.unquote(URLPARSE.password)
+                if ARGS.password is None:
+                    http_password = mqtt_password
+    except:     # pylint: disable=bare-except
+        pass
+    if not SSL_MODULE and len(mqtt_scheme) and mqtt_scheme[-1] == 's':
+        exit_(ExitCode.MODULE_NOT_FOUND,
+            "Missing python SSL module - MQTT scheme '{}' not possible, use mqtt instead".format(mqtt_scheme),
+            type_=LogType.WARNING,
+            doexit=not ARGS.ignorewarning,
+            line=inspect.getlineno(inspect.currentframe()))
+        ARGS.mqttsource = ARGS.mqttsource.replace('mqtts', 'mqtt')
+        mqtt_scheme = 'mqtt'
+    if mqtt_port is None:
+        try:
+            mqtt_port = DEFAULT_PORT_MQTTS if mqtt_scheme[-1] == 's' else DEFAULT_PORT_MQTT
+        except:     # pylint: disable=bare-except
+            mqtt_port = DEFAULT_PORT_MQTT
+    return mqtt_scheme, mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, http_password
+
 def load_tasmotaconfig(filename):
     """
     Load config from Tasmota file
@@ -3292,7 +3425,7 @@ def load_tasmotaconfig(filename):
         exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename), line=inspect.getlineno(inspect.currentframe()))
 
     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-        message("Load data from file '{}'".format(ARGS.tasmotafile), type_=LogType.INFO if ARGS.verbose else None)
+        message("Load data from file '{}'".format(ARGS.filesource), type_=LogType.INFO if ARGS.verbose else None)
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
@@ -3306,9 +3439,9 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     Tasmota http request
 
     @param host:
-        hostname or IP of Tasmota device
+        hostname or IP of Tasmota httpsource
     @param port:
-        http port of Tasmota device
+        http port of Tasmota httpsource
     @param username:
         optional username for Tasmota web login
     @param password
@@ -3317,7 +3450,7 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     @return:
         binary config data (encrypted) or None on error
     """
-    # read config direct from device via http
+    # read config direct from httpsource via http
     url = make_url(host, port, cmnd)
     referer = make_url(host, port)
     auth = None
@@ -3370,66 +3503,48 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
 
     return hostname
 
-def pull_tasmotaconfig(host, port, username=DEFAULTS['source']['username'], password=None):
+def pull_http():
     """
-    Pull config from Tasmota device
-
-    @param host:
-        hostname or IP of Tasmota device
-    @param port:
-        http port of Tasmota device
-    @param username:
-        optional username for Tasmota web login
-    @param password
-        optional password for Tasmota web login
+    Download binary data to a Tasmota host using http
 
     @return:
         binary config data (encrypted) or None on error
     """
-    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-        message("Load data from device '{}'".format(ARGS.device), type_=LogType.INFO if ARGS.verbose else None)
+    _, http_host, http_port, http_username, http_password = get_http_parts()
 
-    _, body = get_tasmotaconfig('dl', host, port, username, password, contenttype='application/octet-stream')
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data by http from device '{}'".format(http_host), type_=LogType.INFO if ARGS.verbose else None)
+
+    _, body = get_tasmotaconfig('dl', http_host, http_port, http_username, http_password, contenttype='application/octet-stream')
 
     return body
 
-def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['username'], password=None, verbosemsg=""):
+def push_http(encode_cfg):
     """
     Upload binary data to a Tasmota host using http
 
     @param encode_cfg:
         encrypted binary data or filename containing Tasmota encrypted binary config
-    @param host:
-        hostname or IP of Tasmota device
-    @param port:
-        http port of Tasmota device
-    @param username:
-        optional username for Tasmota web login
-    @param password
-        optional password for Tasmota web login
-    @param verbosemsg
-        optional verbosemsg text
 
     @return
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
-    if ARGS.verbose:
-        message(verbosemsg, type_=LogType.INFO)
-
     if isinstance(encode_cfg, str):
         encode_cfg = bytearray(encode_cfg)
 
+    _, http_host, http_port, http_username, http_password = get_http_parts()
+
     # get restore config page first to set internal Tasmota vars
-    responsecode, body = get_tasmotaconfig('rs?', host, port, username, password, contenttype='text/html')
+    responsecode, body = get_tasmotaconfig('rs?', http_host, http_port, http_username, http_password, contenttype='text/html')
     if body is None:
         return responsecode, "ERROR"
 
     # ~ # post data
-    url = make_url(host, port, "u2")
+    url = make_url(http_host, http_port, "u2")
     auth = None
-    if username is not None and password is not None:
-        auth = (username, password)
+    if http_username is not None and http_password is not None:
+        auth = (http_username, http_password)
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=METADATA['VERSION_BUILD']), encode_cfg)}
     try:
         res = requests.post(url, auth=auth, files=files)
@@ -3461,6 +3576,433 @@ def push_tasmotaconfig(encode_cfg, host, port, username=DEFAULTS['source']['user
         return ExitCode.UPLOAD_CONFIG_ERROR, reason
 
     return 0, 'OK'
+
+def mqtt_maketopic(mqtt_topic, prefix, cmnd):
+    """
+    Make command or stat topic from given topic
+
+    @param topic
+        topic given by user via mqtt(s):// or --fulltopic param
+    @param iscmnd
+        True if generate Tasmota command topic, otherwise stat topic
+    @param isdownload
+        True generate Tasmota command for download topic otherwise for upload
+
+    @return:
+        topic to use for MQTT transport
+    """
+    if prefix == 'stat':
+        cmnd = cmnd.upper()
+    else:
+        cmnd = cmnd.lower()
+    return re.sub(r'\bstat\b|\btele\b|\bcmnd\b|\%prefix\%', prefix, mqtt_topic).rstrip('/')+"/"+cmnd
+
+def pull_mqtt(use_base64=True):
+    """
+    Download binary data from a Tasmota host using mqtt
+
+    @param use_base64
+        optional True if using base64 data transfer, otherwise binary data transfer
+
+    @return:
+        binary config data (encrypted) or None on error
+    """
+    mqtt_scheme, mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, tasmota_mqtt_password = get_mqtt_parts()
+
+    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+        message("Load data by mqtt using '{}'".format(ARGS.mqttsource), type_=LogType.INFO if ARGS.verbose else None)
+
+    cmnd = 'FILEDOWNLOAD'
+    topic_publish = mqtt_maketopic(mqtt_topic, 'cmnd', cmnd)
+
+    dobj = None
+
+    ack_flag = False
+    err_flag = False
+    err_str = ""
+
+    file_name = ""
+    file_id = 0
+    file_type = 0
+    file_size = 0
+    file_md5 = ""
+
+    # The callback for when subscribe message is received
+    def on_message(client, userdata, msg):
+        nonlocal ack_flag
+        nonlocal err_flag
+        nonlocal err_str
+        nonlocal file_name
+        nonlocal file_id
+        nonlocal file_type
+        nonlocal file_size
+        nonlocal file_md5
+        nonlocal in_hash_md5
+        nonlocal dobj
+
+        base64_data = ""
+        rcv_id = 0
+
+        try:
+            root = json.loads(msg.payload.decode("utf-8"))
+            if root:
+                if "FileDownload" in root:
+                    rcv_code = root["FileDownload"]
+                    if "Aborted" in rcv_code:
+                        err_str ="Aborted"
+                        err_flag = True
+                        return
+                    if "Started" in rcv_code:
+                        return
+                    if "Error" in rcv_code:
+                        if "1" in rcv_code:
+                            err_str ="Wrong password"
+                        else:
+                            if "2" in rcv_code:
+                                err_str ="Bad chunk size"
+                            else:
+                                if "3" in rcv_code:
+                                    err_str ="Invalid file type"
+                                else:
+                                    err_str ="Receive code "+rcv_code
+                        err_flag = True
+                        return
+                if "Command" in root:
+                    rcv_code = root["Command"]
+                    if rcv_code == "Error":
+                        err_str ="Command error"
+                        err_flag = True
+                        return
+                if "File" in root:
+                    file_name = root["File"]
+                if "Id" in root:
+                    rcv_id = root["Id"]
+                if "Type" in root:
+                    file_type = root["Type"]
+                if "Size" in root:
+                    file_size = root["Size"]
+                if "Data" in root:
+                    base64_data = root["Data"]
+                if "Md5" in root:
+                    file_md5 = root["Md5"]
+        except:
+            pass
+
+        if dobj is None and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
+            file_id = rcv_id
+            dobj = bytearray()
+        else:
+            if use_base64 and file_id > 0 and file_id != rcv_id:
+                err_flag = True
+                return
+
+        if file_md5 == "" and file_name:
+            if use_base64 and base64_data:
+                base64_decoded_data = base64_data.encode('utf-8')
+                chunk = base64.decodebytes(base64_decoded_data)
+                in_hash_md5.update(chunk)    # Update hash
+                dobj += chunk
+            if not use_base64 and 0 == rcv_id:
+                chunk = msg.payload
+                in_hash_md5.update(chunk)    # Update hash
+                dobj += chunk
+
+        if file_md5 != "":
+            md5_hash = in_hash_md5.hexdigest()
+            if md5_hash != file_md5:
+                err_str ="MD5 mismatch"
+                err_flag = True
+
+        ack_flag = False
+
+    def wait_for_ack():
+        nonlocal err_flag
+
+        timeout = MQTT_TIMEOUT/10
+        while ack_flag and not err_flag and timeout > 0:
+            time.sleep(0.01)
+            timeout = timeout -1
+
+        if 0 == timeout:
+            err_str ="Timeout"
+            err_flag = True
+
+        return ack_flag
+
+    conn_rc = 0
+    conn_flag = False
+    def on_connect(client, userdata, flags, rc):
+        nonlocal conn_rc
+        nonlocal conn_flag
+
+        conn_rc = rc
+        conn_flag = True
+
+    def wait_for_connect():
+        nonlocal conn_flag
+
+        timeout = 200
+        while not conn_flag and timeout > 0:
+            time.sleep(0.01)
+            timeout = timeout -1
+
+        return 0 != timeout
+
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    if SSL_MODULE:
+        # cafile and url scheme controls TLS usage
+        try:
+            tls = mqtt_scheme[-1] == 's'
+        except:
+            tls = False
+        if tls or ARGS.cafile is not None:
+            if ARGS.certfile is not None and ARGS.keyfile is not None:
+                client.tls_set(ARGS.cafile,
+                            certfile=ARGS.certfile,
+                            keyfile=ARGS.keyfile,
+                            cert_reqs=ssl.CERT_REQUIRED)
+            else:
+                client.tls_set(ARGS.cafile, cert_reqs=ssl.CERT_REQUIRED)
+            client.tls_insecure_set(ARGS.insecure)
+    if mqtt_username is not None and mqtt_password is not None:
+        client.username_pw_set(mqtt_username, mqtt_password)
+    try:
+        client.connect(mqtt_host, mqtt_port, ARGS.keepalive)
+    except Exception as err:    # pylint: disable=broad-except,unused-variable
+        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: {}'".format(mqtt_host, mqtt_port, err.strerror))
+    client.loop_start()                    # Start loop to process received messages
+    if not wait_for_connect():
+        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Connection timeout'".format(mqtt_host, mqtt_port))
+    elif conn_rc != mqtt.MQTT_ERR_SUCCESS:
+        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Code {} - {}'".format(mqtt_host, mqtt_port, conn_rc, mqtt.connack_string(conn_rc)))
+    client.subscribe(mqtt_maketopic(mqtt_topic, 'stat', cmnd))
+
+    in_hash_md5 = hashlib.md5()
+
+    data = {"Password":tasmota_mqtt_password, "Type":MQTT_FILETYPE}
+    if not use_base64:
+        data["Binary"] = 1
+    client.publish(topic_publish, json.dumps(data))
+
+    ack_flag = True
+    run_flag = True
+    while run_flag:
+        if wait_for_ack():                  # We use Ack here
+            client.publish(topic_publish, "0")   # Abort any failed download
+            run_flag = False
+        else:
+            if file_md5 == "":               # Request chunk
+                client.publish(topic_publish, "?")
+                ack_flag = True
+            else:
+                run_flag = False
+
+    if not err_flag:
+        file_type_name = "Data"
+        if file_type == MQTT_FILETYPE:
+            file_type_name = "Settings"
+        ARGS.filesource = file_name
+        if ARGS.verbose:
+            message("{} downloaded by MQTT as {}".format(file_type_name, file_name), type_=LogType.INFO)
+    else:
+        exit_(ExitCode.DOWNLOAD_CONFIG_ERROR, "Error during MQTT data processing: {}".format(err_str), line=inspect.getlineno(inspect.currentframe()))
+
+    client.disconnect()                    # Disconnect
+    client.loop_stop()                     # Stop loop
+
+    return dobj
+
+def push_mqtt(encode_cfg, use_base64=True):
+    """
+    Upload binary data to a Tasmota host using mqtt
+
+    @param encode_cfg:
+        encrypted binary data or filename containing Tasmota encrypted binary config
+    @param use_base64
+        optional True if using base64 data transfer, otherwise binary data transfer
+
+    @return
+        errorcode, errorstring
+        errorcode=0 if success, otherwise mqtt response or exception code
+    """
+    mqtt_scheme, mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, tasmota_mqtt_password = get_mqtt_parts()
+
+    cmnd = 'FILEUPLOAD'
+    topic_publish = mqtt_maketopic(mqtt_topic, 'cmnd', cmnd)
+
+    dobj = encode_cfg
+
+    ack_flag = False
+    err_flag = False
+    err_str = ""
+
+    file_id = int(time.time()*10000000 % 253) + 2   # id must be between 2 and 254
+    file_chunk_size = MQTT_MESSAGE_MAX_SIZE         # Tasmota MQTT max message size
+
+    # The callback for when subscribe message is received
+    def on_message(client, userdata, msg):
+        nonlocal ack_flag
+        nonlocal err_flag
+        nonlocal err_str
+        nonlocal file_chunk_size
+        nonlocal encode_cfg
+
+        rcv_code = ""
+        rcv_id = 0
+
+        try:
+            root = json.loads(msg.payload.decode("utf-8"))
+            if root:
+                if "FileUpload" in root:
+                    rcv_code = root["FileUpload"]
+                    if "Aborted" in rcv_code:
+                        err_str ="Aborted"
+                        err_flag = True
+                        return
+                    if "MD5 mismatch" in rcv_code:
+                        err_str ="MD5 mismatch"
+                        Err_flag = True
+                        return
+                    if "Started" in rcv_code:
+                        return
+                    if "Error" in rcv_code:
+                        if "1" in rcv_code:
+                            err_str ="Wrong password"
+                        else:
+                            if "2" in rcv_code:
+                                err_str ="Bad chunk size"
+                            else:
+                                if "3" in rcv_code:
+                                    err_str ="Invalid file type"
+                                else:
+                                    err_str ="Receive code "+rcv_code
+                        err_flag = True
+                        return
+                if "Command" in root:
+                    rcv_code = root["Command"]
+                    if rcv_code == "Error":
+                        err_str ="Command error"
+                        err_flag = True
+                        return
+                if "Id" in root:
+                    rcv_id = root["Id"]
+                    if rcv_id == file_id:
+                        if "MaxSize" in root:
+                            file_chunk_size = root["MaxSize"]
+        except:
+            pass
+
+        ack_flag = False
+
+    def wait_for_ack():
+        nonlocal err_flag
+
+        timeout = MQTT_TIMEOUT/10
+        while ack_flag and not err_flag and timeout > 0:
+            time.sleep(0.01)
+            timeout = timeout -1
+
+        if 0 == timeout:
+            err_str ="Timeout"
+            err_flag = True
+
+        return ack_flag
+
+    conn_rc = 0
+    conn_flag = False
+    def on_connect(client, userdata, flags, rc):
+        nonlocal conn_rc
+        nonlocal conn_flag
+
+        conn_rc = rc
+        conn_flag = True
+
+    def wait_for_connect():
+        nonlocal conn_flag
+
+        timeout = 200
+        while not conn_flag and timeout > 0:
+            time.sleep(0.01)
+            timeout = timeout -1
+
+        return 0 != timeout
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    if SSL_MODULE:
+        # cafile and url scheme controls TLS usage
+        try:
+            tls = mqtt_scheme[-1] == 's'
+        except:
+            tls = False
+        if tls or ARGS.cafile is not None:
+            if ARGS.certfile is not None and ARGS.keyfile is not None:
+                client.tls_set(ARGS.cafile,
+                            certfile=ARGS.certfile,
+                            keyfile=ARGS.keyfile,
+                            cert_reqs=ssl.CERT_REQUIRED)
+            else:
+                client.tls_set(ARGS.cafile, cert_reqs=ssl.CERT_REQUIRED)
+            client.tls_insecure_set(ARGS.insecure)
+    if mqtt_username is not None and mqtt_password is not None:
+        client.username_pw_set(mqtt_username, mqtt_password)
+    try:
+        client.connect(mqtt_host, mqtt_port, ARGS.keepalive)
+    except Exception as err:    # pylint: disable=broad-except,unused-variable
+        return ExitCode.MQTT_CONNECTION_ERROR, "MQTT connection: {}".format(err.strerror)
+    client.loop_start()                    # Start loop to process received messages
+    if not wait_for_connect():
+        return ExitCode.MQTT_CONNECTION_ERROR, "MQTT connection: Connection timeout"
+    elif conn_rc != mqtt.MQTT_ERR_SUCCESS:
+        return ExitCode.MQTT_CONNECTION_ERROR, "MQTT connection: Code {} - {}'".format(conn_rc, mqtt.connack_string(conn_rc))
+    client.subscribe(mqtt_maketopic(mqtt_topic, 'stat', cmnd))
+
+    client.publish(topic_publish, json.dumps({"Password":tasmota_mqtt_password,
+                                              "File":"decode-config.dmp",
+                                              "Id":file_id,
+                                              "Type":MQTT_FILETYPE,
+                                              "Size":len(encode_cfg)
+                                            }))
+
+    out_hash_md5 = hashlib.md5()
+
+    ack_flag = True
+    run_flag = True
+    while run_flag:
+        if wait_for_ack():                  # We use Ack here
+            client.publish(topic_publish, "0")   # Abort any failed upload
+            run_flag = False
+        chunk = dobj[:file_chunk_size]
+        dobj = dobj[file_chunk_size:]
+        if len(chunk):
+            out_hash_md5.update(chunk)       # Update hash
+            if use_base64:
+                base64_encoded_data = base64.b64encode(chunk)
+                base64_data = base64_encoded_data.decode('utf-8')
+                client.publish(topic_publish, json.dumps({"Id":file_id,"Data":base64_data}))
+            else:
+                client.publish(topic_publish+"201", chunk)
+            ack_flag = True
+
+        else:
+            md5_hash = out_hash_md5.hexdigest()
+            client.publish(topic_publish, json.dumps({"Id":file_id,"Md5":md5_hash}))
+            run_flag = False
+
+    if not err_flag:
+        if ARGS.verbose:
+            message("Settings uploaded by MQTT", type_=LogType.INFO)
+    else:
+       return ExitCode.DOWNLOAD_CONFIG_ERROR, "MQTT data processing error: {}".format(err_str)
+
+    client.disconnect()                    # Disconnect
+    client.loop_stop()                     # Stop loop
+
+    return ExitCode.OK, ""
 
 def decrypt_encrypt(obj):
     """
@@ -3564,7 +4106,7 @@ def get_strindex(platform_, strindex_name):
     """
     # platform_ = get_fielddef(fielddef, fields='platform_')
     try:
-        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index(strindex_name)
+        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index(strindex_name)
     except:     # pylint: disable=bare-except
         return -1
 
@@ -3640,8 +4182,8 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
                     raise SyntaxError(raise_error)
                 try:
                     strindex = get_strindex(platform_, strindex_name)
-                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index('SET_MAX'):
-                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_)].index('SET_MAX'), fielddef), file=sys.stderr)
+                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index('SET_MAX'):
+                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index('SET_MAX'), fielddef), file=sys.stderr)
                         raise SyntaxError(raise_error)
                 except:     # pylint: disable=bare-except
                     pass
@@ -4458,7 +5000,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 try:
                     set_max = get_strindex(platform_, 'SET_MAX')
                 except:     # pylint: disable=bare-except
-                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL)].index('SET_MAX')
+                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].index('SET_MAX')
                 if len(sarray) >= set_max:
                     delrange = len(sarray) - set_max
                     if delrange > 0:
@@ -4732,7 +5274,7 @@ def bin2mapping(config, raw=False):
     cfg_platform_def = config['info']['template'].get('config_version', None)
     if cfg_platform_def is not None:
         cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
-        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform+1)})
+        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform)})
 
     return valuemapping
 
@@ -4972,11 +5514,11 @@ def restore(restorefile, backupfileformat, config):
         platform_device = config['info']['platform']
         if platform_device != platform_new_data:
             exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
-                "File" if ARGS.tasmotafile is not None else "Device",
-                ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
-                Platform.str(platform_device),
+                "File" if ARGS.filesource is not None else "Device",
+                ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
+                Platform.str(platform_device-1),
                 restorefilename,
-                Platform.str(platform_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                Platform.str(platform_new_data-1)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
         # Data version compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
@@ -4984,8 +5526,8 @@ def restore(restorefile, backupfileformat, config):
             version_device = config['info']['version']
             if version_device != version_new_data:
                 exit_(ExitCode.RESTORE_DATA_ERROR, "Restore binary data incompatibility: {} '{}' v'{}', restore file '{}' v'{}'".format(\
-                    "File" if ARGS.tasmotafile is not None else "Device",
-                    ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+                    "File" if ARGS.filesource is not None else "Device",
+                    ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
                     get_versionstr(version_device),
                     restorefilename,
                     get_versionstr(version_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
@@ -5000,28 +5542,42 @@ def restore(restorefile, backupfileformat, config):
                     message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
                 dryrun = SIMULATING
                 error_code = 0
-            # write config direct to device via http
-            if ARGS.device is not None:
+            # write config direct to httpsource via http
+            if ARGS.httpsource is not None:
                 if not ARGS.dryrun:
-                    error_code, error_str = push_tasmotaconfig(new_encode_cfg, ARGS.device, ARGS.port, ARGS.username, ARGS.password, verbosemsg="{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.device, restorefilename))
+                    if ARGS.verbose:
+                        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO)
+                    error_code, error_str = push_http(new_encode_cfg, ARGS.httpsource, ARGS.port, ARGS.username, ARGS.password)
                 if error_code:
                     exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
                     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.device, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+
+            # write config direct to mqttsource via mqtt
+            elif ARGS.mqttsource is not None:
+                if not ARGS.dryrun:
+                    if ARGS.verbose:
+                        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO)
+                    error_code, error_str = push_mqtt(new_encode_cfg)
+                if error_code:
+                    exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
+                else:
+                    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
             # write config from a file
-            elif ARGS.tasmotafile is not None:
+            elif ARGS.filesource is not None:
                 if ARGS.verbose:
-                    message("{}Write new data to file '{}' using restore file '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO)
+                    message("{}Write new data to file '{}' using restore file '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO)
                 if not ARGS.dryrun:
                     try:
-                        with open(ARGS.tasmotafile, "wb") as outputfile:
+                        with open(ARGS.filesource, "wb") as outputfile:
                             outputfile.write(new_encode_cfg)
                     except Exception as err:    # pylint: disable=broad-except
-                        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.tasmotafile, err), line=inspect.getlineno(inspect.currentframe()))
+                        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.filesource, err), line=inspect.getlineno(inspect.currentframe()))
                 if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                    message("{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.tasmotafile, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+                    message("{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
@@ -5153,17 +5709,57 @@ def parseargs():
                         dest='source',
                         default=DEFAULTS['source']['source'],
                         help="source used for the Tasmota configuration (default: {}). "
-                        "The argument can be a <filename> containing Tasmota .dmp configuation data or "
-                        "a <hostname>, <ip>-address, <url> which means an online tasmota device is used. "
-                        "A url can also contain web login and port data in the format http://<user>:<password>@tasmota:<port>, "
-                        "e. g, http://admin:mypw@mytasmota:8090".format(DEFAULTS['source']['source']))
-    source.add_argument('-f', '--file', dest='tasmotafile', default=DEFAULTS['source']['tasmotafile'], help=configargparse.SUPPRESS)
-    source.add_argument('--tasmota-file', dest='tasmotafile', help=configargparse.SUPPRESS)
-    source.add_argument('-d', '--device', dest='device', default=DEFAULTS['source']['device'], help=configargparse.SUPPRESS)
-    source.add_argument('--host', dest='device', help=configargparse.SUPPRESS)
+                        "Specify source type, path, file, user, password, hostname, port and topic at once as an URL. "
+                        "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile'"
+                        "where scheme is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
+                        "and 'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT server)".format(DEFAULTS['source']['source']))
+    source.add_argument('-f', '--file', dest='filesource', default=DEFAULTS['source']['filesource'], help=configargparse.SUPPRESS)
+    source.add_argument('--tasmota-file', dest='filesource', help=configargparse.SUPPRESS)
+    source.add_argument('-d', '--device', dest='httpsource', default=DEFAULTS['source']['httpsource'], help=configargparse.SUPPRESS)
+    source.add_argument('-m', '--mqtt', dest='mqttsource', default=DEFAULTS['source']['mqttsource'], help=configargparse.SUPPRESS)
+    source.add_argument('--host', dest='httpsource', help=configargparse.SUPPRESS)
     source.add_argument('-P', '--port', dest='port', default=DEFAULTS['source']['port'], help=configargparse.SUPPRESS)
     source.add_argument('-u', '--username', dest='username', default=DEFAULTS['source']['username'], help=configargparse.SUPPRESS)
-    source.add_argument('-p', '--password', dest='password', default=DEFAULTS['source']['password'], help=configargparse.SUPPRESS)
+    source.add_argument('-p', '--password',
+                        metavar='<password>',
+                        dest='password',
+                        default=DEFAULTS['source']['password'],
+                        help="Web server password on HTTP source (set by Tasmota 'WebPassword' command), "
+                        "MQTT server password in MQTT source (set by Tasmota 'MqttPassword' command) (default: {})".format(DEFAULTS['source']['password']))
+
+    mqtt = PARSER.add_argument_group('MQTT',
+                                       'MQTT transport settings')
+    mqtt.add_argument('--fulltopic',
+                      metavar='<topic>',
+                      dest='fulltopic',
+                      default=DEFAULTS['source']['fulltopic'],
+                      help="Optional MQTT transport fulltopic used for accessing Tasmota device (default: {})".format(DEFAULTS['source']['fulltopic']))
+    mqtt.add_argument('--cafile',
+                      metavar='<file>',
+                      dest='cafile',
+                      default=DEFAULTS['source']['cafile'],
+                      help="Enables SSL/TLS connection: path to a or filename of the Certificate Authority certificate files that are to be treated as trusted by this client (default {})".format(DEFAULTS['source']['cafile']) if SSL_MODULE else configargparse.SUPPRESS)
+    mqtt.add_argument('--certfile',
+                      metavar='<file>',
+                      dest='certfile',
+                      default=DEFAULTS['source']['certfile'],
+                      help="Enables SSL/TLS connection: filename of a PEM encoded client certificate file (default {})".format(DEFAULTS['source']['certfile']) if SSL_MODULE else configargparse.SUPPRESS)
+    mqtt.add_argument('--keyfile',
+                      metavar='<file>',
+                      dest='keyfile',
+                      default=DEFAULTS['source']['keyfile'],
+                      help="Enables SSL/TLS connection: filename of a PEM encoded client private key file (default {})".format(DEFAULTS['source']['keyfile']) if SSL_MODULE else configargparse.SUPPRESS)
+    mqtt.add_argument('--insecure',
+                      dest='insecure',
+                      action='store_true',
+                      default=DEFAULTS['source']['insecure'],
+                      help="suppress verification of the MQTT server hostname in the server certificate (default {})".format(DEFAULTS['source']['insecure']) if SSL_MODULE else configargparse.SUPPRESS)
+    mqtt.add_argument('--keepalive',
+                      metavar='<sec>',
+                      dest='keepalive',
+                      type=int,
+                      default=DEFAULTS['source']['keepalive'],
+                      help="keepalive timeout for the client (default {})".format(DEFAULTS['source']['keepalive']))
 
     backres = PARSER.add_argument_group('Backup/Restore',
                                         'Backup & restore specification')
@@ -5381,43 +5977,57 @@ if __name__ == "__main__":
     if ARGS.shorthelp:
         shorthelp()
 
-    # check source args
-    if sum(map(lambda i: i is not None, (ARGS.source, ARGS.device, ARGS.tasmotafile))) > 1:
+    # check for ambiguous source parameters
+    if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) > 1:
         exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources have been specified by -s, -d or -f parameter - limit it to a single one", line=inspect.getlineno(inspect.currentframe()))
 
     # default no configuration available
     CONFIG['encode'] = None
 
     if ARGS.debug:
+        # Check whole setting definition
         check_setting_definition()
 
+    # set the source type based on the criteria
     if ARGS.source is not None:
-        if os.path.isfile(ARGS.source) and get_filetype(ARGS.source) == FileType.DMP:
-            ARGS.tasmotafile = ARGS.source
+        # check source args
+        URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.source, safe='/:@'))
+        # http(s)
+        #   ARGS.source = http(s)://<user>:<password>@tasmota:<port>
+        if URLPARSE.scheme in ('http', 'https'):
+            ARGS.httpsource = ARGS.source
+
+        # mqtt(s)
+        #   ARGS.source = mqtt(s)://<user>:<password>@tasmota:<port>
+        elif URLPARSE.scheme in ('mqtt', 'mqtts'):
+            ARGS.mqttsource = ARGS.source
+
+        # file:
+        #   ARGS.source = file:// or (not http(s)and not mqtt(s) and <source> exists)
+        elif URLPARSE.scheme in ('file',) or (
+            ARGS.httpsource is None and
+            ARGS.mqttsource is None and
+            os.path.isfile(ARGS.source) and
+            get_filetype(ARGS.source) == FileType.DMP
+            ):
+            ARGS.filesource = ARGS.source
         else:
-            ARGS.device = ARGS.source
+            ARGS.httpsource = ARGS.source
 
-    # pull config from Tasmota device
-    if ARGS.tasmotafile is not None:
-        CONFIG['encode'] = load_tasmotaconfig(ARGS.tasmotafile)
+    if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) == 0:
+        exit_(ExitCode.ARGUMENT_ERROR, "no valid source given", line=inspect.getlineno(inspect.currentframe()))
 
-    # load config from Tasmota file
-    if ARGS.device is not None:
-        try:
-            URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.device, safe='/:@'))
-            if URLPARSE.netloc:
-                if URLPARSE.hostname is not None:
-                    ARGS.device = urllib.parse.unquote(URLPARSE.hostname)
-                if URLPARSE.port is not None:
-                    ARGS.port = URLPARSE.port
-                if URLPARSE.username is not None:
-                    ARGS.username = urllib.parse.unquote(URLPARSE.username)
-                if URLPARSE.password is not None:
-                    ARGS.password = urllib.parse.unquote(URLPARSE.password)
-        except:     # pylint: disable=bare-except
-            pass
+    # souce is a file: pull config from Tasmota file
+    if ARGS.filesource is not None:
+        CONFIG['encode'] = load_tasmotaconfig(ARGS.filesource)
 
-        CONFIG['encode'] = pull_tasmotaconfig(ARGS.device, ARGS.port, username=ARGS.username, password=ARGS.password)
+    # source is httpsource: load config from Tasmota http webserver
+    if ARGS.httpsource is not None:
+        CONFIG['encode'] = pull_http()
+
+    # source is mqttsource: load config from Tasmota by MQTT request
+    if ARGS.mqttsource is not None:
+        CONFIG['encode'] = pull_mqtt()
 
     if CONFIG['encode'] is None:
         # no config source given
@@ -5429,8 +6039,8 @@ if __name__ == "__main__":
     if len(CONFIG['encode']) == 0:
         exit_(ExitCode.FILE_READ_ERROR,
               "Unable to read configuration data from {} '{}'"\
-              .format('device' if ARGS.device is not None else 'file',
-                      ARGS.device if ARGS.device is not None else ARGS.tasmotafile),
+              .format('device' if ARGS.httpsource is not None else 'file',
+                      ARGS.httpsource if ARGS.httpsource is not None else ARGS.filesource),
               line=inspect.getlineno(inspect.currentframe()))
 
     # decrypt Tasmota config
@@ -5448,11 +6058,11 @@ if __name__ == "__main__":
     # check version compatibility
     if CONFIG['info']['version'] is not None:
         if ARGS.verbose:
-            message("{} '{}' is using Tasmota v{} on {}"\
-                .format('File' if ARGS.tasmotafile is not None else 'Device',
-                        ARGS.tasmotafile if ARGS.tasmotafile is not None else ARGS.device,
+            message("{}'{}' is using Tasmota v{} on {}"\
+                .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+                        ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
                         get_versionstr(CONFIG['info']['version']),
-                        Platform.str(CONFIG['info']['platform'])),
+                        Platform.desc(CONFIG['info']['platform'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
