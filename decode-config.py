@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '2022.01.3',
+    'VERSION': '2022.1.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -209,7 +209,7 @@ DEFAULTS = {
     'source':
     {
         'source':       None,
-        'filesource':  None,
+        'filesource':   None,
         'httpsource':   None,
         'mqttsource':   None,
         'port':         None,
@@ -282,15 +282,15 @@ based on this dictionary.
         for simply identifying value from Tasmota configuration this key has the same
         name as the structure element of tasmota/settings.h
 
-    <def>:  ( <platform>, <format>, <addrdef>, <datadef> [,<converter>] )
+    <def>:  ( <hardware>, <format>, <addrdef>, <datadef> [,<converter>] )
         tuple with 4 or 5 objects which describes the format, address and structure
         of the binary source.
         For optional values there are two possibilities: If the definition object is
         mandatory it could be None, for none-mandatory optional objects it can be omit.
 
-            <platform>: <int>
-                platform bitmask validation
-                determines whether the setting is valid for a platform (bit=1) or not (bit=0)
+            <hardware>: <int>
+                hardware bitmask validation
+                determines whether the setting is valid for a hardware (bit=1) or not (bit=0)
                 bit0=ESP82xx, bit1=ESP32
 
             <format>:   <formatstring> | <setting>
@@ -322,7 +322,7 @@ based on this dictionary.
 
                 <strindex>: <str>
                     name of the index into a set of strings delimited by \0
-                    This will be dynamically extracted from the corresponding platform index array for strings
+                    This will be dynamically extracted from the corresponding hardware index array for strings
 
 
             <datadef>:  <arraydef> | (<arraydef>, <validate> [,cmd])
@@ -602,452 +602,484 @@ SETTING_OBJECTS = {
     'time': time,
     'textwrap': textwrap
 }
-# settings platforms
-class Platform:
-    """
-    Platform constant
-    """
-    ESP82 = 0x1
-    ESP32 = 0x2
-    ALL = 0xf
-    STR = ["ESP82xx", "ESP32", "ALL"]
-    DESC = ["ESP82xx", "ESP32", "ESP82xx or ESP32"]
-    @staticmethod
-    def str(version):
-        """
-        Create platform string
 
-        @param version:
-            version integer
+class Hardware:
+    """
+    ESPxx configuration data hardware class
+    """
+    # Bit mask for supported hardware
+    ESP82   = 0b00000001        # All ESP82xx
+    ESP32_C3= 0b00000010        # ESP32 excluding ESP32C3
+    ESP32C3 = 0b00000100        # ESP32C3
+    ESP32   = 0b00000110        # All ESP32
+    ESP     = 0b11111111        # All ESP
+
+    # Platform text
+    STR = ["ESP82", "ESP32 (w/o ESP32C3)", "ESP32C3", "ESP32", "ESP82/32"]
+    MASK = [ESP82, ESP32_C3, ESP32C3, ESP32, ESP]
+
+    def get_bitmask(self, config_version):
+        hardware_bits = self.ESP
+        if config_version == 0:
+            hardware_bits = self.ESP82
+        elif config_version == 1:
+            hardware_bits = self.ESP32
+        if config_version == 2:
+            hardware_bits = self.ESP32C3
+        return hardware_bits
+
+    def hstr(self, setting_hardware):
+        """
+        Create hardware string
+
+        @param setting_hardware:
+            hardware definition value from setting
 
         @return:
-            platform string
+            hardware string
         """
         try:
-            return Platform.STR[version]
+            return self.STR[self.MASK.index(setting_hardware)]
         except:     # pylint: disable=bare-except
-            return Platform.STR[len(Platform.STR)-1]
-    def desc(version):
-        """
-        Create platform description
+            return self.STR[len(self.STR)-1]
 
-        @param version:
-            version integer
+    def str(self, config_version):
+        """
+        Create hardware string
+
+        @param config_version:
+            config_version vvalue from Tasmota configuration
 
         @return:
-            platform description
+            hardware string
         """
-        try:
-            return Platform.DESC[version]
-        except:     # pylint: disable=bare-except
-            return Platform.DESC[len(Platform.DESC)-1]
+        if config_version < len(self.STR):
+            return self.STR[config_version]
+        return self.STR[len(self.STR)-1]
+
+    def match(self, setting_hardware, config_version):
+        """
+        Test match of setting hardware with config data from Tasmota
+
+        @param setting_hardware:
+            hardware definition value from setting
+
+        @param config_version:
+            config_version vvalue from Tasmota configuration
+
+        @return:
+            True if setting hardware matchs Tasmota configuration data
+        """
+        return (setting_hardware & self.get_bitmask(config_version)) != 0
+
+HARDWARE = Hardware()
 
 # pylint: disable=bad-continuation,bad-whitespace
 SETTING_5_10_0 = {
-                              # <platform>, <format>, <addrdef>, <datadef> [,<converter>]
-    'cfg_holder':                   (Platform.ALL,   '<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'save_flag':                    (Platform.ALL,   '<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
-    'version':                      (Platform.ALL,   '<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
-    'bootcount':                    (Platform.ALL,   '<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
-    'flag':                         (Platform.ALL, {
-        'save_state':               (Platform.ALL,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
-        'button_restrict':          (Platform.ALL,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SetOption1 {}".format($)')) ),
-        'value_units':              (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SetOption2 {}".format($)')) ),
-        'mqtt_enabled':             (Platform.ALL,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SetOption3 {}".format($)')) ),
-        'mqtt_response':            (Platform.ALL,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SetOption4 {}".format($)')) ),
-        'mqtt_power_retain':        (Platform.ALL,   '<L', (0x010,1, 5), (None, None,                           ('MQTT',        '"PowerRetain {}".format($)')) ),
-        'mqtt_button_retain':       (Platform.ALL,   '<L', (0x010,1, 6), (None, None,                           ('MQTT',        '"ButtonRetain {}".format($)')) ),
-        'mqtt_switch_retain':       (Platform.ALL,   '<L', (0x010,1, 7), (None, None,                           ('MQTT',        '"SwitchRetain {}".format($)')) ),
-        'temperature_conversion':   (Platform.ALL,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SetOption8 {}".format($)')) ),
-        'mqtt_sensor_retain':       (Platform.ALL,   '<L', (0x010,1, 9), (None, None,                           ('MQTT',        '"SensorRetain {}".format($)')) ),
-        'mqtt_offline':             (Platform.ALL,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SetOption10 {}".format($)')) ),
-        'button_swap':              (Platform.ALL,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SetOption11 {}".format($)')) ),
-        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SetOption12 {}".format($)')) ),
-        'button_single':            (Platform.ALL,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SetOption13 {}".format($)')) ),
-        'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('SetOption',   '"SetOption14 {}".format($)')) ),
-        'pwm_control':              (Platform.ALL,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SetOption15 {}".format($)')) ),
-        'ws_clock_reverse':         (Platform.ALL,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SetOption16 {}".format($)')) ),
-        'decimal_text':             (Platform.ALL,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SetOption17 {}".format($)')) ),
+                                   # <hardware>, <format>, <addrdef>,    <datadef>                                                      [,<converter>]
+    'cfg_holder':                   (HARDWARE.ESP,   '<L',  0x000,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'save_flag':                    (HARDWARE.ESP,   '<L',  0x004,       (None, None,                           (INTERNAL,      None)), (None,      False) ),
+    'version':                      (HARDWARE.ESP,   '<L',  0x008,       (None, None,                           ('System',      None)), ('hex($)',  False) ),
+    'bootcount':                    (HARDWARE.ESP,   '<L',  0x00C,       (None, None,                           ('System',      None)), (None,      False) ),
+    'flag':                         (HARDWARE.ESP, {
+        'save_state':               (HARDWARE.ESP,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SetOption0 {}".format($)')) ),
+        'button_restrict':          (HARDWARE.ESP,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SetOption1 {}".format($)')) ),
+        'value_units':              (HARDWARE.ESP,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SetOption2 {}".format($)')) ),
+        'mqtt_enabled':             (HARDWARE.ESP,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SetOption3 {}".format($)')) ),
+        'mqtt_response':            (HARDWARE.ESP,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SetOption4 {}".format($)')) ),
+        'mqtt_power_retain':        (HARDWARE.ESP,   '<L', (0x010,1, 5), (None, None,                           ('MQTT',        '"PowerRetain {}".format($)')) ),
+        'mqtt_button_retain':       (HARDWARE.ESP,   '<L', (0x010,1, 6), (None, None,                           ('MQTT',        '"ButtonRetain {}".format($)')) ),
+        'mqtt_switch_retain':       (HARDWARE.ESP,   '<L', (0x010,1, 7), (None, None,                           ('MQTT',        '"SwitchRetain {}".format($)')) ),
+        'temperature_conversion':   (HARDWARE.ESP,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SetOption8 {}".format($)')) ),
+        'mqtt_sensor_retain':       (HARDWARE.ESP,   '<L', (0x010,1, 9), (None, None,                           ('MQTT',        '"SensorRetain {}".format($)')) ),
+        'mqtt_offline':             (HARDWARE.ESP,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SetOption10 {}".format($)')) ),
+        'button_swap':              (HARDWARE.ESP,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SetOption11 {}".format($)')) ),
+        'stop_flash_rotate':        (HARDWARE.ESP,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SetOption12 {}".format($)')) ),
+        'button_single':            (HARDWARE.ESP,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SetOption13 {}".format($)')) ),
+        'interlock':                (HARDWARE.ESP,   '<L', (0x010,1,14), (None, None,                           ('SetOption',   '"SetOption14 {}".format($)')) ),
+        'pwm_control':              (HARDWARE.ESP,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SetOption15 {}".format($)')) ),
+        'ws_clock_reverse':         (HARDWARE.ESP,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SetOption16 {}".format($)')) ),
+        'decimal_text':             (HARDWARE.ESP,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SetOption17 {}".format($)')) ),
                                     },                      0x010,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'save_data':                    (Platform.ALL,   '<h',  0x014,       (None, '0 <= $ <= 3600',               ('Management',  '"SaveData {}".format($)')) ),
-    'timezone':                     (Platform.ALL,   'b',   0x016,       (None, '-13 <= $ <= 13 or $==99',      ('Management',  '"Timezone {}".format($)')) ),
-    'ota_url':                      (Platform.ALL,   '101s',0x017,       (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  (Platform.ALL,   '11s', 0x07C,       ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#+1,$)')) ),
-    'seriallog_level':              (Platform.ALL,   'B',   0x09E,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sta_config':                   (Platform.ALL,   'B',   0x09F,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
-    'sta_active':                   (Platform.ALL,   'B',   0x0A0,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
-    'sta_ssid':                     (Platform.ALL,   '33s', 0x0A1,       ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#+1,$)')) ),
-    'sta_pwd':                      (Platform.ALL,   '65s', 0x0E3,       ([2],  None,                           ('Wifi',        '"Password{} {}".format(#+1,$)')), (passwordread, passwordwrite) ),
-    'hostname':                     (Platform.ALL,   '33s', 0x165,       (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  (Platform.ALL,   '33s', 0x186,       (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'syslog_port':                  (Platform.ALL,   '<H',  0x1A8,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
-    'syslog_level':                 (Platform.ALL,   'B',   0x1AA,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
-    'webserver':                    (Platform.ALL,   'B',   0x1AB,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
-    'weblog_level':                 (Platform.ALL,   'B',   0x1AC,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint':             (Platform.ALL,   'B',   0x1AD,       ([60], None,                           ('MQTT',        '"MqttFingerprint {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint"]))')), '"0x{:02x}".format($)' ),
-    'mqtt_host':                    (Platform.ALL,   '33s', 0x1E9,       (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_port':                    (Platform.ALL,   '<H',  0x20A,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
-    'mqtt_client':                  (Platform.ALL,   '33s', 0x20C,       (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    (Platform.ALL,   '33s', 0x22D,       (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     (Platform.ALL,   '33s', 0x24E,       (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'mqtt_topic':                   (Platform.ALL,   '33s', 0x26F,       (None, None,                           ('MQTT',        '"Topic {}".format($)')) ),
-    'button_topic':                 (Platform.ALL,   '33s', 0x290,       (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '33s', 0x2B1,       (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'mqtt_fingerprinth':            (Platform.ALL,   'B',   0x2D2,       ([20], None,                           ('MQTT',        None)) ),
-    'pwm_frequency':                (Platform.ALL,   '<H',  0x2E6,       (None, '$==1 or 100 <= $ <= 4000',     ('Management',  '"PwmFrequency {}".format($)')) ),
-    'power':                        (Platform.ALL, {
-        'power1':                   (Platform.ALL,   '<L', (0x2E8,1,0),  (None, None,                           ('Control',     '"Power1 {}".format($)')) ),
-        'power2':                   (Platform.ALL,   '<L', (0x2E8,1,1),  (None, None,                           ('Control',     '"Power2 {}".format($)')) ),
-        'power3':                   (Platform.ALL,   '<L', (0x2E8,1,2),  (None, None,                           ('Control',     '"Power3 {}".format($)')) ),
-        'power4':                   (Platform.ALL,   '<L', (0x2E8,1,3),  (None, None,                           ('Control',     '"Power4 {}".format($)')) ),
-        'power5':                   (Platform.ALL,   '<L', (0x2E8,1,4),  (None, None,                           ('Control',     '"Power5 {}".format($)')) ),
-        'power6':                   (Platform.ALL,   '<L', (0x2E8,1,5),  (None, None,                           ('Control',     '"Power6 {}".format($)')) ),
-        'power7':                   (Platform.ALL,   '<L', (0x2E8,1,6),  (None, None,                           ('Control',     '"Power7 {}".format($)')) ),
-        'power8':                   (Platform.ALL,   '<L', (0x2E8,1,7),  (None, None,                           ('Control',     '"Power8 {}".format($)')) ),
+    'save_data':                    (HARDWARE.ESP,   '<h',  0x014,       (None, '0 <= $ <= 3600',               ('Management',  '"SaveData {}".format($)')) ),
+    'timezone':                     (HARDWARE.ESP,   'b',   0x016,       (None, '-13 <= $ <= 13 or $==99',      ('Management',  '"Timezone {}".format($)')) ),
+    'ota_url':                      (HARDWARE.ESP,   '101s',0x017,       (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
+    'mqtt_prefix':                  (HARDWARE.ESP,   '11s', 0x07C,       ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#+1,$)')) ),
+    'seriallog_level':              (HARDWARE.ESP,   'B',   0x09E,       (None, '0 <= $ <= 5',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   (HARDWARE.ESP,   'B',   0x09F,       (None, '0 <= $ <= 5',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   (HARDWARE.ESP,   'B',   0x0A0,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'sta_ssid':                     (HARDWARE.ESP,   '33s', 0x0A1,       ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#+1,$)')) ),
+    'sta_pwd':                      (HARDWARE.ESP,   '65s', 0x0E3,       ([2],  None,                           ('Wifi',        '"Password{} {}".format(#+1,$)')), (passwordread, passwordwrite) ),
+    'hostname':                     (HARDWARE.ESP,   '33s', 0x165,       (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
+    'syslog_host':                  (HARDWARE.ESP,   '33s', 0x186,       (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
+    'syslog_port':                  (HARDWARE.ESP,   '<H',  0x1A8,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 (HARDWARE.ESP,   'B',   0x1AA,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    (HARDWARE.ESP,   'B',   0x1AB,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 (HARDWARE.ESP,   'B',   0x1AC,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint':             (HARDWARE.ESP,   'B',   0x1AD,       ([60], None,                           ('MQTT',        '"MqttFingerprint {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint"]))')), '"0x{:02x}".format($)' ),
+    'mqtt_host':                    (HARDWARE.ESP,   '33s', 0x1E9,       (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
+    'mqtt_port':                    (HARDWARE.ESP,   '<H',  0x20A,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'mqtt_client':                  (HARDWARE.ESP,   '33s', 0x20C,       (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
+    'mqtt_user':                    (HARDWARE.ESP,   '33s', 0x22D,       (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
+    'mqtt_pwd':                     (HARDWARE.ESP,   '33s', 0x24E,       (None, None,                           ('MQTT',        '"MqttPassword {}".format($)')), (passwordread, passwordwrite) ),
+    'mqtt_topic':                   (HARDWARE.ESP,   '33s', 0x26F,       (None, None,                           ('MQTT',        '"Topic {}".format($)')) ),
+    'button_topic':                 (HARDWARE.ESP,   '33s', 0x290,       (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
+    'mqtt_grptopic':                (HARDWARE.ESP,   '33s', 0x2B1,       (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
+    'mqtt_fingerprinth':            (HARDWARE.ESP,   'B',   0x2D2,       ([20], None,                           ('MQTT',        None)) ),
+    'pwm_frequency':                (HARDWARE.ESP,   '<H',  0x2E6,       (None, '$==1 or 100 <= $ <= 4000',     ('Management',  '"PwmFrequency {}".format($)')) ),
+    'power':                        (HARDWARE.ESP, {
+        'power1':                   (HARDWARE.ESP,   '<L', (0x2E8,1,0),  (None, None,                           ('Control',     '"Power1 {}".format($)')) ),
+        'power2':                   (HARDWARE.ESP,   '<L', (0x2E8,1,1),  (None, None,                           ('Control',     '"Power2 {}".format($)')) ),
+        'power3':                   (HARDWARE.ESP,   '<L', (0x2E8,1,2),  (None, None,                           ('Control',     '"Power3 {}".format($)')) ),
+        'power4':                   (HARDWARE.ESP,   '<L', (0x2E8,1,3),  (None, None,                           ('Control',     '"Power4 {}".format($)')) ),
+        'power5':                   (HARDWARE.ESP,   '<L', (0x2E8,1,4),  (None, None,                           ('Control',     '"Power5 {}".format($)')) ),
+        'power6':                   (HARDWARE.ESP,   '<L', (0x2E8,1,5),  (None, None,                           ('Control',     '"Power6 {}".format($)')) ),
+        'power7':                   (HARDWARE.ESP,   '<L', (0x2E8,1,6),  (None, None,                           ('Control',     '"Power7 {}".format($)')) ),
+        'power8':                   (HARDWARE.ESP,   '<L', (0x2E8,1,7),  (None, None,                           ('Control',     '"Power8 {}".format($)')) ),
                                     },                      0x2E8,       (None, None,                           ('Control',     None)), (None, None) ),
-    'pwm_value':                    (Platform.ALL,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1,$)')) ),
-    'altitude':                     (Platform.ALL,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
-    'tele_period':                  (Platform.ALL,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',       '"TelePeriod {}".format($)')) ),
-    'ledstate':                     (Platform.ALL,   'B',   0x2FB,       (None, '0 <= $ <= 8',                  ('Control',     '"LedState {}".format(($ & 0x7))')) ),
-    'param':                        (Platform.ALL,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
-    'state_text':                   (Platform.ALL,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
-    'domoticz_update_timer':        (Platform.ALL,   '<H',  0x340,       (None, '0 <= $ <= 3600',               ('Domoticz',    '"DomoticzUpdateTimer {}".format($)')) ),
-    'pwm_range':                    (Platform.ALL,   '<H',  0x342,       (None, '$==1 or 255 <= $ <= 1023',     ('Management',  '"PwmRange {}".format($)')) ),
-    'domoticz_relay_idx':           (Platform.ALL,   '<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DomoticzIdx{} {}".format(#+1,$)')) ),
-    'domoticz_key_idx':             (Platform.ALL,   '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DomoticzKeyIdx{} {}".format(#+1,$)')) ),
-    'energy_power_calibration':     (Platform.ALL,   '<L',  0x364,       (None, None,                           ('Power',       '"PowerSet {}".format($)')) ),
-    'energy_voltage_calibration':   (Platform.ALL,   '<L',  0x368,       (None, None,                           ('Power',       '"VoltageSet {}".format($)')) ),
-    'energy_current_calibration':   (Platform.ALL,   '<L',  0x36C,       (None, None,                           ('Power',       '"CurrentSet {}".format($)')) ),
-    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhdoy':                (Platform.ALL,   '<H',  0x378,       (None, None,                           ('Power',       None)) ),
-    'energy_min_power':             (Platform.ALL,   '<H',  0x37A,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
-    'energy_max_power':             (Platform.ALL,   '<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
-    'energy_min_voltage':           (Platform.ALL,   '<H',  0x37E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
-    'energy_max_voltage':           (Platform.ALL,   '<H',  0x380,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
-    'energy_min_current':           (Platform.ALL,   '<H',  0x382,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
-    'energy_max_current':           (Platform.ALL,   '<H',  0x384,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
-    'energy_max_power_limit':       (Platform.ALL,   '<H',  0x386,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
-    'energy_max_power_limit_hold':  (Platform.ALL,   '<H',  0x388,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
-    'energy_max_power_limit_window':(Platform.ALL,   '<H',  0x38A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
-    'energy_max_power_safe_limit':  (Platform.ALL,   '<H',  0x38C,       (None, None,                           ('Power',       '"SavePower {}".format($)')) ),
+    'pwm_value':                    (HARDWARE.ESP,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1,$)')) ),
+    'altitude':                     (HARDWARE.ESP,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
+    'tele_period':                  (HARDWARE.ESP,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',       '"TelePeriod {}".format($)')) ),
+    'ledstate':                     (HARDWARE.ESP,   'B',   0x2FB,       (None, '0 <= $ <= 8',                  ('Control',     '"LedState {}".format(($ & 0x7))')) ),
+    'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
+    'state_text':                   (HARDWARE.ESP,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
+    'domoticz_update_timer':        (HARDWARE.ESP,   '<H',  0x340,       (None, '0 <= $ <= 3600',               ('Domoticz',    '"DomoticzUpdateTimer {}".format($)')) ),
+    'pwm_range':                    (HARDWARE.ESP,   '<H',  0x342,       (None, '$==1 or 255 <= $ <= 1023',     ('Management',  '"PwmRange {}".format($)')) ),
+    'domoticz_relay_idx':           (HARDWARE.ESP,   '<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DomoticzIdx{} {}".format(#+1,$)')) ),
+    'domoticz_key_idx':             (HARDWARE.ESP,   '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DomoticzKeyIdx{} {}".format(#+1,$)')) ),
+    'energy_power_calibration':     (HARDWARE.ESP,   '<L',  0x364,       (None, None,                           ('Power',       '"PowerSet {}".format($)')) ),
+    'energy_voltage_calibration':   (HARDWARE.ESP,   '<L',  0x368,       (None, None,                           ('Power',       '"VoltageSet {}".format($)')) ),
+    'energy_current_calibration':   (HARDWARE.ESP,   '<L',  0x36C,       (None, None,                           ('Power',       '"CurrentSet {}".format($)')) ),
+    'energy_kWhtoday':              (HARDWARE.ESP,   '<L',  0x370,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhyesterday':          (HARDWARE.ESP,   '<L',  0x374,       (None, '0 <= $ <= 4250000',            ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhdoy':                (HARDWARE.ESP,   '<H',  0x378,       (None, None,                           ('Power',       None)) ),
+    'energy_min_power':             (HARDWARE.ESP,   '<H',  0x37A,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
+    'energy_max_power':             (HARDWARE.ESP,   '<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
+    'energy_min_voltage':           (HARDWARE.ESP,   '<H',  0x37E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
+    'energy_max_voltage':           (HARDWARE.ESP,   '<H',  0x380,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
+    'energy_min_current':           (HARDWARE.ESP,   '<H',  0x382,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
+    'energy_max_current':           (HARDWARE.ESP,   '<H',  0x384,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
+    'energy_max_power_limit':       (HARDWARE.ESP,   '<H',  0x386,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
+    'energy_max_power_limit_hold':  (HARDWARE.ESP,   '<H',  0x388,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
+    'energy_max_power_limit_window':(HARDWARE.ESP,   '<H',  0x38A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
+    'energy_max_power_safe_limit':  (HARDWARE.ESP,   '<H',  0x38C,       (None, None,                           ('Power',       '"SavePower {}".format($)')) ),
     'energy_max_power_safe_limit_hold':
-                                    (Platform.ALL,   '<H',  0x38E,       (None, None,                           ('Power',       '"SavePowerHold {}".format($)')) ),
+                                    (HARDWARE.ESP,   '<H',  0x38E,       (None, None,                           ('Power',       '"SavePowerHold {}".format($)')) ),
     'energy_max_power_safe_limit_window':
-                                    (Platform.ALL,   '<H',  0x390,       (None, None,                           ('Power',       '"SavePowerWindow {}".format($)')) ),
-    'energy_max_energy':            (Platform.ALL,   '<H',  0x392,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
-    'energy_max_energy_start':      (Platform.ALL,   '<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
-    'mqtt_retry':                   (Platform.ALL,   '<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
-    'poweronstate':                 (Platform.ALL,   'B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
-    'last_module':                  (Platform.ALL,   'B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
-    'blinktime':                    (Platform.ALL,   '<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
-    'blinkcount':                   (Platform.ALL,   '<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
-    'friendlyname':                 (Platform.ALL,   '33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'switch_topic':                 (Platform.ALL,   '33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'sleep':                        (Platform.ALL,   'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
-    'domoticz_switch_idx':          (Platform.ALL,   '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
-    'domoticz_sensor_idx':          (Platform.ALL,   '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
-    'module':                       (Platform.ALL,   'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
-    'ws_color':                     (Platform.ALL,   'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
-    'ws_width':                     (Platform.ALL,   'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
-    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#,$)')) ),
-    'light_pixels':                 (Platform.ALL,   '<H',  0x496,       (None, '1 <= $ <= 512',                ('Light',       '"Pixels {}".format($)')) ),
-    'light_color':                  (Platform.ALL,   'B',   0x498,       ([5],  None,                           ('Light',       None)) ),
-    'light_correction':             (Platform.ALL,   'B',   0x49D     ,  (None, '0 <= $ <= 1',                  ('Light',       '"LedTable {}".format($)')) ),
-    'light_dimmer':                 (Platform.ALL,   'B',   0x49E,       (None, '0 <= $ <= 100',                ('Light',       '"Wakeup {}".format($)')) ),
-    'light_fade':                   (Platform.ALL,   'B',   0x4A1,       (None, '0 <= $ <= 1',                  ('Light',       '"Fade {}".format($)')) ),
-    'light_speed':                  (Platform.ALL,   'B',   0x4A2,       (None, '1 <= $ <= 20',                 ('Light',       '"Speed {}".format($)')) ),
-    'light_scheme':                 (Platform.ALL,   'B',   0x4A3,       (None, None,                           ('Light',       '"Scheme {}".format($)')) ),
-    'light_width':                  (Platform.ALL,   'B',   0x4A4,       (None, '0 <= $ <= 4',                  ('Light',       '"Width {}".format($)')) ),
-    'light_wakeup':                 (Platform.ALL,   '<H',  0x4A6,       (None, '0 <= $ <= 3100',               ('Light',       '"WakeUpDuration {}".format($)')) ),
-    'web_password':                 (Platform.ALL,   '33s', 0x4A9,       (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'switchmode':                   (Platform.ALL,   'B',   0x4CA,       ([4],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'ntp_server':                   (Platform.ALL,   '33s', 0x4CE,       ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#+1,$)')) ),
-    'ina219_mode':                  (Platform.ALL,   'B',   0x531,       (None, '0 <= $ <= 7',                  ('Sensor',      '"Sensor13 {}".format($)')) ),
-    'pulse_timer':                  (Platform.ALL,   '<H',  0x532,       ([8],  '0 <= $ <= 64900',              ('Control',     '"PulseTime{} {}".format(#+1,$)')) ),
-    'ip_address':                   (Platform.ALL,   '<L',  0x544,       ([4],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
-    'mqtt_fulltopic':               (Platform.ALL,   '100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'flag2':                        (Platform.ALL, {
-        'current_resolution':       (Platform.ALL,   '<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Sensor',      '"AmpRes {}".format($)')) ),
-        'voltage_resolution':       (Platform.ALL,   '<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Sensor',      '"VoltRes {}".format($)')) ),
-        'wattage_resolution':       (Platform.ALL,   '<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Sensor',      '"WattRes {}".format($)')) ),
-        'emulation':                (Platform.ALL,   '<L', (0x5BC,2,21), (None, '0 <= $ <= 2',                  ('Management',  '"Emulation {}".format($)')) ),
-        'energy_resolution':        (Platform.ALL,   '<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Sensor',      '"EnergyRes {}".format($)')) ),
-        'pressure_resolution':      (Platform.ALL,   '<L', (0x5BC,2,26), (None, '0 <= $ <= 3',                  ('Sensor',      '"PressRes {}".format($)')) ),
-        'humidity_resolution':      (Platform.ALL,   '<L', (0x5BC,2,28), (None, '0 <= $ <= 3',                  ('Sensor',      '"HumRes {}".format($)')) ),
-        'temperature_resolution':   (Platform.ALL,   '<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
+                                    (HARDWARE.ESP,   '<H',  0x390,       (None, None,                           ('Power',       '"SavePowerWindow {}".format($)')) ),
+    'energy_max_energy':            (HARDWARE.ESP,   '<H',  0x392,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
+    'energy_max_energy_start':      (HARDWARE.ESP,   '<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
+    'mqtt_retry':                   (HARDWARE.ESP,   '<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
+    'poweronstate':                 (HARDWARE.ESP,   'B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
+    'last_module':                  (HARDWARE.ESP,   'B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
+    'blinktime':                    (HARDWARE.ESP,   '<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
+    'blinkcount':                   (HARDWARE.ESP,   '<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
+    'friendlyname':                 (HARDWARE.ESP,   '33s', 0x3AC,       ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'switch_topic':                 (HARDWARE.ESP,   '33s', 0x430,       (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
+    'sleep':                        (HARDWARE.ESP,   'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'domoticz_switch_idx':          (HARDWARE.ESP,   '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_sensor_idx':          (HARDWARE.ESP,   '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
+    'module':                       (HARDWARE.ESP,   'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+    'ws_color':                     (HARDWARE.ESP,   'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
+    'ws_width':                     (HARDWARE.ESP,   'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
+    'my_gp':                        (HARDWARE.ESP,   'B',   0x484,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#,$)')) ),
+    'light_pixels':                 (HARDWARE.ESP,   '<H',  0x496,       (None, '1 <= $ <= 512',                ('Light',       '"Pixels {}".format($)')) ),
+    'light_color':                  (HARDWARE.ESP,   'B',   0x498,       ([5],  None,                           ('Light',       None)) ),
+    'light_correction':             (HARDWARE.ESP,   'B',   0x49D     ,  (None, '0 <= $ <= 1',                  ('Light',       '"LedTable {}".format($)')) ),
+    'light_dimmer':                 (HARDWARE.ESP,   'B',   0x49E,       (None, '0 <= $ <= 100',                ('Light',       '"Wakeup {}".format($)')) ),
+    'light_fade':                   (HARDWARE.ESP,   'B',   0x4A1,       (None, '0 <= $ <= 1',                  ('Light',       '"Fade {}".format($)')) ),
+    'light_speed':                  (HARDWARE.ESP,   'B',   0x4A2,       (None, '1 <= $ <= 20',                 ('Light',       '"Speed {}".format($)')) ),
+    'light_scheme':                 (HARDWARE.ESP,   'B',   0x4A3,       (None, None,                           ('Light',       '"Scheme {}".format($)')) ),
+    'light_width':                  (HARDWARE.ESP,   'B',   0x4A4,       (None, '0 <= $ <= 4',                  ('Light',       '"Width {}".format($)')) ),
+    'light_wakeup':                 (HARDWARE.ESP,   '<H',  0x4A6,       (None, '0 <= $ <= 3100',               ('Light',       '"WakeUpDuration {}".format($)')) ),
+    'web_password':                 (HARDWARE.ESP,   '33s', 0x4A9,       (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread, passwordwrite) ),
+    'switchmode':                   (HARDWARE.ESP,   'B',   0x4CA,       ([4],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'ntp_server':                   (HARDWARE.ESP,   '33s', 0x4CE,       ([3],  None,                           ('Wifi',        '"NtpServer{} {}".format(#+1,$)')) ),
+    'ina219_mode':                  (HARDWARE.ESP,   'B',   0x531,       (None, '0 <= $ <= 7',                  ('Sensor',      '"Sensor13 {}".format($)')) ),
+    'pulse_timer':                  (HARDWARE.ESP,   '<H',  0x532,       ([8],  '0 <= $ <= 64900',              ('Control',     '"PulseTime{} {}".format(#+1,$)')) ),
+    'ip_address':                   (HARDWARE.ESP,   '<L',  0x544,       ([4],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
+    'energy_kWhtotal':              (HARDWARE.ESP,   '<L',  0x554,       (None, '0 <= $ <= 4250000000',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
+    'mqtt_fulltopic':               (HARDWARE.ESP,   '100s',0x558,       (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
+    'flag2':                        (HARDWARE.ESP, {
+        'current_resolution':       (HARDWARE.ESP,   '<L', (0x5BC,2,15), (None, '0 <= $ <= 3',                  ('Sensor',      '"AmpRes {}".format($)')) ),
+        'voltage_resolution':       (HARDWARE.ESP,   '<L', (0x5BC,2,17), (None, '0 <= $ <= 3',                  ('Sensor',      '"VoltRes {}".format($)')) ),
+        'wattage_resolution':       (HARDWARE.ESP,   '<L', (0x5BC,2,19), (None, '0 <= $ <= 3',                  ('Sensor',      '"WattRes {}".format($)')) ),
+        'emulation':                (HARDWARE.ESP,   '<L', (0x5BC,2,21), (None, '0 <= $ <= 2',                  ('Management',  '"Emulation {}".format($)')) ),
+        'energy_resolution':        (HARDWARE.ESP,   '<L', (0x5BC,3,23), (None, '0 <= $ <= 5',                  ('Sensor',      '"EnergyRes {}".format($)')) ),
+        'pressure_resolution':      (HARDWARE.ESP,   '<L', (0x5BC,2,26), (None, '0 <= $ <= 3',                  ('Sensor',      '"PressRes {}".format($)')) ),
+        'humidity_resolution':      (HARDWARE.ESP,   '<L', (0x5BC,2,28), (None, '0 <= $ <= 3',                  ('Sensor',      '"HumRes {}".format($)')) ),
+        'temperature_resolution':   (HARDWARE.ESP,   '<L', (0x5BC,2,30), (None, '0 <= $ <= 3',                  ('Sensor',      '"TempRes {}".format($)')) ),
                                     },                      0x5BC,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'pulse_counter':                (Platform.ALL,   '<L',  0x5C0,       ([4],  None,                           ('Sensor',      '"Counter{} {}".format(#+1,$)')) ),
-    'pulse_counter_type':           (Platform.ALL, {
-        'pulse_counter_type1':      (Platform.ALL,   '<H', (0x5D0,1,0),  (None, None,                           ('Sensor',      '"CounterType1 {}".format($)')) ),
-        'pulse_counter_type2':      (Platform.ALL,   '<H', (0x5D0,1,1),  (None, None,                           ('Sensor',      '"CounterType2 {}".format($)')) ),
-        'pulse_counter_type3':      (Platform.ALL,   '<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
-        'pulse_counter_type4':      (Platform.ALL,   '<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
+    'pulse_counter':                (HARDWARE.ESP,   '<L',  0x5C0,       ([4],  None,                           ('Sensor',      '"Counter{} {}".format(#+1,$)')) ),
+    'pulse_counter_type':           (HARDWARE.ESP, {
+        'pulse_counter_type1':      (HARDWARE.ESP,   '<H', (0x5D0,1,0),  (None, None,                           ('Sensor',      '"CounterType1 {}".format($)')) ),
+        'pulse_counter_type2':      (HARDWARE.ESP,   '<H', (0x5D0,1,1),  (None, None,                           ('Sensor',      '"CounterType2 {}".format($)')) ),
+        'pulse_counter_type3':      (HARDWARE.ESP,   '<H', (0x5D0,1,2),  (None, None,                           ('Sensor',      '"CounterType3 {}".format($)')) ),
+        'pulse_counter_type4':      (HARDWARE.ESP,   '<H', (0x5D0,1,3),  (None, None,                           ('Sensor',      '"CounterType4 {}".format($)')) ),
                                     },                      0x5D0,       (None, None,                           ('Sensor',      None)), (None, None) ),
-    'pulse_counter_debounce':       (Platform.ALL,   '<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
-    'rf_code':                      (Platform.ALL,   'B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
+    'pulse_counter_debounce':       (HARDWARE.ESP,   '<H',  0x5D2,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounce {}".format($)')) ),
+    'rf_code':                      (HARDWARE.ESP,   'B',   0x5D4,       ([17,9],None,                          ('Rf',          None)), '"0x{:02x}".format($)'),
                                     }
 # ======================================================================
 SETTING_5_11_0 = copy.deepcopy(SETTING_5_10_0)
 SETTING_5_11_0.update               ({
-    'display_model':                (Platform.ALL,   'B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"Model {}".format($)')) ),
-    'display_mode':                 (Platform.ALL,   'B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"Mode {}".format($)')) ),
-    'display_refresh':              (Platform.ALL,   'B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"Refresh {}".format($)')) ),
-    'display_rows':                 (Platform.ALL,   'B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"Rows {}".format($)')) ),
-    'display_cols':                 (Platform.ALL,   'B',   0x2D6,       ([2],  '1 <= $ <= 40',                 ('Display',     '"Cols{} {}".format(#+1,$)')) ),
-    'display_address':              (Platform.ALL,   'B',   0x2D8,       ([8],  None,                           ('Display',     '"Address{} {}".format(#+1,$)')) ),
-    'display_dimmer':               (Platform.ALL,   'B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"Dimmer {}".format($)')) ),
-    'display_size':                 (Platform.ALL,   'B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"Size {}".format($)')) ),
+    'display_model':                (HARDWARE.ESP,   'B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"Model {}".format($)')) ),
+    'display_mode':                 (HARDWARE.ESP,   'B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"Mode {}".format($)')) ),
+    'display_refresh':              (HARDWARE.ESP,   'B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"Refresh {}".format($)')) ),
+    'display_rows':                 (HARDWARE.ESP,   'B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"Rows {}".format($)')) ),
+    'display_cols':                 (HARDWARE.ESP,   'B',   0x2D6,       ([2],  '1 <= $ <= 40',                 ('Display',     '"Cols{} {}".format(#+1,$)')) ),
+    'display_address':              (HARDWARE.ESP,   'B',   0x2D8,       ([8],  None,                           ('Display',     '"Address{} {}".format(#+1,$)')) ),
+    'display_dimmer':               (HARDWARE.ESP,   'B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"Dimmer {}".format($)')) ),
+    'display_size':                 (HARDWARE.ESP,   'B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"Size {}".format($)')) ),
                                     })
 SETTING_5_11_0['flag'][1].update    ({
-        'light_signal':             (Platform.ALL,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SetOption18 {}".format($)')) ),
+        'light_signal':             (HARDWARE.ESP,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SetOption18 {}".format($)')) ),
                                     })
 SETTING_5_11_0.pop('mqtt_fingerprinth',None)
 # ======================================================================
 SETTING_5_12_0 = copy.deepcopy(SETTING_5_11_0)
 SETTING_5_12_0['flag'][1].update    ({
-        'hass_discovery':           (Platform.ALL,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SetOption19 {}".format($)')) ),
-        'not_power_linked':         (Platform.ALL,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SetOption20 {}".format($)')) ),
-        'no_power_on_check':        (Platform.ALL,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SetOption21 {}".format($)')) ),
+        'hass_discovery':           (HARDWARE.ESP,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SetOption19 {}".format($)')) ),
+        'not_power_linked':         (HARDWARE.ESP,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SetOption20 {}".format($)')) ),
+        'no_power_on_check':        (HARDWARE.ESP,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SetOption21 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_5_13_1 = copy.deepcopy(SETTING_5_12_0)
 SETTING_5_13_1.pop('mqtt_fingerprint',None)
 SETTING_5_13_1['flag'][1].update    ({
-        'mqtt_serial':              (Platform.ALL,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SetOption22 {}".format($)')) ),
-        'rules_enabled':            (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
-        'rules_once':               (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
-        'knx_enabled':              (Platform.ALL,   '<L', (0x010,1,25), (None, None,                           ('KNX',         '"KNX_ENABLED {}".format($)')) ),
+        'mqtt_serial':              (HARDWARE.ESP,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SetOption22 {}".format($)')) ),
+        'rules_enabled':            (HARDWARE.ESP,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
+        'rules_once':               (HARDWARE.ESP,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
+        'knx_enabled':              (HARDWARE.ESP,   '<L', (0x010,1,25), (None, None,                           ('KNX',         '"KNX_ENABLED {}".format($)')) ),
                                     })
 SETTING_5_13_1.update               ({
-    'baudrate':                     (Platform.ALL,   'B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'mqtt_fingerprint1':            (Platform.ALL,   'B',   0x1AD,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
-    'mqtt_fingerprint2':            (Platform.ALL,   'B',   0x1AD+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
-    'energy_power_delta':           (Platform.ALL,   'B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
-    'light_rotation':               (Platform.ALL,   '<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
-    'serial_delimiter':             (Platform.ALL,   'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
-    'sbaudrate':                    (Platform.ALL,   'B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'knx_GA_registered':            (Platform.ALL,   'B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
-    'knx_CB_registered':            (Platform.ALL,   'B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
-    'timer':                        (Platform.ALL, {
-        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
-        'window':                   (Platform.ALL,   '<L', (0x670, 4,11),(None, None,                           ('Timer',       None)) ),
-        'repeat':                   (Platform.ALL,   '<L', (0x670, 1,15),(None, None,                           ('Timer',       None)) ),
-        'days':                     (Platform.ALL,   '<L', (0x670, 7,16),(None, None,                           ('Timer',       None)), '"0b{:07b}".format($)' ),
-        'device':                   (Platform.ALL,   '<L', (0x670, 4,23),(None, None,                           ('Timer',       None)) ),
-        'power':                    (Platform.ALL,   '<L', (0x670, 2,27),(None, None,                           ('Timer',       None)) ),
-        'mode':                     (Platform.ALL,   '<L', (0x670, 2,29),(None, '0 <= $ <= 3',                  ('Timer',       None)) ),
-        'arm':                      (Platform.ALL,   '<L', (0x670, 1,31),(None, None,                           ('Timer',       None)) ),
+    'baudrate':                     (HARDWARE.ESP,   'B',   0x09D,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'mqtt_fingerprint1':            (HARDWARE.ESP,   'B',   0x1AD,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            (HARDWARE.ESP,   'B',   0x1AD+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
+    'energy_power_delta':           (HARDWARE.ESP,   'B',   0x33F,       (None, None,                           ('Power',       '"PowerDelta {}".format($)')) ),
+    'light_rotation':               (HARDWARE.ESP,   '<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
+    'serial_delimiter':             (HARDWARE.ESP,   'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'sbaudrate':                    (HARDWARE.ESP,   'B',   0x452,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'knx_GA_registered':            (HARDWARE.ESP,   'B',   0x4A5,       (None, None,                           ('KNX',         None)) ),
+    'knx_CB_registered':            (HARDWARE.ESP,   'B',   0x4A8,       (None, None,                           ('KNX',         None)) ),
+    'timer':                        (HARDWARE.ESP, {
+        'time':                     (HARDWARE.ESP,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Arm\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
+        'window':                   (HARDWARE.ESP,   '<L', (0x670, 4,11),(None, None,                           ('Timer',       None)) ),
+        'repeat':                   (HARDWARE.ESP,   '<L', (0x670, 1,15),(None, None,                           ('Timer',       None)) ),
+        'days':                     (HARDWARE.ESP,   '<L', (0x670, 7,16),(None, None,                           ('Timer',       None)), '"0b{:07b}".format($)' ),
+        'device':                   (HARDWARE.ESP,   '<L', (0x670, 4,23),(None, None,                           ('Timer',       None)) ),
+        'power':                    (HARDWARE.ESP,   '<L', (0x670, 2,27),(None, None,                           ('Timer',       None)) ),
+        'mode':                     (HARDWARE.ESP,   '<L', (0x670, 2,29),(None, '0 <= $ <= 3',                  ('Timer',       None)) ),
+        'arm':                      (HARDWARE.ESP,   '<L', (0x670, 1,31),(None, None,                           ('Timer',       None)) ),
                                     },                      0x670,       ([16], None,                           ('Timer',       None)) ),
-    'latitude':                     (Platform.ALL,   'i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) / 1000000', 'int($ * 1000000)')),
-    'longitude':                    (Platform.ALL,   'i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) / 1000000', 'int($ * 1000000)')),
-    'knx_physsical_addr':           (Platform.ALL,   '<H',  0x6B8,       (None, None,                           ('KNX',         None)) ),
-    'knx_GA_addr':                  (Platform.ALL,   '<H',  0x6BA,       ([10], None,                           ('KNX',         None)) ),
-    'knx_CB_addr':                  (Platform.ALL,   '<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
-    'knx_GA_param':                 (Platform.ALL,   'B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
-    'knx_CB_param':                 (Platform.ALL,   'B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
-    'rules':                        (Platform.ALL,   '512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
+    'latitude':                     (HARDWARE.ESP,   'i',   0x6B0,       (None, None,                           ('Timer',       '"Latitude {}".format($)')),  ('float($) / 1000000', 'int($ * 1000000)')),
+    'longitude':                    (HARDWARE.ESP,   'i',   0x6B4,       (None, None,                           ('Timer',       '"Longitude {}".format($)')), ('float($) / 1000000', 'int($ * 1000000)')),
+    'knx_physsical_addr':           (HARDWARE.ESP,   '<H',  0x6B8,       (None, None,                           ('KNX',         None)) ),
+    'knx_GA_addr':                  (HARDWARE.ESP,   '<H',  0x6BA,       ([10], None,                           ('KNX',         None)) ),
+    'knx_CB_addr':                  (HARDWARE.ESP,   '<H',  0x6CE,       ([10], None,                           ('KNX',         None)) ),
+    'knx_GA_param':                 (HARDWARE.ESP,   'B',   0x6E2,       ([10], None,                           ('KNX',         None)) ),
+    'knx_CB_param':                 (HARDWARE.ESP,   'B',   0x6EC,       ([10], None,                           ('KNX',         None)) ),
+    'rules':                        (HARDWARE.ESP,   '512s',0x800,       (None, None,                           ('Rules',       '"Rule {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_5_14_0 = copy.deepcopy(SETTING_5_13_1)
 SETTING_5_14_0['flag'][1].update    ({
-        'device_index_enable':      (Platform.ALL,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SetOption26 {}".format($)')) ),
+        'device_index_enable':      (HARDWARE.ESP,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SetOption26 {}".format($)')) ),
                                     })
 SETTING_5_14_0['flag'][1].pop('rules_once',None)
 SETTING_5_14_0.update               ({
-    'tflag':                        (Platform.ALL, {
-        'hemis':                    (Platform.ALL,   '<H', (0x2E2,1, 0), (None, None,                           ('Management',  None)) ),
-        'week':                     (Platform.ALL,   '<H', (0x2E2,3, 1), (None, '0 <= $ <= 4',                  ('Management',  None)) ),
-        'month':                    (Platform.ALL,   '<H', (0x2E2,4, 4), (None, '1 <= $ <= 12',                 ('Management',  None)) ),
-        'dow':                      (Platform.ALL,   '<H', (0x2E2,3, 8), (None, '1 <= $ <= 7',                  ('Management',  None)) ),
-        'hour':                     (Platform.ALL,   '<H', (0x2E2,5,11), (None, '0 <= $ <= 23',                 ('Management',  None)) ),
+    'tflag':                        (HARDWARE.ESP, {
+        'hemis':                    (HARDWARE.ESP,   '<H', (0x2E2,1, 0), (None, None,                           ('Management',  None)) ),
+        'week':                     (HARDWARE.ESP,   '<H', (0x2E2,3, 1), (None, '0 <= $ <= 4',                  ('Management',  None)) ),
+        'month':                    (HARDWARE.ESP,   '<H', (0x2E2,4, 4), (None, '1 <= $ <= 12',                 ('Management',  None)) ),
+        'dow':                      (HARDWARE.ESP,   '<H', (0x2E2,3, 8), (None, '1 <= $ <= 7',                  ('Management',  None)) ),
+        'hour':                     (HARDWARE.ESP,   '<H', (0x2E2,5,11), (None, '0 <= $ <= 23',                 ('Management',  None)) ),
                                     },                      0x2E2,       ([2],  None,                           ('Management',  None)), (None, None) ),
-    'param':                        (Platform.ALL,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
-    'toffset':                      (Platform.ALL,   '<h',  0x30E,       ([2],  None,                           ('Management',  '"{cmnd} {hemis},{week},{month},{dow},{hour},{toffset}".format(cmnd="TimeSTD" if #==0 else "TimeDST", hemis=@["tflag"][#]["hemis"], week=@["tflag"][#]["week"], month=@["tflag"][#]["month"], dow=@["tflag"][#]["dow"], hour=@["tflag"][#]["hour"], toffset=value)')) ),
+    'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
+    'toffset':                      (HARDWARE.ESP,   '<h',  0x30E,       ([2],  None,                           ('Management',  '"{cmnd} {hemis},{week},{month},{dow},{hour},{toffset}".format(cmnd="TimeSTD" if #==0 else "TimeDST", hemis=@["tflag"][#]["hemis"], week=@["tflag"][#]["week"], month=@["tflag"][#]["month"], dow=@["tflag"][#]["dow"], hour=@["tflag"][#]["hour"], toffset=value)')) ),
                                     })
 # ======================================================================
 SETTING_6_0_0 = copy.deepcopy(SETTING_5_14_0)
 SETTING_6_0_0.update                ({
-    'cfg_holder':                   (Platform.ALL,   '<H',  0x000,       (None, None,                           ('System',      None)), ),
-    'cfg_size':                     (Platform.ALL,   '<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
-    'bootcount':                    (Platform.ALL,   '<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
-    'cfg_crc':                      (Platform.ALL,   '<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
-    'rule_enabled':                 (Platform.ALL, {
-        'rule1':                    (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
-        'rule2':                    (Platform.ALL,   'B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
-        'rule3':                    (Platform.ALL,   'B',  (0x49F,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($)')) ),
+    'cfg_holder':                   (HARDWARE.ESP,   '<H',  0x000,       (None, None,                           ('System',      None)), ),
+    'cfg_size':                     (HARDWARE.ESP,   '<H',  0x002,       (None, None,                           ('System',      None)), (None, False)),
+    'bootcount':                    (HARDWARE.ESP,   '<H',  0x00C,       (None, None,                           ('System',      None)), (None, False)),
+    'cfg_crc':                      (HARDWARE.ESP,   '<H',  0x00E,       (None, None,                           ('System',      None)), '"0x{:04x}".format($)'),
+    'rule_enabled':                 (HARDWARE.ESP, {
+        'rule1':                    (HARDWARE.ESP,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($)')) ),
+        'rule2':                    (HARDWARE.ESP,   'B',  (0x49F,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($)')) ),
+        'rule3':                    (HARDWARE.ESP,   'B',  (0x49F,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($)')) ),
                                     },                      0x49F,       (None, None,                           ('Rules',       None)), (None, None) ),
-    'rule_once':                    (Platform.ALL, {
-        'rule1':                    (Platform.ALL,   'B',  (0x4A0,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+4)')) ),
-        'rule2':                    (Platform.ALL,   'B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
-        'rule3':                    (Platform.ALL,   'B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
+    'rule_once':                    (HARDWARE.ESP, {
+        'rule1':                    (HARDWARE.ESP,   'B',  (0x4A0,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+4)')) ),
+        'rule2':                    (HARDWARE.ESP,   'B',  (0x4A0,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+4)')) ),
+        'rule3':                    (HARDWARE.ESP,   'B',  (0x4A0,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+4)')) ),
                                     },                      0x4A0,       (None, None,                           ('Rules',       None)), (None, None) ),
-    'mems':                         (Platform.ALL,   '10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'mems':                         (HARDWARE.ESP,   '10s', 0x7CE,       ([5],  None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
+    'rules':                        (HARDWARE.ESP,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 SETTING_6_0_0['flag'][1].update     ({
-        'knx_enable_enhancement':   (Platform.ALL,   '<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
+        'knx_enable_enhancement':   (HARDWARE.ESP,   '<L', (0x010,1,27), (None, None,                           ('KNX',         '"KNX_ENHANCED {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_1_1 = copy.deepcopy(SETTING_6_0_0)
 SETTING_6_1_1.update                ({
-    'flag3':                        (Platform.ALL,   '<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'mcp230xx_config':              (Platform.ALL, {
-        'pinmode':                  (Platform.ALL,   '<H', (0x6F6,3, 0), (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#, pinmode=@["mcp230xx_config"][#]["pinmode"], pullup=@["mcp230xx_config"][#]["pullup"], intmode=@["mcp230xx_config"][#]["int_report_mode"])')) ),
-        'pullup':                   (Platform.ALL,   '<H', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
-        'saved_state':              (Platform.ALL,   '<H', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
-        'int_report_mode':          (Platform.ALL,   '<H', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
-        'int_report_defer':         (Platform.ALL,   '<H', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
-        'int_count_en':             (Platform.ALL,   '<H', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
+    'flag3':                        (HARDWARE.ESP,   '<L',  0x3A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'switchmode':                   (HARDWARE.ESP,   'B',   0x3A4,       ([8],  '0 <= $ <= 7',                  ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'mcp230xx_config':              (HARDWARE.ESP, {
+        'pinmode':                  (HARDWARE.ESP,   '<H', (0x6F6,3, 0), (None, None,                           ('Sensor',      '"Sensor29 {pin},{pinmode},{pullup},{intmode}".format(pin=#, pinmode=@["mcp230xx_config"][#]["pinmode"], pullup=@["mcp230xx_config"][#]["pullup"], intmode=@["mcp230xx_config"][#]["int_report_mode"])')) ),
+        'pullup':                   (HARDWARE.ESP,   '<H', (0x6F6,1, 3), (None, None,                           ('Sensor',      None)) ),
+        'saved_state':              (HARDWARE.ESP,   '<H', (0x6F6,1, 4), (None, None,                           ('Sensor',      None)) ),
+        'int_report_mode':          (HARDWARE.ESP,   '<H', (0x6F6,2, 5), (None, None,                           ('Sensor',      None)) ),
+        'int_report_defer':         (HARDWARE.ESP,   '<H', (0x6F6,4, 7), (None, None,                           ('Sensor',      None)) ),
+        'int_count_en':             (HARDWARE.ESP,   '<H', (0x6F6,1,11), (None, None,                           ('Sensor',      None)) ),
                                      },     0x6F6,       ([16], None,                                           ('Sensor',      None)), (None, None) ),
                                     })
 SETTING_6_1_1['flag'][1].update     ({
-        'rf_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SetOption28 {}".format($)')) ),
-        'ir_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SetOption29 {}".format($)')) ),
-        'hass_light':               (Platform.ALL,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SetOption30 {}".format($)')) ),
+        'rf_receive_decimal':       (HARDWARE.ESP,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SetOption28 {}".format($)')) ),
+        'ir_receive_decimal':       (HARDWARE.ESP,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SetOption29 {}".format($)')) ),
+        'hass_light':               (HARDWARE.ESP,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SetOption30 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1 = copy.deepcopy(SETTING_6_1_1)
 SETTING_6_2_1.update                ({
-    'rule_stop':                    (Platform.ALL, {
-        'rule1':                    (Platform.ALL,   'B',  (0x1A7,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
-        'rule2':                    (Platform.ALL,   'B',  (0x1A7,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
-        'rule3':                    (Platform.ALL,   'B',  (0x1A7,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+    'rule_stop':                    (HARDWARE.ESP, {
+        'rule1':                    (HARDWARE.ESP,   'B',  (0x1A7,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    (HARDWARE.ESP,   'B',  (0x1A7,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    (HARDWARE.ESP,   'B',  (0x1A7,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
                                      },     0x1A7,        None),
-    'display_rotate':               (Platform.ALL,   'B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"Rotate {}".format($)')) ),
-    'display_font':                 (Platform.ALL,   'B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
-    'flag3':                        (Platform.ALL, {
-        'timers_enable':            (Platform.ALL,   '<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
-        'user_esp8285_enable':      (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
+    'display_rotate':               (HARDWARE.ESP,   'B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"Rotate {}".format($)')) ),
+    'display_font':                 (HARDWARE.ESP,   'B',   0x312,       (None, '1 <= $ <= 4',                  ('Display',     '"Font {}".format($)')) ),
+    'flag3':                        (HARDWARE.ESP, {
+        'timers_enable':            (HARDWARE.ESP,   '<L', (0x3A0,1, 0), (None, None,                           ('Timer',       '"Timers {}".format($)')) ),
+        'user_esp8285_enable':      (HARDWARE.ESP,   '<L', (0x3A0,1,31), (None, None,                           (INTERNAL,      None)) ),
                                     },                      0x3A0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'button_debounce':              (Platform.ALL,   '<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
-    'switch_debounce':              (Platform.ALL,   '<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
-    'mcp230xx_int_prio':            (Platform.ALL,   'B',   0x716,       (None, None,                           ('Sensor',      None)) ),
-    'mcp230xx_int_timer':           (Platform.ALL,   '<H',  0x718,       (None, None,                           ('Sensor',      None)) ),
+    'button_debounce':              (HARDWARE.ESP,   '<H',  0x542,       (None, '40 <= $ <= 1000',              ('Control',     '"ButtonDebounce {}".format($)')) ),
+    'switch_debounce':              (HARDWARE.ESP,   '<H',  0x66E,       (None, '40 <= $ <= 1000',              ('Control',     '"SwitchDebounce {}".format($)')) ),
+    'mcp230xx_int_prio':            (HARDWARE.ESP,   'B',   0x716,       (None, None,                           ('Sensor',      None)) ),
+    'mcp230xx_int_timer':           (HARDWARE.ESP,   '<H',  0x718,       (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_6_2_1['flag'][1].pop('rules_enabled',None)
 SETTING_6_2_1['flag'][1].update     ({
-        'mqtt_serial_raw':          (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
-        'global_state':             (Platform.ALL,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SetOption31 {}".format($)')) ),
+        'mqtt_serial_raw':          (HARDWARE.ESP,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SetOption23 {}".format($)')) ),
+        'global_state':             (HARDWARE.ESP,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SetOption31 {}".format($)')) ),
                                     })
 SETTING_6_2_1['flag2'][1].update    ({
-    'axis_resolution':              (Platform.ALL,   '<L', (0x5BC,2,13), (None, None,                           ('Sensor',      None)) ),   # Need to be services by command Sensor32
+    'axis_resolution':              (HARDWARE.ESP,   '<L', (0x5BC,2,13), (None, None,                           ('Sensor',      None)) ),   # Need to be services by command Sensor32
                                     })
 # ======================================================================
 SETTING_6_2_1_2 = copy.deepcopy(SETTING_6_2_1)
 SETTING_6_2_1_2['flag3'][1].update  ({
-        'user_esp8285_enable':      (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
+        'user_esp8285_enable':      (HARDWARE.ESP,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SetOption51 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_3 = copy.deepcopy(SETTING_6_2_1_2)
 SETTING_6_2_1_3['flag2'][1].update  ({
-        'frequency_resolution':     (Platform.ALL,   '<L', (0x5BC,2,11), (None, '0 <= $ <= 3',                  ('Power',       '"FreqRes {}".format($)')) ),
+        'frequency_resolution':     (HARDWARE.ESP,   '<L', (0x5BC,2,11), (None, '0 <= $ <= 3',                  ('Power',       '"FreqRes {}".format($)')) ),
                                     })
 SETTING_6_2_1_3['flag3'][1].update  ({
-        'time_append_timezone':     (Platform.ALL,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SetOption52 {}".format($)')) ),
+        'time_append_timezone':     (HARDWARE.ESP,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SetOption52 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_6 = copy.deepcopy(SETTING_6_2_1_3)
 SETTING_6_2_1_6.update              ({
-    'energy_power_calibration':     (Platform.ALL,   '<L',  0x364,       (None, '1000 <= $ <= 32000',           ('Power',       '"PowerCal {}".format($)')) ),
-    'energy_voltage_calibration':   (Platform.ALL,   '<L',  0x368,       (None, '1000 <= $ <= 32000',           ('Power',       '"VoltageCal {}".format($)')) ),
-    'energy_current_calibration':   (Platform.ALL,   '<L',  0x36C,       (None, '1000 <= $ <= 32000',           ('Power',       '"CurrentCal {}".format($)')) ),
-    'energy_frequency_calibration': (Platform.ALL,   '<L',  0x7C8,       (None, '45000 < $ < 65000',            ('Power',       '"FrequencySet {}".format($)')) ),
+    'energy_power_calibration':     (HARDWARE.ESP,   '<L',  0x364,       (None, '1000 <= $ <= 32000',           ('Power',       '"PowerCal {}".format($)')) ),
+    'energy_voltage_calibration':   (HARDWARE.ESP,   '<L',  0x368,       (None, '1000 <= $ <= 32000',           ('Power',       '"VoltageCal {}".format($)')) ),
+    'energy_current_calibration':   (HARDWARE.ESP,   '<L',  0x36C,       (None, '1000 <= $ <= 32000',           ('Power',       '"CurrentCal {}".format($)')) ),
+    'energy_frequency_calibration': (HARDWARE.ESP,   '<L',  0x7C8,       (None, '45000 < $ < 65000',            ('Power',       '"FrequencySet {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_10 = copy.deepcopy(SETTING_6_2_1_6)
 SETTING_6_2_1_10.update             ({
-    'rgbwwTable':                   (Platform.ALL,   'B',   0x71A,       ([5],  None,                           ('Light',       '"RGBWWTable {}".format(",".join(str(i) for i in @["rgbwwTable"]))')) ),
+    'rgbwwTable':                   (HARDWARE.ESP,   'B',   0x71A,       ([5],  None,                           ('Light',       '"RGBWWTable {}".format(",".join(str(i) for i in @["rgbwwTable"]))')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_14 = copy.deepcopy(SETTING_6_2_1_10)
 SETTING_6_2_1_14.update             ({
-    'weight_reference':             (Platform.ALL,   '<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
-    'weight_calibration':           (Platform.ALL,   '<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
-    'weight_max':                   (Platform.ALL,   '<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
-    'weight_item':                  (Platform.ALL,   '<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
-    'web_refresh':                  (Platform.ALL,   '<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
+    'weight_reference':             (HARDWARE.ESP,   '<L',  0x7C0,       (None, None,                           ('Management',  '"Sensor34 3 {}".format($)')) ),
+    'weight_calibration':           (HARDWARE.ESP,   '<L',  0x7C4,       (None, None,                           ('Management',  '"Sensor34 4 {}".format($)')) ),
+    'weight_max':                   (HARDWARE.ESP,   '<H',  0x7BE,       (None, None,                           ('Management',  '"Sensor34 5 {}".format($)')), ('float($) // 1000', 'int($ * 1000)') ),
+    'weight_item':                  (HARDWARE.ESP,   '<H',  0x7BC,       (None, None,                           ('Management',  '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'web_refresh':                  (HARDWARE.ESP,   '<H',  0x7CC,       (None, '1000 <= $ <= 10000',           ('Wifi',        '"WebRefresh {}".format($)')) ),
                                     })
 SETTING_6_2_1_14['flag2'][1].update ({
-        'weight_resolution':        (Platform.ALL,   '<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
+        'weight_resolution':        (HARDWARE.ESP,   '<L', (0x5BC,2, 9), (None, '0 <= $ <= 3',                  ('Sensor',      '"WeightRes {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_2_1_19 = copy.deepcopy(SETTING_6_2_1_14)
 SETTING_6_2_1_19.update             ({
-    'weight_item':                  (Platform.ALL,   '<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
+    'weight_item':                  (HARDWARE.ESP,   '<L',  0x7B8,       (None, None,                           ('Sensor',      '"Sensor34 6 {}".format($)')), ('int($ * 10)', 'float($) // 10') ),
                                     })
 SETTING_6_2_1_20 = SETTING_6_2_1_19
 SETTING_6_2_1_20['flag3'][1].update ({
-        'gui_hostname_ip':          (Platform.ALL,   '<L', (0x3A0,1,3),  (None, None,                           ('SetOption',   '"SetOption53 {}".format($)')) ),
+        'gui_hostname_ip':          (HARDWARE.ESP,   '<L', (0x3A0,1,3),  (None, None,                           ('SetOption',   '"SetOption53 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0 = copy.deepcopy(SETTING_6_2_1_20)
 SETTING_6_3_0.update                ({
-    'energy_kWhtotal_time':         (Platform.ALL,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
-    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhtotal_time':         (HARDWARE.ESP,   '<L',  0x7B4,       (None, None,                           ('Power',       None)) ),
+    'energy_kWhtoday':              (HARDWARE.ESP,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhyesterday':          (HARDWARE.ESP,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {}".format(int(round(float($)//100)))')) ),
+    'energy_kWhtotal':              (HARDWARE.ESP,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {}".format(int(round(float($)//100)))')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update              ({
-    'timezone_minutes':             (Platform.ALL,   'B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
+    'timezone_minutes':             (HARDWARE.ESP,   'B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_6_3_0_2['flag'][1].pop('rules_once',None)
 SETTING_6_3_0_2['flag'][1].update   ({
-        'pressure_conversion':      (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
+        'pressure_conversion':      (HARDWARE.ESP,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SetOption24 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_4 = copy.deepcopy(SETTING_6_3_0_2)
 SETTING_6_3_0_4.update              ({
-    'drivers':                      (Platform.ALL,   '<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'monitors':                     (Platform.ALL,   '<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'displays':                     (Platform.ALL,   '<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'drivers':                      (HARDWARE.ESP,   '<L',  0x794,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'monitors':                     (HARDWARE.ESP,   '<L',  0x7A0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'sensors':                      (HARDWARE.ESP,   '<L',  0x7A4,       ([3],  None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'displays':                     (HARDWARE.ESP,   '<L',  0x7B0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_6_3_0_4['flag3'][1].update  ({
-        'tuya_apply_o20':           (Platform.ALL,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
+        'tuya_apply_o20':           (HARDWARE.ESP,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SetOption54 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_8 = copy.deepcopy(SETTING_6_3_0_4)
 SETTING_6_3_0_8['flag3'][1].update  ({
-        'hass_short_discovery_msg': (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
+        'hass_short_discovery_msg': (HARDWARE.ESP,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_10 = copy.deepcopy(SETTING_6_3_0_8)
 SETTING_6_3_0_10['flag3'][1].update ({
-        'use_wifi_scan':            (Platform.ALL,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SetOption56 {}".format($)')) ),
-        'use_wifi_rescan':          (Platform.ALL,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SetOption57 {}".format($)')) ),
+        'use_wifi_scan':            (HARDWARE.ESP,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SetOption56 {}".format($)')) ),
+        'use_wifi_rescan':          (HARDWARE.ESP,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SetOption57 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_11 = copy.deepcopy(SETTING_6_3_0_10)
 SETTING_6_3_0_11['flag3'][1].update ({
-        'receive_raw':          	(Platform.ALL,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SetOption58 {}".format($)')) ),
+        'receive_raw':          	(HARDWARE.ESP,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SetOption58 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_13 = copy.deepcopy(SETTING_6_3_0_11)
 SETTING_6_3_0_13['flag3'][1].update ({
-        'hass_tele_on_power':       (Platform.ALL,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SetOption59 {}".format($)')) ),
+        'hass_tele_on_power':       (HARDWARE.ESP,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SetOption59 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_14 = copy.deepcopy(SETTING_6_3_0_13)
 SETTING_6_3_0_14['flag2'][1].update ({
-        'calc_resolution':          (Platform.ALL,   '<L', (0x5BC,3, 6), (None, '0 <= $ <= 7',                  ('Rules',       '"CalcRes {}".format($)')) ),
+        'calc_resolution':          (HARDWARE.ESP,   '<L', (0x5BC,3, 6), (None, '0 <= $ <= 7',                  ('Rules',       '"CalcRes {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_15 = copy.deepcopy(SETTING_6_3_0_14)
 SETTING_6_3_0_15['flag3'][1].update ({
-        'sleep_normal':             (Platform.ALL,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SetOption60 {}".format($)')) ),
+        'sleep_normal':             (HARDWARE.ESP,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SetOption60 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_3_0_16 = copy.deepcopy(SETTING_6_3_0_15)
 SETTING_6_3_0_16['mcp230xx_config'][1].update ({
-        'int_retain_flag':          (Platform.ALL,   '<H', (0x6F6,1,12), (None, None,                           ('Sensor',      '"Sensor29 IntRetain,{pin},{int_retain_flag}".format(pin=#, int_retain_flag=@["mcp230xx_config"][#]["int_retain_flag"])')) ),
+        'int_retain_flag':          (HARDWARE.ESP,   '<H', (0x6F6,1,12), (None, None,                           ('Sensor',      '"Sensor29 IntRetain,{pin},{int_retain_flag}".format(pin=#, int_retain_flag=@["mcp230xx_config"][#]["int_retain_flag"])')) ),
                                     })
 SETTING_6_3_0_16['flag3'][1].update ({
-        'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
+        'button_switch_force_local':(HARDWARE.ESP,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SetOption61 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_0_2 = copy.deepcopy(SETTING_6_3_0_16)
@@ -1055,46 +1087,46 @@ SETTING_6_4_0_2['flag3'][1].pop('hass_short_discovery_msg',None)
 # ======================================================================
 SETTING_6_4_1_4 = copy.deepcopy(SETTING_6_4_0_2)
 SETTING_6_4_1_4['flag3'][1].update  ({
-        'mdns_enabled':             (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
+        'mdns_enabled':             (HARDWARE.ESP,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SetOption55 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_7 = copy.deepcopy(SETTING_6_4_1_4)
 SETTING_6_4_1_7['flag3'][1].update  ({
-        'no_pullup':                (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
+        'no_pullup':                (HARDWARE.ESP,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_8 = copy.deepcopy(SETTING_6_4_1_7)
 SETTING_6_4_1_8.update              ({
-    'my_gp':                        (Platform.ALL,   'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp':                        (HARDWARE.ESP,   'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
                                     })
 SETTING_6_4_1_8['flag3'][1].update  ({
-        'split_interlock':          (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
+        'split_interlock':          (HARDWARE.ESP,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_11 = copy.deepcopy(SETTING_6_4_1_8)
 SETTING_6_4_1_11['flag3'][1].pop('split_interlock',None)
 SETTING_6_4_1_11.update             ({
-    'interlock':                    (Platform.ALL,   'B',   0x4CA,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:02x}".format($)' ),
+    'interlock':                    (HARDWARE.ESP,   'B',   0x4CA,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:02x}".format($)' ),
                                     })
 SETTING_6_4_1_11['flag'][1].update  ({
-        'interlock':                (Platform.ALL,   '<L', (0x010,1,14), (None, None,                           ('Control',     '"Interlock {}".format($)')) ),
+        'interlock':                (HARDWARE.ESP,   '<L', (0x010,1,14), (None, None,                           ('Control',     '"Interlock {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_13 = copy.deepcopy(SETTING_6_4_1_11)
 SETTING_6_4_1_13.update             ({
-    'SensorBits1':                  (Platform.ALL, {
-        'mhz19b_abc_disable':       (Platform.ALL,   'B',  (0x717,1, 7), (None, None,                           ('Sensor',      '"Sensor15 {}".format($)')) ),
+    'SensorBits1':                  (HARDWARE.ESP, {
+        'mhz19b_abc_disable':       (HARDWARE.ESP,   'B',  (0x717,1, 7), (None, None,                           ('Sensor',      '"Sensor15 {}".format($)')) ),
                                     },                      0x717,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_6_4_1_16 = copy.deepcopy(SETTING_6_4_1_13)
 SETTING_6_4_1_16.update             ({
-    'user_template':                (Platform.ALL, {
-        'base':                     (Platform.ALL,   'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ALL,   '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
-        'gpio':                     (Platform.ALL,   'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
-        'flag':                     (Platform.ALL, {
-            'adc0':                 (Platform.ALL,   'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+    'user_template':                (HARDWARE.ESP, {
+        'base':                     (HARDWARE.ESP,   'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP,   '15s', 0x720,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)' )) ),
+        'gpio':                     (HARDWARE.ESP,   'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
+        'flag':                     (HARDWARE.ESP, {
+            'adc0':                 (HARDWARE.ESP,   'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x73C,       (None, None,                           ('Management',  None))
                                     ),
                                     },                      0x71F,       (None, None,                           ('Management',  None))
@@ -1106,155 +1138,155 @@ SETTING_6_4_1_17['flag3'][1].pop('no_pullup',None)
 # ======================================================================
 SETTING_6_4_1_18 = copy.deepcopy(SETTING_6_4_1_17)
 SETTING_6_4_1_18['flag3'][1].update ({
-        'no_hold_retain':           (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
+        'no_hold_retain':           (HARDWARE.ESP,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SetOption62 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_3 = copy.deepcopy(SETTING_6_4_1_18)
 SETTING_6_5_0_3.update              ({
-    'novasds_period':               (Platform.ALL,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
+    'novasds_period':               (HARDWARE.ESP,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_6 = copy.deepcopy(SETTING_6_5_0_3)
 SETTING_6_5_0_6.update              ({
-    'web_color':                    (Platform.ALL,   '3B',  0x73E,       ([18], None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+1,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
+    'web_color':                    (HARDWARE.ESP,   '3B',  0x73E,       ([18], None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+1,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_6_5_0_7 = copy.deepcopy(SETTING_6_5_0_6)
 SETTING_6_5_0_7.update              ({
-    'ledmask':                      (Platform.ALL,   '<H',  0x7BC,       (None, None,                           ('Control',     '"LedMask {}".format($)')), '"0x{:04x}".format($)' ),
+    'ledmask':                      (HARDWARE.ESP,   '<H',  0x7BC,       (None, None,                           ('Control',     '"LedMask {}".format($)')), '"0x{:04x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_6_5_0_9 = copy.deepcopy(SETTING_6_5_0_7)
 SETTING_6_5_0_9['flag3'][1].update  ({
-        'no_power_feedback':        (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
+        'no_power_feedback':        (HARDWARE.ESP,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SetOption63 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_10 = copy.deepcopy(SETTING_6_5_0_9)
 SETTING_6_5_0_10.update             ({
-    'my_adc0':                      (Platform.ALL,   'B',   0x495,       (None, None,                           ('Sensor',      '"Adc {}".format($)')) ),
+    'my_adc0':                      (HARDWARE.ESP,   'B',   0x495,       (None, None,                           ('Sensor',      '"Adc {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_11 = copy.deepcopy(SETTING_6_5_0_10)
 SETTING_6_5_0_11['flag3'][1].update ({
-        'use_underscore':           (Platform.ALL,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SetOption64 {}".format($)')) ),
+        'use_underscore':           (HARDWARE.ESP,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SetOption64 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_12 = copy.deepcopy(SETTING_6_5_0_11)
 SETTING_6_5_0_12.pop('drivers',None)
 SETTING_6_5_0_12.update             ({
-    'adc_param_type':               (Platform.ALL,   'B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param1':                   (Platform.ALL,   '<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
-    'adc_param2':                   (Platform.ALL,   '<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
-    'adc_param3':                   (Platform.ALL,   '<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
-    'sps30_inuse_hours':            (Platform.ALL,   'B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0x1D5,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
+    'adc_param1':                   (HARDWARE.ESP,   '<L',  0x794,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param2':                   (HARDWARE.ESP,   '<L',  0x798,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param3':                   (HARDWARE.ESP,   '<l',  0x79C,       (None, None,                           ('Sensor',      None)) ),
+    'sps30_inuse_hours':            (HARDWARE.ESP,   'B',   0x1E8,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 # ======================================================================
 SETTING_6_5_0_15 = copy.deepcopy(SETTING_6_5_0_12)
 SETTING_6_5_0_15['flag3'][1].update ({
-        'tuya_show_dimmer':         (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+        'tuya_show_dimmer':         (HARDWARE.ESP,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_1 = copy.deepcopy(SETTING_6_5_0_15)
 SETTING_6_6_0_1['flag3'][1].update  ({
-        'tuya_dimmer_range_255':    (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
+        'tuya_dimmer_range_255':    (HARDWARE.ESP,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_2 = copy.deepcopy(SETTING_6_6_0_1)
 SETTING_6_6_0_2['flag3'][1].update  ({
-        'buzzer_enable':            (Platform.ALL,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SetOption67 {}".format($)')) ),
+        'buzzer_enable':            (HARDWARE.ESP,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SetOption67 {}".format($)')) ),
                                     })
 SETTING_6_6_0_2.update              ({
-    'display_model':                (Platform.ALL,   'B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"DisplayModel {}".format($)')) ),
-    'display_mode':                 (Platform.ALL,   'B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"DisplayMode {}".format($)')) ),
-    'display_refresh':              (Platform.ALL,   'B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"DisplayRefresh {}".format($)')) ),
-    'display_rows':                 (Platform.ALL,   'B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"DisplayRows {}".format($)')) ),
-    'display_cols':                 (Platform.ALL,   'B',   0x2D6,       ([2],  '1 <= $ <= 44',                 ('Display',     '"DisplayCols{} {}".format(#+1,$)')) ),
-    'display_address':              (Platform.ALL,   'B',   0x2D8,       ([8],  None,                           ('Display',     '"DisplayAddress{} {}".format(#+1,$)')) ),
-    'display_dimmer':               (Platform.ALL,   'B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"DisplayDimmer {}".format($)')) ),
-    'display_size':                 (Platform.ALL,   'B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"DisplaySize {}".format($)')) ),
-    'display_rotate':               (Platform.ALL,   'B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"DisplayRotate {}".format($)')) ),
-    'display_font':                 (Platform.ALL,   'B',   0x312,       (None, '$ in (1,1,2,3,7)',             ('Display',     '"DisplayFont {}".format($)')) ),
-    'display_width':                (Platform.ALL,   '<H',  0x774,       (None, None,                           ('Display',     '"DisplayWidth {}".format($)')) ),
-    'display_height':               (Platform.ALL,   '<H',  0x776,       (None, None,                           ('Display',     '"DisplayHeight {}".format($)')) ),
+    'display_model':                (HARDWARE.ESP,   'B',   0x2D2,       (None, '0 <= $ <= 16',                 ('Display',     '"DisplayModel {}".format($)')) ),
+    'display_mode':                 (HARDWARE.ESP,   'B',   0x2D3,       (None, '0 <= $ <= 5',                  ('Display',     '"DisplayMode {}".format($)')) ),
+    'display_refresh':              (HARDWARE.ESP,   'B',   0x2D4,       (None, '1 <= $ <= 7',                  ('Display',     '"DisplayRefresh {}".format($)')) ),
+    'display_rows':                 (HARDWARE.ESP,   'B',   0x2D5,       (None, '1 <= $ <= 32',                 ('Display',     '"DisplayRows {}".format($)')) ),
+    'display_cols':                 (HARDWARE.ESP,   'B',   0x2D6,       ([2],  '1 <= $ <= 44',                 ('Display',     '"DisplayCols{} {}".format(#+1,$)')) ),
+    'display_address':              (HARDWARE.ESP,   'B',   0x2D8,       ([8],  None,                           ('Display',     '"DisplayAddress{} {}".format(#+1,$)')) ),
+    'display_dimmer':               (HARDWARE.ESP,   'B',   0x2E0,       (None, '0 <= $ <= 100',                ('Display',     '"DisplayDimmer {}".format($)')) ),
+    'display_size':                 (HARDWARE.ESP,   'B',   0x2E1,       (None, '1 <= $ <= 4',                  ('Display',     '"DisplaySize {}".format($)')) ),
+    'display_rotate':               (HARDWARE.ESP,   'B',   0x2FA,       (None, '0 <= $ <= 3',                  ('Display',     '"DisplayRotate {}".format($)')) ),
+    'display_font':                 (HARDWARE.ESP,   'B',   0x312,       (None, '$ in (1,1,2,3,7)',             ('Display',     '"DisplayFont {}".format($)')) ),
+    'display_width':                (HARDWARE.ESP,   '<H',  0x774,       (None, None,                           ('Display',     '"DisplayWidth {}".format($)')) ),
+    'display_height':               (HARDWARE.ESP,   '<H',  0x776,       (None, None,                           ('Display',     '"DisplayHeight {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_3 = copy.deepcopy(SETTING_6_6_0_2)
 SETTING_6_6_0_3['flag3'][1].update  ({
-        'pwm_multi_channels':       (Platform.ALL,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SetOption68 {}".format($)')) ),
+        'pwm_multi_channels':       (HARDWARE.ESP,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SetOption68 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_5 = copy.deepcopy(SETTING_6_6_0_3)
 SETTING_6_6_0_5.update              ({
-    'sensors':                      (Platform.ALL,   '<L',  0x7A4,       ([3],  None,                           ('Wifi',        'list("WebSensor{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
+    'sensors':                      (HARDWARE.ESP,   '<L',  0x7A4,       ([3],  None,                           ('Wifi',        'list("WebSensor{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
                                     })
 SETTING_6_6_0_5['flag3'][1].update  ({
-        'tuya_dimmer_min_limit':    (Platform.ALL,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SetOption69 {}".format($)')) ),
+        'tuya_dimmer_min_limit':    (HARDWARE.ESP,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SetOption69 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_6 = copy.deepcopy(SETTING_6_6_0_5)
 SETTING_6_6_0_6['flag3'][1].pop('tuya_show_dimmer',None)
 SETTING_6_6_0_6['flag3'][1].update  ({
-        'tuya_disable_dimmer':      (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+        'tuya_disable_dimmer':      (HARDWARE.ESP,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_7 = copy.deepcopy(SETTING_6_6_0_6)
 SETTING_6_6_0_7.update              ({
-    'energy_usage':                 (Platform.ALL, {
-        'usage1_kWhtotal':          (Platform.ALL,   '<L',  0x77C,       (None, None,                           ('Power',       None)) ),
-        'usage1_kWhtoday':          (Platform.ALL,   '<L',  0x780,       (None, None,                           ('Power',       None)) ),
-        'return1_kWhtotal':         (Platform.ALL,   '<L',  0x784,       (None, None,                           ('Power',       None)) ),
-        'return2_kWhtotal':         (Platform.ALL,   '<L',  0x788,       (None, None,                           ('Power',       None)) ),
-        'last_usage_kWhtotal':      (Platform.ALL,   '<L',  0x78C,       (None, None,                           ('Power',       None)) ),
-        'last_return_kWhtotal':     (Platform.ALL,   '<L',  0x790,       (None, None,                           ('Power',       None)) ),
+    'energy_usage':                 (HARDWARE.ESP, {
+        'usage1_kWhtotal':          (HARDWARE.ESP,   '<L',  0x77C,       (None, None,                           ('Power',       None)) ),
+        'usage1_kWhtoday':          (HARDWARE.ESP,   '<L',  0x780,       (None, None,                           ('Power',       None)) ),
+        'return1_kWhtotal':         (HARDWARE.ESP,   '<L',  0x784,       (None, None,                           ('Power',       None)) ),
+        'return2_kWhtotal':         (HARDWARE.ESP,   '<L',  0x788,       (None, None,                           ('Power',       None)) ),
+        'last_usage_kWhtotal':      (HARDWARE.ESP,   '<L',  0x78C,       (None, None,                           ('Power',       None)) ),
+        'last_return_kWhtotal':     (HARDWARE.ESP,   '<L',  0x790,       (None, None,                           ('Power',       None)) ),
                                     },                      0x77C,       (None, None,                           ('Power',       None)) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_8 = copy.deepcopy(SETTING_6_6_0_7)
 SETTING_6_6_0_8['flag3'][1].update  ({
-        'energy_weekend':           (Platform.ALL,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff3 {}".format($)')) ),
+        'energy_weekend':           (HARDWARE.ESP,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff3 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_9 = copy.deepcopy(SETTING_6_6_0_8)
 SETTING_6_6_0_9.update              ({
-    'baudrate':                     (Platform.ALL,   '<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-    'sbaudrate':                    (Platform.ALL,   '<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'baudrate':                     (HARDWARE.ESP,   '<H',  0x778,       (None, None,                           ('Serial',      '"Baudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'sbaudrate':                    (HARDWARE.ESP,   '<H',  0x77A,       (None, None,                           ('Serial',      '"SBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
 SETTING_6_6_0_10 = copy.deepcopy(SETTING_6_6_0_9)
 SETTING_6_6_0_10['flag3'][1].pop('tuya_disable_dimmer',None)
 SETTING_6_6_0_10.update             ({
-    'cfg_timestamp':                (Platform.ALL,   '<L',  0xFF8,       (None, None,                           ('System',      None)) ),
-    'cfg_crc32':                    (Platform.ALL,   '<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
-    'tuya_fnid_map':                (Platform.ALL, {
-        'fnid':                     (Platform.ALL,   'B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#]["dpid"]!=0) else None')) ),
-        'dpid':                     (Platform.ALL,   'B',   0xE01,       (None, None,                           ('Management',  None)) ),
+    'cfg_timestamp':                (HARDWARE.ESP,   '<L',  0xFF8,       (None, None,                           ('System',      None)) ),
+    'cfg_crc32':                    (HARDWARE.ESP,   '<L',  0xFFC,       (None, None,                           ('System',      None)), '"0x{:08x}".format($)' ),
+    'tuya_fnid_map':                (HARDWARE.ESP, {
+        'fnid':                     (HARDWARE.ESP,   'B',   0xE00,       (None, None,                           ('Management',  '"TuyaMCU {},{}".format($,@["tuya_fnid_map"][#]["dpid"]) if ($!=0 or @["tuya_fnid_map"][#]["dpid"]!=0) else None')) ),
+        'dpid':                     (HARDWARE.ESP,   'B',   0xE01,       (None, None,                           ('Management',  None)) ),
                                     },                      0xE00,       ([16], None,                           ('Management',  None)), (None, None) ),
                                     })
 SETTING_6_6_0_10['flag2'][1].update ({
-        'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 2',                  ('Management', '"Time {}".format($+1)')) ),
+        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 2',                  ('Management', '"Time {}".format($+1)')) ),
                                     })
 SETTING_6_6_0_10['flag3'][1].pop('tuya_show_dimmer',None)
 # ======================================================================
 SETTING_6_6_0_11 = copy.deepcopy(SETTING_6_6_0_10)
 SETTING_6_6_0_11.update             ({
-    'ina226_r_shunt':               (Platform.ALL,   '<H',  0xE20,       ([4], None,                            ('Power',       '"Sensor54 {}1 {}".format(#+1,$)')) ),
-    'ina226_i_fs':                  (Platform.ALL,   '<H',  0xE28,       ([4], None,                            ('Power',       '"Sensor54 {}2 {}".format(#+1,$)')) ),
+    'ina226_r_shunt':               (HARDWARE.ESP,   '<H',  0xE20,       ([4], None,                            ('Power',       '"Sensor54 {}1 {}".format(#+1,$)')) ),
+    'ina226_i_fs':                  (HARDWARE.ESP,   '<H',  0xE28,       ([4], None,                            ('Power',       '"Sensor54 {}2 {}".format(#+1,$)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_12 = copy.deepcopy(SETTING_6_6_0_11)
 SETTING_6_6_0_12.update             ({
-    'register8_ENERGY_TARIFF1_ST':  (Platform.ALL,   'B',   0x1D6,       (None, None,                           ('Power',       '"Tariff1 {},{}".format($,@["register8_ENERGY_TARIFF1_DS"])')) ),
-    'register8_ENERGY_TARIFF2_ST':  (Platform.ALL,   'B',   0x1D7,       (None, None,                           ('Power',       '"Tariff2 {},{}".format($,@["register8_ENERGY_TARIFF2_DS"])')) ),
-    'register8_ENERGY_TARIFF1_DS':  (Platform.ALL,   'B',   0x1D8,       (None, None,                           ('Power',       None)) ),
-    'register8_ENERGY_TARIFF2_DS':  (Platform.ALL,   'B',   0x1D9,       (None, None,                           ('Power',       None)) ),
+    'register8_ENERGY_TARIFF1_ST':  (HARDWARE.ESP,   'B',   0x1D6,       (None, None,                           ('Power',       '"Tariff1 {},{}".format($,@["register8_ENERGY_TARIFF1_DS"])')) ),
+    'register8_ENERGY_TARIFF2_ST':  (HARDWARE.ESP,   'B',   0x1D7,       (None, None,                           ('Power',       '"Tariff2 {},{}".format($,@["register8_ENERGY_TARIFF2_DS"])')) ),
+    'register8_ENERGY_TARIFF1_DS':  (HARDWARE.ESP,   'B',   0x1D8,       (None, None,                           ('Power',       None)) ),
+    'register8_ENERGY_TARIFF2_DS':  (HARDWARE.ESP,   'B',   0x1D9,       (None, None,                           ('Power',       None)) ),
                                     })
 SETTING_6_6_0_12['flag3'][1].update ({
-        'energy_weekend':           (Platform.ALL,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff9 {}".format($)')) ),
+        'energy_weekend':           (HARDWARE.ESP,   '<L', (0x3A0,1,20), (None, None,                           ('Power',       '"Tariff9 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_13 = copy.deepcopy(SETTING_6_6_0_12)
 SETTING_6_6_0_13['SensorBits1'][1].update ({
-        'hx711_json_weight_change': (Platform.ALL,   'B',  (0x717,1, 6), (None, None,                           ('Sensor',      '"Sensor34 8 {}".format($)')) ),
+        'hx711_json_weight_change': (HARDWARE.ESP,   'B',  (0x717,1, 6), (None, None,                           ('Sensor',      '"Sensor34 8 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_14 = copy.deepcopy(SETTING_6_6_0_13)
@@ -1263,31 +1295,31 @@ SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF2_ST',None)
 SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF1_DS',None)
 SETTING_6_6_0_14.pop('register8_ENERGY_TARIFF2_DS',None)
 SETTING_6_6_0_14.update             ({
-    'register8':                    (Platform.ALL,   'B',   0x1D6,       ([16], None,                           ('Power',       None)) ),
-    'tariff1_0':                    (Platform.ALL,   '<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]//60,@["tariff1_0"]%60,@["tariff1_1"]//60,@["tariff1_1"]%60)')) ),
-    'tariff1_1':                    (Platform.ALL,   '<H',  0xE32,       (None, None,                           ('Power',       None)) ),
-    'tariff2_0':                    (Platform.ALL,   '<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
-    'tariff2_1':                    (Platform.ALL,   '<H',  0xE36,       (None, None,                           ('Power',       None)) ),
-    'mqttlog_level':                (Platform.ALL,   'B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
-    'pcf8574_config':               (Platform.ALL,   'B',   0xE88,       ([8],  None,                           ('Sensor',      None)) ),
-    'shutter_accuracy':             (Platform.ALL,   'B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
-    'shutter_opentime':             (Platform.ALL,   '<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
-    'shutter_closetime':            (Platform.ALL,   '<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
-    'shuttercoeff':                 (Platform.ALL,   '<H',  0xE50,       ([5,4],None,                           ('Shutter',     'list("ShutterCalibration{} {}".format(k+1, list(",".join(str(@["shuttercoeff"][i][j]) for i in range(0, len(@["shuttercoeff"]))) for j in range(0, len(@["shuttercoeff"][0])))[k]) for k in range(0,len(@["shuttercoeff"][0])))')) ),
-    'shutter_invert':               (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     '"ShutterInvert{} {}".format(#+1,$)')) ),
-    'shutter_set50percent':         (Platform.ALL,   'B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#+1,$)')) ),
-    'shutter_position':             (Platform.ALL,   'B',   0xE80,       ([4],  None,                           ('Shutter',     '"ShutterPosition{} {}".format(#+1,$)')) ),
-    'shutter_startrelay':           (Platform.ALL,   'B',   0xE84,       ([4],  None,                           ('Shutter',     '"ShutterRelay{} {}".format(#+1,$)')) ),
+    'register8':                    (HARDWARE.ESP,   'B',   0x1D6,       ([16], None,                           ('Power',       None)) ),
+    'tariff1_0':                    (HARDWARE.ESP,   '<H',  0xE30,       (None, None,                           ('Power',       '"Tariff1 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff1_0"]//60,@["tariff1_0"]%60,@["tariff1_1"]//60,@["tariff1_1"]%60)')) ),
+    'tariff1_1':                    (HARDWARE.ESP,   '<H',  0xE32,       (None, None,                           ('Power',       None)) ),
+    'tariff2_0':                    (HARDWARE.ESP,   '<H',  0xE34,       (None, None,                           ('Power',       '"Tariff2 {:02d}:{:02d},{:02d}:{:02d}".format(@["tariff2_0"]//60,@["tariff2_0"]%60,@["tariff2_1"]//60,@["tariff2_1"]%60)')) ),
+    'tariff2_1':                    (HARDWARE.ESP,   '<H',  0xE36,       (None, None,                           ('Power',       None)) ),
+    'mqttlog_level':                (HARDWARE.ESP,   'B',   0x1E7,       (None, None,                           ('Management', '"MqttLog {}".format($)')) ),
+    'pcf8574_config':               (HARDWARE.ESP,   'B',   0xE88,       ([8],  None,                           ('Sensor',      None)) ),
+    'shutter_accuracy':             (HARDWARE.ESP,   'B',   0x1E6,       (None, None,                           ('Shutter',     None)) ),
+    'shutter_opentime':             (HARDWARE.ESP,   '<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
+    'shutter_closetime':            (HARDWARE.ESP,   '<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
+    'shuttercoeff':                 (HARDWARE.ESP,   '<H',  0xE50,       ([5,4],None,                           ('Shutter',     'list("ShutterCalibration{} {}".format(k+1, list(",".join(str(@["shuttercoeff"][i][j]) for i in range(0, len(@["shuttercoeff"]))) for j in range(0, len(@["shuttercoeff"][0])))[k]) for k in range(0,len(@["shuttercoeff"][0])))')) ),
+    'shutter_invert':               (HARDWARE.ESP,   'B',   0xE78,       ([4],  None,                           ('Shutter',     '"ShutterInvert{} {}".format(#+1,$)')) ),
+    'shutter_set50percent':         (HARDWARE.ESP,   'B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#+1,$)')) ),
+    'shutter_position':             (HARDWARE.ESP,   'B',   0xE80,       ([4],  None,                           ('Shutter',     '"ShutterPosition{} {}".format(#+1,$)')) ),
+    'shutter_startrelay':           (HARDWARE.ESP,   'B',   0xE84,       ([4],  None,                           ('Shutter',     '"ShutterRelay{} {}".format(#+1,$)')) ),
                                     })
 SETTING_6_6_0_14['flag3'][1].update ({
-        'dds2382_model':            (Platform.ALL,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SetOption71 {}".format($)')) ),
-        'shutter_mode':             (Platform.ALL,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SetOption80 {}".format($)')) ),
-        'pcf8574_ports_inverted':   (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SetOption81 {}".format($)')) ),
+        'dds2382_model':            (HARDWARE.ESP,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SetOption71 {}".format($)')) ),
+        'shutter_mode':             (HARDWARE.ESP,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SetOption80 {}".format($)')) ),
+        'pcf8574_ports_inverted':   (HARDWARE.ESP,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SetOption81 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_15 = copy.deepcopy(SETTING_6_6_0_14)
 SETTING_6_6_0_15['flag3'][1].update ({
-        'hardware_energy_total':    (Platform.ALL,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SetOption72 {}".format($)')) ),
+        'hardware_energy_total':    (HARDWARE.ESP,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SetOption72 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_18 = copy.deepcopy(SETTING_6_6_0_15)
@@ -1295,110 +1327,110 @@ SETTING_6_6_0_18['flag3'][1].pop('tuya_dimmer_range_255',None)
 SETTING_6_6_0_18['flag3'][1].pop('tuya_dimmer_min_limit',None)
 SETTING_6_6_0_18.pop('novasds_period',None)
 SETTING_6_6_0_18.update             ({
-    'dimmer_hw_min':                (Platform.ALL,   '<H',  0xE90,       (None, None,                           ('Light',       '"DimmerRange {},{}".format($,@["dimmer_hw_max"])')) ),
-    'dimmer_hw_max':                (Platform.ALL,   '<H',  0xE92,       (None, None,                           ('Light',       None)) ),
-    'deepsleep':                    (Platform.ALL,   '<H',  0xE94,       (None, '0 or 10 <= $ <= 86400',        ('Management',  '"DeepSleepTime {}".format($)')) ),
-    'novasds_startingoffset':       (Platform.ALL,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
+    'dimmer_hw_min':                (HARDWARE.ESP,   '<H',  0xE90,       (None, None,                           ('Light',       '"DimmerRange {},{}".format($,@["dimmer_hw_max"])')) ),
+    'dimmer_hw_max':                (HARDWARE.ESP,   '<H',  0xE92,       (None, None,                           ('Light',       None)) ),
+    'deepsleep':                    (HARDWARE.ESP,   '<H',  0xE94,       (None, '0 or 10 <= $ <= 86400',        ('Management',  '"DeepSleepTime {}".format($)')) ),
+    'novasds_startingoffset':       (HARDWARE.ESP,   'B',   0x73D,       (None, '1 <= $ <= 255',                ('Sensor',      '"Sensor20 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_20 = copy.deepcopy(SETTING_6_6_0_18)
 SETTING_6_6_0_20['flag3'][1].update ({
-        'fast_power_cycle_disable': (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
+        'fast_power_cycle_disable': (HARDWARE.ESP,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SetOption65 {}".format($)')) ),
                                     })
 SETTING_6_6_0_20.update             ({
-    'energy_power_delta':           (Platform.ALL,   '<H',  0xE98,       (None, '0 <= $ < 32000',               ('Power',       '"PowerDelta {}".format($)')) ),
+    'energy_power_delta':           (HARDWARE.ESP,   '<H',  0xE98,       (None, '0 <= $ < 32000',               ('Power',       '"PowerDelta {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_6_6_0_21 = copy.deepcopy(SETTING_6_6_0_20)
 SETTING_6_6_0_21['flag'][1].pop('value_units',None)
 SETTING_6_6_0_21['flag3'][1].pop('tuya_dimmer_range_255',None)
 SETTING_6_6_0_21['flag3'][1].update ({
-        'tuya_serial_mqtt_publish': (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
+        'tuya_serial_mqtt_publish': (HARDWARE.ESP,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SetOption66 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_1 = copy.deepcopy(SETTING_6_6_0_21)
 SETTING_7_0_0_1.pop('register8',None)
 SETTING_7_0_0_1.update             ({
-    'shutter_motordelay':           (Platform.ALL,   'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#+1,float($)/20.0)')) ),
-    'flag4':                        (Platform.ALL,   '<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'shutter_motordelay':           (HARDWARE.ESP,   'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#+1,float($)/20.0)')) ),
+    'flag4':                        (HARDWARE.ESP,   '<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_7_0_0_1['flag3'][1].update  ({
-        'cors_enabled':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
-        'ds18x20_internal_pullup':  (Platform.ALL,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SetOption74 {}".format($)')) ),
-        'grouptopic_mode':          (Platform.ALL,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SetOption75 {}".format($)')) ),
+        'cors_enabled':             (HARDWARE.ESP,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
+        'ds18x20_internal_pullup':  (HARDWARE.ESP,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SetOption74 {}".format($)')) ),
+        'grouptopic_mode':          (HARDWARE.ESP,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SetOption75 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_2 = copy.deepcopy(SETTING_7_0_0_1)
 SETTING_7_0_0_2.update              ({
-    'web_color2':                   (Platform.ALL,   '3B',  0xEA0,       ([1],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+19,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
+    'web_color2':                   (HARDWARE.ESP,   '3B',  0xEA0,       ([1],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+19,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_3 = copy.deepcopy(SETTING_7_0_0_2)
 SETTING_7_0_0_3.update              ({
-    'i2c_drivers':                  (Platform.ALL,   '<L',  0xFEC,       ([3],  None,                           ('Management',  'list("I2CDriver{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')),'"0x{:08x}".format($)' ),
+    'i2c_drivers':                  (HARDWARE.ESP,   '<L',  0xFEC,       ([3],  None,                           ('Management',  'list("I2CDriver{} {}".format((#*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_7_0_0_4 = copy.deepcopy(SETTING_7_0_0_3)
 SETTING_7_0_0_4.update              ({
-    'wifi_output_power':            (Platform.ALL,   'B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'wifi_output_power':            (HARDWARE.ESP,   'B',   0x1E5,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
                                     })
 SETTING_7_0_0_4['flag3'][1].update  ({
-        'bootcount_update':         (Platform.ALL,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
+        'bootcount_update':         (HARDWARE.ESP,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SetOption76 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_5 = copy.deepcopy(SETTING_7_0_0_4)
 SETTING_7_0_0_5.update              ({
-    'temp_comp':                    (Platform.ALL,   'b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
+    'temp_comp':                    (HARDWARE.ESP,   'b',   0xE9E,       (None, '-127 < $ < 127',               ('Sensor',      '"TempOffset {:.1f}".format(float($)/10.0)')) ),
                                     })
 # ======================================================================
 SETTING_7_0_0_6 = copy.deepcopy(SETTING_7_0_0_5)
 SETTING_7_0_0_6['flag3'][1].update  ({
-        'slider_dimmer_stay_on':    (Platform.ALL,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
+        'slider_dimmer_stay_on':    (HARDWARE.ESP,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SetOption77 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_2 = copy.deepcopy(SETTING_7_0_0_6)
 SETTING_7_1_2_2.update              ({
-    'serial_config':                (Platform.ALL,   'B',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'serial_config':                (HARDWARE.ESP,   'B',   0x14E,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_3 = copy.deepcopy(SETTING_7_1_2_2)
 SETTING_7_1_2_3['flag3'][1].pop('cors_enabled',None)
 SETTING_7_1_2_3.update              ({
-    'cors_domain':                  (Platform.ALL,   '33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'weight_change':                (Platform.ALL,   'B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
+    'cors_domain':                  (HARDWARE.ESP,   '33s', 0xEA6,       (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
+    'weight_change':                (HARDWARE.ESP,   'B',   0xE9F,       (None, None,                           ('Management',  '"Sensor34 9 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_5 = copy.deepcopy(SETTING_7_1_2_3)
 SETTING_7_1_2_5.update              ({
-    'seriallog_level':              (Platform.ALL,   'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sta_config':                   (Platform.ALL,   'B',   0xEC7,       (None, '0 <= $ <= 7',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
-    'sta_active':                   (Platform.ALL,   'B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
-    'rule_stop':                    (Platform.ALL, {
-        'rule1':                    (Platform.ALL,   'B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
-        'rule2':                    (Platform.ALL,   'B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
-        'rule3':                    (Platform.ALL,   'B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
+    'seriallog_level':              (HARDWARE.ESP,   'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sta_config':                   (HARDWARE.ESP,   'B',   0xEC7,       (None, '0 <= $ <= 7',                  ('Wifi',        '"WifiConfig {}".format($)')) ),
+    'sta_active':                   (HARDWARE.ESP,   'B',   0xEC8,       (None, '0 <= $ <= 1',                  ('Wifi',        '"AP {}".format($)')) ),
+    'rule_stop':                    (HARDWARE.ESP, {
+        'rule1':                    (HARDWARE.ESP,   'B',  (0xEC9,1,0),  (None, None,                           ('Rules',       '"Rule1 {}".format($+8)')) ),
+        'rule2':                    (HARDWARE.ESP,   'B',  (0xEC9,1,1),  (None, None,                           ('Rules',       '"Rule2 {}".format($+8)')) ),
+        'rule3':                    (HARDWARE.ESP,   'B',  (0xEC9,1,2),  (None, None,                           ('Rules',       '"Rule3 {}".format($+8)')) ),
                                      },     0xEC9,        None),
-    'syslog_port':                  (Platform.ALL,   '<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
-    'syslog_level':                 (Platform.ALL,   'B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
-    'webserver':                    (Platform.ALL,   'B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
-    'weblog_level':                 (Platform.ALL,   'B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
-    'mqtt_fingerprint1':            (Platform.ALL,   'B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
-    'mqtt_fingerprint2':            (Platform.ALL,   'B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
-    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+    'syslog_port':                  (HARDWARE.ESP,   '<H',  0xECA,       (None, '1 <= $ <= 32766',              ('Management',  '"LogPort {}".format($)')) ),
+    'syslog_level':                 (HARDWARE.ESP,   'B',   0xECC,       (None, '0 <= $ <= 4',                  ('Management',  '"SysLog {}".format($)')) ),
+    'webserver':                    (HARDWARE.ESP,   'B',   0xECD,       (None, '0 <= $ <= 2',                  ('Wifi',        '"WebServer {}".format($)')) ),
+    'weblog_level':                 (HARDWARE.ESP,   'B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
+    'mqtt_fingerprint1':            (HARDWARE.ESP,   'B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
+    'mqtt_fingerprint2':            (HARDWARE.ESP,   'B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_6 = copy.deepcopy(SETTING_7_1_2_5)
 SETTING_7_1_2_6.update              ({
-    'flag4':                        (Platform.ALL,   '<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
-    'serial_config':                (Platform.ALL,   'B',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
-    'wifi_output_power':            (Platform.ALL,   'B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
-    'mqtt_port':                    (Platform.ALL,   '<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
-    'shutter_accuracy':             (Platform.ALL,   'B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
-    'mqttlog_level':                (Platform.ALL,   'B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
-    'sps30_inuse_hours':            (Platform.ALL,   'B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
+    'flag4':                        (HARDWARE.ESP,   '<L',  0xEF8,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'serial_config':                (HARDWARE.ESP,   'B',   0xEFE,       (None, '0 <= $ <= 23',                 ('Serial',      '"SerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'wifi_output_power':            (HARDWARE.ESP,   'B',   0xEFF,       (None, None,                           ('Wifi',        '"WifiPower {:.1f}".format(float($)/10.0)')) ),
+    'mqtt_port':                    (HARDWARE.ESP,   '<H',  0xEFC,       (None, None,                           ('MQTT',        '"MqttPort {}".format($)')) ),
+    'shutter_accuracy':             (HARDWARE.ESP,   'B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
+    'mqttlog_level':                (HARDWARE.ESP,   'B',   0xF01,       (None, None,                           ('Management',  '"MqttLog {}".format($)')) ),
+    'sps30_inuse_hours':            (HARDWARE.ESP,   'B',   0xF02,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_7_1_2_6['flag3'][1].update  ({
-        'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
+        'compatibility_check':      (HARDWARE.ESP,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SetOption78 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_0_0_1 = copy.deepcopy(SETTING_7_1_2_6)
@@ -1406,7 +1438,7 @@ SETTING_8_0_0_1.update              ({
     # v8.x.x.x: Index numbers for indexed strings
     SETTINGVAR:
     {
-        'TEXTINDEX_'+Platform.str(Platform.ALL-1):
+        'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP):
                        ['SET_OTAURL',
                         'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
                         'SET_STASSID1', 'SET_STASSID2',
@@ -1428,81 +1460,81 @@ SETTING_8_0_0_1.update              ({
                         'SET_MAX']
     }
                                     })
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_0_0_1.update              ({
-    'ota_url':                      (Platform.ALL,   '699s',(0x017,'SET_OTAURL'),
+    'ota_url':                      (HARDWARE.ESP,   '699s',(0x017,'SET_OTAURL'),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
-    'mqtt_prefix':                  (Platform.ALL,   '699s',(0x017,'SET_MQTTPREFIX1'),
+    'mqtt_prefix':                  (HARDWARE.ESP,   '699s',(0x017,'SET_MQTTPREFIX1'),
                                                                          ([3],  None,                           ('MQTT',        '"Prefix{} {}".format(#+1,$)')) ),
-    'sta_ssid':                     (Platform.ALL,   '699s',(0x017,'SET_STASSID1'),
+    'sta_ssid':                     (HARDWARE.ESP,   '699s',(0x017,'SET_STASSID1'),
                                                                          ([2],  None,                           ('Wifi',        '"SSId{} {}".format(#+1,$)')) ),
-    'sta_pwd':                      (Platform.ALL,   '699s',(0x017,'SET_STAPWD1'),
+    'sta_pwd':                      (HARDWARE.ESP,   '699s',(0x017,'SET_STAPWD1'),
                                                                          ([2],  None,                           ('Wifi',        '"Password{} {}".format(#+1,$)')), (passwordread, passwordwrite) ),
-    'hostname':                     (Platform.ALL,   '699s',(0x017,'SET_HOSTNAME'),
+    'hostname':                     (HARDWARE.ESP,   '699s',(0x017,'SET_HOSTNAME'),
                                                                          (None, None,                           ('Wifi',        '"Hostname {}".format($)')) ),
-    'syslog_host':                  (Platform.ALL,   '699s',(0x017,'SET_SYSLOG_HOST'),
+    'syslog_host':                  (HARDWARE.ESP,   '699s',(0x017,'SET_SYSLOG_HOST'),
                                                                          (None, None,                           ('Management',  '"LogHost {}".format($)')) ),
-    'web_password':                 (Platform.ALL,   '699s',(0x017,'SET_WEBPWD'),
+    'web_password':                 (HARDWARE.ESP,   '699s',(0x017,'SET_WEBPWD'),
                                                                          (None, None,                           ('Wifi',        '"WebPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'cors_domain':                  (Platform.ALL,   '699s',(0x017,'SET_CORS'),
+    'cors_domain':                  (HARDWARE.ESP,   '699s',(0x017,'SET_CORS'),
                                                                          (None, None,                           ('Wifi',        '"CORS {}".format($ if len($) else \'"\')')) ),
-    'mqtt_host':                    (Platform.ALL,   '699s',(0x017,'SET_MQTT_HOST'),
+    'mqtt_host':                    (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_HOST'),
                                                                          (None, None,                           ('MQTT',        '"MqttHost {}".format($)')) ),
-    'mqtt_client':                  (Platform.ALL,   '699s',(0x017,'SET_MQTT_CLIENT'),
+    'mqtt_client':                  (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_CLIENT'),
                                                                          (None, None,                           ('MQTT',        '"MqttClient {}".format($)')) ),
-    'mqtt_user':                    (Platform.ALL,   '699s',(0x017,'SET_MQTT_USER'),
+    'mqtt_user':                    (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_USER'),
                                                                          (None, None,                           ('MQTT',        '"MqttUser {}".format($)')) ),
-    'mqtt_pwd':                     (Platform.ALL,   '699s',(0x017,'SET_MQTT_PWD'),
+    'mqtt_pwd':                     (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_PWD'),
                                                                         (None, None,                            ('MQTT',        '"MqttPassword {}".format($)')), (passwordread, passwordwrite) ),
-    'mqtt_fulltopic':               (Platform.ALL,   '699s',(0x017,'SET_MQTT_FULLTOPIC'),
+    'mqtt_fulltopic':               (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_FULLTOPIC'),
                                                                          (None, None,                           ('MQTT',        '"FullTopic {}".format($)')) ),
-    'mqtt_topic':                   (Platform.ALL,   '699s',(0x017,'SET_MQTT_TOPIC'),
+    'mqtt_topic':                   (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"Topic {}".format($)')) ),
-    'button_topic':                 (Platform.ALL,   '699s',(0x017,'SET_MQTT_BUTTON_TOPIC'),
+    'button_topic':                 (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_BUTTON_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"ButtonTopic {}".format($)')) ),
-    'switch_topic':                 (Platform.ALL,   '699s',(0x017,'SET_MQTT_SWITCH_TOPIC'),
+    'switch_topic':                 (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_SWITCH_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"SwitchTopic {}".format($)')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
+    'mqtt_grptopic':                (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic {}".format($)')) ),
-    'state_text':                   (Platform.ALL,   '699s',(0x017,'SET_STATE_TXT1'),
+    'state_text':                   (HARDWARE.ESP,   '699s',(0x017,'SET_STATE_TXT1'),
                                                                          ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
-    'ntp_server':                   (Platform.ALL,   '699s',(0x017,'SET_NTPSERVER1'),
+    'ntp_server':                   (HARDWARE.ESP,   '699s',(0x017,'SET_NTPSERVER1'),
                                                                          ([3],  None,                           ('Management',  '"NtpServer{} {}".format(#+1,$)')) ),
-    'mems':                         (Platform.ALL,   '699s',(0x017,'SET_MEM1'),
+    'mems':                         (HARDWARE.ESP,   '699s',(0x017,'SET_MEM1'),
                                                                          ([16], None,                           ('Rules',       '"Mem{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,'SET_FRIENDLYNAME1'),
+    'friendlyname':                 (HARDWARE.ESP,   '699s',(0x017,'SET_FRIENDLYNAME1'),
                                                                          ([4],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'script_pram':                  (Platform.ALL,   'b',   0x7CE,       ([5,10],None,                          ('Rules',       None )) ),
+    'script_pram':                  (HARDWARE.ESP,   'b',   0x7CE,       ([5,10],None,                          ('Rules',       None )) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_0 = copy.deepcopy(SETTING_8_0_0_1)
 SETTING_8_1_0_0.update              ({
-    'friendlyname':                 (Platform.ALL,   '699s',(0x017,'SET_FRIENDLYNAME1'),
+    'friendlyname':                 (HARDWARE.ESP,   '699s',(0x017,'SET_FRIENDLYNAME1'),
                                                                          ([8],  None,                           ('Management',  '"FriendlyName{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'button_text':                  (Platform.ALL,   '699s',(0x017,'SET_BUTTON1'),
+    'button_text':                  (HARDWARE.ESP,   '699s',(0x017,'SET_BUTTON1'),
                                                                          ([16], None,                           ('Control',     '"Webbutton{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_1 = copy.deepcopy(SETTING_8_1_0_0)
 SETTING_8_1_0_1['flag3'][1].update  ({
-        'counter_reset_on_tele':    (Platform.ALL,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
+        'counter_reset_on_tele':    (HARDWARE.ESP,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SetOption79 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_2 = copy.deepcopy(SETTING_8_1_0_1)
 SETTING_8_1_0_2.update              ({
-    'hotplug_scan':                 (Platform.ALL,   'B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
-    'shutter_button':               (Platform.ALL,   '<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#+1, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#+1,0)')),'"0x{:08x}".format($)' ),
+    'hotplug_scan':                 (HARDWARE.ESP,   'B',   0xF03,       (None, None,                           ('Sensor',      '"HotPlug {}".format($)')) ),
+    'shutter_button':               (HARDWARE.ESP,   '<L',  0xFDC,       ([4],  None,                           ('Shutter',     '"ShutterButton{} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format(#+1, a=(($>> 0)&(0x03))+1, b=((($>> 2)&(0x3f))-1)<<1, c=((($>> 8)&(0x3f))-1)<<1, d=((($>>14)&(0x3f))-1)<<1, e=((($>>20)&(0x3f))-1)<<1, f=($>>26)&(0x01), g=($>>27)&(0x01),  h=($>>28)&(0x01), i=($>>29)&(0x01), j=($>>30)&(0x01) ) if $!=0 else "ShutterButton{} {}".format(#+1,0)')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_8_1_0_3 = copy.deepcopy(SETTING_8_1_0_2)
 SETTING_8_1_0_3.pop('shutter_invert',None)
 SETTING_8_1_0_3.update              ({
-    'shutter_options':              (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
+    'shutter_options':              (HARDWARE.ESP,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
                                                                                                                                  '"ShutterLock{} {}".format(#+1,1 if $ & 2 else 0)',\
                                                                                                                                  '"ShutterEnableEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)'))) ),
-    'shutter_button':               (Platform.ALL, {
-        'shutter':                  (Platform.ALL,   '<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
+    'shutter_button':               (HARDWARE.ESP, {
+        'shutter':                  (HARDWARE.ESP,   '<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
                                                                                                                                     x=1+@["shutter_button"][#]["shutter"], \
                                                                                                                                     a=#+1, \
                                                                                                                                     b=@["shutter_button"][#]["press_single"], \
@@ -1515,86 +1547,86 @@ SETTING_8_1_0_3.update              ({
                                                                                                                                     i=@["shutter_button"][#]["mqtt_broadcast_hold"], \
                                                                                                                                     j=@["shutter_button"][#]["mqtt_broadcast_all"] \
                                                                                                                                 )')), ('$+1','$-1') ),
-        'press_single':             (Platform.ALL,   '<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_double':             (Platform.ALL,   '<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_triple':             (Platform.ALL,   '<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'press_hold':               (Platform.ALL,   '<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
-        'mqtt_broadcast_single':    (Platform.ALL,   '<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_double':    (Platform.ALL,   '<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_triple':    (Platform.ALL,   '<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_hold':      (Platform.ALL,   '<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
-        'mqtt_broadcast_all':       (Platform.ALL,   '<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
-        'enabled':                  (Platform.ALL,   '<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
+        'press_single':             (HARDWARE.ESP,   '<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_double':             (HARDWARE.ESP,   '<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_triple':             (HARDWARE.ESP,   '<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_hold':               (HARDWARE.ESP,   '<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'mqtt_broadcast_single':    (HARDWARE.ESP,   '<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_double':    (HARDWARE.ESP,   '<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_triple':    (HARDWARE.ESP,   '<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_hold':      (HARDWARE.ESP,   '<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_all':       (HARDWARE.ESP,   '<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
+        'enabled':                  (HARDWARE.ESP,   '<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
                                     },                      0xFDC,       ([4], None,                            ('Shutter',     None)), (None, None) ),
-    'flag4':                        (Platform.ALL, {
-        'alexa_ct_range':           (Platform.ALL,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SetOption82 {}".format($)')) ),
+    'flag4':                        (HARDWARE.ESP, {
+        'alexa_ct_range':           (HARDWARE.ESP,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SetOption82 {}".format($)')) ),
                                     },                      0xEF8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_4 = copy.deepcopy(SETTING_8_1_0_3)
 SETTING_8_1_0_4.update              ({
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
+    'switchmode':                   (HARDWARE.ESP,   'B',   0x3A4,       ([8],  '0 <= $ <= 10',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 7',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3},{param4}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"],param4=@["adc_param4"]) \
                                                                                                                   if 6==@["my_adc0"] \
                                                                                                                   else \
                                                                                                                   "AdcParam {type},{param1},{param2},{param3}".format(type=@["my_adc0"],param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]/10000)')) ),
-    'adc_param4':                   (Platform.ALL,   '<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
+    'adc_param4':                   (HARDWARE.ESP,   '<l',  0xFD8,       (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_8_1_0_4['flag4'][1].update  ({
-        'zigbee_use_names':         (Platform.ALL,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
+        'zigbee_use_names':         (HARDWARE.ESP,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SetOption83 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_5 = copy.deepcopy(SETTING_8_1_0_4)
 SETTING_8_1_0_5.update              ({
-    'keeloq_master_msb':            (Platform.ALL,   '<L',  0xFBC,       (None, None,                           ('Shutter',     '"KeeloqSet {} {} {} {}".format(@["keeloq_master_msb"],@["keeloq_master_lsb"],@["keeloq_serial"],@["keeloq_count"])')) ),
-    'keeloq_master_lsb':            (Platform.ALL,   '<L',  0xFC0,       (None, None,                           ('Shutter',     None)) ),
-    'keeloq_serial':                (Platform.ALL,   '<L',  0xFC4,       (None, None,                           ('Shutter',     None)) ),
-    'keeloq_count':                 (Platform.ALL,   '<L',  0xFC8,       (None, None,                           ('Shutter',     None)) ),
+    'keeloq_master_msb':            (HARDWARE.ESP,   '<L',  0xFBC,       (None, None,                           ('Shutter',     '"KeeloqSet {} {} {} {}".format(@["keeloq_master_msb"],@["keeloq_master_lsb"],@["keeloq_serial"],@["keeloq_count"])')) ),
+    'keeloq_master_lsb':            (HARDWARE.ESP,   '<L',  0xFC0,       (None, None,                           ('Shutter',     None)) ),
+    'keeloq_serial':                (HARDWARE.ESP,   '<L',  0xFC4,       (None, None,                           ('Shutter',     None)) ),
+    'keeloq_count':                 (HARDWARE.ESP,   '<L',  0xFC8,       (None, None,                           ('Shutter',     None)) ),
                                     })
 SETTING_8_1_0_5['flag4'][1].update  ({
-        'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
+        'awsiot_shadow':            (HARDWARE.ESP,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SetOption84 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_6 = copy.deepcopy(SETTING_8_1_0_5)
 SETTING_8_1_0_6.update              ({
-    'bootcount_reset_time':         (Platform.ALL,   '<L',  0xFD4,       (None, None,                           ('System',      None)) ),
+    'bootcount_reset_time':         (HARDWARE.ESP,   '<L',  0xFD4,       (None, None,                           ('System',      None)) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_1_0_9.update              ({
-    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
-    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
-    'bri_power_on':                 (Platform.ALL,   'B',   0xF04,       (None, None,                           ('Light',       None)) ),
-    'bri_min':                      (Platform.ALL,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
-    'bri_preset_low':               (Platform.ALL,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
-    'bri_preset_high':              (Platform.ALL,   'B',   0xF07,       (None, None,                           ('Light',       None)) ),
-    'mqtt_grptopicdev':             (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
+    'device_group_share_in':        (HARDWARE.ESP,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       (HARDWARE.ESP,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
+    'bri_power_on':                 (HARDWARE.ESP,   'B',   0xF04,       (None, None,                           ('Light',       None)) ),
+    'bri_min':                      (HARDWARE.ESP,   'B',   0xF05,       (None, None,                           ('Light',       '"BriMin {}".format($)')) ),
+    'bri_preset_low':               (HARDWARE.ESP,   'B',   0xF06,       (None, None,                           ('Light',       '"BriPreset {},{}".format(@["bri_preset_low"],@["bri_preset_high"])')) ),
+    'bri_preset_high':              (HARDWARE.ESP,   'B',   0xF07,       (None, None,                           ('Light',       None)) ),
+    'mqtt_grptopicdev':             (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2,$)')) ),
                                     })
 SETTING_8_1_0_9['flag4'][1].update  ({
-        'device_groups_enabled':    (Platform.ALL,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
+        'device_groups_enabled':    (HARDWARE.ESP,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SetOption85 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_10 = copy.deepcopy(SETTING_8_1_0_9)
 SETTING_8_1_0_10['flag2'][1].update ({
-        'speed_conversion':         (Platform.ALL,   '<L', (0x5BC,3, 1), (None, '0 <= $ <= 5',                  ('Sensor',      '"SpeedUnit {}".format($)')) ),
+        'speed_conversion':         (HARDWARE.ESP,   '<L', (0x5BC,3, 1), (None, '0 <= $ <= 5',                  ('Sensor',      '"SpeedUnit {}".format($)')) ),
                                     })
 SETTING_8_1_0_10['flag4'][1].update ({
-        'led_timeout':              (Platform.ALL,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
-        'powered_off_led':          (Platform.ALL,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
-        'remote_device_mode':       (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
-        'zigbee_distinct_topics':   (Platform.ALL,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
+        'led_timeout':              (HARDWARE.ESP,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SetOption86 {}".format($)')) ),
+        'powered_off_led':          (HARDWARE.ESP,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SetOption87 {}".format($)')) ),
+        'remote_device_mode':       (HARDWARE.ESP,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SetOption88 {}".format($)')) ),
+        'zigbee_distinct_topics':   (HARDWARE.ESP,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SetOption89 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_1_0_11 = copy.deepcopy(SETTING_8_1_0_10)
 SETTING_8_1_0_11.update             ({
-    'hum_comp':                     (Platform.ALL,   'b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
-    'shutter_options':              (Platform.ALL,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
+    'hum_comp':                     (HARDWARE.ESP,   'b',   0xF08,       (None, '-101 < $ < 101',               ('Sensor',      '"HumOffset {:.1f}".format(float($)/10.0)')) ),
+    'shutter_options':              (HARDWARE.ESP,   'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
                                                                                                                                  '"ShutterLock{} {}".format(#+1,1 if $ & 2 else 0)',\
                                                                                                                                  '"ShutterEnableEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)',\
                                                                                                                                  '"ShutterInvertWebButtons{} {}".format(#+1,1 if $ & 8 else 0)'))) ),
@@ -1602,157 +1634,157 @@ SETTING_8_1_0_11.update             ({
 # ======================================================================
 SETTING_8_2_0_0 = copy.deepcopy(SETTING_8_1_0_11)
 SETTING_8_2_0_0.update              ({
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode':                   (HARDWARE.ESP,   'B',   0x3A4,       ([8],  '0 <= $ <= 14',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update              ({
-    'templatename':                 (Platform.ALL,   '699s',(0x017,'SET_TEMPLATE_NAME'),
+    'templatename':                 (HARDWARE.ESP,   '699s',(0x017,'SET_TEMPLATE_NAME'),
                                                                          (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\"}}".format($)')) ),
-    'pulse_counter_debounce_low':   (Platform.ALL,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
-    'pulse_counter_debounce_high':  (Platform.ALL,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
-    'wifi_channel':                 (Platform.ALL,   'B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
-    'wifi_bssid':                   (Platform.ALL,   'B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
-    'as3935_sensor_cfg':            (Platform.ALL,   'B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
-    'as3935_functions':             (Platform.ALL, {
-        'nf_autotune':              (Platform.ALL,   'B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
-        'dist_autotune':            (Platform.ALL,   'B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
-        'nf_autotune_both':         (Platform.ALL,   'B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
-        'mqtt_only_Light_Event':    (Platform.ALL,   'B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
+    'pulse_counter_debounce_low':   (HARDWARE.ESP,   '<H',  0xFB8,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceLow {}".format($)')) ),
+    'pulse_counter_debounce_high':  (HARDWARE.ESP,   '<H',  0xFBA,       (None, '0 <= $ <= 32000',              ('Sensor',      '"CounterDebounceHigh {}".format($)')) ),
+    'wifi_channel':                 (HARDWARE.ESP,   'B',   0xF09,       (None, None,                           ('Wifi',        None)) ),
+    'wifi_bssid':                   (HARDWARE.ESP,   'B',   0xF0A,       ([6],  None,                           ('Wifi',        None)) ),
+    'as3935_sensor_cfg':            (HARDWARE.ESP,   'B',   0xF10,       ([5],  None,                           ('Sensor',      None)) ),
+    'as3935_functions':             (HARDWARE.ESP, {
+        'nf_autotune':              (HARDWARE.ESP,   'B',  (0xF15,1, 0), (None, None,                           ('Sensor',      '"AS3935AutoNF {}".format($)')) ),
+        'dist_autotune':            (HARDWARE.ESP,   'B',  (0xF15,1, 1), (None, None,                           ('Sensor',      '"AS3935AutoDisturber {}".format($)')) ),
+        'nf_autotune_both':         (HARDWARE.ESP,   'B',  (0xF15,1, 2), (None, None,                           ('Sensor',      '"AS3935AutoNFMax {}".format($)')) ),
+        'mqtt_only_Light_Event':    (HARDWARE.ESP,   'B',  (0xF15,1, 3), (None, None,                           ('Sensor',      '"AS3935MQTTEvent {}".format($)')) ),
                                     },                      0xF15,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'as3935_parameter':             (Platform.ALL, {
-        'nf_autotune_time':         (Platform.ALL,   '<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
-        'dist_autotune_time':       (Platform.ALL,   '<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
-        'nf_autotune_min':          (Platform.ALL,   '<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
+    'as3935_parameter':             (HARDWARE.ESP, {
+        'nf_autotune_time':         (HARDWARE.ESP,   '<H', (0xF16,4, 0), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935NFTime {}".format($)')) ),
+        'dist_autotune_time':       (HARDWARE.ESP,   '<H', (0xF16,1, 4), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935DistTime {}".format($)')) ),
+        'nf_autotune_min':          (HARDWARE.ESP,   '<H', (0xF16,1, 8), (None, '0 <= $ <= 15',                 ('Sensor',      '"AS3935SetMinStage {}".format($)')) ),
                                     },                      0xF16,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'zb_ext_panid':                 (Platform.ALL,   '<Q',  0xF18,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_precfgkey_l':               (Platform.ALL,   '<Q',  0xF20,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_precfgkey_h':               (Platform.ALL,   '<Q',  0xF28,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_pan_id':                    (Platform.ALL,   '<H',  0xF30,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
-    'zb_channel':                   (Platform.ALL,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\"}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"])')) ),
-    'pms_wake_interval':            (Platform.ALL,   '<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
-    'device_group_share_in':        (Platform.ALL,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
-    'device_group_share_out':       (Platform.ALL,   '<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
-    'device_group_topic':           (Platform.ALL,   '699s',(0x017,'SET_DEV_GROUP_NAME1'),
+    'zb_ext_panid':                 (HARDWARE.ESP,   '<Q',  0xF18,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_l':               (HARDWARE.ESP,   '<Q',  0xF20,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_precfgkey_h':               (HARDWARE.ESP,   '<Q',  0xF28,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_pan_id':                    (HARDWARE.ESP,   '<H',  0xF30,       (None, None,                           ('Zigbee',      None)), '"0x{:016x}".format($)' ),
+    'zb_channel':                   (HARDWARE.ESP,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\"}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"])')) ),
+    'pms_wake_interval':            (HARDWARE.ESP,   '<H',  0xF34,       (None, None,                           ('Sensor',      '"Sensor18 {}".format($)')) ),
+    'device_group_share_in':        (HARDWARE.ESP,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
+    'device_group_share_out':       (HARDWARE.ESP,   '<L',  0xFD0,       (None, None,                           ('Control',      None)) ),
+    'device_group_topic':           (HARDWARE.ESP,   '699s',(0x017,'SET_DEV_GROUP_NAME1'),
                                                                          ([4],  None,                           ('Control',     '"DevGroupName{} {}".format(#+1,$ if len($) else "\\"")')) ),
-    'mqtt_grptopic':                (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
+    'mqtt_grptopic':                (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_GRP_TOPIC'),
                                                                          (None, None,                           ('MQTT',        '"GroupTopic1 {}".format("\\"" if len($) == 0 else $)')) ),
-    'mqtt_grptopic2':               (Platform.ALL,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
+    'mqtt_grptopic2':               (HARDWARE.ESP,   '699s',(0x017,'SET_MQTT_GRP_TOPIC2'),
                                                                          ([3],  None,                           ('MQTT',        '"GroupTopic{} {}".format(#+2, "\\"" if len($) == 0 else $)')) ),
-    'my_gp':                        (Platform.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'my_gp_esp32':                  (Platform.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'user_template_esp32':          (Platform.ESP32,{
-        'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
-        'gpio':                     (Platform.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
-        'flag':                     (Platform.ESP32,{
-            'adc0':                 (Platform.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+    'my_gp':                        (HARDWARE.ESP82, 'B',   0x484,       ([17], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32':                  (HARDWARE.ESP32, 'B',   0x558,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'user_template_esp32':          (HARDWARE.ESP32,{
+        'base':                     (HARDWARE.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (HARDWARE.ESP32, 'B',   0x580,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
+        'flag':                     (HARDWARE.ESP32,{
+            'adc0':                 (HARDWARE.ESP32, 'B',  (0x5A4,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x5A4,       (None, None,                           ('Management',  None)) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
                                     })
 SETTING_8_2_0_3['user_template'][1].update ({
-        'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
-        'gpio':                     (Platform.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
-        'flag':                     (Platform.ESP82, {
-            'adc0':                 (Platform.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+        'base':                     (HARDWARE.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (HARDWARE.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
+        'flag':                     (HARDWARE.ESP82, {
+            'adc0':                 (HARDWARE.ESP82, 'B',  (0x73C,4,0),  (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x73C,       (None, None,                           ('Management',  None)) ),
                                     })
 SETTING_8_2_0_3['flag3'][1].update  ({
-        'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
+        'mqtt_buttons':             (HARDWARE.ESP,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SetOption73 {}".format($)')) ),
                                     })
 SETTING_8_2_0_3['flag4'][1].update  ({
-        'only_json_message':        (Platform.ALL,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
-        'fade_at_startup':          (Platform.ALL,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
+        'only_json_message':        (HARDWARE.ESP,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
+        'fade_at_startup':          (HARDWARE.ESP,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
                                     })
 SETTING_8_2_0_3['SensorBits1'][1].update ({
-        'bh1750_resolution':        (Platform.ALL,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
+        'bh1750_resolution':        (HARDWARE.ESP,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
 SETTING_8_2_0_4.update              ({
-    'config_version':               (Platform.ALL,   'B',   0xF36,       (None, '0 <= $ < len(Platform.STR)',   (INTERNAL,      None)), (None,      False) ),
+    'config_version':               (HARDWARE.ESP,   'B',   0xF36,       (None, '0 <= $ < len(HARDWARE.STR)',   (INTERNAL,      None)), (None,      False) ),
                                     })
 SETTING_8_2_0_4.update              ({
-    'param':                        (Platform.ALL,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SO{} {}".format(#+32,$)')) ),
+    'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SO{} {}".format(#+32,$)')) ),
                                     })
 SETTING_8_2_0_4['flag'][1].update   ({
-        'save_state':               (Platform.ALL,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SO0 {}".format($)')) ),
-        'button_restrict':          (Platform.ALL,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SO1 {}".format($)')) ),
-        'value_units':              (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
-        'mqtt_enabled':             (Platform.ALL,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SO3 {}".format($)')) ),
-        'mqtt_response':            (Platform.ALL,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SO4 {}".format($)')) ),
-        'temperature_conversion':   (Platform.ALL,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SO8 {}".format($)')) ),
-        'mqtt_offline':             (Platform.ALL,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SO10 {}".format($)')) ),
-        'button_swap':              (Platform.ALL,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SO11 {}".format($)')) ),
-        'stop_flash_rotate':        (Platform.ALL,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SO12 {}".format($)')) ),
-        'button_single':            (Platform.ALL,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SO13 {}".format($)')) ),
-        'pwm_control':              (Platform.ALL,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SO15 {}".format($)')) ),
-        'ws_clock_reverse':         (Platform.ALL,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SO16 {}".format($)')) ),
-        'decimal_text':             (Platform.ALL,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SO17 {}".format($)')) ),
-        'light_signal':             (Platform.ALL,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SO18 {}".format($)')) ),
-        'hass_discovery':           (Platform.ALL,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SO19 {}".format($)')) ),
-        'not_power_linked':         (Platform.ALL,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SO20 {}".format($)')) ),
-        'no_power_on_check':        (Platform.ALL,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SO21 {}".format($)')) ),
-        'mqtt_serial':              (Platform.ALL,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SO22 {}".format($)')) ),
-        'mqtt_serial_raw':          (Platform.ALL,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SO23 {}".format($)')) ),
-        'pressure_conversion':      (Platform.ALL,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SO24 {}".format($)')) ),
-        'device_index_enable':      (Platform.ALL,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SO26 {}".format($)')) ),
-        'rf_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SO28 {}".format($)')) ),
-        'ir_receive_decimal':       (Platform.ALL,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SO29 {}".format($)')) ),
-        'hass_light':               (Platform.ALL,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SO30 {}".format($)')) ),
-        'global_state':             (Platform.ALL,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SO31 {}".format($)')) ),
+        'save_state':               (HARDWARE.ESP,   '<L', (0x010,1, 0), (None, None,                           ('SetOption',   '"SO0 {}".format($)')) ),
+        'button_restrict':          (HARDWARE.ESP,   '<L', (0x010,1, 1), (None, None,                           ('SetOption',   '"SO1 {}".format($)')) ),
+        'value_units':              (HARDWARE.ESP,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
+        'mqtt_enabled':             (HARDWARE.ESP,   '<L', (0x010,1, 3), (None, None,                           ('SetOption',   '"SO3 {}".format($)')) ),
+        'mqtt_response':            (HARDWARE.ESP,   '<L', (0x010,1, 4), (None, None,                           ('SetOption',   '"SO4 {}".format($)')) ),
+        'temperature_conversion':   (HARDWARE.ESP,   '<L', (0x010,1, 8), (None, None,                           ('SetOption',   '"SO8 {}".format($)')) ),
+        'mqtt_offline':             (HARDWARE.ESP,   '<L', (0x010,1,10), (None, None,                           ('SetOption',   '"SO10 {}".format($)')) ),
+        'button_swap':              (HARDWARE.ESP,   '<L', (0x010,1,11), (None, None,                           ('SetOption',   '"SO11 {}".format($)')) ),
+        'stop_flash_rotate':        (HARDWARE.ESP,   '<L', (0x010,1,12), (None, None,                           ('SetOption',   '"SO12 {}".format($)')) ),
+        'button_single':            (HARDWARE.ESP,   '<L', (0x010,1,13), (None, None,                           ('SetOption',   '"SO13 {}".format($)')) ),
+        'pwm_control':              (HARDWARE.ESP,   '<L', (0x010,1,15), (None, None,                           ('SetOption',   '"SO15 {}".format($)')) ),
+        'ws_clock_reverse':         (HARDWARE.ESP,   '<L', (0x010,1,16), (None, None,                           ('SetOption',   '"SO16 {}".format($)')) ),
+        'decimal_text':             (HARDWARE.ESP,   '<L', (0x010,1,17), (None, None,                           ('SetOption',   '"SO17 {}".format($)')) ),
+        'light_signal':             (HARDWARE.ESP,   '<L', (0x010,1,18), (None, None,                           ('SetOption',   '"SO18 {}".format($)')) ),
+        'hass_discovery':           (HARDWARE.ESP,   '<L', (0x010,1,19), (None, None,                           ('SetOption',   '"SO19 {}".format($)')) ),
+        'not_power_linked':         (HARDWARE.ESP,   '<L', (0x010,1,20), (None, None,                           ('SetOption',   '"SO20 {}".format($)')) ),
+        'no_power_on_check':        (HARDWARE.ESP,   '<L', (0x010,1,21), (None, None,                           ('SetOption',   '"SO21 {}".format($)')) ),
+        'mqtt_serial':              (HARDWARE.ESP,   '<L', (0x010,1,22), (None, None,                           ('SetOption',   '"SO22 {}".format($)')) ),
+        'mqtt_serial_raw':          (HARDWARE.ESP,   '<L', (0x010,1,23), (None, None,                           ('SetOption',   '"SO23 {}".format($)')) ),
+        'pressure_conversion':      (HARDWARE.ESP,   '<L', (0x010,1,24), (None, None,                           ('SetOption',   '"SO24 {}".format($)')) ),
+        'device_index_enable':      (HARDWARE.ESP,   '<L', (0x010,1,26), (None, None,                           ('SetOption',   '"SO26 {}".format($)')) ),
+        'rf_receive_decimal':       (HARDWARE.ESP,   '<L', (0x010,1,28), (None, None,                           ('SetOption' ,  '"SO28 {}".format($)')) ),
+        'ir_receive_decimal':       (HARDWARE.ESP,   '<L', (0x010,1,29), (None, None,                           ('SetOption',   '"SO29 {}".format($)')) ),
+        'hass_light':               (HARDWARE.ESP,   '<L', (0x010,1,30), (None, None,                           ('SetOption',   '"SO30 {}".format($)')) ),
+        'global_state':             (HARDWARE.ESP,   '<L', (0x010,1,31), (None, None,                           ('SetOption',   '"SO31 {}".format($)')) ),
                                     })
 SETTING_8_2_0_4['flag3'][1].update  ({
-        'user_esp8285_enable':      (Platform.ALL,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SO51 {}".format($)')) ),
-        'time_append_timezone':     (Platform.ALL,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SO52 {}".format($)')) ),
-        'gui_hostname_ip':          (Platform.ALL,   '<L', (0x3A0,1, 3), (None, None,                           ('SetOption',   '"SO53 {}".format($)')) ),
-        'tuya_apply_o20':           (Platform.ALL,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SO54 {}".format($)')) ),
-        'mdns_enabled':             (Platform.ALL,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SO55 {}".format($)')) ),
-        'use_wifi_scan':            (Platform.ALL,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SO56 {}".format($)')) ),
-        'use_wifi_rescan':          (Platform.ALL,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SO57 {}".format($)')) ),
-        'receive_raw':          	(Platform.ALL,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SO58 {}".format($)')) ),
-        'hass_tele_on_power':       (Platform.ALL,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SO59 {}".format($)')) ),
-        'sleep_normal':             (Platform.ALL,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SO60 {}".format($)')) ),
-        'button_switch_force_local':(Platform.ALL,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SO61 {}".format($)')) ),
-        'no_hold_retain':           (Platform.ALL,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SO62 {}".format($)')) ),
-        'no_power_feedback':        (Platform.ALL,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SO63 {}".format($)')) ),
-        'use_underscore':           (Platform.ALL,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SO64 {}".format($)')) ),
-        'fast_power_cycle_disable': (Platform.ALL,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SO65 {}".format($)')) ),
-        'tuya_serial_mqtt_publish': (Platform.ALL,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SO66 {}".format($)')) ),
-        'buzzer_enable':            (Platform.ALL,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SO67 {}".format($)')) ),
-        'pwm_multi_channels':       (Platform.ALL,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SO68 {}".format($)')) ),
-        'tuya_dimmer_min_limit':    (Platform.ALL,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
-        'dds2382_model':            (Platform.ALL,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SO71 {}".format($)')) ),
-        'hardware_energy_total':    (Platform.ALL,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SO72 {}".format($)')) ),
-        'mqtt_buttons':             (Platform.ALL,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SO73 {}".format($)')) ),
-        'ds18x20_internal_pullup':  (Platform.ALL,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SO74 {}".format($)')) ),
-        'grouptopic_mode':          (Platform.ALL,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SO75 {}".format($)')) ),
-        'bootcount_update':         (Platform.ALL,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SO76 {}".format($)')) ),
-        'slider_dimmer_stay_on':    (Platform.ALL,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SO77 {}".format($)')) ),
-        'compatibility_check':      (Platform.ALL,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SO78 {}".format($)')) ),
-        'counter_reset_on_tele':    (Platform.ALL,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SO79 {}".format($)')) ),
-        'shutter_mode':             (Platform.ALL,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SO80 {}".format($)')) ),
-        'pcf8574_ports_inverted':   (Platform.ALL,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SO81 {}".format($)')) ),
+        'user_esp8285_enable':      (HARDWARE.ESP,   '<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SO51 {}".format($)')) ),
+        'time_append_timezone':     (HARDWARE.ESP,   '<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SO52 {}".format($)')) ),
+        'gui_hostname_ip':          (HARDWARE.ESP,   '<L', (0x3A0,1, 3), (None, None,                           ('SetOption',   '"SO53 {}".format($)')) ),
+        'tuya_apply_o20':           (HARDWARE.ESP,   '<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SO54 {}".format($)')) ),
+        'mdns_enabled':             (HARDWARE.ESP,   '<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SO55 {}".format($)')) ),
+        'use_wifi_scan':            (HARDWARE.ESP,   '<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SO56 {}".format($)')) ),
+        'use_wifi_rescan':          (HARDWARE.ESP,   '<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SO57 {}".format($)')) ),
+        'receive_raw':          	(HARDWARE.ESP,   '<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SO58 {}".format($)')) ),
+        'hass_tele_on_power':       (HARDWARE.ESP,   '<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SO59 {}".format($)')) ),
+        'sleep_normal':             (HARDWARE.ESP,   '<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SO60 {}".format($)')) ),
+        'button_switch_force_local':(HARDWARE.ESP,   '<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SO61 {}".format($)')) ),
+        'no_hold_retain':           (HARDWARE.ESP,   '<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SO62 {}".format($)')) ),
+        'no_power_feedback':        (HARDWARE.ESP,   '<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SO63 {}".format($)')) ),
+        'use_underscore':           (HARDWARE.ESP,   '<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SO64 {}".format($)')) ),
+        'fast_power_cycle_disable': (HARDWARE.ESP,   '<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SO65 {}".format($)')) ),
+        'tuya_serial_mqtt_publish': (HARDWARE.ESP,   '<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SO66 {}".format($)')) ),
+        'buzzer_enable':            (HARDWARE.ESP,   '<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SO67 {}".format($)')) ),
+        'pwm_multi_channels':       (HARDWARE.ESP,   '<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SO68 {}".format($)')) ),
+        'tuya_dimmer_min_limit':    (HARDWARE.ESP,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
+        'dds2382_model':            (HARDWARE.ESP,   '<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SO71 {}".format($)')) ),
+        'hardware_energy_total':    (HARDWARE.ESP,   '<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SO72 {}".format($)')) ),
+        'mqtt_buttons':             (HARDWARE.ESP,   '<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SO73 {}".format($)')) ),
+        'ds18x20_internal_pullup':  (HARDWARE.ESP,   '<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SO74 {}".format($)')) ),
+        'grouptopic_mode':          (HARDWARE.ESP,   '<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SO75 {}".format($)')) ),
+        'bootcount_update':         (HARDWARE.ESP,   '<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SO76 {}".format($)')) ),
+        'slider_dimmer_stay_on':    (HARDWARE.ESP,   '<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SO77 {}".format($)')) ),
+        'compatibility_check':      (HARDWARE.ESP,   '<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SO78 {}".format($)')) ),
+        'counter_reset_on_tele':    (HARDWARE.ESP,   '<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SO79 {}".format($)')) ),
+        'shutter_mode':             (HARDWARE.ESP,   '<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SO80 {}".format($)')) ),
+        'pcf8574_ports_inverted':   (HARDWARE.ESP,   '<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SO81 {}".format($)')) ),
                                     })
 SETTING_8_2_0_4['flag4'][1].update  ({
-        'alexa_ct_range':           (Platform.ALL,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SO82 {}".format($)')) ),
-        'zigbee_use_names':         (Platform.ALL,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SO83 {}".format($)')) ),
-        'awsiot_shadow':            (Platform.ALL,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SO84 {}".format($)')) ),
-        'device_groups_enabled':    (Platform.ALL,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SO85 {}".format($)')) ),
-        'led_timeout':              (Platform.ALL,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SO86 {}".format($)')) ),
-        'powered_off_led':          (Platform.ALL,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SO87 {}".format($)')) ),
-        'remote_device_mode':       (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
-        'zigbee_distinct_topics':   (Platform.ALL,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SO89 {}".format($)')) ),
-        'only_json_message':        (Platform.ALL,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SO90 {}".format($)')) ),
-        'fade_at_startup':          (Platform.ALL,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SO91 {}".format($)')) ),
-        'pwm_ct_mode':              (Platform.ALL,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SO92 {}".format($)')) ),
+        'alexa_ct_range':           (HARDWARE.ESP,   '<L', (0xEF8,1, 0), (None, None,                           ('SetOption',   '"SO82 {}".format($)')) ),
+        'zigbee_use_names':         (HARDWARE.ESP,   '<L', (0xEF8,1, 1), (None, None,                           ('SetOption',   '"SO83 {}".format($)')) ),
+        'awsiot_shadow':            (HARDWARE.ESP,   '<L', (0xEF8,1, 2), (None, None,                           ('SetOption',   '"SO84 {}".format($)')) ),
+        'device_groups_enabled':    (HARDWARE.ESP,   '<L', (0xEF8,1, 3), (None, None,                           ('SetOption',   '"SO85 {}".format($)')) ),
+        'led_timeout':              (HARDWARE.ESP,   '<L', (0xEF8,1, 4), (None, None,                           ('SetOption',   '"SO86 {}".format($)')) ),
+        'powered_off_led':          (HARDWARE.ESP,   '<L', (0xEF8,1, 5), (None, None,                           ('SetOption',   '"SO87 {}".format($)')) ),
+        'remote_device_mode':       (HARDWARE.ESP,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
+        'zigbee_distinct_topics':   (HARDWARE.ESP,   '<L', (0xEF8,1, 7), (None, None,                           ('SetOption',   '"SO89 {}".format($)')) ),
+        'only_json_message':        (HARDWARE.ESP,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SO90 {}".format($)')) ),
+        'fade_at_startup':          (HARDWARE.ESP,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SO91 {}".format($)')) ),
+        'pwm_ct_mode':              (HARDWARE.ESP,   '<L', (0xEF8,1,10), (None, None,                           ('SetOption',   '"SO92 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_2_0_6 = copy.deepcopy(SETTING_8_2_0_4)
@@ -1761,186 +1793,186 @@ SETTING_8_2_0_6.pop('tariff1_1', None)
 SETTING_8_2_0_6.pop('tariff2_0', None)
 SETTING_8_2_0_6.pop('tariff2_1', None)
 SETTING_8_2_0_6.update              ({
-    'tariff':                       (Platform.ALL,   '<H',  0xE30,       ([4,2],None,                           ('Power',       'list("Tariff{} {:02d}:{:02d},{:02d}:{:02d}".format(i+1, @["tariff"][i][0]//60, @["tariff"][i][0]%60, @["tariff"][i][1]//60, @["tariff"][i][1]%60) for i in range(0, len(@["tariff"][0])))')) ),
-    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'user_template_esp32':          (Platform.ESP32,{
-        'base':                     (Platform.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
-        'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
-        'flag':                     (Platform.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
+    'tariff':                       (HARDWARE.ESP,   '<H',  0xE30,       ([4,2],None,                           ('Power',       'list("Tariff{} {:02d}:{:02d},{:02d}:{:02d}".format(i+1, @["tariff"][i][0]//60, @["tariff"][i][0]%60, @["tariff"][i][1]//60, @["tariff"][i][1]%60) for i in range(0, len(@["tariff"][0])))')) ),
+    'my_gp_esp32':                  (HARDWARE.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'user_template_esp32':          (HARDWARE.ESP32,{
+        'base':                     (HARDWARE.ESP32, '<H',  0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (HARDWARE.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template_esp32"]["gpio"])')) ),
+        'flag':                     (HARDWARE.ESP32, '<H',  0x444,       (None, None,                           ('Management',  '"Template {{\\\"FLAG\\\":{}}}".format($)')) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
-    'webcam_config':                (Platform.ESP32, {
-        'stream':                   (Platform.ESP32, '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
-        'mirror':                   (Platform.ESP32, '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
-        'flip':                     (Platform.ESP32, '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
-        'contrast':                 (Platform.ESP32, '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
-        'brightness':               (Platform.ESP32, '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
-        'saturation':               (Platform.ESP32, '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
-        'resolution':               (Platform.ESP32, '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+    'webcam_config':                (HARDWARE.ESP32, {
+        'stream':                   (HARDWARE.ESP32, '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32, '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32, '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32, '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32, '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32, '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32, '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
                                     },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'windmeter_pulses_x_rot':       (Platform.ALL,   'B',   0xF37,       (None, None,                           ('Sensor',      '"Sensor68 2,{}".format($)')) ),
-    'windmeter_radius':             (Platform.ALL,   '<H',  0xF38,       (None, None,                           ('Sensor',      '"Sensor68 1,{}".format($)')) ),
-    'windmeter_pulse_debounce':     (Platform.ALL,   '<H',  0xF3A,       (None, None,                           ('Sensor',      '"Sensor68 3,{}".format($)')) ),
-    'windmeter_speed_factor':       (Platform.ALL,   '<h',  0xF3C,       (None, None,                           ('Sensor',      '"Sensor68 4,{}".format(float($)/1000)')) ),
-    'windmeter_tele_pchange':       (Platform.ALL,   'B',   0xF3E,       (None, None,                           ('Sensor',      '"Sensor68 5,{}".format($)')) ),
-    'ot_hot_water_setpoint':        (Platform.ALL,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
-    'ot_boiler_setpoint':           (Platform.ALL,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
-    'ot_flags':                     (Platform.ALL,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')) ),
+    'windmeter_pulses_x_rot':       (HARDWARE.ESP,   'B',   0xF37,       (None, None,                           ('Sensor',      '"Sensor68 2,{}".format($)')) ),
+    'windmeter_radius':             (HARDWARE.ESP,   '<H',  0xF38,       (None, None,                           ('Sensor',      '"Sensor68 1,{}".format($)')) ),
+    'windmeter_pulse_debounce':     (HARDWARE.ESP,   '<H',  0xF3A,       (None, None,                           ('Sensor',      '"Sensor68 3,{}".format($)')) ),
+    'windmeter_speed_factor':       (HARDWARE.ESP,   '<h',  0xF3C,       (None, None,                           ('Sensor',      '"Sensor68 4,{}".format(float($)/1000)')) ),
+    'windmeter_tele_pchange':       (HARDWARE.ESP,   'B',   0xF3E,       (None, None,                           ('Sensor',      '"Sensor68 5,{}".format($)')) ),
+    'ot_hot_water_setpoint':        (HARDWARE.ESP,   'B',   0xE8C,       (None, None,                           ('Sensor',      '"Backlog OT_TWater {};OT_Save_Setpoints".format($)')) ),
+    'ot_boiler_setpoint':           (HARDWARE.ESP,   'B',   0xE8D,       (None, None,                           ('Sensor',      '"Backlog OT_TBoiler {};OT_Save_Setpoints".format($)')) ),
+    'ot_flags':                     (HARDWARE.ESP,   'B',   0xE8E,       (None, None,                           ('Sensor',      '"OT_Flags {}".format(",".join(["CHOD","DHW","CH","COOL","OTC","CH2"][i] for i in range(0,6) if $ & 1<<i))')) ),
+    'rules':                        (HARDWARE.ESP,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')) ),
                                     })
 SETTING_8_2_0_6['flag4'][1].update  ({
-        'compress_rules_cpu':       (Platform.ALL,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SO93 {}".format($)')) ),
+        'compress_rules_cpu':       (HARDWARE.ESP,   '<L', (0xEF8,1,11), (None, None,                           ('SetOption',   '"SO93 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_DEVICENAME'])
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_3_1_1.update              ({
-    'devicename':                   (Platform.ALL,   '699s',(0x017,'SET_DEVICENAME'),
+    'devicename':                   (HARDWARE.ESP,   '699s',(0x017,'SET_DEVICENAME'),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
 SETTING_8_3_1_2.update              ({
-    # 'ledpwm_mask':                  (Platform.ESP82, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if 157 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
-    # 'ledpwm_mask':                  (Platform.ESP32, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if  17 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
-    'ledpwm_mask':                  (Platform.ALL,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
-    'ledpwm_on':                    (Platform.ALL,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
-    'ledpwm_off':                   (Platform.ALL,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
+    # 'ledpwm_mask':                  (HARDWARE.ESP82, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if 157 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
+    # 'ledpwm_mask':                  (HARDWARE.ESP32, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if  17 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
+    'ledpwm_mask':                  (HARDWARE.ESP,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
+    'ledpwm_on':                    (HARDWARE.ESP,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
+    'ledpwm_off':                   (HARDWARE.ESP,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
                                     })
 SETTING_8_3_1_2['flag2'][1].update  ({
-        'time_format':              (Platform.ALL,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
+        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
                                     })
 SETTING_8_3_1_2['SensorBits1'][1].pop('bh1750_resolution',None)
 SETTING_8_3_1_2['SensorBits1'][1].update ({
-        'bh1750_2_resolution':      (Platform.ALL,   'B',  (0x717,2, 2), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution2 {}".format($)')) ),
-        'bh1750_1_resolution':      (Platform.ALL,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution1 {}".format($)')) ),
+        'bh1750_2_resolution':      (HARDWARE.ESP,   'B',  (0x717,2, 2), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution2 {}".format($)')) ),
+        'bh1750_1_resolution':      (HARDWARE.ESP,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Bh1750Resolution1 {}".format($)')) ),
                                     })
 SETTING_8_3_1_2['flag4'][1].update  ({
-        'max6675':                  (Platform.ALL,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SO94 {}".format($)')) ),
+        'max6675':                  (HARDWARE.ESP,   '<L', (0xEF8,1,12), (None, None,                           ('SetOption',   '"SO94 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP82-1): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+Platform.str(Platform.ESP32-1): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)])})
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_3_1_3.update              ({
-    'telegram_token':               (Platform.ALL,   '699s',(0x017,'SET_TELEGRAM_TOKEN'),
+    'telegram_token':               (HARDWARE.ESP,   '699s',(0x017,'SET_TELEGRAM_TOKEN'),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
-    'telegram_chatid':              (Platform.ALL,   '699s',(0x017,'SET_TELEGRAM_CHATID'),
+    'telegram_chatid':              (HARDWARE.ESP,   '699s',(0x017,'SET_TELEGRAM_CHATID'),
                                                                          (None, None,                           ('Telegram',    '"TmChatId {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
 # ======================================================================
 SETTING_8_3_1_4 = copy.deepcopy(SETTING_8_3_1_3)
 SETTING_8_3_1_4.update              ({
-    'tcp_baudrate':                 (Platform.ALL,   'B',   0xF41,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+    'tcp_baudrate':                 (HARDWARE.ESP,   'B',   0xF41,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 SETTING_8_3_1_4['flag4'][1].update  ({
-        'network_wifi':             (Platform.ALL,   '<L', (0xEF8,1,13), (None, None,                           ('Wifi',        '"Wifi {}".format($)')) ),
-        'network_ethernet':         (Platform.ESP32, '<L', (0xEF8,1,14), (None, None,                           ('Wifi',        '"Ethernet {}".format($)')) ),
+        'network_wifi':             (HARDWARE.ESP,   '<L', (0xEF8,1,13), (None, None,                           ('Wifi',        '"Wifi {}".format($)')) ),
+        'network_ethernet':         (HARDWARE.ESP32, '<L', (0xEF8,1,14), (None, None,                           ('Wifi',        '"Ethernet {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_5 = copy.deepcopy(SETTING_8_3_1_4)
 SETTING_8_3_1_5.update              ({
-    'eth_type':                     (Platform.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
-    'eth_clk_mode':                 (Platform.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
-    'eth_address':                  (Platform.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+    'eth_type':                     (HARDWARE.ESP32, 'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_clk_mode':                 (HARDWARE.ESP32, 'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'eth_address':                  (HARDWARE.ESP32, 'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_6 = copy.deepcopy(SETTING_8_3_1_5)
 SETTING_8_3_1_6.update              ({
-    'fallback_module':              (Platform.ALL,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
-    'zb_channel':                   (Platform.ALL,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
-    'zb_txradio_dbm':               (Platform.ALL,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
+    'fallback_module':              (HARDWARE.ESP,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
+    'zb_channel':                   (HARDWARE.ESP,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
+    'zb_txradio_dbm':               (HARDWARE.ESP,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
                                     })
 SETTING_8_3_1_6['flag4'][1].update  ({
-        'tuyamcu_baudrate':         (Platform.ALL,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SO97 {}".format($)')) ),
-        'rotary_uses_rules':        (Platform.ALL,   '<L', (0xEF8,1,16), (None, None,                           ('SetOption',   '"SO98 {}".format($)')) ),
-        'zerocross_dimmer':         (Platform.ALL,   '<L', (0xEF8,1,17), (None, None,                           ('SetOption',   '"SO99 {}".format($)')) ),
+        'tuyamcu_baudrate':         (HARDWARE.ESP,   '<L', (0xEF8,1,15), (None, None,                           ('SetOption',   '"SO97 {}".format($)')) ),
+        'rotary_uses_rules':        (HARDWARE.ESP,   '<L', (0xEF8,1,16), (None, None,                           ('SetOption',   '"SO98 {}".format($)')) ),
+        'zerocross_dimmer':         (HARDWARE.ESP,   '<L', (0xEF8,1,17), (None, None,                           ('SetOption',   '"SO99 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_3_1_7 = copy.deepcopy(SETTING_8_3_1_6)
 SETTING_8_3_1_7.update              ({
-    'rules':                        (Platform.ALL,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), (rulesread, ruleswrite)),
-    'scripting_used':               (Platform.ALL,   'B',  (0x4A0,1,7),  (None, None,                           ('Rules',       None)), (False, False)),
-    'scripting_compressed':         (Platform.ALL,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
-    'script_enabled':               (Platform.ALL,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
-    'script':                       (Platform.ALL,  '1536s',0x800,       (None, None,                           ('Rules',       None)), (scriptread, scriptwrite)),
+    'rules':                        (HARDWARE.ESP,   '512s',0x800,       ([3],  None,                           ('Rules',       '"Rule{} \\"".format(#+1) if len($) == 0 else list("Rule{} {}{}".format(#+1, "+" if i else "", s) for i, s in enumerate(textwrap.wrap($, width=512))) if ARGS.cmnduseruleconcat else "Rule{} {}".format(#+1,$)')), (rulesread, ruleswrite)),
+    'scripting_used':               (HARDWARE.ESP,   'B',  (0x4A0,1,7),  (None, None,                           ('Rules',       None)), (False, False)),
+    'scripting_compressed':         (HARDWARE.ESP,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
+    'script_enabled':               (HARDWARE.ESP,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
+    'script':                       (HARDWARE.ESP,  '1536s',0x800,       (None, None,                           ('Rules',       None)), (scriptread, scriptwrite)),
                                     })
 SETTING_8_3_1_7['flag4'][1].update  ({
-        'remove_zbreceived':        (Platform.ALL,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SO100 {}".format($)')) ),
-        'zb_index_ep':              (Platform.ALL,   '<L', (0xEF8,1,19), (None, None,                           ('SetOption',   '"SO101 {}".format($)')) ),
+        'remove_zbreceived':        (HARDWARE.ESP,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SO100 {}".format($)')) ),
+        'zb_index_ep':              (HARDWARE.ESP,   '<L', (0xEF8,1,19), (None, None,                           ('SetOption',   '"SO101 {}".format($)')) ),
                                     })
 SETTING_8_3_1_7['timer'][1].update  ({
-        'time':                     (Platform.ALL,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
+        'time':                     (HARDWARE.ESP,   '<L', (0x670,11, 0),(None, '0 <= $ < 1440',                ('Timer',       '"Timer{} {{\\\"Enable\\\":{arm},\\\"Mode\\\":{mode},\\\"Time\\\":\\\"{tsign}{time}\\\",\\\"Window\\\":{window},\\\"Days\\\":\\\"{days}\\\",\\\"Repeat\\\":{repeat},\\\"Output\\\":{device},\\\"Action\\\":{power}}}".format(#+1, arm=@["timer"][#]["arm"],mode=@["timer"][#]["mode"],tsign="-" if @["timer"][#]["mode"]>0 and @["timer"][#]["time"]>(12*60) else "",time=time.strftime("%H:%M",time.gmtime((@["timer"][#]["time"] if @["timer"][#]["mode"]==0 else @["timer"][#]["time"] if @["timer"][#]["time"]<=(12*60) else @["timer"][#]["time"]-(12*60))*60)),window=@["timer"][#]["window"],repeat=@["timer"][#]["repeat"],days="{:07b}".format(@["timer"][#]["days"])[::-1],device=@["timer"][#]["device"]+1,power=@["timer"][#]["power"] )')), '"0x{:03x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_8_4_0_0.update              ({
-    'adc_param':                    (Platform.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
+    'adc_param':                    (HARDWARE.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
                                                                          ([8],  None,                           ('Management',  None)) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_1 = copy.deepcopy(SETTING_8_4_0_0)
 SETTING_8_4_0_1['flag4'][1].update  ({
-        'multiple_device_groups':   (Platform.ALL,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
-        'teleinfo_baudrate':        (Platform.ALL,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SO102 {}".format($)')) ),
-        'mqtt_tls':                 (Platform.ALL,   '<L', (0xEF8,1,21), (None, None,                           ('SetOption',   '"SO103 {}".format($)')) ),
-        'mqtt_no_retain':           (Platform.ALL,   '<L', (0xEF8,1,22), (None, None,                           ('SetOption',   '"SO104 {}".format($)')) ),
+        'multiple_device_groups':   (HARDWARE.ESP,   '<L', (0xEF8,1, 6), (None, None,                           ('SetOption',   '"SO88 {}".format($)')) ),
+        'teleinfo_baudrate':        (HARDWARE.ESP,   '<L', (0xEF8,1,20), (None, None,                           ('SetOption',   '"SO102 {}".format($)')) ),
+        'mqtt_tls':                 (HARDWARE.ESP,   '<L', (0xEF8,1,21), (None, None,                           ('SetOption',   '"SO103 {}".format($)')) ),
+        'mqtt_no_retain':           (HARDWARE.ESP,   '<L', (0xEF8,1,22), (None, None,                           ('SetOption',   '"SO104 {}".format($)')) ),
                                     })
 SETTING_8_4_0_1['flag4'][1].pop('remote_device_mode',None)
 # ======================================================================
 SETTING_8_4_0_2 = copy.deepcopy(SETTING_8_4_0_1)
 SETTING_8_4_0_2.update              ({
-    'flag5':                        (Platform.ALL,   '<L',  0xEB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'flag5':                        (HARDWARE.ESP,   '<L',  0xEB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_8_4_0_2['flag4'][1].update  ({
-        'white_blend_mode':         (Platform.ALL,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SO105 {}".format($)')) ),
-        'virtual_ct':               (Platform.ALL,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SO106 {}".format($)')) ),
-        'virtual_ct_cw':            (Platform.ALL,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SO107 {}".format($)')) ),
-        'teleinfo_rawdata':         (Platform.ALL,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SO108 {}".format($)')) ),
+        'white_blend_mode':         (HARDWARE.ESP,   '<L', (0xEF8,1,23), (None, None,                           ('SetOption',   '"SO105 {}".format($)')) ),
+        'virtual_ct':               (HARDWARE.ESP,   '<L', (0xEF8,1,24), (None, None,                           ('SetOption',   '"SO106 {}".format($)')) ),
+        'virtual_ct_cw':            (HARDWARE.ESP,   '<L', (0xEF8,1,25), (None, None,                           ('SetOption',   '"SO107 {}".format($)')) ),
+        'teleinfo_rawdata':         (HARDWARE.ESP,   '<L', (0xEF8,1,26), (None, None,                           ('SetOption',   '"SO108 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_3 = copy.deepcopy(SETTING_8_4_0_2)
 SETTING_8_4_0_3.update              ({
-    'energy_power_delta':           (Platform.ALL,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
-    'flag5':                        (Platform.ALL,   '<L',  0xFB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+    'energy_power_delta':           (HARDWARE.ESP,   '<H',  0xF44,       ([3], '0 <= $ < 32000',                ('Power',       '"PowerDelta{} {}".format(#+1, $)')) ),
+    'flag5':                        (HARDWARE.ESP,   '<L',  0xFB4,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update  ({
-        'alexa_gen_1':              (Platform.ALL,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SO109 {}".format($)')) ),
+        'alexa_gen_1':              (HARDWARE.ESP,   '<L', (0xEF8,1,27), (None, None,                           ('SetOption',   '"SO109 {}".format($)')) ),
                                     })
 SETTING_8_4_0_3['flag4'][1].update  ({
-        'suppress_irq_no_Event':    (Platform.ALL,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
+        'suppress_irq_no_Event':    (HARDWARE.ESP,   'B',  (0xF15,1, 4), (None, None,                           ('Sensor',      '"AS3935NoIrqEvent {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_5_0_1 = copy.deepcopy(SETTING_8_4_0_3)
 SETTING_8_5_0_1.update              ({
-    'shutter_mode':                 (Platform.ALL,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',     '"ShutterMode {}".format($)')) ),
-    'shutter_pwmrange':             (Platform.ALL,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
-    'hass_new_discovery':           (Platform.ALL,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
-    'tuyamcu_topic':                (Platform.ALL,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
+    'shutter_mode':                 (HARDWARE.ESP,   'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',     '"ShutterMode {}".format($)')) ),
+    'shutter_pwmrange':             (HARDWARE.ESP,   '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
+    'hass_new_discovery':           (HARDWARE.ESP,   '<H', 0xE98,       (None, None,                            (INTERNAL,      None)) ),
+    'tuyamcu_topic':                (HARDWARE.ESP,   'B',  0x33F,       (None, '0 <= $ <= 1',                   ('Serial',      None)) ),
                                     })
 SETTING_8_5_0_1['flag4'][1].update  ({
-        'zb_disable_autobind':      (Platform.ALL,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SO110 {}".format($)')) ),
-        'buzzer_freq_mode':         (Platform.ALL,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SO111 {}".format($)')) ),
-        'zb_topic_fname':           (Platform.ALL,   '<L', (0xEF8,1,30), (None, None,                           ('SetOption',   '"SO112 {}".format($)')) ),
+        'zb_disable_autobind':      (HARDWARE.ESP,   '<L', (0xEF8,1,28), (None, None,                           ('SetOption',   '"SO110 {}".format($)')) ),
+        'buzzer_freq_mode':         (HARDWARE.ESP,   '<L', (0xEF8,1,29), (None, None,                           ('SetOption',   '"SO111 {}".format($)')) ),
+        'zb_topic_fname':           (HARDWARE.ESP,   '<L', (0xEF8,1,30), (None, None,                           ('SetOption',   '"SO112 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_8_5_1_0 = copy.deepcopy(SETTING_8_5_0_1)
@@ -1949,59 +1981,59 @@ SETTING_9_0_0_1 = copy.deepcopy(SETTING_8_5_1_0)
 SETTING_9_0_0_1.pop('my_adc0', None)
 SETTING_9_0_0_1.pop('bri_min', None)
 SETTING_9_0_0_1.update              ({
-    'gpio16_converted':             (Platform.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
-    'my_gp':                        (Platform.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'templatename':                 (Platform.ALL,   '699s',(0x017,'SET_TEMPLATE_NAME'),
+    'gpio16_converted':             (HARDWARE.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
+    'my_gp':                        (HARDWARE.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'templatename':                 (HARDWARE.ESP,   '699s',(0x017,'SET_TEMPLATE_NAME'),
                                                                          (None, None,                           ('Management',  None)) ),
-    'user_template':                (Platform.ESP82,{
-        'base':                     (Platform.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template"]["gpio"],@["user_template"]["flag"],$)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
-        'gpio':                     (Platform.ESP82, '<H',  0x3FC,       ([14], None,                           ('Management',  None)) ),
-        'flag':                     (Platform.ESP82, '<H',  0x3FC+(2*14),(None, None,                           ('Management',  None)) ),
+    'user_template':                (HARDWARE.ESP82,{
+        'base':                     (HARDWARE.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template"]["gpio"],@["user_template"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (HARDWARE.ESP82, '<H',  0x3FC,       ([14], None,                           ('Management',  None)) ),
+        'flag':                     (HARDWARE.ESP82, '<H',  0x3FC+(2*14),(None, None,                           ('Management',  None)) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
-    'my_gp_esp32':                  (Platform.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'user_template_esp32':          (Platform.ESP32,{
-        'base':                     (Platform.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio"],@["user_template_esp32"]["flag"],$)')), ('$+1','$-1') ),
-        'name':                     (Platform.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
-        'gpio':                     (Platform.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
-        'flag':                     (Platform.ESP32, '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
+    'my_gp_esp32':                  (HARDWARE.ESP32, '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'user_template_esp32':          (HARDWARE.ESP32,{
+        'base':                     (HARDWARE.ESP32, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio"],@["user_template_esp32"]["flag"],$)')), ('$+1','$-1') ),
+        'name':                     (HARDWARE.ESP32, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
+        'gpio':                     (HARDWARE.ESP32, '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag':                     (HARDWARE.ESP32, '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
-    'pwm_dimmer_cfg':               (Platform.ALL, {
-        'pwm_count':                (Platform.ALL,   '<L', (0xF05,3, 0), (None, '0 <= $ <= 4',                  ('Light',       '"PWMDimmerPWMs {}".format($+1)')) ),
+    'pwm_dimmer_cfg':               (HARDWARE.ESP, {
+        'pwm_count':                (HARDWARE.ESP,   '<L', (0xF05,3, 0), (None, '0 <= $ <= 4',                  ('Light',       '"PWMDimmerPWMs {}".format($+1)')) ),
                                     },                      0xF05,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_9_0_0_2 = copy.deepcopy(SETTING_9_0_0_1)
 SETTING_9_0_0_2.update              ({
-    'zb_txradio_dbm':               (Platform.ALL,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
-    'adc_param_type':               (Platform.ALL,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
-    'switchmode':                   (Platform.ALL,   'B',   0x3A4,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'zb_txradio_dbm':               (HARDWARE.ESP,   'b',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 8',                  ('Sensor',      None)) ),
+    'switchmode':                   (HARDWARE.ESP,   'B',   0x3A4,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
                                     })
 SETTING_9_0_0_2['flag4'][1].update  ({
-        'rotary_poweron_dimlow':    (Platform.ALL,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SO113 {}".format($)')) ),
+        'rotary_poweron_dimlow':    (HARDWARE.ESP,   '<L', (0xEF8,1,31), (None, None,                           ('SetOption',   '"SO113 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()    # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_9_0_0_3.update              ({
-    'switchtext':                   (Platform.ALL, '699s',(0x017,'SET_SWITCH_TXT1'),
+    'switchtext':                   (HARDWARE.ESP, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'shelly_dimmer':                (Platform.ALL, '699s',(0x017,'SET_SHD_PARAM'),
+    'shelly_dimmer':                (HARDWARE.ESP, '699s',(0x017,'SET_SHD_PARAM'),
                                                                          (None,  None,                          ('Light',       None)) ),
-    'dimmer_step':                  (Platform.ALL,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
-    'flag5':                        (Platform.ALL, {
-        'mqtt_switches':            (Platform.ALL,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SO114 {}".format($)')) ),
+    'dimmer_step':                  (HARDWARE.ESP,   'B',   0xF5A,       (None, '1 <= $ <= 50',                 ('Light',       '"DimmerStep {}".format($)')) ),
+    'flag5':                        (HARDWARE.ESP, {
+        'mqtt_switches':            (HARDWARE.ESP,   '<L', (0xFB4,1, 0), (None, None,                           ('SetOption',   '"SO114 {}".format($)')) ),
                                     },                      0xFB4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2009,139 +2041,139 @@ SETTING_9_1_0_0 = copy.deepcopy(SETTING_9_0_0_3)
 # ======================================================================
 SETTING_9_1_0_1 = copy.deepcopy(SETTING_9_1_0_0)
 SETTING_9_1_0_1.update              ({
-    'shd_leading_edge':             (Platform.ALL,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
-    'shd_warmup_brightness':        (Platform.ALL,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
-    'shd_warmup_time':              (Platform.ALL,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
-    'rf_protocol_mask':             (Platform.ALL,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
+    'shd_leading_edge':             (HARDWARE.ESP,   'B',   0xF5B,       (None, '0 <= $ <= 1',                  ('Light',       '"ShdLeadingEdge {}".format($)')) ),
+    'shd_warmup_brightness':        (HARDWARE.ESP,   '<H',  0xF5C,       (None, '10 <= $ <= 100',               ('Light',       '"ShdWarmupBrightness {}".format($)')) ),
+    'shd_warmup_time':              (HARDWARE.ESP,   'B',   0xF5E,       (None, '20 <= $ <= 200',               ('Light',       '"ShdWarmupTime {}".format($)')) ),
+    'rf_protocol_mask':             (HARDWARE.ESP,   '<Q',  0xFA8,       (None, None,                           ('Rf',          '"RfProtocol {}".format($)')), '"0x{:016x}".format($)' ),
                                     })
 SETTING_9_1_0_1['flag5'][1].update  ({
-        'mi32_enable':              (Platform.ALL,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SO115 {}".format($)')) ),
-        'zb_disable_autoquery':     (Platform.ALL,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SO116 {}".format($)')) ),
+        'mi32_enable':              (HARDWARE.ESP,   '<L', (0xFB4,1, 1), (None, None,                           ('SetOption',   '"SO115 {}".format($)')) ),
+        'zb_disable_autoquery':     (HARDWARE.ESP,   '<L', (0xFB4,1, 2), (None, None,                           ('SetOption',   '"SO116 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_1_0_2 = copy.deepcopy(SETTING_9_1_0_1)
 SETTING_9_1_0_2['flag5'][1].update  ({
-        'fade_fixed_duration':      (Platform.ALL,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SO117 {}".format($)')) ),
+        'fade_fixed_duration':      (HARDWARE.ESP,   '<L', (0xFB4,1, 3), (None, None,                           ('SetOption',   '"SO117 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_2 = copy.deepcopy(SETTING_9_1_0_2)
 SETTING_9_2_0_2['flag5'][1].update  ({
-        'zb_received_as_subtopic':  (Platform.ALL,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SO118 {}".format($)')) ),
-        'zb_omit_json_addr':        (Platform.ALL,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SO119 {}".format($)')) ),
+        'zb_received_as_subtopic':  (HARDWARE.ESP,   '<L', (0xFB4,1, 4), (None, None,                           ('SetOption',   '"SO118 {}".format($)')) ),
+        'zb_omit_json_addr':        (HARDWARE.ESP,   '<L', (0xFB4,1, 5), (None, None,                           ('SetOption',   '"SO119 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_3 = copy.deepcopy(SETTING_9_2_0_2)
 SETTING_9_2_0_3.update              ({
-    'energy_kWhtoday':              (Platform.ALL,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'energy_kWhyesterday':          (Platform.ALL,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
-    'device_group_maps':            (Platform.ALL,   '<L',  0xFB0,       (None, None,                           ('Control',     None)) ),
+    'energy_kWhtoday':              (HARDWARE.ESP,   '<L',  0x370,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset1 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'energy_kWhyesterday':          (HARDWARE.ESP,   '<L',  0x374,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset2 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'energy_kWhtotal':              (HARDWARE.ESP,   '<L',  0x554,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'device_group_maps':            (HARDWARE.ESP,   '<L',  0xFB0,       (None, None,                           ('Control',     None)) ),
                                     })
 SETTING_9_2_0_3['webcam_config'][1].update ({
-        'rtsp':                     (Platform.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32, '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_4 = copy.deepcopy(SETTING_9_2_0_3)
 SETTING_9_2_0_4['flag5'][1].update  ({
-        'zb_topic_endpoint':        (Platform.ALL,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SO120 {}".format($)')) ),
+        'zb_topic_endpoint':        (HARDWARE.ESP,   '<L', (0xFB4,1, 6), (None, None,                           ('SetOption',   '"SO120 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
 SETTING_9_2_0_5.update             ({
-    'power_esp32':                  (Platform.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
+    'power_esp32':                  (HARDWARE.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
                                                                                                                 ('Control',     'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_SHD_PARAM
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
                                                        'SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24',
                                                        'SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_SHD_PARAM'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 
 SETTING_9_2_0_6.update              ({
-    'switchtext':                   (Platform.ESP82, '699s',(0x017,'SET_SWITCH_TXT1'),
+    'switchtext':                   (HARDWARE.ESP82, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'switchtext_esp32':             (Platform.ESP32, '699s',(0x017,'SET_SWITCH_TXT1'),
+    'switchtext_esp32':             (HARDWARE.ESP32, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([28],  None,                          ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
-    'shelly_dimmer':                (Platform.ESP82, '699s',(0x017,'SET_SHD_PARAM'),
+    'shelly_dimmer':                (HARDWARE.ESP82, '699s',(0x017,'SET_SHD_PARAM'),
                                                                          (None,  None,                          ('Light',       None)) ),
-    'shelly_dimmer_esp32':          (Platform.ESP32, '699s',(0x017,'SET_SHD_PARAM'),
+    'shelly_dimmer_esp32':          (HARDWARE.ESP32, '699s',(0x017,'SET_SHD_PARAM'),
                                                                          (None,  None,                          ('Light',       None)) ),
-    'switchmode':                   (Platform.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'switchmode_esp32':             (Platform.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'interlock':                    (Platform.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
-    'interlock_esp32':              (Platform.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock_esp32"])')), '"0x{:08x}".format($)' ),
+    'switchmode':                   (HARDWARE.ESP82, 'B',   0x4A9,       ([8],  '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode_esp32':             (HARDWARE.ESP32, 'B',   0x4A9,       ([28], '0 <= $ <= 15',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'interlock':                    (HARDWARE.ESP82, '<L',  0x4D0,       ([4],  None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock"])')), '"0x{:08x}".format($)' ),
+    'interlock_esp32':              (HARDWARE.ESP32, '<L',  0x4D0,       ([14], None,                           ('Control',     '"Interlock "+" ".join(",".join(str(i+1) for i in range(0,8) if j & (1<<i) ) for j in @["interlock_esp32"])')), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_2_0_7 = copy.deepcopy(SETTING_9_2_0_6)
 SETTING_9_2_0_7.pop('device_group_maps', None)
 SETTING_9_2_0_7.update              ({
-    'device_group_tie':             (Platform.ALL,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
+    'device_group_tie':             (HARDWARE.ESP,   'B',   0xFB0,       ([4],  None,                           ('Control',     '"DevGroupTie{} {}".format(#+1, $)')) ),
                                     })
 # ======================================================================
 SETTING_9_3_0_1 = copy.deepcopy(SETTING_9_2_0_7)
 SETTING_9_3_0_1['flag5'][1].update  ({
-        'mqtt_state_retain':        (Platform.ALL,   '<L', (0xFB4,1, 7), (None, None,                           ('MQTT',        '"StateRetain {}".format($)')) ),
-        'mqtt_info_retain':         (Platform.ALL,   '<L', (0xFB4,1, 8), (None, None,                           ('MQTT',        '"InfoRetain {}".format($)')) ),
+        'mqtt_state_retain':        (HARDWARE.ESP,   '<L', (0xFB4,1, 7), (None, None,                           ('MQTT',        '"StateRetain {}".format($)')) ),
+        'mqtt_info_retain':         (HARDWARE.ESP,   '<L', (0xFB4,1, 8), (None, None,                           ('MQTT',        '"InfoRetain {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_3_1_1 = copy.deepcopy(SETTING_9_3_0_1)
 SETTING_9_3_1_1.update              ({
-    'display_options':              (Platform.ALL, {
-        'ilimode':                  (Platform.ALL,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayILIMode {}".format($)')) ),
-        'invert':                   (Platform.ALL,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
+    'display_options':              (HARDWARE.ESP, {
+        'ilimode':                  (HARDWARE.ESP,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayILIMode {}".format($)')) ),
+        'invert':                   (HARDWARE.ESP,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 SETTING_9_3_1_1['flag5'][1].update  ({
-        'wiegand_hex_output':       (Platform.ALL,   '<L', (0xFB4,1, 9), (None, None,                           ('SetOption',   '"SO123 {}".format($)')) ),
-        'wiegand_keypad_to_tag':    (Platform.ALL,   '<L', (0xFB4,1,10), (None, None,                           ('SetOption',   '"SO124 {}".format($)')) ),
+        'wiegand_hex_output':       (HARDWARE.ESP,   '<L', (0xFB4,1, 9), (None, None,                           ('SetOption',   '"SO123 {}".format($)')) ),
+        'wiegand_keypad_to_tag':    (HARDWARE.ESP,   '<L', (0xFB4,1,10), (None, None,                           ('SetOption',   '"SO124 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_3_1_2 = copy.deepcopy(SETTING_9_3_1_1)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_baudrate',None)
 SETTING_9_3_1_2['flag5'][1].pop('teleinfo_rawdata',None)
 SETTING_9_3_1_2.update              ({
-    'mqtt_keepalive':               (Platform.ALL,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive {}".format($)')) ),
-    'mqtt_socket_timeout':          (Platform.ALL,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout {}".format($)')) ),
-    'teleinfo':                     (Platform.ALL, {
-        'raw_skip':                 (Platform.ALL,   '<L', (0xFA4,8, 0), (None, None,                           ('Power',       None)) ),
-        'raw_report_changed':       (Platform.ALL,   '<L', (0xFA4,1, 8), (None, None,                           ('Power',       None)) ),
-        'raw_send':                 (Platform.ALL,   '<L', (0xFA4,1, 9), (None, None,                           ('Power',       None)) ),
-        'raw_limit':                (Platform.ALL,   '<L', (0xFA4,1,10), (None, None,                           ('Power',       None)) ),
-        'mode_standard':            (Platform.ALL,   '<L', (0xFA4,1,11), (None, None,                           ('Power',       None)) ),
+    'mqtt_keepalive':               (HARDWARE.ESP,   '<H',  0x52C,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttKeepAlive {}".format($)')) ),
+    'mqtt_socket_timeout':          (HARDWARE.ESP,   '<H',  0x52E,       (None, '1 <= $ <= 100',                ('MQTT',        '"MqttTimeout {}".format($)')) ),
+    'teleinfo':                     (HARDWARE.ESP, {
+        'raw_skip':                 (HARDWARE.ESP,   '<L', (0xFA4,8, 0), (None, None,                           ('Power',       None)) ),
+        'raw_report_changed':       (HARDWARE.ESP,   '<L', (0xFA4,1, 8), (None, None,                           ('Power',       None)) ),
+        'raw_send':                 (HARDWARE.ESP,   '<L', (0xFA4,1, 9), (None, None,                           ('Power',       None)) ),
+        'raw_limit':                (HARDWARE.ESP,   '<L', (0xFA4,1,10), (None, None,                           ('Power',       None)) ),
+        'mode_standard':            (HARDWARE.ESP,   '<L', (0xFA4,1,11), (None, None,                           ('Power',       None)) ),
                                     },                      0xFA4,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 SETTING_9_3_1_2['flag5'][1].update  ({
-        'zigbee_hide_-bridge_topic': (Platform.ALL,  '<L', (0xFB4,1,11), (None, None,                           ('SetOption',   '"SO125 {}".format($)')) ),
-        'ds18x20_mean':             (Platform.ALL,   '<L', (0xFB4,1,12), (None, None,                           ('SetOption',   '"SO126 {}".format($)')) ),
+        'zigbee_hide_-bridge_topic': (HARDWARE.ESP,  '<L', (0xFB4,1,11), (None, None,                           ('SetOption',   '"SO125 {}".format($)')) ),
+        'ds18x20_mean':             (HARDWARE.ESP,   '<L', (0xFB4,1,12), (None, None,                           ('SetOption',   '"SO126 {}".format($)')) ),
                                     })
 SETTING_9_3_1_2['mcp230xx_config'][1].update ({
-        'keep_output':              (Platform.ALL,   '<H', (0x6F6,1,13), (None, None,                           ('Sensor',      None)) ),
+        'keep_output':              (HARDWARE.ESP,   '<H', (0x6F6,1,13), (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_9_3_1_2.pop('display_options',None)
 SETTING_9_3_1_2.update              ({
-    'display_options':              (Platform.ALL, {
-        'type':                     (Platform.ALL,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayType {}".format($)')) ),
-        'invert':                   (Platform.ALL,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
+    'display_options':              (HARDWARE.ESP, {
+        'type':                     (HARDWARE.ESP,   'B',  (0x313,3, 0), (None, '1 <= $ <= 7',                  ('Display',     '"DisplayType {}".format($)')) ),
+        'invert':                   (HARDWARE.ESP,   'B',  (0x313,1, 3), (None, '0 <= $ <= 1',                  ('Display',     '"DisplayInvert {}".format($)')) ),
                                     },                      0x313,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_9_4_0_0 = copy.deepcopy(SETTING_9_3_1_2)
 SETTING_9_4_0_0.update              ({
-    'mbflag2':                      (Platform.ALL, {
-        'temperature_set_res':      (Platform.ALL,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management',  '"TuyaTempSetRes {}".format($)')) ),
+    'mbflag2':                      (HARDWARE.ESP, {
+        'temperature_set_res':      (HARDWARE.ESP,   '<L', (0xFD8,2,30), (None, '0 <= $ <= 3',                  ('Management',  '"TuyaTempSetRes {}".format($)')) ),
                                     },                      0xFD8,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
 SETTING_9_4_0_3 = copy.deepcopy(SETTING_9_4_0_0)
 SETTING_9_4_0_3.update              ({
-    'sbflag1':                      (Platform.ALL, {
-        'telegram_send_enable':     (Platform.ALL,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
-        'telegram_recv_enable':     (Platform.ALL,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
-        'telegram_echo_enable':     (Platform.ALL,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+    'sbflag1':                      (HARDWARE.ESP, {
+        'telegram_send_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
                                     },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2149,74 +2181,74 @@ SETTING_9_4_0_5 = copy.deepcopy(SETTING_9_4_0_3)
 # ======================================================================
 SETTING_9_4_0_6 = copy.deepcopy(SETTING_9_4_0_5)
 SETTING_9_4_0_6.update              ({
-    'mqtt_wifi_timeout':            (Platform.ALL,   'B',   0x530,       (None, '1 <= $ <= 200',                ('MQTT',        '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
+    'mqtt_wifi_timeout':            (HARDWARE.ESP,   'B',   0x530,       (None, '1 <= $ <= 200',                ('MQTT',        '"MqttWifiTimeout {}".format($)')), ('$ * 100','$ // 100') ),
                                     })
 # ======================================================================
 SETTING_9_5_0_2 = copy.deepcopy(SETTING_9_4_0_6)
 SETTING_9_5_0_2['flag5'][1].update  ({
-        'wifi_no_sleep':            (Platform.ALL,   '<L', (0xFB4,1,13), (None, None,                           ('SetOption',   '"SO127 {}".format($)')) ),
+        'wifi_no_sleep':            (HARDWARE.ESP,   '<L', (0xFB4,1,13), (None, None,                           ('SetOption',   '"SO127 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_5_0_3 = copy.deepcopy(SETTING_9_5_0_2)
 SETTING_9_5_0_3.update              ({
-    'sensors':                      (Platform.ALL,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
+    'sensors':                      (HARDWARE.ESP,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_5_0_4 = copy.deepcopy(SETTING_9_5_0_3)
 SETTING_9_5_0_4.update              ({
-    'ip_address':                   (Platform.ALL,   '<L',  0x544,       ([5],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
-    'energy_kWhtotal':              (Platform.ALL,   '<L',  0xF9C,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
+    'ip_address':                   (HARDWARE.ESP,   '<L',  0x544,       ([5],  None,                           ('Wifi',        '"IPAddress{} {}".format(#+1,$)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]")),
+    'energy_kWhtotal':              (HARDWARE.ESP,   '<L',  0xF9C,       (None, '0 <= $ <= 4294967295',         ('Power',       '"EnergyReset3 {} {}".format(int(round(float($)//100)), @["energy_kWhtotal_time"])')) ),
                                     })
 # ======================================================================
 SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].pop()    # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP82-1)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ESP32-1)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_9_5_0_5.update              ({
-    'ipv4_rgx_address':             (Platform.ALL,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
-    'ipv4_rgx_subnetmask':          (Platform.ALL,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
-    'influxdb_version':             (Platform.ALL,   'B',   0xEF7,       (None, None,                           ('Management',  None)) ),
-    'influxdb_port':                (Platform.ALL,   '<H',  0x4CE,       (None, None,                           ('Management',  '"IfxPort {}".format($)')) ),
-    'influxdb_host':                (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_HOST'),
+    'ipv4_rgx_address':             (HARDWARE.ESP,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'ipv4_rgx_subnetmask':          (HARDWARE.ESP,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'influxdb_version':             (HARDWARE.ESP,   'B',   0xEF7,       (None, None,                           ('Management',  None)) ),
+    'influxdb_port':                (HARDWARE.ESP,   '<H',  0x4CE,       (None, None,                           ('Management',  '"IfxPort {}".format($)')) ),
+    'influxdb_host':                (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_HOST'),
                                                                          (None,  None,                          ('Management',  '"IfxHost {}".format("\\"" if len($) == 0 else $)')) ),
-    'influxdb_host32':              (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_HOST'),
+    'influxdb_host32':              (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_HOST'),
                                                                          (None,  None,                          ('Management',  '"IfxHost {}".format("\\"" if len($) == 0 else $)')) ),
-    'influxdb_org':                 (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_ORG'),
+    'influxdb_org':                 (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_ORG'),
                                                                          (None,  None,                          ('Management',  '"Ifx{} {}".format("Org" if @["influxdb_version"] == 2 else "User", "\\"" if len($) == 0 else $)')) ),
-    'influxdb_org32':               (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_ORG'),
+    'influxdb_org32':               (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_ORG'),
                                                                          (None,  None,                          ('Management',  '"Ifx{} {}".format("Org" if @["influxdb_version"] == 2 else "User", "\\"" if len($) == 0 else $)')) ),
-    'influxdb_token':               (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
+    'influxdb_token':               (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
                                                                          (None,  None,                          ('Management',  '"Ifx{} {}".format("Token" if @["influxdb_version"] == 2 else "Password", "\\"" if len($) == 0 else $)')) ),
-    'influxdb_token32':             (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
+    'influxdb_token32':             (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
                                                                          (None,  None,                          ('Management',  '"Ifx{} {}".format("Token" if @["influxdb_version"] == 2 else "Password", "\\"" if len($) == 0 else $)')) ),
-    'influxdb_bucket':              (Platform.ESP82, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
+    'influxdb_bucket':              (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
                                                                          (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $$)')) ),
-    'influxdb_bucket32':            (Platform.ESP32, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
+    'influxdb_bucket32':            (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
                                                                          (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $)')) ),
-    'rgx_ssid':                     (Platform.ESP82, '699s',(0x017,'SET_RGX_SSID'),
+    'rgx_ssid':                     (HARDWARE.ESP82, '699s',(0x017,'SET_RGX_SSID'),
                                                                          (None,  None,                          ('Wifi',        '"RgxSSId {}".format("\\"" if len($) == 0 else $)')) ),
-    'rgx_ssid_esp32':               (Platform.ESP32, '699s',(0x017,'SET_RGX_SSID'),
+    'rgx_ssid_esp32':               (HARDWARE.ESP32, '699s',(0x017,'SET_RGX_SSID'),
                                                                          (None,  None,                          ('Wifi',        '"RgxSSId {}".format("\\"" if len($) == 0 else $)')) ),
-    'rgx_pwassword':                (Platform.ESP82, '699s',(0x017,'SET_RGX_PASSWORD'),
+    'rgx_pwassword':                (HARDWARE.ESP82, '699s',(0x017,'SET_RGX_PASSWORD'),
                                                                          (None,  None,                          ('Wifi',        '"RgxPassword {}".format("\\"" if len($) == 0 else $)')) ),
-    'rgx_pwassword_esp32':          (Platform.ESP32, '699s',(0x017,'SET_RGX_PASSWORD'),
+    'rgx_pwassword_esp32':          (HARDWARE.ESP32, '699s',(0x017,'SET_RGX_PASSWORD'),
                                                                          (None,  None,                          ('Wifi',        '"RgxPassword {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 SETTING_9_5_0_5['flag5'][1].update  ({
-        'disable_referer_chk':      (Platform.ALL,   '<L', (0xFB4,1,14), (None, None,                           ('SetOption',   '"SO128 {}".format($)')) ),
+        'disable_referer_chk':      (HARDWARE.ESP,   '<L', (0xFB4,1,14), (None, None,                           ('SetOption',   '"SO128 {}".format($)')) ),
                                     })
 SETTING_9_5_0_5['sbflag1'][1].update  ({
-        'range_extender':           (Platform.ALL,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
-        'range_extender_napt':      (Platform.ALL,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
-        'sonoff_l1_music_sync':     (Platform.ALL,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
-        'influxdb_default':         (Platform.ALL,   '<L', (0xFA0,1,6), (None, '0 <= $ <= 1',                   ('Management',  None)) ),
-        'influxdb_state':           (Platform.ALL,   '<L', (0xFA0,1,7), (None, '0 <= $ <= 1',                   ('Management',  '"Ifx {}".format($)')) ),
+        'range_extender':           (HARDWARE.ESP,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
+        'range_extender_napt':      (HARDWARE.ESP,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
+        'sonoff_l1_music_sync':     (HARDWARE.ESP,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
+        'influxdb_default':         (HARDWARE.ESP,   '<L', (0xFA0,1,6), (None, '0 <= $ <= 1',                   ('Management',  None)) ),
+        'influxdb_state':           (HARDWARE.ESP,   '<L', (0xFA0,1,7), (None, '0 <= $ <= 1',                   ('Management',  '"Ifx {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_5)
@@ -2224,73 +2256,76 @@ SETTING_9_5_0_7 = copy.deepcopy(SETTING_9_5_0_5)
 SETTING_9_5_0_8 = copy.deepcopy(SETTING_9_5_0_7)
 SETTING_9_5_0_8.pop('display_dimmer', None)
 SETTING_9_5_0_8.update              ({
-    'display_dimmer_protected':     (Platform.ALL,   'b',   0x2E0,       (None, '-100 <= $ <= 15',              ('Display',     '"DisplayDimmer {}".format(abs($))')) ),
+    'display_dimmer_protected':     (HARDWARE.ESP,   'b',   0x2E0,       (None, '-100 <= $ <= 15',              ('Display',     '"DisplayDimmer {}".format(abs($))')) ),
                                     })
 SETTING_9_5_0_8['flag'][1].update   ({
-        'mqtt_add_global_info':     (Platform.ALL,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
+        'mqtt_add_global_info':     (HARDWARE.ESP,   '<L', (0x010,1, 2), (None, None,                           ('SetOption',   '"SO2 {}".format($)')) ),
                                     })
 SETTING_9_5_0_8['flag'][1].pop('value_units',None)
 # ======================================================================
 SETTING_9_5_0_9 = copy.deepcopy(SETTING_9_5_0_8)
 SETTING_9_5_0_9.update              ({
-    'energy_kWhtoday_ph':           (Platform.ALL,   '<l',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyToday{} {}".format(#+1,int(round(float($)//100)))')) ),
-    'energy_kWhyesterday_ph':       (Platform.ALL,   '<l',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyYesterday{} {}".format(#+1,int(round(float($)//100)))')) ),
-    'energy_kWhtotal_ph':           (Platform.ALL,   '<l',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyTotal{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhtoday_ph':           (HARDWARE.ESP,   '<l',  0x314,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyToday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhyesterday_ph':       (HARDWARE.ESP,   '<l',  0x320,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyYesterday{} {}".format(#+1,int(round(float($)//100)))')) ),
+    'energy_kWhtotal_ph':           (HARDWARE.ESP,   '<l',  0x32C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyTotal{} {}".format(#+1,int(round(float($)//100)))')) ),
                                     })
 SETTING_9_5_0_9['flag5'][1].update  ({
-        'energy_phase':             (Platform.ALL,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
-        'show_heap_with_timestamp': (Platform.ALL,   '<L', (0xFB4,1,16), (None, None,                           ('SetOption',   '"SO130 {}".format($)')) ),
+        'energy_phase':             (HARDWARE.ESP,   '<L', (0xFB4,1,15), (None, None,                           ('SetOption',   '"SO129 {}".format($)')) ),
+        'show_heap_with_timestamp': (HARDWARE.ESP,   '<L', (0xFB4,1,16), (None, None,                           ('SetOption',   '"SO130 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_10_0_0_1 = copy.deepcopy(SETTING_9_5_0_9)
 SETTING_10_0_0_1.update             ({
-    'tcp_config':                   (Platform.ALL,   'B',   0xF5F,       (None, '0 <= $ <= 23',                 ('Serial',      '"TCPConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
-    'shutter_tilt_config':          (Platform.ALL,   'b',   0x508,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
-    'shutter_tilt_pos':             (Platform.ALL,   'b',   0x51C,       ([4],  None,                           ('Shutter',     None)) ),
+    'tcp_config':                   (HARDWARE.ESP,   'B',   0xF5F,       (None, '0 <= $ <= 23',                 ('Serial',      '"TCPConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'shutter_tilt_config':          (HARDWARE.ESP,   'b',   0x508,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
+    'shutter_tilt_pos':             (HARDWARE.ESP,   'b',   0x51C,       ([4],  None,                           ('Shutter',     None)) ),
                                     })
 # ======================================================================
 SETTING_10_0_0_3 = copy.deepcopy(SETTING_10_0_0_1)
 SETTING_10_0_0_3.update             ({
-    'light_step_pixels':            (Platform.ALL,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
-    'influxdb_period':              (Platform.ALL,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
+    'light_step_pixels':            (HARDWARE.ESP,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
+    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
                                     })
 SETTING_10_0_0_3['flag5'][1].update ({
-        'tuya_allow_dimmer_0':      (Platform.ALL,   '<L', (0xFB4,1,17), (None, None,                           ('SetOption',   '"SO131 {}".format($)')) ),
+        'tuya_allow_dimmer_0':      (HARDWARE.ESP,   '<L', (0xFB4,1,17), (None, None,                           ('SetOption',   '"SO131 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_10_0_0_4 = copy.deepcopy(SETTING_10_0_0_3)
 SETTING_10_0_0_4.update             ({
-    'shift595_device_count':        (Platform.ALL,   'B',   0xEC6,       (None, None,                           ('Sensor',     '"Shift595DeviceCount {}".format($)')) ),
+    'shift595_device_count':        (HARDWARE.ESP,   'B',   0xEC6,       (None, None,                           ('Sensor',     '"Shift595DeviceCount {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['sbflag1'][1].update({
-        'sspm_display':             (Platform.ESP32, '<L', (0xFA0,1,8),  (None, '0 <= $ <= 1',                  ('Management',  '"SSPMDisplay {}".format($)')) ),
+        'sspm_display':             (HARDWARE.ESP32, '<L', (0xFA0,1,8),  (None, '0 <= $ <= 1',                  ('Management',  '"SSPMDisplay {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['flag5'][1].update ({
-        'tls_use_fingerprint':      (Platform.ALL,   '<L', (0xFB4,1,18), (None, None,                           ('SetOption',   '"SO132 {}".format($)')) ),
-        'shift595_invert_outputs':  (Platform.ALL,   '<L', (0xFB4,1,19), (None, None,                           ('SetOption',   '"SO133 {}".format($)')) ),
+        'tls_use_fingerprint':      (HARDWARE.ESP,   '<L', (0xFB4,1,18), (None, None,                           ('SetOption',   '"SO132 {}".format($)')) ),
+        'shift595_invert_outputs':  (HARDWARE.ESP,   '<L', (0xFB4,1,19), (None, None,                           ('SetOption',   '"SO133 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_10_1_0_3 = copy.deepcopy(SETTING_10_0_0_4)
 SETTING_10_1_0_3.update             ({
-    'sserial_config':               (Platform.ALL,   'B',   0x33E,       (None, None,                           ('Serial',      '"SSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'sserial_config':               (HARDWARE.ESP,   'B',   0x33E,       (None, None,                           ('Serial',      '"SSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
 SETTING_2022_01_2 = copy.deepcopy(SETTING_10_1_0_3)
 SETTING_2022_01_2.update            ({
-    'eth_ipv4_address':             (Platform.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',        'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
+    'eth_ipv4_address':             (HARDWARE.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',        'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
                                     })
 # ======================================================================
 SETTING_2022_01_3 = copy.deepcopy(SETTING_2022_01_2)
 SETTING_2022_01_3.update            ({
-    'web_time_start':               (Platform.ALL,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
-    'web_time_end':                 (Platform.ALL,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
-    'pwm_value_ext':                (Platform.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
+    'web_time_start':               (HARDWARE.ESP,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
+    'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
+    'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
                                     })
 SETTING_2022_01_3['flag5'][1].update({
-        'pwm_force_same_phase':     (Platform.ALL,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
+        'pwm_force_same_phase':     (HARDWARE.ESP,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_2022_1_4 = copy.deepcopy(SETTING_2022_01_3)
+# ======================================================================
 SETTINGS = [
+            (0x14160104,0x1000, SETTING_2022_1_4),
             (0x14160103,0x1000, SETTING_2022_01_3),
             (0x14160102,0x1000, SETTING_2022_01_2),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
@@ -2492,7 +2527,7 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
     if doexit:
-        message("Premature exit - {} #{}".format(ExitCode.str(status), status), type_=None, status=None, line=None)
+        message("Premature exit - #{} {}".format(status, ExitCode.str(status)), type_=None, status=None, line=None)
         sys.exit(EXIT_CODE)
 
 def shorthelp(doexit=True):
@@ -3051,7 +3086,7 @@ def get_config_info(decode_cfg):
         binary config data (decrypted)
 
     @return: dict
-        platform         int  config data hardware platform
+        hardware         int  config data hardware
         version          int  config data version
         template_version int  template version number
         template_size    int  config data size
@@ -3059,21 +3094,21 @@ def get_config_info(decode_cfg):
     """
     version = 0x0
     size = setting = None
-    version = get_field(decode_cfg, Platform.ALL, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
+    version = get_field(decode_cfg, HARDWARE.ESP, 'version', SETTING_6_2_1['version'], raw=True, ignoregroup=True)
     template_version = version
 
-    # identify platform (config_version)
-    config_version = Platform.STR.index("ESP82xx")  # default legacy
+    # identify hardware (config_version)
+    config_version = HARDWARE.STR.index("ESP82")  # default legacy
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             fielddef = cfg[2].get('config_version', None)
             if fielddef is not None:
-                config_version = get_field(decode_cfg, Platform.ALL, 'config_version', fielddef, raw=True, ignoregroup=True)
-                if config_version >= len(Platform.STR):
-                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(Platform.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
-                    config_version = Platform.STR.index("ESP82xx")
+                config_version = get_field(decode_cfg, HARDWARE.ESP, 'config_version', fielddef, raw=True, ignoregroup=True)
+                if config_version >= len(HARDWARE.STR):
+                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    config_version = HARDWARE.STR.index("ESP82")
             break
-    # search setting definition for platform top-down
+    # search setting definition for hardware top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             template_version = cfg[0]
@@ -3085,7 +3120,7 @@ def get_config_info(decode_cfg):
         exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version v{} not supported".format(get_versionstr(version)), line=inspect.getlineno(inspect.currentframe()))
 
     return {
-        'platform': config_version,
+        'hardware': config_version,
         'version': version,
         'template_version': template_version,
         'template_size': size,
@@ -4093,11 +4128,11 @@ def bitsread(value, pos=0, bits=1):
         value &= (1<<bits)-1
     return value
 
-def get_strindex(platform_, strindex_name):
+def get_strindex(hardware_, strindex_name):
     """
-    Get the platform corresponding string index for variable strings
+    Get the hardware corresponding string index for variable strings
 
-    @param platform_:
+    @param hardware_:
         platfrom id
     @param strindex_name:
         name of the index to find within string definition
@@ -4105,13 +4140,13 @@ def get_strindex(platform_, strindex_name):
     @return:
         index of the string or -1 on error
     """
-    # platform_ = get_fielddef(fielddef, fields='platform_')
+    # hardware_ = get_fielddef(fielddef, fields='hardware_')
     try:
-        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index(strindex_name)
+        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index(strindex_name)
     except:     # pylint: disable=bare-except
         return -1
 
-def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
+def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
     """
     Get field definition items
 
@@ -4124,7 +4159,7 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
     @return:
         set of values defined in <fields>
     """
-    platform_ = format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
+    hardware_ = format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
     bits = bitshift = 0
     raise_error = '<fielddef> error'
 
@@ -4141,10 +4176,10 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
     # get top level items
     if len(fielddef) == 4:
         # converter not present
-        platform_, format_, addrdef, datadef = fielddef
+        hardware_, format_, addrdef, datadef = fielddef
     elif len(fielddef) == 5:
         # converter present
-        platform_, format_, addrdef, datadef, converter = fielddef
+        hardware_, format_, addrdef, datadef, converter = fielddef
     else:
         print('wrong <fielddef> {} length ({}) in setting'.format(fielddef, len(fielddef)), file=sys.stderr)
         raise SyntaxError(raise_error)
@@ -4153,9 +4188,9 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
     if isinstance(format_, dict) and baseaddr is None and datadef is None:
         return eval(fields)     # pylint: disable=eval-used
 
-    if not isinstance(platform_, int):
+    if not isinstance(hardware_, int):
         print("baseaddr: {} datadef: {}".format(baseaddr, datadef))
-        print('<platform> ({}) must be defined as integer in <fielddef> {}'.format(type(platform_), fielddef), file=sys.stderr)
+        print('<hardware> ({}) must be defined as integer in <fielddef> {}'.format(type(hardware_), fielddef), file=sys.stderr)
         raise SyntaxError(raise_error)
 
     if not isinstance(format_, (str, dict)):
@@ -4182,9 +4217,9 @@ def get_fielddef(fielddef, fields="platform_, format_, addrdef, baseaddr, bits, 
                     print('<strindex> must be defined as named index string in <fielddef> {}'.format(fielddef), file=sys.stderr)
                     raise SyntaxError(raise_error)
                 try:
-                    strindex = get_strindex(platform_, strindex_name)
-                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index('SET_MAX'):
-                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(platform_-1)].index('SET_MAX'), fielddef), file=sys.stderr)
+                    strindex = get_strindex(hardware_, strindex_name)
+                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index('SET_MAX'):
+                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index('SET_MAX'), fielddef), file=sys.stderr)
                         raise SyntaxError(raise_error)
                 except:     # pylint: disable=bare-except
                     pass
@@ -4500,7 +4535,7 @@ def get_fieldlength(fielddef):
         length of field in bytes
     """
     length = 0
-    platform_, format_, addrdef, arraydef = get_fielddef(fielddef, fields='platform_, format_, addrdef, arraydef')
+    hardware_, format_, addrdef, arraydef = get_fielddef(fielddef, fields='hardware_, format_, addrdef, arraydef')
 
     # <arraydef> contains a integer list
     if isinstance(arraydef, list) and len(arraydef) > 0:
@@ -4509,10 +4544,10 @@ def get_fieldlength(fielddef):
         for _ in range(0, arraydef[0]):
             subfielddef = get_subfielddef(fielddef)
             if len(arraydef) > 1:
-                length += get_fieldlength((platform_, format_, addrdef, subfielddef))
+                length += get_fieldlength((hardware_, format_, addrdef, subfielddef))
             # single array
             else:
-                length += get_fieldlength((platform_, format_, addrdef, None))
+                length += get_fieldlength((hardware_, format_, addrdef, None))
 
     elif isinstance(format_, dict):
         # -> iterate through format
@@ -4541,7 +4576,7 @@ def get_subfielddef(fielddef):
     @return:
         subfield definition
     """
-    platform_, format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='platform_, format_, addrdef, datadef, arraydef, validate, cmd, converter')
+    hardware_, format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='hardware_, format_, addrdef, datadef, arraydef, validate, cmd, converter')
 
     # create new arraydef
     if len(arraydef) > 1:
@@ -4561,9 +4596,9 @@ def get_subfielddef(fielddef):
     # set new field def
     subfielddef = None
     if converter is not None:
-        subfielddef = (platform_, format_, addrdef, datadef, converter)
+        subfielddef = (hardware_, format_, addrdef, datadef, converter)
     else:
-        subfielddef = (platform_, format_, addrdef, datadef)
+        subfielddef = (hardware_, format_, addrdef, datadef)
 
     return subfielddef
 
@@ -4603,7 +4638,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
     @return:
         value read from dobj
     """
-    platform_, format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='platform_, format_, bits, bitshift, strindex')
+    hardware_, format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='hardware_, format_, bits, bitshift, strindex')
 
     value_ = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
@@ -4650,7 +4685,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
             # get unpacked binary value as stripped string
             str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
             # split into single or multiple list elements delimted by \0
-            set_max = get_strindex(platform_, 'SET_MAX')
+            set_max = get_strindex(hardware_, 'SET_MAX')
             sarray = str_.split('\x00', set_max)
 
         if isinstance(sarray, list):
@@ -4728,14 +4763,14 @@ def set_fieldvalue(fielddef, dobj, addr, value):
 
     return dobj
 
-def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False, converter=True):
+def get_field(dobj, config_version, fieldname, fielddef, raw=False, addroffset=0, ignoregroup=False, converter=True):
     """
     Get field value from definition
 
     @param dobj:
         decrypted binary config data
-    @param platform_bits:
-        platform bits is the bitmask for valid platform for this fielddef
+    @param config_version:
+        config_version vvalue from Tasmota configuration
     @param fieldname:
         name of the field
     @param fielddef:
@@ -4762,10 +4797,10 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
         return valuemapping
 
     # get field definition
-    platform_, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='platform_, format_, baseaddr, strindex, arraydef, group')
+    hardware_, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='hardware_, format_, baseaddr, strindex, arraydef, group')
 
-    # filter platform
-    if (platform_ & platform_bits) == 0:
+    # filter hardware
+    if not HARDWARE.match(hardware_, config_version):
         return valuemapping
 
     # filter groups
@@ -4781,9 +4816,9 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
             length = get_fieldlength(subfielddef)
             if length != 0:
                 if strindex is not None:
-                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=i, ignoregroup=ignoregroup, converter=converter)
+                    value = get_field(dobj, config_version, fieldname, subfielddef, raw=raw, addroffset=i, ignoregroup=ignoregroup, converter=converter)
                 else:
-                    value = get_field(dobj, platform_bits, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, ignoregroup=ignoregroup, converter=converter)
+                    value = get_field(dobj, config_version, fieldname, subfielddef, raw=raw, addroffset=addroffset+offset, ignoregroup=ignoregroup, converter=converter)
                 arraymapping.append(value)
             offset += length
         # filter arrays containing only None
@@ -4797,7 +4832,7 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
         # -> iterate through format
         for name in format_:
             value = None
-            value = get_field(dobj, platform_bits, name, format_[name], raw=raw, addroffset=addroffset, ignoregroup=ignoregroup, converter=converter)
+            value = get_field(dobj, config_version, name, format_[name], raw=raw, addroffset=addroffset, ignoregroup=ignoregroup, converter=converter)
             if value is not None:
                 mapping_value[name] = value
         # copy complete returned mapping
@@ -4823,14 +4858,14 @@ def get_field(dobj, platform_bits, fieldname, fielddef, raw=False, addroffset=0,
 
     return valuemapping
 
-def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffset=0, filename=""):
+def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroffset=0, filename=""):
     """
     Get field value from definition
 
     @param dobj:
         decrypted binary config data
-    @param platform_bits:
-        platform bits is the bitmask for valid platform for this fielddef
+    @param config_version:
+        config_version vvalue from Tasmota configuration
     @param fieldname:
         name of the field
     @param fielddef:
@@ -4851,10 +4886,10 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
     if fieldname == SETTINGVAR:
         return dobj
 
-    platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='platform_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
+    hardware_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='hardware_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
 
-    # filter platform
-    if (platform_ & platform_bits) == 0:
+    # filter hardware
+    if not HARDWARE.match(hardware_, config_version):
         return dobj
 
     # filter groups
@@ -4868,23 +4903,23 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
     # <arraydef> contains a list
     if isinstance(arraydef, list) and len(arraydef) > 0:
         offset = 0
-        try:
-            if len(restoremapping) > arraydef[0]:
-                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
-            for i in range(0, arraydef[0]):
-                subfielddef = get_subfielddef(fielddef)
-                length = get_fieldlength(subfielddef)
-                if length != 0:
-                    if i >= len(restoremapping): # restoremapping data list may be shorter than definition
-                        break
-                    subrestore = restoremapping[i]
-                    if strindex is not None:
-                        dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
-                    else:
-                        dobj = set_field(dobj, platform_bits, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
-                offset += length
-        except:     # pylint: disable=bare-except
-            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        # try:
+        if len(restoremapping) > arraydef[0]:
+            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        for i in range(0, arraydef[0]):
+            subfielddef = get_subfielddef(fielddef)
+            length = get_fieldlength(subfielddef)
+            if length != 0:
+                if i >= len(restoremapping): # restoremapping data list may be shorter than definition
+                    break
+                subrestore = restoremapping[i]
+                if strindex is not None:
+                    dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                else:
+                    dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+            offset += length
+        # except:     # pylint: disable=bare-except
+        #     exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # <format> contains a dict
     elif isinstance(format_, dict):
@@ -4894,7 +4929,7 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
             except:     # pylint: disable=bare-except
                 restoremap = None
             if restoremap is not None:
-                dobj = set_field(dobj, platform_bits, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
+                dobj = set_field(dobj, config_version, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
 
     # a simple value
     elif isinstance(format_, (str, bool, int, float)):
@@ -4999,9 +5034,9 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
                 sarray = str_.split('\x00')
                 # limit to SET_MAX
                 try:
-                    set_max = get_strindex(platform_, 'SET_MAX')
+                    set_max = get_strindex(hardware_, 'SET_MAX')
                 except:     # pylint: disable=bare-except
-                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+Platform.str(Platform.ALL-1)].index('SET_MAX')
+                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].index('SET_MAX')
                 if len(sarray) >= set_max:
                     delrange = len(sarray) - set_max
                     if delrange > 0:
@@ -5061,14 +5096,14 @@ def set_field(dobj, platform_bits, fieldname, fielddef, restoremapping, addroffs
 
     return dobj
 
-def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0, idx=None):
+def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedvalue, addroffset=0, idx=None):
     """
     Get Tasmota command mapping from given field value definition
 
     @param cmnds:
         Tasmota command mapping: { 'group': ['cmnd' <,'cmnd'...>] ... }
-    @param platform_bits:
-        platform bits is the bitmask for valid platform for this fielddef
+    @param config_version:
+        config_version vvalue from Tasmota configuration
     @param fieldname:
         name of the field
     @param fielddef:
@@ -5106,10 +5141,10 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
     if fieldname == SETTINGVAR:
         return cmnds
 
-    platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='platform_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
+    hardware_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='hardware_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
-    # filter platform
-    if (platform_ & platform_bits) == 0:
+    # filter hardware
+    if not HARDWARE.match(hardware_, config_version):
         return cmnds
 
     # filter groups
@@ -5132,7 +5167,7 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
                     break
                 subrestore = mappedvalue[i]
                 idx[len(idx)-1] = i
-                cmnds = set_cmnd(cmnds, platform_bits, fieldname, subfielddef, valuemapping, subrestore, addroffset=addroffset+offset, idx=idx)
+                cmnds = set_cmnd(cmnds, config_version, fieldname, subfielddef, valuemapping, subrestore, addroffset=addroffset+offset, idx=idx)
             offset += length
         if idx is not None:
             idx.pop(len(idx)-1)
@@ -5144,7 +5179,7 @@ def set_cmnd(cmnds, platform_bits, fieldname, fielddef, valuemapping, mappedvalu
         for name, rm_fielddef in format_.items():    # -> iterate through format
             mapped = mappedvalue.get(name, None)
             if mapped is not None:
-                cmnds = set_cmnd(cmnds, platform_bits, name, rm_fielddef, valuemapping, mapped, addroffset=addroffset, idx=idx)
+                cmnds = set_cmnd(cmnds, config_version, name, rm_fielddef, valuemapping, mapped, addroffset=addroffset, idx=idx)
 
     # a simple value
     elif isinstance(mappedvalue, (str, bool, int, float)):
@@ -5192,7 +5227,7 @@ def bin2mapping(config, raw=False):
     cfg_size = None
     cfg_size_fielddef = config['info']['template'].get('cfg_size', None)
     if cfg_size_fielddef is not None:
-        cfg_size = get_field(config['decode'], Platform.ALL, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
+        cfg_size = get_field(config['decode'], HARDWARE.ESP, 'cfg_size', cfg_size_fielddef, raw=True, ignoregroup=True)
         # read size should be same as definied in setting
         if cfg_size > config['info']['template_size']:
             # may be processed
@@ -5204,21 +5239,21 @@ def bin2mapping(config, raw=False):
     # get/calc crc
     cfg_crc_fielddef = config['info']['template'].get('cfg_crc', None)
     if cfg_crc_fielddef is not None:
-        cfg_crc = get_field(config['decode'], Platform.ALL, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
+        cfg_crc = get_field(config['decode'], HARDWARE.ESP, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc = get_settingcrc(config['decode'])
 
     # get/calc crc32
     cfg_crc32_fielddef = config['info']['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
-        cfg_crc32 = get_field(config['decode'], Platform.ALL, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
+        cfg_crc32 = get_field(config['decode'], HARDWARE.ESP, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_crc32 = get_settingcrc32(config['decode'])
 
     # get config timestamp
     cfg_timestamp_fielddef = config['info']['template'].get('cfg_timestamp', None)
     if cfg_timestamp_fielddef is not None:
-        cfg_timestamp = get_field(config['decode'], Platform.ALL, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
+        cfg_timestamp = get_field(config['decode'], HARDWARE.ESP, 'cfg_timestamp', cfg_timestamp_fielddef, raw=True, ignoregroup=True)
     else:
         cfg_timestamp = int(time.time())
 
@@ -5231,9 +5266,9 @@ def bin2mapping(config, raw=False):
 
     # get valuemapping
     if raw:
-        valuemapping = get_field(config['decode'], 1<<config['info']['platform'], None, (Platform.ALL, config['info']['template'], 0, (None, None, (VIRTUAL, None))), ignoregroup=True, converter=False)
+        valuemapping = get_field(config['decode'], config['info']['hardware'], None, (HARDWARE.ESP, config['info']['template'], 0, (None, None, (VIRTUAL, None))), ignoregroup=True, converter=False)
     else:
-        valuemapping = get_field(config['decode'], 1<<config['info']['platform'], None, (Platform.ALL, config['info']['template'], 0, (None, None, (VIRTUAL, None))), ignoregroup=False)
+        valuemapping = get_field(config['decode'], config['info']['hardware'], None, (HARDWARE.ESP, config['info']['template'], 0, (None, None, (VIRTUAL, None))), ignoregroup=False)
         # remove keys having empty object
         if valuemapping is not None:
             for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
@@ -5272,10 +5307,10 @@ def bin2mapping(config, raw=False):
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
         valuemapping['header']['data'].update({'versionstr': get_versionstr(config['info']['version'])})
-    cfg_platform_def = config['info']['template'].get('config_version', None)
-    if cfg_platform_def is not None:
-        cfg_platform = get_field(config['decode'], Platform.ALL, 'config_version', cfg_platform_def, raw=True, ignoregroup=True)
-        valuemapping['header']['data'].update({'platform': Platform.str(cfg_platform)})
+    cfg_hardware_def = config['info']['template'].get('config_version', None)
+    if cfg_hardware_def is not None:
+        cfg_hardware = get_field(config['decode'], HARDWARE.ESP, 'config_version', cfg_hardware_def, raw=True, ignoregroup=True)
+        valuemapping['header']['data'].update({'hardware': HARDWARE.str(cfg_hardware)})
 
     return valuemapping
 
@@ -5307,7 +5342,7 @@ def mapping2bin(config, jsonconfig, filename=""):
             # key must exist in both dict
             setting_fielddef = config['info']['template'].get(name, None)
             if setting_fielddef is not None:
-                set_field(_buffer, 1<<config['info']['platform'], name, setting_fielddef, data, addroffset=0, filename=filename)
+                set_field(_buffer, config['info']['hardware'], name, setting_fielddef, data, addroffset=0, filename=filename)
             else:
                 if name != 'header':
                     exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
@@ -5347,7 +5382,7 @@ def mapping2cmnd(config):
         # key must exist in both dict
         setting_fielddef = config['info']['template'].get(name, None)
         if setting_fielddef is not None:
-            cmnds = set_cmnd(cmnds, 1<<config['info']['platform'], name, setting_fielddef, config['groupmapping'], mapping, addroffset=0)
+            cmnds = set_cmnd(cmnds, config['info']['hardware'], name, setting_fielddef, config['groupmapping'], mapping, addroffset=0)
         else:
             if name != 'header':
                 exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
@@ -5506,20 +5541,20 @@ def restore(restorefile, backupfileformat, config):
 
         # Platform compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
-            platform_new_data = get_config_info(new_decode_cfg)['platform']
+            new_config_version = get_config_info(new_decode_cfg)['hardware']
         else:
             try:
-                platform_new_data = Platform.STR.index(jsonconfig['header']['data']['platform'])
+                new_config_version = HARDWARE.STR.index(jsonconfig['header']['data']['hardware'])
             except:     # pylint: disable=bare-except
-                platform_new_data = Platform.STR.index("ESP82xx")
-        platform_device = config['info']['platform']
-        if platform_device != platform_new_data:
-            exit_(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' platform is '{}', restore file '{}' platform is '{}'".format(\
+                new_config_version = HARDWARE.STR.index("ESP82")
+        config_version = config['info']['hardware']
+        if config_version != new_config_version:
+            exit_(ExitCode.RESTORE_DATA_ERROR, "Data incompatibility: {} '{}' hardware is '{}', restore file '{}' is for hardware '{}'".format(\
                 "File" if ARGS.filesource is not None else "Device",
                 ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
-                Platform.str(platform_device-1),
+                HARDWARE.str(config_version),
                 restorefilename,
-                Platform.str(platform_new_data-1)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                HARDWARE.str(new_config_version)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
         # Data version compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
@@ -5548,7 +5583,7 @@ def restore(restorefile, backupfileformat, config):
                 if not ARGS.dryrun:
                     if ARGS.verbose:
                         message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO)
-                    error_code, error_str = push_http(new_encode_cfg, ARGS.httpsource, ARGS.port, ARGS.username, ARGS.password)
+                    error_code, error_str = push_http(new_encode_cfg)
                 if error_code:
                     exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
@@ -6063,7 +6098,7 @@ if __name__ == "__main__":
                     .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
                     ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
                     get_versionstr(CONFIG['info']['version']),
-                    Platform.desc(CONFIG['info']['platform'])),
+                    HARDWARE.str(CONFIG['info']['hardware'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
