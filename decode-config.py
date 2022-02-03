@@ -3440,9 +3440,9 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     Tasmota http request
 
     @param host:
-        hostname or IP of Tasmota httpsource
+        hostname or IP of Tasmota device
     @param port:
-        http port of Tasmota httpsource
+        http port of Tasmota device
     @param username:
         optional username for Tasmota web login
     @param password
@@ -3451,7 +3451,7 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     @return:
         binary config data (encrypted) or None on error
     """
-    # read config direct from httpsource via http
+    # read config direct from device via http
     url = make_url(host, port, cmnd)
     referer = make_url(host, port)
     auth = None
@@ -5543,7 +5543,7 @@ def restore(restorefile, backupfileformat, config):
                     message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
                 dryrun = SIMULATING
                 error_code = 0
-            # write config direct to httpsource via http
+            # write config direct to device via http
             if ARGS.httpsource is not None:
                 if not ARGS.dryrun:
                     if ARGS.verbose:
@@ -6039,9 +6039,9 @@ if __name__ == "__main__":
 
     if len(CONFIG['encode']) == 0:
         exit_(ExitCode.FILE_READ_ERROR,
-              "Unable to read configuration data from {} '{}'"\
-              .format('device' if ARGS.httpsource is not None else 'file',
-                      ARGS.httpsource if ARGS.httpsource is not None else ARGS.filesource),
+              "Unable to read configuration data from {}'{}'"\
+              .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+              ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
               line=inspect.getlineno(inspect.currentframe()))
 
     # decrypt Tasmota config
@@ -6060,10 +6060,10 @@ if __name__ == "__main__":
     if CONFIG['info']['version'] is not None:
         if ARGS.verbose:
             message("{}'{}' is using Tasmota v{} on {}"\
-                .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
-                        ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
-                        get_versionstr(CONFIG['info']['version']),
-                        Platform.desc(CONFIG['info']['platform'])),
+                    .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+                    ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
+                    get_versionstr(CONFIG['info']['version']),
+                    Platform.desc(CONFIG['info']['platform'])),
                     type_=LogType.INFO)
         SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
         if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
