@@ -44,8 +44,7 @@ This branch does not contain any binaries. If you want to use a precompiled **de
 you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
 
 > **Note**  
-If you want to run the development **decode-config.py** from this branch, you need an
-installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+To run **decode-config.py** from this branch, you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 See [Running as Python script](#running-as-python-script) for more details.
 
 ### Table of contents
@@ -57,6 +56,7 @@ See [Running as Python script](#running-as-python-script) for more details.
     * [Prerequisite](#prerequisite)
   * [Usage](#usage)
     * [Basics](#basics)
+    * [Tasmota source](#tasmota-source)
     * [Format JSON output](#format-json-output)
     * [Parameter file](#parameter-file)
     * [Save backup](#save-backup)
@@ -121,12 +121,8 @@ For an overview start the program without any parameter and you will get a short
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable MD031 -->
 ```bash
-decode-config
+decode-config.py
 ```
-> **Note**  
-Replace `decode-config` by the program name your are using:  
-`decode-config.py` when running as Python executable.
-<!-- markdownlint-restore -->
 
 This prints a short help:
 
@@ -152,76 +148,78 @@ If you're missing older parameters, don't worry, they're still there (see [Obsol
 
 ### Basics
 
-To get a program result, pass at least a Tasmota source from which you want to read the configuration data..
+To get a program result, pass at least a [Tasmota source](#tasmota-source) from which you want to read the configuration data.
 
-#### Tasmota source
+### Tasmota source
 
 The Tasmota source determines where the configuration data should be loaded from and saved to.
-Sourcec can be
+A source can be an offline file or an online Tasmota device accessed via HTTP or indirectly via MQTT.
 
-* **.dmp File**: Source is a Tasmota configuration file (having extension `.dmp`):  
-use `--source <filename|file-url>` parameter  
-  
-* **HTTP connection**: Source is a HTTP connection to a running Tasmota device, specifying the hostname, IP o or [http-url](https://en.wikipedia.org/wiki/URL) of the Tasmota device:  
-use `--source <host|ip|http-scheme-url>` parameter  
-  
-* **MQTT transission**: Source is a MQTT topic of a MQTT server where a Tasmota device is connected to, specifying a [mttq-url](https://en.wikipedia.org/wiki/URL) of the MQTT server/broker:  
-use `--source <mqtt-scheme-url>` parameter.  
-You have to specify the Tasmota topic either using the [URL path](https://en.wikipedia.org/wiki/URL#Syntax) component or the optional `--fulltopic` parameter.  
-The topic must be the full topic of the Tasmota device without any trailing command or result part. You can use any of the prefixed topic (*cmnd*, *stat* or *tele* topic) or use the placeholder *%prefix%* for it, example  
-`%prefix%/tasmota-4281` or `tele/tasmota-4281` are valid topics  
-`cmnd/tasmota-4281/POWER` or `tele/tasmota-4281/STATE` are valid topics due to the trailing part.  
-*decode-config* cannot recognize what belongs to a base-topic and what is appended by Tasmota.  
-If the Tasmota device addressed via the topic uses a different password than decode-config for the MQTT connection, pass the different Tasmota password with the parameter `--password`.
+Use `--source` parameter to determine the configuration data source:
 
-When using a MQTT source, a [URL with scheme](https://en.wikipedira.org/wiki/) is mandatory.
+#### Binary (*.dmp) file (Offline)
 
-For HTTP and file sources, **decode-config** try to determine the source type itself as best it can. When in doubt, always use a [URL with scheme](https://en.wikipedira.org/wiki/).
+Source is a Tasmota configuration file (having extension `.dmp`).
 
-#### Configuration data from a binary (*.dmp) file
-
-To read from a binary Tasmota configuration file, pass the filename directly or as an URL:
+Pass the filename direclty or encoded as a [file-URL](https://en.wikipedia.org/wiki/URL):
 
 ```bash
 decode-config --source tasmota-4281.dmp
 decode-config -s file://path/to/tasmota-4281.dmp
 ```
 
-#### Configuration data using HTTP connection
+#### HTTP connection (Online)
 
-To read from the Tasmota HTTP interface you need the hostname or IP and optionally the web interface username and password. An http path appended to the URL is ignored:
+Source is an online HTTP connection to a running Tasmota device. To use this source, **decode-config** must have access to the network on which Tasmota is running.
+
+Specify the hostname, IP o or [http-url](https://en.wikipedia.org/wiki/URL) of the Tasmota device.
+
+An optionally required HTTP password, username and different HTTP port of the device can be specified via [URL](https://en.wikipedia.org/wiki/URL) or separately via `--username`, `--password` and `--port`
 
 ```bash
 decode-config --source tasmota-4281
 decode-config -s 192.168.10.92
-decode-config --source http://tasmota-4281 --username admin --password myPaszxwo!z
-decode-config --source http://admin:myPaszxwo!z@tasmota-4281
-decode-config --source http://admin:myPaszxwo!z@tasmota-4281:8000/cs?
+decode-config --source http://tasmota-4281 --password myPaszxwo!z
+decode-config --source http://admin:myPaszxwo!z@tasmota-4281:8000
+decode-config --source http://admin:myPaszxwo!z@tasmota-4281/cs?
 ```
 
-#### Configuration data using MQTT
+An appended HTTP path (here "`/cs?`") is ignored.
 
-To read the Tasmota configuration via an MQTT server, you need the hostname or IP of the MQTT server and optionally the username and password for it.  
-If Tasmota's password for the MQTT server connection differs from the password that decode-config should use, this must be passed as an optional parameter using `--password`.
+#### MQTT transission (Online)
 
-MQTT connections from decode-config to the MQTT server also allow the use of SSL/TLS:
+Source is a MQTT server and topic where an online Tasmota device is connected to. To use this source, **decode-config** does not need to have access to the same network that Tasmota is running on, it just needs access to the MQTT server that Tasmota also uses.
 
-##### Connect MQTT without SSL/TLS
+##### MQTT connection parameter
 
-```bash
-decode-config --source mqtt://mybroker.example.com/%prefx%/tasmota-4281
-decode-config --source mqtt://mybroker.example.com:1883/tele/tasmota-4281
-decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com  --fulltopic tele/tasmota-4281
-decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/tasmota-4281 --password myTasmotaMQTTPaszxwo!z
-```
+Specify the hostname or IP of the MQTT server (possibly also specify username and password for the MQTT server) and the Tasmota MQTT topic. The **decode-config** connection to MQTT server also allows SSL/TLS connection.
 
-##### Connect MQTT with SSL/TLS
+The MQTT username and password must be encoded within the URL (the parameter `--password` can not be used for that, it has a different function here).  
+If the username/password combination for the **decode-config** MQTT connection is different from the one used by Tasmota itself (Tasmota command `MQTTPassword`), the Tasmota MQTT password must be specified via the `--password` parameter.
+
+The Tasmota topic can be specfied either within the [URL path](https://en.wikipedia.org/wiki/URL#Syntax) component or using optional `--fulltopic` parameter.  
+The topic must be the full topic of the Tasmota device without any trailing command or result part. You can use any of the prefixed topic (*cmnd*, *stat* or *tele* topic) or use the placeholder *%prefix%* for it, example  
+`%prefix%/tasmota-4281` or `tele/tasmota-4281` are valid topics  
+`cmnd/tasmota-4281/POWER` or `tele/tasmota-4281/STATE` are invalid topics due to the trailing part.
+
+For SSL/TLS connection to MQTT server use `mqtts://` [URL scheme](https://en.wikipedia.org/wiki/URL#Syntax).
 
 ```bash
 decode-config --source mqtts://mybroker.example.com/%prefx%/tasmota-4281
 decode-config --source mqtts://mybroker.example.com:8883/tele/tasmota-4281
 decode-config --source mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com  --fulltopic tele/tasmota-4281
 decode-config --source mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/tasmota-4281 --password myTasmotaMQTTPaszxwo!z
+```
+
+For own certifications use the parameters `--cafile`, `--certfile` and `--keyfile`. To suppress certification verification use `--insecure`.
+
+For none SSL/TLS connection to MQTT server use `mqtt://` [URL scheme](https://en.wikipedia.org/wiki/URL#Syntax).
+
+```bash
+decode-config --source mqtt://mybroker.example.com/%prefx%/tasmota-4281
+decode-config --source mqtt://mybroker.example.com:1883/tele/tasmota-4281
+decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com  --fulltopic tele/tasmota-4281
+decode-config --source mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/tasmota-4281 --password myTasmotaMQTTPaszxwo!z
 ```
 
 ### Format JSON output
@@ -315,7 +313,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_10.1.0.json` (the part `Tasmota` and `10.1.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_2022.01.json` (the part `Tasmota` and `2022.01` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -327,7 +325,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_10.1.0.json` using JSON format
+* `Config_Tasmota_2022.01.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -335,10 +333,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_10.1.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_2022.01.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_10.1.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_2022.01
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -810,7 +808,7 @@ For details see [Obsolete parameters](#obsolete-parameters)
 * Filename replacement macros **@h** and **@H**:
   * **@h**
 The **@h** replacement macro uses the hostname configured with the Tasomta Wifi `Hostname <host>` command (defaults to `%s-%04d`). It will not use the network hostname of your device because this is not available when working with files only (e.g. `--source <filename>` as source).
-To prevent having a useless % in your filename, **@h** will not replaced by hostname if this contains '%' characters.
+To prevent having an useless % in your filename, **@h** will not replaced by hostname if this contains '%' characters.
   * **@H**
 If you want to use the network hostname within your filename, use the **@H** replacement macro instead - but be aware this will only replaced if you are using a network device as source (`<hostname>`, `<ip>`, `<url>`); it will not work when using a file as source (`<filename>`)
 
