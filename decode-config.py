@@ -2507,6 +2507,7 @@ def shorthelp(doexit=True):
     PARSER.print_usage()
     print()
     print("For advanced help use '{prog} -H' or '{prog} --full-help'".format(prog=os.path.basename(sys.argv[0])))
+    print()
     if doexit:
         sys.exit(ExitCode.OK)
 
@@ -6015,7 +6016,7 @@ if __name__ == "__main__":
             ARGS.httpsource = ARGS.source
 
     if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) == 0:
-        exit_(ExitCode.ARGUMENT_ERROR, "no valid source given", line=inspect.getlineno(inspect.currentframe()))
+        shorthelp()
 
     # souce is a file: pull config from Tasmota file
     if ARGS.filesource is not None:
