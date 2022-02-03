@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v10.1.0.8-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![master](https://img.shields.io/badge/master-v11.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -38,44 +38,37 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Content
 
-**This is the developer branch which contains decode-config matching the latest Tasmota developer version.**
-
-This branch does not contain any binaries. If you want to use a precompiled **decode-config** binary
-you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
-
-> **Note**  
-To run **decode-config.py** from this branch, you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
-See [Running as Python script](#running-as-python-script) for more details.
+**This is the master branch which contains decode-config matching the latest Tasmota release.**. It does not contain the latest changes.  
+If you are using Tasmota from its development branch it is advisable to also use the latest version of **decode-config**. To do this, switch to the [Development](https://github.com/tasmota/decode-config/development) branch of **decode-config**.
 
 ### Table of contents
 
-* [decode-config](#decode-config)
-  * [Content](#content)
-    * [Table of contents](#table-of-contents)
-  * [Running the program](#running-the-program)
-    * [Prerequisite](#prerequisite)
-  * [Usage](#usage)
-    * [Basics](#basics)
-    * [Tasmota source](#tasmota-source)
-    * [Format JSON output](#format-json-output)
-    * [Parameter file](#parameter-file)
-    * [Save backup](#save-backup)
-    * [Restore backup](#restore-backup)
-    * [Auto file extensions](#auto-file-extensions)
-    * [Test your parameter](#test-your-parameter)
-    * [Console outputs](#console-outputs)
-    * [Filter by groups](#filter-by-groups)
-    * [Usage examples](#usage-examples)
-  * [File Formats](#file-formats)
-    * [.dmp format](#dmp-format)
-    * [.json format](#json-format)
-    * [.bin format](#bin-format)
-  * [Program parameter list](#program-parameter-list)
-    * [--full-help](#--full-help)
-    * [Parameter notes](#parameter-notes)
-    * [Obsolete parameters](#obsolete-parameters)
-  * [Generated Tasmota commands](#generated-tasmota-commands)
-  * [Program return codes](#program-return-codes)
+* [Content](#content)
+  * [Table of contents](#table-of-contents)
+* [Running the program](#running-the-program)
+  * [Prerequisite](#prerequisite)
+* [Usage](#usage)
+  * [Basics](#basics)
+  * [Tasmota source](#tasmota-source)
+  * [Format JSON output](#format-json-output)
+  * [Parameter file](#parameter-file)
+  * [Save backup](#save-backup)
+  * [Restore backup](#restore-backup)
+  * [Auto file extensions](#auto-file-extensions)
+  * [Test your parameter](#test-your-parameter)
+  * [Console outputs](#console-outputs)
+  * [Filter by groups](#filter-by-groups)
+  * [Usage examples](#usage-examples)
+* [File Formats](#file-formats)
+  * [.dmp format](#dmp-format)
+  * [.json format](#json-format)
+  * [.bin format](#bin-format)
+* [Program parameter list](#program-parameter-list)
+  * [--full-help](#--full-help)
+  * [Parameter notes](#parameter-notes)
+  * [Obsolete parameters](#obsolete-parameters)
+* [Generated Tasmota commands](#generated-tasmota-commands)
+* [Program return codes](#program-return-codes)
 
 ## Running the program
 
@@ -83,14 +76,11 @@ The program does not have a graphical user interface (GUI), you have to run it f
 
 ### Prerequisite
 
-#### Python
+**decode-config** is a Python programm that needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 
-**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+To avoid installation of Python you can also use one of the distributed executables for Linux, Windows and iOS otherwise install Python as described below.
 
-> **Note**  
-Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
-
-##### Linux
+#### Linux
 
 Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library installation for all OS](#all-os) below.
 
@@ -98,17 +88,23 @@ Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library
 sudo apt-get install python3 python3-pip
 ```
 
-##### Windows 10
+#### Windows
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) as described and follow [library installation for all OS](#all-os) below.
 
-##### MacOS
+#### MacOS
 
 Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and follow [library installation for all OS](#all-os) below.
 
-##### All OS
+#### All OS
 
-After python and pip is installed, install dependencies:
+After installing Python and Pip, decode-config.py can be installed from PyPI with its associated libraries:
+
+```shell
+python -m pip install decode-config
+```
+
+If you want to use the `decode-config.py` from this repository directly, install the module dependencies manually:
 
 ```shell
 python -m pip install requests configargparse paho-mqtt json
@@ -142,9 +138,6 @@ usage: decode-config.py [-s <filename|host|url>] [-p <password>]
 ```
 
 For advanced help run **decode-config** with parameter `--full--help` or `-H`. This will print a [Program parameter list](#program-parameter-list).
-
-> **Note**  
-If you're missing older parameters, don't worry, they're still there (see [Obsolete parameters](#obsolete-parameters)).
 
 ### Basics
 
