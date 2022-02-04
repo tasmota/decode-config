@@ -5549,7 +5549,7 @@ def restore(restorefile, backupfileformat, config):
                 if not ARGS.dryrun:
                     if ARGS.verbose:
                         message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO)
-                    error_code, error_str = push_http(new_encode_cfg, ARGS.httpsource, ARGS.port, ARGS.username, ARGS.password)
+                    error_code, error_str = push_http(new_encode_cfg)
                 if error_code:
                     exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
