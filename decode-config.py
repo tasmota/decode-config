@@ -3207,10 +3207,8 @@ def get_versionstr(version):
         else:
             subreleasestr = ''
     if major >= 20 and minor >= 22:
-        version_format = "{:02d}{:02d}.{:d}{}{}"
-    else:
-        version_format = "{:d}.{:d}.{:d}{}{}"
-    return version_format.format(major, minor, release, '.' if (major >= 6 and subreleasestr != '') else '', subreleasestr)
+        return "{:02d}{:02d}.{:d}{}{}".format(major, minor, release, '.' if len(subreleasestr) else '', subreleasestr if len(subreleasestr) else '')
+    return "{:d}.{:d}.{:d}{}{}".format(major, minor, release, '.' if (major >= 6 and subreleasestr != '') else '', subreleasestr)
 
 def make_filename(filename, filetype, configmapping):
     """
