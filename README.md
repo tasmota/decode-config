@@ -313,7 +313,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_2022.01.json` (the part `Tasmota` and `2022.01` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_2022.1.json` (the part `Tasmota` and `2022.1` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -325,7 +325,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_2022.01.json` using JSON format
+* `Config_Tasmota_2022.1.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -333,10 +333,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_2022.01.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_2022.1.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_2022.01
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_2022.1
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -588,7 +588,7 @@ Filtering by groups affects the entire output, regardless of whether screen outp
 1. Restore a Tasmota configuration file
 
   ```bash
-  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_6.2.1.dmp
+  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_2022.1.dmp
   ```
 
 1. Backup device using Tasmota configuration compatible format
