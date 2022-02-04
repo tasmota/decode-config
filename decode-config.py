@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '2022.01.3',
+    'VERSION': '2022.1.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2290,7 +2290,10 @@ SETTING_2022_01_3['flag5'][1].update({
         'pwm_force_same_phase':     (Platform.ALL,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_2022_1_4 = copy.deepcopy(SETTING_2022_01_3)
+# ======================================================================
 SETTINGS = [
+            (0x14160104,0x1000, SETTING_2022_1_4),
             (0x14160103,0x1000, SETTING_2022_01_3),
             (0x14160102,0x1000, SETTING_2022_01_2),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
