@@ -4124,11 +4124,11 @@ def bitsread(value, pos=0, bits=1):
         value &= (1<<bits)-1
     return value
 
-def get_strindex(hardware_, strindex_name):
+def get_strindex(hardware, strindex_name):
     """
     Get the hardware corresponding string index for variable strings
 
-    @param hardware_:
+    @param hardware:
         platfrom id
     @param strindex_name:
         name of the index to find within string definition
@@ -4136,13 +4136,13 @@ def get_strindex(hardware_, strindex_name):
     @return:
         index of the string or -1 on error
     """
-    # hardware_ = get_fielddef(fielddef, fields='hardware_')
+    # hardware = get_fielddef(fielddef, fields='hardware')
     try:
-        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index(strindex_name)
+        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index(strindex_name)
     except:     # pylint: disable=bare-except
         return -1
 
-def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
+def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
     """
     Get field definition items
 
@@ -4155,7 +4155,7 @@ def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, 
     @return:
         set of values defined in <fields>
     """
-    hardware_ = format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
+    hardware = format_ = addrdef = baseaddr = datadef = arraydef = validate = cmd = group = tasmotacmnd = converter = readconverter = writeconverter = strindex = None
     bits = bitshift = 0
     raise_error = '<fielddef> error'
 
@@ -4172,10 +4172,10 @@ def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, 
     # get top level items
     if len(fielddef) == 4:
         # converter not present
-        hardware_, format_, addrdef, datadef = fielddef
+        hardware, format_, addrdef, datadef = fielddef
     elif len(fielddef) == 5:
         # converter present
-        hardware_, format_, addrdef, datadef, converter = fielddef
+        hardware, format_, addrdef, datadef, converter = fielddef
     else:
         print('wrong <fielddef> {} length ({}) in setting'.format(fielddef, len(fielddef)), file=sys.stderr)
         raise SyntaxError(raise_error)
@@ -4184,9 +4184,9 @@ def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, 
     if isinstance(format_, dict) and baseaddr is None and datadef is None:
         return eval(fields)     # pylint: disable=eval-used
 
-    if not isinstance(hardware_, int):
+    if not isinstance(hardware, int):
         print("baseaddr: {} datadef: {}".format(baseaddr, datadef))
-        print('<hardware> ({}) must be defined as integer in <fielddef> {}'.format(type(hardware_), fielddef), file=sys.stderr)
+        print('<hardware> ({}) must be defined as integer in <fielddef> {}'.format(type(hardware), fielddef), file=sys.stderr)
         raise SyntaxError(raise_error)
 
     if not isinstance(format_, (str, dict)):
@@ -4213,9 +4213,9 @@ def get_fielddef(fielddef, fields="hardware_, format_, addrdef, baseaddr, bits, 
                     print('<strindex> must be defined as named index string in <fielddef> {}'.format(fielddef), file=sys.stderr)
                     raise SyntaxError(raise_error)
                 try:
-                    strindex = get_strindex(hardware_, strindex_name)
-                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index('SET_MAX'):
-                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware_)].index('SET_MAX'), fielddef), file=sys.stderr)
+                    strindex = get_strindex(hardware, strindex_name)
+                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index('SET_MAX'):
+                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index('SET_MAX'), fielddef), file=sys.stderr)
                         raise SyntaxError(raise_error)
                 except:     # pylint: disable=bare-except
                     pass
@@ -4531,7 +4531,7 @@ def get_fieldlength(fielddef):
         length of field in bytes
     """
     length = 0
-    hardware_, format_, addrdef, arraydef = get_fielddef(fielddef, fields='hardware_, format_, addrdef, arraydef')
+    hardware, format_, addrdef, arraydef = get_fielddef(fielddef, fields='hardware, format_, addrdef, arraydef')
 
     # <arraydef> contains a integer list
     if isinstance(arraydef, list) and len(arraydef) > 0:
@@ -4540,10 +4540,10 @@ def get_fieldlength(fielddef):
         for _ in range(0, arraydef[0]):
             subfielddef = get_subfielddef(fielddef)
             if len(arraydef) > 1:
-                length += get_fieldlength((hardware_, format_, addrdef, subfielddef))
+                length += get_fieldlength((hardware, format_, addrdef, subfielddef))
             # single array
             else:
-                length += get_fieldlength((hardware_, format_, addrdef, None))
+                length += get_fieldlength((hardware, format_, addrdef, None))
 
     elif isinstance(format_, dict):
         # -> iterate through format
@@ -4572,7 +4572,7 @@ def get_subfielddef(fielddef):
     @return:
         subfield definition
     """
-    hardware_, format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='hardware_, format_, addrdef, datadef, arraydef, validate, cmd, converter')
+    hardware, format_, addrdef, datadef, arraydef, validate, cmd, converter = get_fielddef(fielddef, fields='hardware, format_, addrdef, datadef, arraydef, validate, cmd, converter')
 
     # create new arraydef
     if len(arraydef) > 1:
@@ -4592,9 +4592,9 @@ def get_subfielddef(fielddef):
     # set new field def
     subfielddef = None
     if converter is not None:
-        subfielddef = (hardware_, format_, addrdef, datadef, converter)
+        subfielddef = (hardware, format_, addrdef, datadef, converter)
     else:
-        subfielddef = (hardware_, format_, addrdef, datadef)
+        subfielddef = (hardware, format_, addrdef, datadef)
 
     return subfielddef
 
@@ -4634,7 +4634,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
     @return:
         value read from dobj
     """
-    hardware_, format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='hardware_, format_, bits, bitshift, strindex')
+    hardware, format_, bits, bitshift, strindex = get_fielddef(fielddef, fields='hardware, format_, bits, bitshift, strindex')
 
     value_ = 0
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
@@ -4681,7 +4681,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
             # get unpacked binary value as stripped string
             str_ = str(unpackedvalue[0], STR_CODING, errors='ignore')
             # split into single or multiple list elements delimted by \0
-            set_max = get_strindex(hardware_, 'SET_MAX')
+            set_max = get_strindex(hardware, 'SET_MAX')
             sarray = str_.split('\x00', set_max)
 
         if isinstance(sarray, list):
@@ -4793,10 +4793,10 @@ def get_field(dobj, config_version, fieldname, fielddef, raw=False, addroffset=0
         return valuemapping
 
     # get field definition
-    hardware_, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='hardware_, format_, baseaddr, strindex, arraydef, group')
+    hardware, format_, baseaddr, strindex, arraydef, group = get_fielddef(fielddef, fields='hardware, format_, baseaddr, strindex, arraydef, group')
 
     # filter hardware
-    if not HARDWARE.match(hardware_, config_version):
+    if not HARDWARE.match(hardware, config_version):
         return valuemapping
 
     # filter groups
@@ -4882,10 +4882,10 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
     if fieldname == SETTINGVAR:
         return dobj
 
-    hardware_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='hardware_, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
+    hardware, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter = get_fielddef(fielddef, fields='hardware, format_, baseaddr, bits, bitshift, strindex, arraydef, group, writeconverter')
 
     # filter hardware
-    if not HARDWARE.match(hardware_, config_version):
+    if not HARDWARE.match(hardware, config_version):
         return dobj
 
     # filter groups
@@ -5030,7 +5030,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                 sarray = str_.split('\x00')
                 # limit to SET_MAX
                 try:
-                    set_max = get_strindex(hardware_, 'SET_MAX')
+                    set_max = get_strindex(hardware, 'SET_MAX')
                 except:     # pylint: disable=bare-except
                     set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].index('SET_MAX')
                 if len(sarray) >= set_max:
@@ -5137,10 +5137,10 @@ def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedval
     if fieldname == SETTINGVAR:
         return cmnds
 
-    hardware_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='hardware_, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
+    hardware, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd = get_fielddef(fielddef, fields='hardware, format_, arraydef, group, readconverter, writeconverter, tasmotacmnd')
 
     # filter hardware
-    if not HARDWARE.match(hardware_, config_version):
+    if not HARDWARE.match(hardware, config_version):
         return cmnds
 
     # filter groups
