@@ -4899,23 +4899,23 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
     # <arraydef> contains a list
     if isinstance(arraydef, list) and len(arraydef) > 0:
         offset = 0
-        # try:
-        if len(restoremapping) > arraydef[0]:
-            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
-        for i in range(0, arraydef[0]):
-            subfielddef = get_subfielddef(fielddef)
-            length = get_fieldlength(subfielddef)
-            if length != 0:
-                if i >= len(restoremapping): # restoremapping data list may be shorter than definition
-                    break
-                subrestore = restoremapping[i]
-                if strindex is not None:
-                    dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
-                else:
-                    dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
-            offset += length
-        # except:     # pylint: disable=bare-except
-        #     exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        try:
+            if len(restoremapping) > arraydef[0]:
+                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            for i in range(0, arraydef[0]):
+                subfielddef = get_subfielddef(fielddef)
+                length = get_fieldlength(subfielddef)
+                if length != 0:
+                    if i >= len(restoremapping): # restoremapping data list may be shorter than definition
+                        break
+                    subrestore = restoremapping[i]
+                    if strindex is not None:
+                        dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=i, filename=filename)
+                    else:
+                        dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
+                offset += length
+        except:     # pylint: disable=bare-except
+            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # <format> contains a dict
     elif isinstance(format_, dict):
