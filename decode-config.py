@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '2022.1.4',
+    'VERSION': '10.1.0.8',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2307,27 +2307,27 @@ SETTING_10_1_0_3.update             ({
     'sserial_config':               (HARDWARE.ESP,   'B',   0x33E,       (None, None,                           ('Serial',      '"SSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 # ======================================================================
-SETTING_2022_01_2 = copy.deepcopy(SETTING_10_1_0_3)
-SETTING_2022_01_2.update            ({
+SETTING_10_1_0_5 = copy.deepcopy(SETTING_10_1_0_3)
+SETTING_10_1_0_5.update            ({
     'eth_ipv4_address':             (HARDWARE.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',        'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
                                     })
 # ======================================================================
-SETTING_2022_01_3 = copy.deepcopy(SETTING_2022_01_2)
-SETTING_2022_01_3.update            ({
+SETTING_10_1_0_6 = copy.deepcopy(SETTING_10_1_0_5)
+SETTING_10_1_0_6.update            ({
     'web_time_start':               (HARDWARE.ESP,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
                                     })
-SETTING_2022_01_3['flag5'][1].update({
+SETTING_10_1_0_6['flag5'][1].update({
         'pwm_force_same_phase':     (HARDWARE.ESP,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_2022_1_4 = copy.deepcopy(SETTING_2022_01_3)
+SETTING_10_1_0_8 = copy.deepcopy(SETTING_10_1_0_6)
 # ======================================================================
 SETTINGS = [
-            (0x14160104,0x1000, SETTING_2022_1_4),
-            (0x14160103,0x1000, SETTING_2022_01_3),
-            (0x14160102,0x1000, SETTING_2022_01_2),
+            (0x0A010008,0x1000, SETTING_10_1_0_8),
+            (0x0A010006,0x1000, SETTING_10_1_0_6),
+            (0x0A010005,0x1000, SETTING_10_1_0_5),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
             (0x0A000004,0x1000, SETTING_10_0_0_4),
             (0x0A000003,0x1000, SETTING_10_0_0_3),
@@ -3238,8 +3238,6 @@ def get_versionstr(version):
             subreleasestr = str(chr(subrelease+ord('a')-1))
         else:
             subreleasestr = ''
-    if major >= 20 and minor >= 22:
-        return "{:02d}{:02d}.{:d}{}{}".format(major, minor, release, '.' if len(subreleasestr) else '', subreleasestr if len(subreleasestr) else '')
     return "{:d}.{:d}.{:d}{}{}".format(major, minor, release, '.' if (major >= 6 and subreleasestr != '') else '', subreleasestr)
 
 def make_filename(filename, filetype, configmapping):
@@ -6106,7 +6104,7 @@ if __name__ == "__main__":
                 COLUMNS = 80
             exit_(ExitCode.UNSUPPORTED_VERSION, \
                 "\n           ".join(textwrap.wrap(\
-                "Tasmota configuration data v{} currently unsupported!\n"
+                "Tasmota configuration data v{} currently unsupported! "
                 "The read configuration data is newer than the last supported v{} by this program. "
                 "Newer Tasmota versions may contain changed data structures so that the data with "
                 "older versions may become incompatible. You can force proceeding at your own risk "
