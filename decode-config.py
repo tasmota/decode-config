@@ -608,40 +608,51 @@ class Hardware:
     ESPxx configuration data hardware class
     """
     # Bit mask for supported hardware
-    ESP82   = 0b00000001        # All ESP82xx
-    ESP32_C3= 0b00000010        # ESP32 excluding ESP32C3
-    ESP32C3 = 0b00000100        # ESP32C3
-    ESP32   = 0b00000110        # All ESP32
-    ESP     = 0b11111111        # All ESP
+    ESP82       = 0b00000001        # All ESP82xx
+    ESP32ex     = 0b00000010        # ESP32 excluding S3/S2/C3
+    ESP82_32ex  = 0b00000011        # ESP82xx + ESP32 excluding ESP32 S3/S2/C3
+    ESP32S3     = 0b00000100        # ESP32S3
+    ESP32S2     = 0b00001000        # ESP32S2
+    ESP32C3     = 0b00010000        # ESP32C3
+    ESP32       = 0b00011110        # All ESP32
+    ESP         = 0b11111111        # All ESP
 
-    # Platform text
-    STR = ["ESP82", "ESP32 (w/o ESP32C3)", "ESP32C3", "ESP32", "ESP82/32"]
-    MASK = [ESP82, ESP32_C3, ESP32C3, ESP32, ESP]
+    # Hardware bitmask and description
+    config = (
+        (ESP82,         "ESP82"),
+        (ESP32ex,       "ESP32 (excl S3/S2/C3)"),
+        (ESP82_32ex,    "ESP82/32 (excl ESP32S3/S2/C3)"),
+        (ESP32S3,       "ESP32S3"),
+        (ESP32,         "ESP32"),
+        (ESP,           "ESP82/32")
+    )
+
+    # Tasmota config_version values
+    config_versions = (ESP82, ESP32ex, ESP32S3, ESP32S2, ESP32C3)
 
     def get_bitmask(self, config_version):
-        hardware_bits = self.ESP
-        if config_version == 0:
-            hardware_bits = self.ESP82
-        elif config_version == 1:
-            hardware_bits = self.ESP32
-        if config_version == 2:
-            hardware_bits = self.ESP32C3
-        return hardware_bits
+        """
+        Get hardware bitmask based on Tasmota config_version
+        """
+        try:
+            return self.config_versions[config_version]
+        except:     # pylint: disable=bare-except
+            return self.ESP
 
     def hstr(self, setting_hardware):
         """
-        Create hardware string
+        Create an dict index string based on hardware
 
         @param setting_hardware:
             hardware definition value from setting
 
         @return:
-            hardware string
+            dict index string
         """
         try:
-            return self.STR[self.MASK.index(setting_hardware)]
+            return 'TEXTINDEX_'+self.config[[hw[0] for hw in self.config].index(setting_hardware)][1]
         except:     # pylint: disable=bare-except
-            return self.STR[len(self.STR)-1]
+            return 'TEXTINDEX_'+self.config[len(self.config)-1][1]
 
     def str(self, config_version):
         """
@@ -653,9 +664,11 @@ class Hardware:
         @return:
             hardware string
         """
-        if config_version < len(self.STR):
-            return self.STR[config_version]
-        return self.STR[len(self.STR)-1]
+        hardware = self.get_bitmask(config_version)
+        try:
+            return self.config[[hw[0] for hw in self.config].index(hardware)][1]
+        except:     # pylint: disable=bare-except
+            return self.config[len(self.config)-1][1]
 
     def match(self, setting_hardware, config_version):
         """
@@ -1438,7 +1451,7 @@ SETTING_8_0_0_1.update              ({
     # v8.x.x.x: Index numbers for indexed strings
     SETTINGVAR:
     {
-        'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP):
+        HARDWARE.hstr(HARDWARE.ESP):
                        ['SET_OTAURL',
                         'SET_MQTTPREFIX1', 'SET_MQTTPREFIX2', 'SET_MQTTPREFIX3',
                         'SET_STASSID1', 'SET_STASSID2',
@@ -1460,8 +1473,8 @@ SETTING_8_0_0_1.update              ({
                         'SET_MAX']
     }
                                     })
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
-SETTING_8_0_0_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_0_0_1[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_0_0_1[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_0_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_0_0_1.update              ({
     'ota_url':                      (HARDWARE.ESP,   '699s',(0x017,'SET_OTAURL'),
                                                                          (None, None,                           ('Management',  '"OtaUrl {}".format($)')) ),
@@ -1593,11 +1606,11 @@ SETTING_8_1_0_6.update              ({
                                     })
 # ======================================================================
 SETTING_8_1_0_9 = copy.deepcopy(SETTING_8_1_0_6)
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
-SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
-SETTING_8_1_0_9[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_1_0_9[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_1_0_9[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MQTT_GRP_TOPIC2', 'SET_MQTT_GRP_TOPIC3', 'SET_MQTT_GRP_TOPIC4'])
+SETTING_8_1_0_9[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_1_0_9[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_1_0_9[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_1_0_9[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_1_0_9.update              ({
     'device_group_share_in':        (HARDWARE.ESP,   '<L',  0xFCC,       (None, None,                           ('Control',     '"DevGroupShare 0x{:08x},0x{:08x}".format(@["device_group_share_in"],@["device_group_share_out"])')) ),
     'device_group_share_out':       (HARDWARE.ESP,   '<L',  0xFD0,       (None, None,                           ('Control',     None)) ),
@@ -1638,11 +1651,11 @@ SETTING_8_2_0_0.update              ({
                                     })
 # ======================================================================
 SETTING_8_2_0_3 = copy.deepcopy(SETTING_8_2_0_0)
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
-SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
-SETTING_8_2_0_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TEMPLATE_NAME', 'SET_DEV_GROUP_NAME1', 'SET_DEV_GROUP_NAME2', 'SET_DEV_GROUP_NAME3', 'SET_DEV_GROUP_NAME4'])
+SETTING_8_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_2_0_3[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_2_0_3[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_2_0_3.pop('mqtt_grptopicdev',None)
 SETTING_8_2_0_3.update              ({
     'templatename':                 (HARDWARE.ESP,   '699s',(0x017,'SET_TEMPLATE_NAME'),
@@ -1827,11 +1840,11 @@ SETTING_8_2_0_6['flag4'][1].update  ({
 SETTING_8_3_1_0 = copy.deepcopy(SETTING_8_2_0_6)
 # ======================================================================
 SETTING_8_3_1_1 = copy.deepcopy(SETTING_8_3_1_0)
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_DEVICENAME'])
-SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
-SETTING_8_3_1_1[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_3_1_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_DEVICENAME'])
+SETTING_8_3_1_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_3_1_1[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_1[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_3_1_1.update              ({
     'devicename':                   (HARDWARE.ESP,   '699s',(0x017,'SET_DEVICENAME'),
                                                                          (None, None,                           ('Management',  '"DeviceName {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1839,8 +1852,6 @@ SETTING_8_3_1_1.update              ({
 # ======================================================================
 SETTING_8_3_1_2 = copy.deepcopy(SETTING_8_3_1_1)
 SETTING_8_3_1_2.update              ({
-    # 'ledpwm_mask':                  (HARDWARE.ESP82, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if 157 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
-    # 'ledpwm_mask':                  (HARDWARE.ESP32, 'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4)) if  17 in @["my_gp"] else "LedPwmMode1 {}".format($ & 1)')) ),
     'ledpwm_mask':                  (HARDWARE.ESP,   'B',   0xE8F,       (None, None,                           ('Control',     'list("LedPwmMode{} {}".format(i+1, 1 if ($ & (1<<i)) else 0) for i in range(0, 4))')) ),
     'ledpwm_on':                    (HARDWARE.ESP,   'B',   0xF3F,       (None, None,                           ('Control',     '"LedPwmOn {}".format($)')) ),
     'ledpwm_off':                   (HARDWARE.ESP,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
@@ -1858,11 +1869,11 @@ SETTING_8_3_1_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_3_1_3 = copy.deepcopy(SETTING_8_3_1_2)
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
-SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
-SETTING_8_3_1_3[SETTINGVAR].update({'TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_3_1_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TELEGRAM_TOKEN', 'SET_TELEGRAM_CHATID'])
+SETTING_8_3_1_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_3_1_3[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP82): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
+SETTING_8_3_1_3[SETTINGVAR].update({HARDWARE.hstr(HARDWARE.ESP32): copy.deepcopy(SETTING_8_3_1_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)])})
 SETTING_8_3_1_3.update              ({
     'telegram_token':               (HARDWARE.ESP,   '699s',(0x017,'SET_TELEGRAM_TOKEN'),
                                                                          (None, None,                           ('Telegram',    '"TmToken {}".format("\\"" if len($) == 0 else $)')) ),
@@ -1916,15 +1927,15 @@ SETTING_8_3_1_7['timer'][1].update  ({
                                     })
 # ======================================================================
 SETTING_8_4_0_0 = copy.deepcopy(SETTING_8_3_1_7)
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_ADC_PARAM1'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
-SETTING_8_4_0_0[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_ADC_PARAM1'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_ADC_PARAM1', 'SET_ADC_PARAM2', 'SET_ADC_PARAM3', 'SET_ADC_PARAM4', 'SET_ADC_PARAM5', 'SET_ADC_PARAM6', 'SET_ADC_PARAM7', 'SET_ADC_PARAM8'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_8_4_0_0.update              ({
     'adc_param':                    (HARDWARE.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
                                                                          ([8],  None,                           ('Management',  None)) ),
@@ -2014,18 +2025,18 @@ SETTING_9_0_0_2['flag4'][1].update  ({
                                     })
 # ======================================================================
 SETTING_9_0_0_3 = copy.deepcopy(SETTING_9_0_0_2)
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
-SETTING_9_0_0_3[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT1', 'SET_SWITCH_TXT2', 'SET_SWITCH_TXT3', 'SET_SWITCH_TXT4', 'SET_SWITCH_TXT5', 'SET_SWITCH_TXT6', 'SET_SWITCH_TXT7', 'SET_SWITCH_TXT8'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_9_0_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_9_0_0_3.update              ({
     'switchtext':                   (HARDWARE.ESP, '699s',(0x017,'SET_SWITCH_TXT1'),
                                                                          ([8],  None,                           ('Management',  '"SwitchText{} {}".format(#+1,"\\"" if len($) == 0 else $)')) ),
@@ -2085,13 +2096,13 @@ SETTING_9_2_0_5.update             ({
                                     })
 # ======================================================================
 SETTING_9_2_0_6 = copy.deepcopy(SETTING_9_2_0_5)
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_SHD_PARAM
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
+SETTING_9_2_0_6[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_2_0_6[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_SHD_PARAM
+SETTING_9_2_0_6[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SWITCH_TXT9', 'SET_SWITCH_TXT10', 'SET_SWITCH_TXT11', 'SET_SWITCH_TXT12', 'SET_SWITCH_TXT13', 'SET_SWITCH_TXT14', 'SET_SWITCH_TXT15', 'SET_SWITCH_TXT16',
                                                        'SET_SWITCH_TXT17', 'SET_SWITCH_TXT18', 'SET_SWITCH_TXT19', 'SET_SWITCH_TXT20', 'SET_SWITCH_TXT21', 'SET_SWITCH_TXT22', 'SET_SWITCH_TXT23', 'SET_SWITCH_TXT24',
                                                        'SET_SWITCH_TXT25', 'SET_SWITCH_TXT26', 'SET_SWITCH_TXT27', 'SET_SWITCH_TXT28'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
-SETTING_9_2_0_6[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_9_2_0_6[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_SHD_PARAM'])
+SETTING_9_2_0_6[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 
 SETTING_9_2_0_6.update              ({
     'switchtext':                   (HARDWARE.ESP82, '699s',(0x017,'SET_SWITCH_TXT1'),
@@ -2201,15 +2212,15 @@ SETTING_9_5_0_4.update              ({
                                     })
 # ======================================================================
 SETTING_9_5_0_5 = copy.deepcopy(SETTING_9_5_0_4)
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
-SETTING_9_5_0_5[SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_RGX_SSID', 'SET_RGX_PASSWORD', 'SET_INFLUXDB_HOST', 'SET_INFLUXDB_PORT', 'SET_INFLUXDB_ORG', 'SET_INFLUXDB_TOKEN', 'SET_INFLUXDB_BUCKET'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_9_5_0_5.update              ({
     'ipv4_rgx_address':             (HARDWARE.ESP,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
     'ipv4_rgx_subnetmask':          (HARDWARE.ESP,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
@@ -2317,6 +2328,112 @@ SETTING_10_1_0_6.update            ({
     'web_time_start':               (HARDWARE.ESP,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
+    'eth_type':                     (HARDWARE.ESP32ex,
+                                                     'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_type_esp32s3':             (HARDWARE.ESP32S3,
+                                                     'B',   0x40E,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_clk_mode':                 (HARDWARE.ESP32ex,
+                                                     'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'eth_clk_mode_esp32s3':         (HARDWARE.ESP32S3,
+                                                     'B',   0x40F,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'eth_address':                  (HARDWARE.ESP32ex,
+                                                     'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+    'eth_address_esp32s3':          (HARDWARE.ESP32S3,
+                                                     'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+    'module':                       (HARDWARE.ESP82_32ex,
+                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+    'module_esp32s3':               (HARDWARE.ESP32S3,
+                                                     'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+    'webcam_config':                (HARDWARE.ESP32ex, {
+        'stream':                   (HARDWARE.ESP32ex,
+                                                     '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32ex,
+                                                     '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32ex,
+                                                     '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32ex,
+                                                     '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32ex,
+                                                     '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32ex,
+                                                     '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32ex,
+                                                     '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32ex,
+                                                     '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+                                    },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'webcam_config_esp32s3':        (HARDWARE.ESP32S3, {
+        'stream':                   (HARDWARE.ESP32S3,
+                                                     '<L', (0x460,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32S3,
+                                                     '<L', (0x460,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32S3,
+                                                     '<L', (0x460,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32S3,
+                                                     '<L', (0x460,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32S3,
+                                                     '<l', (0x460,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32S3,
+                                                     '<l', (0x460,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32S3,
+                                                     '<l', (0x460,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32S3,
+                                                     '<l', (0x460,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+                                    },                      0x460,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'ws_width':                     (HARDWARE.ESP82_32ex,
+                                                     'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
+    'ws_width_esp32s3':             (HARDWARE.ESP32S3,
+                                                     'B',   0x464,       ([3],  None,                           ('Light',       None)) ),
+    'serial_delimiter':             (HARDWARE.ESP82_32ex,
+                                                     'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'serial_delimiter_esp32s3':     (HARDWARE.ESP32S3,
+                                                     'B',   0x467,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'seriallog_level':              (HARDWARE.ESP82_32ex,
+                                                     'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'seriallog_level_esp32s3':      (HARDWARE.ESP32S3,
+                                                     'B',   0x468,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sleep':                        (HARDWARE.ESP82_32ex,
+                                                     'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'sleep_esp32s3':                (HARDWARE.ESP32S3,
+                                                     'B',   0x469,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'domoticz_switch_idx':          (HARDWARE.ESP82_32ex,
+                                                     '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_switch_idx_esp32s3':  (HARDWARE.ESP32S3,
+                                                     '<H',  0x46A,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_sensor_idx':          (HARDWARE.ESP82_32ex,
+                                                     '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
+    'domoticz_sensor_idx_esp32s3':  (HARDWARE.ESP32S3,
+                                                     '<H',  0x472,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
+    'ws_color':                     (HARDWARE.ESP82_32ex,
+                                                     'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
+    'ws_color_esp32s3':             (HARDWARE.ESP32S3,
+                                                     'B',   0x48A,       ([4,3],None,                           ('Light',       None)) ),
+    'my_gp_esp32':                  (HARDWARE.ESP32ex,
+                                                     '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32c3':                (HARDWARE.ESP32C3,
+                                                     '<H',  0x3AC,       ([22], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32s2':                (HARDWARE.ESP32S2,
+                                                     '<H',  0x3AC,       ([47], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32s3':                (HARDWARE.ESP32S3,
+                                                     '<H',  0x3AC,       ([49], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+                                    })
+SETTING_10_1_0_6['user_template_esp32'][1].update({
+        'gpio':                     (HARDWARE.ESP32ex,
+                                                     '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag':                     (HARDWARE.ESP32ex,
+                                                     '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
+        'gpio_esp32c3':             (HARDWARE.ESP32C3,
+                                                     '<H',  0x3FC,       ([22], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32c3':             (HARDWARE.ESP32C3,
+                                                     '<H',  0x3FC+(2*22),(None, None,                           ('Management',  None)) ),
+        'gpio_esp32s2':             (HARDWARE.ESP32S2,
+                                                     '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32s2':             (HARDWARE.ESP32S2,
+                                                     '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
+        'gpio_esp32s3':             (HARDWARE.ESP32S3,
+                                                     '<H',  0x410,       ([33], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32s3':             (HARDWARE.ESP32S3,
+                                                     '<H',  0x410+(2*33),(None, None,                           ('Management',  None)) ),
                                     })
 SETTING_10_1_0_6['flag5'][1].update({
         'pwm_force_same_phase':     (HARDWARE.ESP,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
@@ -3098,15 +3215,15 @@ def get_config_info(decode_cfg):
     template_version = version
 
     # identify hardware (config_version)
-    config_version = HARDWARE.STR.index("ESP82")  # default legacy
+    config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)  # default legacy
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
         if version >= cfg[0]:
             fielddef = cfg[2].get('config_version', None)
             if fielddef is not None:
                 config_version = get_field(decode_cfg, HARDWARE.ESP, 'config_version', fielddef, raw=True, ignoregroup=True)
-                if config_version >= len(HARDWARE.STR):
+                if config_version >= len(HARDWARE.config_versions):
                     exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
-                    config_version = HARDWARE.STR.index("ESP82")
+                    config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
             break
     # search setting definition for hardware top-down
     for cfg in sorted(SETTINGS, key=lambda s: s[0], reverse=True):
@@ -4138,7 +4255,7 @@ def get_strindex(hardware, strindex_name):
     """
     # hardware = get_fielddef(fielddef, fields='hardware')
     try:
-        return CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index(strindex_name)
+        return CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index(strindex_name)
     except:     # pylint: disable=bare-except
         return -1
 
@@ -4214,8 +4331,8 @@ def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, b
                     raise SyntaxError(raise_error)
                 try:
                     strindex = get_strindex(hardware, strindex_name)
-                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index('SET_MAX'):
-                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(hardware)].index('SET_MAX'), fielddef), file=sys.stderr)
+                    if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index('SET_MAX'):
+                        print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index('SET_MAX'), fielddef), file=sys.stderr)
                         raise SyntaxError(raise_error)
                 except:     # pylint: disable=bare-except
                     pass
@@ -5032,7 +5149,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                 try:
                     set_max = get_strindex(hardware, 'SET_MAX')
                 except:     # pylint: disable=bare-except
-                    set_max = CONFIG['info']['template'][SETTINGVAR]['TEXTINDEX_'+HARDWARE.hstr(HARDWARE.ESP)].index('SET_MAX')
+                    set_max = CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].index('SET_MAX')
                 if len(sarray) >= set_max:
                     delrange = len(sarray) - set_max
                     if delrange > 0:
@@ -5278,8 +5395,8 @@ def bin2mapping(config, raw=False):
             'size':     len(config['decode']),
         },
         'template': {
-            'version':  hex(config['info']['template_version']),
-            'versionstr':get_versionstr(config['info']['template_version']),
+            'version':  {'name':get_versionstr(config['info']['template_version']),
+                         'id':hex(config['info']['template_version'])},
             'crc':      hex(cfg_crc),
         },
         'env': {
@@ -5301,8 +5418,8 @@ def bin2mapping(config, raw=False):
         valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
         valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
     if config['info']['version'] != 0x0:
-        valuemapping['header']['data'].update({'version': hex(config['info']['version'])})
-        valuemapping['header']['data'].update({'versionstr': get_versionstr(config['info']['version'])})
+        valuemapping['header']['data'].update({'version': {'name':get_versionstr(config['info']['version']),
+                                                           'id':hex(config['info']['version'])}})
     cfg_hardware_def = config['info']['template'].get('config_version', None)
     if cfg_hardware_def is not None:
         cfg_hardware = get_field(config['decode'], HARDWARE.ESP, 'config_version', cfg_hardware_def, raw=True, ignoregroup=True)
