@@ -137,7 +137,6 @@ if sys.version_info[0] < 3:
 import platform
 try:
     from datetime import datetime
-    import paho.mqtt.client as mqtt
     import base64
     import time
     import copy
@@ -155,6 +154,11 @@ try:
     import hashlib
 except ImportError as err:
     module_import_error(err)
+try:
+    from paho.mqtt import client as mqtt
+    MQTT_MODULE = True
+except ImportError:
+    MQTT_MODULE = False
 try:
     import ssl
     SSL_MODULE = True
@@ -5861,7 +5865,8 @@ def parseargs():
                         "Specify source type, path, file, user, password, hostname, port and topic at once as an URL. "
                         "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile'"
                         "where scheme is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
-                        "and 'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT server)".format(DEFAULTS['source']['source']))
+                        "{}".format(DEFAULTS['source']['source'], 
+                            "and 'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT server)" if MQTT_MODULE else ""))
     source.add_argument('-f', '--file', dest='filesource', default=DEFAULTS['source']['filesource'], help=configargparse.SUPPRESS)
     source.add_argument('--tasmota-file', dest='filesource', help=configargparse.SUPPRESS)
     source.add_argument('-d', '--device', dest='httpsource', default=DEFAULTS['source']['httpsource'], help=configargparse.SUPPRESS)
@@ -5876,39 +5881,39 @@ def parseargs():
                         help="Web server password on HTTP source (set by Tasmota 'WebPassword' command), "
                         "MQTT server password in MQTT source (set by Tasmota 'MqttPassword' command) (default: {})".format(DEFAULTS['source']['password']))
 
-    mqtt = PARSER.add_argument_group('MQTT',
-                                       'MQTT transport settings')
+    mqtt = PARSER.add_argument_group('MQTT' if MQTT_MODULE else None,
+                                     'MQTT transport settings' if MQTT_MODULE else None)
     mqtt.add_argument('--fulltopic',
                       metavar='<topic>',
                       dest='fulltopic',
                       default=DEFAULTS['source']['fulltopic'],
-                      help="Optional MQTT transport fulltopic used for accessing Tasmota device (default: {})".format(DEFAULTS['source']['fulltopic']))
+                      help="Optional MQTT transport fulltopic used for accessing Tasmota device (default: {})".format(DEFAULTS['source']['fulltopic']) if MQTT_MODULE else configargparse.SUPPRESS)
     mqtt.add_argument('--cafile',
                       metavar='<file>',
                       dest='cafile',
                       default=DEFAULTS['source']['cafile'],
-                      help="Enables SSL/TLS connection: path to a or filename of the Certificate Authority certificate files that are to be treated as trusted by this client (default {})".format(DEFAULTS['source']['cafile']) if SSL_MODULE else configargparse.SUPPRESS)
+                      help="Enables SSL/TLS connection: path to a or filename of the Certificate Authority certificate files that are to be treated as trusted by this client (default {})".format(DEFAULTS['source']['cafile']) if SSL_MODULE and MQTT_MODULE else configargparse.SUPPRESS)
     mqtt.add_argument('--certfile',
                       metavar='<file>',
                       dest='certfile',
                       default=DEFAULTS['source']['certfile'],
-                      help="Enables SSL/TLS connection: filename of a PEM encoded client certificate file (default {})".format(DEFAULTS['source']['certfile']) if SSL_MODULE else configargparse.SUPPRESS)
+                      help="Enables SSL/TLS connection: filename of a PEM encoded client certificate file (default {})".format(DEFAULTS['source']['certfile']) if SSL_MODULE and MQTT_MODULE else configargparse.SUPPRESS)
     mqtt.add_argument('--keyfile',
                       metavar='<file>',
                       dest='keyfile',
                       default=DEFAULTS['source']['keyfile'],
-                      help="Enables SSL/TLS connection: filename of a PEM encoded client private key file (default {})".format(DEFAULTS['source']['keyfile']) if SSL_MODULE else configargparse.SUPPRESS)
+                      help="Enables SSL/TLS connection: filename of a PEM encoded client private key file (default {})".format(DEFAULTS['source']['keyfile']) if SSL_MODULE and MQTT_MODULE else configargparse.SUPPRESS)
     mqtt.add_argument('--insecure',
                       dest='insecure',
                       action='store_true',
                       default=DEFAULTS['source']['insecure'],
-                      help="suppress verification of the MQTT server hostname in the server certificate (default {})".format(DEFAULTS['source']['insecure']) if SSL_MODULE else configargparse.SUPPRESS)
+                      help="suppress verification of the MQTT server hostname in the server certificate (default {})".format(DEFAULTS['source']['insecure']) if SSL_MODULE and MQTT_MODULE else configargparse.SUPPRESS)
     mqtt.add_argument('--keepalive',
                       metavar='<sec>',
                       dest='keepalive',
                       type=int,
                       default=DEFAULTS['source']['keepalive'],
-                      help="keepalive timeout for the client (default {})".format(DEFAULTS['source']['keepalive']))
+                      help="keepalive timeout for the client (default {})".format(DEFAULTS['source']['keepalive']) if MQTT_MODULE else configargparse.SUPPRESS)
 
     backres = PARSER.add_argument_group('Backup/Restore',
                                         'Backup & restore specification')
@@ -6126,6 +6131,9 @@ if __name__ == "__main__":
     if ARGS.shorthelp:
         shorthelp()
 
+    if not MQTT_MODULE:
+        ARGS.mqttsource = None
+
     # check for ambiguous source parameters
     if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) > 1:
         exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources have been specified by -s, -d or -f parameter - limit it to a single one", line=inspect.getlineno(inspect.currentframe()))
@@ -6148,7 +6156,7 @@ if __name__ == "__main__":
 
         # mqtt(s)
         #   ARGS.source = mqtt(s)://<user>:<password>@tasmota:<port>
-        elif URLPARSE.scheme in ('mqtt', 'mqtts'):
+        elif MQTT_MODULE and URLPARSE.scheme in ('mqtt', 'mqtts'):
             ARGS.mqttsource = ARGS.source
 
         # file:
