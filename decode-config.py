@@ -3387,9 +3387,8 @@ def make_filename(filename, filetype, configmapping):
     """
     config_version = config_friendlyname = config_hostname = device_hostname = ''
 
-    config_version = configmapping.get('version', '')
     try:
-        config_version = configmapping['header']['data']['version']
+        config_version = configmapping['header']['data']['version']['id']
     except:     # pylint: disable=bare-except
         config_version = configmapping.get('version', '')
     if config_version != '':
