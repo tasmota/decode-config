@@ -2,6 +2,8 @@
 *.conf
 *.dmp
 *.json
+/build-executables/build/
+/build-executables/dist/
 
 # pyinstaller
 __pycache__/
