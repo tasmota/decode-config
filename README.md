@@ -38,13 +38,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Content
 
-**This is the developer branch which contains decode-config matching the latest Tasmota developer version.**
-
-This branch does not contain any binaries. If you want to use a precompiled **decode-config** binary
-you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
-
-> **Note**  
-To run **decode-config.py** from this branch, you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+To run **decode-config.py** you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 See [Running as Python script](#running-as-python-script) for more details.
 
 ### Table of contents
