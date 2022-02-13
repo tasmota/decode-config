@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v11.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development](https://img.shields.io/badge/development-v11.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -85,9 +85,6 @@ The program does not have a graphical user interface (GUI), you have to run it f
 #### Python
 
 **decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
-
-> **Note**  
-Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
 
 ##### Linux
 

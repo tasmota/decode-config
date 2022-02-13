@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.0.0',
+    'VERSION': '11.0.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
-    'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
+    'CLASSIFIER': 'Development Status :: 4 - Beta'',
     'URL': 'https://github.com/tasmota/decode-config',
     'AUTHOR': 'Norbert Richter',
     'AUTHOR_EMAIL': 'nr@prsolution.eu',
@@ -2443,10 +2443,10 @@ SETTING_10_1_0_6['flag5'][1].update({
         'pwm_force_same_phase':     (HARDWARE.ESP,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_11_0_0_0 = copy.deepcopy(SETTING_10_1_0_6)
+SETTING_11_0_0_1 = copy.deepcopy(SETTING_10_1_0_6)
 # ======================================================================
 SETTINGS = [
-            (0x0B000000,0x1000, SETTING_11_0_0_0),
+            (0x0B000001,0x1000, SETTING_11_0_0_1),
             (0x0A010006,0x1000, SETTING_10_1_0_6),
             (0x0A010005,0x1000, SETTING_10_1_0_5),
             (0x0A010003,0x1000, SETTING_10_1_0_3),
