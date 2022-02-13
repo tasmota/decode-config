@@ -5660,9 +5660,9 @@ def restore(restorefile, backupfileformat, config):
             new_config_version = get_config_info(new_decode_cfg)['hardware']
         else:
             try:
-                new_config_version = HARDWARE.STR.index(jsonconfig['header']['data']['hardware'])
+                new_config_version = HARDWARE.config_versions.index(jsonconfig['header']['data']['hardware'])
             except:     # pylint: disable=bare-except
-                new_config_version = HARDWARE.STR.index("ESP82")
+                new_config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
         config_version = config['info']['hardware']
         if config_version != new_config_version:
             exit_(ExitCode.RESTORE_DATA_ERROR, "Data incompatibility: {} '{}' hardware is '{}', restore file '{}' is for hardware '{}'".format(\
