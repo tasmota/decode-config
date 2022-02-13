@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v11.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![development](https://img.shields.io/badge/development-v11.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -38,8 +38,14 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Content
 
-**This is the master branch which contains decode-config matching the latest Tasmota release.**. It does not contain the latest changes.  
-If you are using Tasmota from its development branch it is advisable to also use the latest version of **decode-config**. To do this, switch to the [Development](https://github.com/tasmota/decode-config/development) branch of **decode-config**.
+**This is the developer branch which contains decode-config matching the latest Tasmota developer version.**
+
+This branch does not contain any binaries. If you want to use a precompiled **decode-config** binary
+you can use binaries from latest [Release](https://github.com/tasmota/decode-config/releases).
+
+> **Note**  
+To run **decode-config.py** from this branch, you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+See [Running as Python script](#running-as-python-script) for more details.
 
 ### Table of contents
 
@@ -76,11 +82,14 @@ The program does not have a graphical user interface (GUI), you have to run it f
 
 ### Prerequisite
 
-**decode-config** is a Python programm that needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+#### Python
 
-To avoid installation of Python you can also use one of the distributed executables for Linux, Windows and iOS otherwise install Python as described below.
+**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
 
-#### Linux
+> **Note**  
+Due to the [Python 2.7 EOL](https://github.com/python/devguide/pull/344) in Jan 2020 Python 2.x is no longer supported.
+
+##### Linux
 
 Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library installation for all OS](#all-os) below.
 
@@ -88,23 +97,17 @@ Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library
 sudo apt-get install python3 python3-pip
 ```
 
-#### Windows
+##### Windows 10
 
 Install [Python 3.x](https://www.python.org/downloads/windows/) as described and follow [library installation for all OS](#all-os) below.
 
-#### MacOS
+##### MacOS
 
 Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and follow [library installation for all OS](#all-os) below.
 
-#### All OS
+##### All OS
 
-After installing Python and Pip, decode-config.py can be installed from PyPI with its associated libraries:
-
-```shell
-python -m pip install decode-config
-```
-
-If you want to use the `decode-config.py` from this repository directly, install the module dependencies manually:
+After python and pip is installed, install dependencies:
 
 ```shell
 python -m pip install requests configargparse paho-mqtt json
@@ -138,6 +141,9 @@ usage: decode-config.py [-s <filename|host|url>] [-p <password>]
 ```
 
 For advanced help run **decode-config** with parameter `--full--help` or `-H`. This will print a [Program parameter list](#program-parameter-list).
+
+> **Note**  
+If you're missing older parameters, don't worry, they're still there (see [Obsolete parameters](#obsolete-parameters)).
 
 ### Basics
 
@@ -306,7 +312,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_11.0.json` (the part `Tasmota` and `11.0` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_10.1.json` (the part `Tasmota` and `10.1` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -318,7 +324,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_11.0.json` using JSON format
+* `Config_Tasmota_10.1.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -326,10 +332,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_11.0.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_10.1.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_11.0
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_10.1
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -581,7 +587,7 @@ Filtering by groups affects the entire output, regardless of whether screen outp
 1. Restore a Tasmota configuration file
 
   ```bash
-  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_11.0.dmp
+  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_10.1.dmp
   ```
 
 1. Backup device using Tasmota configuration compatible format
