@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/curzon01/media/blob/master/pics/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![development](https://img.shields.io/badge/development-v11.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![master](https://img.shields.io/badge/master-v11.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
@@ -34,7 +34,14 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 | batch processing        |           Yes           |         No         |
 | Backup/Restore subsets  |           Yes           |         No         |
 
+## Development
+
 **decode-config** is compatible with [Tasmota](https://github.com/arendst/Tasmota) starting from v5.10.0 up to now.
+
+It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
+
+<!-- markdownlint-disable MD033 -->
+[![development version](https://img.shields.io/badge/development-v11.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
@@ -43,6 +50,7 @@ See [Running as Python script](#running-as-python-script) for more details.
 
 ### Table of contents
 
+* [Development](#development)
 * [Content](#content)
   * [Table of contents](#table-of-contents)
 * [Running the program](#running-the-program)
@@ -58,7 +66,10 @@ See [Running as Python script](#running-as-python-script) for more details.
   * [Test your parameter](#test-your-parameter)
   * [Console outputs](#console-outputs)
   * [Filter by groups](#filter-by-groups)
-  * [Usage examples](#usage-examples)
+* [Usage examples](#usage-examples)
+  * [Using Tasmota binary configuration files](#using-tasmota-binary-configuration-files)
+  * [Using JSON editable file](#using-json-editable-file)
+  * [Use batch processing](#use-batch-processing)
 * [File Formats](#file-formats)
   * [.dmp format](#dmp-format)
   * [.json format](#json-format)
@@ -98,10 +109,16 @@ Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and
 
 ##### All OS
 
-After python and pip is installed, install dependencies:
+After python and pip is installed you can install the latest release with:
 
 ```shell
-python -m pip install requests configargparse paho-mqtt json
+python -m pip install decode-config
+```
+
+Alternatively, if you want to run decode-config.py from this repository, install the required modules manually first:
+
+```shell
+python -m pip install requests configargparse paho-mqtt
 ```
 
 ## Usage
@@ -571,31 +588,68 @@ decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Main MQTT 
 
 Filtering by groups affects the entire output, regardless of whether screen output or backup file.
 
-### Usage examples
+## Usage examples
 
-#### Using Tasmota binary configuration files
+### Using Tasmota binary configuration files
 
-1. Restore a Tasmota configuration file
+These examples use an online Tasmota device accessed over HTTP. The hostname of the Tasmota device is `tasmota-2f5d44-4281`
 
-  ```bash
-  decode-config -c my.conf -s tasmota --restore-file Config_Tasmota_10.1.dmp
-  ```
+#### Backup an online Tasmota device via HTTP into a Tasmota configuration file
 
-1. Backup device using Tasmota configuration compatible format
+##### Use args to choice the file format
 
-   a) use file extension to choice the file format
+```bash
+  decode-config -c my.conf -s tasmota-2f5d44-4281 --backup-type dmp --backup-file Config_@d_@v
+```
 
-  ```bash
-  decode-config -c my.conf -s tasmota --backup-file Config_@d_@v.dmp
-  ```
+##### Use file extension to choice the file format
 
-   b) use args to choice the file format
+```bash
+decode-config -c my.conf -s tasmota-2f5d44-4281 --backup-file Config_@d_@v.dmp
+```
 
-  ```bash
-    decode-config -c my.conf -s tasmota --backup-type dmp --backup-file Config_@d_@v
-  ```
+#### Restore a Tasmota configuration file to an online Tasmota device via HTTP
 
-#### Use batch processing
+```bash
+decode-config -c my.conf -s http://tasmota-2f5d44-4281 --restore-file Config_@d_@v.dmp
+```
+
+### Using JSON editable file
+
+These examples use an online Tasmota device that is accessed indirectly via MQTT.
+
+In these examples, the MQTT server parameters are the same as those used by Tasmota itself:
+
+* MQTT Server: `mybroker.example.com`
+* MQTT Username: `mqttuser`
+* MQTT Password: `myBrokerPaszxwo!z`
+* Tasmota topic: `tele/tasmota_2F5D44`
+
+#### Backup an online Tasmota device via MQTT into a JSON file
+
+##### Use an unencrypted MQTT connection
+
+MQTT server uses a non default port 42110
+
+```bash
+decode-config -s mqtt://mqttuser:myBrokerPaszxwo!z@mybroker.example.com:42110/tele/tasmota_2F5D44 --backup-file Config_2f5d44-4281.json
+```
+
+##### Use SSL/TLS MQTT connection
+
+Limit the configuration data to the groups `Control`, `Management` and `SetOption`
+
+```bash
+decode-config -s mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com --fulltopic tele/tasmota_2F5D44 --backup-file Config_2f5d44-4281.json -g Control Management SetOption
+```
+
+#### Restore a JSON file to an online Tasmota device via MQTT
+
+```bash
+decode-config -s mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/tasmota_2F5D44 --restore-file Config_2f5d44-4281.json
+```
+
+### Use batch processing
 
 Linux
 
