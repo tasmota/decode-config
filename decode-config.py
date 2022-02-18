@@ -3376,7 +3376,9 @@ def make_filename(filename, filetype, configmapping):
         @h:
             hostname from config data
         @H:
-            hostname from device (-d arg only)
+            hostname from device (http source only)
+        @F:
+            configuration filename from MQTT request (mqtt source only)
     @param filetype:
         FileType.x object - creates extension if not None
     @param configmapping:
@@ -3385,7 +3387,7 @@ def make_filename(filename, filetype, configmapping):
     @return:
         New filename with replacements
     """
-    config_version = config_friendlyname = config_hostname = device_hostname = ''
+    config_version = config_friendlyname = config_hostname = device_hostname = filesource = ''
 
     try:
         config_version = configmapping['header']['data']['version']['id']
@@ -3408,6 +3410,8 @@ def make_filename(filename, filetype, configmapping):
         device_hostname = get_tasmotahostname(http_host, http_port, username=http_username, password=http_password)
         if device_hostname is None:
             device_hostname = ''
+    if filename.find('@F') >= 0 and ARGS.mqttsource is not None and ARGS.filesource is not None:
+        filesource = ARGS.filesource.strip().rstrip('.dmp')
 
     dirname = basename = ext = ''
 
@@ -3446,6 +3450,7 @@ def make_filename(filename, filetype, configmapping):
     filename = filename.replace('@f', config_friendlyname)
     filename = filename.replace('@h', config_hostname)
     filename = filename.replace('@H', device_hostname)
+    filename = filename.replace('@F', filesource)
 
     return filename
 
@@ -5920,13 +5925,13 @@ def parseargs():
                          metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only)".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (invalid if using a file as source)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @F=configuration filename from MQTT request (mqtt source only)".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),

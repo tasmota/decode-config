@@ -306,13 +306,17 @@ To save data from a device or [*.dmp](#dmp-format) file into a backup file, use 
 
 #### Backup filename macros
 
-You can use the following placeholders within backup/restore filenames:
+You can use the following placeholders within filenames:
 
-* **@v** is replaced by *Tasmota Version*
-* **@d** is replaced by *Devicename*
-* **@f** is replaced by first *Friendlyname1*
-* **@h** is replaced by the *Hostname* from configuration data (note: this is the static hostname which is configured by the command *Hostname*, for real hostname from a device use macro the **@H**)
-* **@H** is replaced by the live device hostname note: this can be different to the configured hostname as this can contain also macros). Only valid when using real devices as source
+* **@v** is replaced by *Tasmota Version* (backup & restore filenames)
+* **@d** is replaced by *Devicename* (backup & restore filenames)
+* **@f** is replaced by first *Friendlyname1* (backup & restore filenames)
+* **@h** is replaced by the *Hostname* from configuration data (backup & restore filenames)  
+Note: This is the static hostname which is configured by the command *Hostname*, for real hostname from a device use macro the **@H**)
+* **@H** is replaced by the live device hostname  (only for http sources, backup & restore filenames)  
+Note: This can be different to the configured hostname as this can contain also macros).source
+* **@F** is replaced by the filename of MQTT request (only for MQTT sources, backup filenames only).  
+This is usually the filename that Tasmota uses when saving the configuration in the WebUI.
 
 Example:
 
@@ -723,8 +727,8 @@ usage: decode-config.py [-s <filename|host|url>] [-p <password>]
                         [-g <groupname> [<groupname> ...]] [-w] [--dry-run]
                         [-h] [-H] [-v] [-V]
 
-Backup/Restore Tasmota configuration data. Args that start with '--' (eg. -s)
-can also be set in a config file (specified via -c). Config file syntax
+Backup/Restore Tasmota configuration data. Args that start with '--' (eg.
+-s) can also be set in a config file (specified via -c). Config file syntax
 allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
 https://goo.gl/R74nmi). If an arg is specified in more than one place, then
 commandline values override config file values which override defaults.
@@ -735,13 +739,13 @@ Source:
   -s, --source <filename|host|url>
                         source used for the Tasmota configuration (default:
                         None). Specify source type, path, file, user,
-                        password, hostname, port and topic at once as an URL.
-                        The URL must be in the form 'scheme://[username[:pass
-                        word]@]host[:port][/topic]|pathfile'where scheme is
-                        'file' for a tasmota binary config file, 'http' for a
-                        Tasmota HTTP web connection and 'mqtt(s)' for Tasmota
-                        MQTT transport ('mqtts' uses a TLS connection to MQTT
-                        server)
+                        password, hostname, port and topic at once as an
+                        URL. The URL must be in the form 'scheme://[username
+                        [:password]@]host[:port][/topic]|pathfile'where
+                        scheme is 'file' for a tasmota binary config file,
+                        'http' for a Tasmota HTTP web connection and
+                        'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a
+                        TLS connection to MQTT server)
   -p, --password <password>
                         Web server password on HTTP source (set by Tasmota
                         'WebPassword' command), MQTT server password in MQTT
@@ -757,10 +761,10 @@ MQTT:
                         the Certificate Authority certificate files that are
                         to be treated as trusted by this client (default
                         None)
-  --certfile <file>     Enables SSL/TLS connection: filename of a PEM encoded
-                        client certificate file (default None)
-  --keyfile <file>      Enables SSL/TLS connection: filename of a PEM encoded
-                        client private key file (default None)
+  --certfile <file>     Enables SSL/TLS connection: filename of a PEM
+                        encoded client certificate file (default None)
+  --keyfile <file>      Enables SSL/TLS connection: filename of a PEM
+                        encoded client private key file (default None)
   --insecure            suppress verification of the MQTT server hostname in
                         the server certificate (default False)
   --keepalive <sec>     keepalive timeout for the client (default 60)
@@ -772,14 +776,14 @@ Backup/Restore:
                         file to restore configuration from (default: None).
                         Replacements: @v=firmware version from config,
                         @d=devicename, @f=friendlyname1, @h=hostname from
-                        config, @H=device hostname (invalid if using a file
-                        as source)
+                        config, @H=device hostname (http source only)
   -o, --backup-file <backupfile>
                         file to backup configuration to, can be specified
                         multiple times (default: None). Replacements:
                         @v=firmware version from config, @d=devicename,
                         @f=friendlyname1, @h=hostname from config, @H=device
-                        hostname (invalid if using a file as source)
+                        hostname (http source only), @F=configuration
+                        filename from MQTT request (mqtt source only)
   -t, --backup-type json|bin|dmp
                         backup filetype (default: 'json')
   -E, --extension       append filetype extension for -i and -o filename
@@ -803,8 +807,8 @@ Tasmota command output:
   "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
 
   --cmnd-indent <indent>
-                        Tasmota command grouping indent level (default: '2').
-                        0 disables indent
+                        Tasmota command grouping indent level (default:
+                        '2'). 0 disables indent
   --cmnd-groups         group Tasmota commands (default)
   --cmnd-sort           sort Tasmota commands (default)
   --cmnd-use-rule-concat
