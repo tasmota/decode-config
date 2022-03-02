@@ -9,7 +9,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 [![master](https://img.shields.io/badge/master-v11.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
-![PyPI downloads](https://img.shields.io/pypi/dm/decode-config)
+![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
 [![License](https://img.shields.io/github/license/tasmota/decode-config.svg)](LICENSE)
 
 If you like **decode-config** give it a star or fork it and contribute:
