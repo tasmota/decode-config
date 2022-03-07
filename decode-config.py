@@ -2447,6 +2447,9 @@ SETTING_11_0_0_3 = copy.deepcopy(SETTING_10_1_0_6)
 SETTING_11_0_0_3.update            ({
     'pulse_timer':                  (HARDWARE.ESP,   '<H',  0x57C,       ([32], '0 <= $ <= 65535',              ('Control',     '"PulseTime{} {}".format(#+1,$)')) ),
                                     })
+SETTING_11_0_0_3['flag5'][1].update({
+        'display_no_splash':        (HARDWARE.ESP,   '<L', (0xFB4,1,21), (None, None,                           ('SetOption',   '"SO135 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B000003,0x1000, SETTING_11_0_0_3),
