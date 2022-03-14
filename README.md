@@ -36,9 +36,9 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 | batch processing        |           Yes           |         No         |
 | Backup/Restore subsets  |           Yes           |         No         |
 
-## Development
+**decode-config** is compatible with all [Tasmota](https://github.com/arendst/Tasmota) versions, starting from Tasmota v5.10.0 up to the current one.
 
-**decode-config** is compatible with [Tasmota](https://github.com/arendst/Tasmota) starting from v5.10.0 up to now.
+## Development
 
 It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
 
