@@ -1104,7 +1104,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
 | **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
-|                |                             |                        | `RfHigh`    |
+|                | RfTimeOut                   |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
 |                |                             |                        | `RfKey<x>`  |
 |                |                             |                        | `RfLow`     |
