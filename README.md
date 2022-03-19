@@ -1066,6 +1066,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | VoltRes                     |                        |             |
 |                | WattRes                     |                        |             |
 |                | WeightRes                   |                        |             |
+|                | Wiper<x\>                   |                        |             |
 | **Power**      | AmpRes                      | *CurrentSet*           |             |
 |                | CurrentCal                  | *FrequencySet*         |`EnergyReset`|
 |                | CurrentHigh                 | *ModuleAddress*        |             |

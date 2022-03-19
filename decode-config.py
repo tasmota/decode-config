@@ -2456,6 +2456,9 @@ SETTING_11_0_0_4 = copy.deepcopy(SETTING_11_0_0_3)
 SETTING_11_0_0_4['sbflag1'][1].update({
         'local_ntp_server':         (HARDWARE.ESP32, '<L', (0xFA0,1,9),  (None, '0 <= $ <= 1',                  ('Management',  '"RtcNtpserver {}".format($)')) ),
                                     })
+SETTING_11_0_0_4.update            ({
+    'ds3502_state':                 (HARDWARE.ESP,   'B',  0x4CA,       ([4], '0 <= $ <= 127',                  ('Sensor',      '"Wiper{} {}".format(#+1,$)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B000004,0x1000, SETTING_11_0_0_4),
