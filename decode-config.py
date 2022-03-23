@@ -5681,7 +5681,7 @@ def restore(restorefile, backupfileformat, config):
             new_config_version = get_config_info(new_decode_cfg)['hardware']
         else:
             try:
-                new_config_version = HARDWARE.config_versions.index(jsonconfig['header']['data']['hardware'])
+                new_config_version = jsonconfig['config_version']
             except:     # pylint: disable=bare-except
                 new_config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
         config_version = config['info']['hardware']
