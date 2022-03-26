@@ -2459,6 +2459,9 @@ SETTING_11_0_0_4['sbflag1'][1].update({
 SETTING_11_0_0_4.update            ({
     'ds3502_state':                 (HARDWARE.ESP,   'B',  0x4CA,       ([4], '0 <= $ <= 127',                  ('Sensor',      '"Wiper{} {}".format(#+1,$)')) ),
                                     })
+SETTING_11_0_0_4['flag5'][1].update({
+        'tuyasns_no_immediate':     (HARDWARE.ESP,   '<L', (0xFB4,1,22), (None, None,                           ('SetOption',   '"SO136 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B000004,0x1000, SETTING_11_0_0_4),
