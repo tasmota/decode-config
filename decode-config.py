@@ -2461,6 +2461,7 @@ SETTING_11_0_0_4.update            ({
                                     })
 SETTING_11_0_0_4['flag5'][1].update({
         'tuyasns_no_immediate':     (HARDWARE.ESP,   '<L', (0xFB4,1,22), (None, None,                           ('SetOption',   '"SO136 {}".format($)')) ),
+        'tuya_exclude_heartbeat':   (HARDWARE.ESP,   '<L', (0xFB4,1,23), (None, None,                           ('SetOption',   '"SO137 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
