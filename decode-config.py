@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.0.0.4',
+    'VERSION': '11.0.0.5',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2464,7 +2464,10 @@ SETTING_11_0_0_4['flag5'][1].update({
         'tuya_exclude_heartbeat':   (HARDWARE.ESP,   '<L', (0xFB4,1,23), (None, None,                           ('SetOption',   '"SO137 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_11_0_0_5 = copy.deepcopy(SETTING_11_0_0_4)
+# ======================================================================
 SETTINGS = [
+            (0x0B000005,0x1000, SETTING_11_0_0_5),
             (0x0B000004,0x1000, SETTING_11_0_0_4),
             (0x0B000003,0x1000, SETTING_11_0_0_3),
             (0x0A010006,0x1000, SETTING_10_1_0_6),
