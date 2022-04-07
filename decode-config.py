@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.0.0.5',
+    'VERSION': '11.0.0.6',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2473,7 +2473,14 @@ SETTING_11_0_0_5['sbflag1'][1].update({
         'influxdb_sensor':          (HARDWARE.ESP32, '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_11_0_0_6 = copy.deepcopy(SETTING_11_0_0_5)
+SETTING_11_0_0_6.update            ({
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0B000006,0x1000, SETTING_11_0_0_6),
             (0x0B000005,0x1000, SETTING_11_0_0_5),
             (0x0B000004,0x1000, SETTING_11_0_0_4),
             (0x0B000003,0x1000, SETTING_11_0_0_3),
