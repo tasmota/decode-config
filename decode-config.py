@@ -2465,6 +2465,13 @@ SETTING_11_0_0_4['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_11_0_0_5 = copy.deepcopy(SETTING_11_0_0_4)
+SETTING_11_0_0_5.update            ({
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          None)) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          None)) ),
+                                    })
+SETTING_11_0_0_5['sbflag1'][1].update({
+        'influxdb_sensor':          (HARDWARE.ESP32, '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B000005,0x1000, SETTING_11_0_0_5),

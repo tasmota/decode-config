@@ -938,8 +938,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | IfxPort                     | *SSPMLog<sup>2</sup>*  |             |
 |                | IfxUser                     | *SSPEnergy<sup>2</sup>*|             |
 |                | IfxPeriod                   | *SSPHistory<sup>2</sup>*|            |
-|                | L1MusicSync                 | *SSPScan<sup>2</sup>*  |             |
-|                | LogHost                     | *SSPIamHere<sup>2</sup>*|            |
+|                | IfxSensor                   | *SSPScan<sup>2</sup>*  |             |
+|                | L1MusicSync                 | *SSPIamHere<sup>2</sup>*|            |
+|                | LogHost                     |                        |             |
 |                | LogPort                     |                        |             |
 |                | Module                      |                        |             |
 |                | Module2                     |                        |             |
