@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.0.0.6',
+    'VERSION': '11.0.0.7',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2479,7 +2479,16 @@ SETTING_11_0_0_6.update            ({
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_11_0_0_7 = copy.deepcopy(SETTING_11_0_0_6)
+SETTING_11_0_0_7.update            ({
+    'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',          None)) ),
+    'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 12 {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0B000007,0x1000, SETTING_11_0_0_7),
             (0x0B000006,0x1000, SETTING_11_0_0_6),
             (0x0B000005,0x1000, SETTING_11_0_0_5),
             (0x0B000004,0x1000, SETTING_11_0_0_4),
