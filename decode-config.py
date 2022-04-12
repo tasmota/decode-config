@@ -2472,6 +2472,10 @@ SETTING_11_0_0_5.update            ({
 SETTING_11_0_0_5['sbflag1'][1].update({
         'influxdb_sensor':          (HARDWARE.ESP32, '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
                                     })
+SETTING_11_0_0_5['flag5'][1].pop('tuya_exclude_heartbeat',None)
+SETTING_11_0_0_5['flag5'][1].update({
+        'tuya_exclude_from_mqtt':   (HARDWARE.ESP,   '<L', (0xFB4,1,23), (None, None,                           ('SetOption',   '"SO137 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTING_11_0_0_6 = copy.deepcopy(SETTING_11_0_0_5)
 SETTING_11_0_0_6.update            ({
