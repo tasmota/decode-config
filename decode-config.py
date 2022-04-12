@@ -2490,6 +2490,9 @@ SETTING_11_0_0_7.update            ({
     'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 12 {}".format($)')) ),
                                     })
+SETTING_11_0_0_7['flag5'][1].update({
+        'gui_table_align':          (HARDWARE.ESP,   '<L', (0xFB4,1,24), (None, None,                           ('SetOption',   '"SO138 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B000007,0x1000, SETTING_11_0_0_7),
