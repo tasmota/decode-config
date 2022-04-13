@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.0.0.7',
+    'VERSION': '11.1.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2494,7 +2494,10 @@ SETTING_11_0_0_7['flag5'][1].update({
         'gui_table_align':          (HARDWARE.ESP,   '<L', (0xFB4,1,24), (None, None,                           ('SetOption',   '"SO138 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_11_1_0_1 = copy.deepcopy(SETTING_11_0_0_7)
+# ======================================================================
 SETTINGS = [
+            (0x0B010001,0x1000, SETTING_11_1_0_1),
             (0x0B000007,0x1000, SETTING_11_0_0_7),
             (0x0B000006,0x1000, SETTING_11_0_0_6),
             (0x0B000005,0x1000, SETTING_11_0_0_5),
