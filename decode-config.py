@@ -32,7 +32,12 @@ METADATA = {
 Requirements:
     - Python 3.x and Pip:
         sudo apt-get install python3 python3-pip
-        pip3 install requests configargparse paho-mqtt json
+
+Installation:
+    - Using pypi:
+        python -m pip install decode-config
+    - Manually:
+        python -m pip install -r requirements.txt
 
 Instructions:
     Execute decode-config with option -d <host|url> to retrieve config data
@@ -294,8 +299,7 @@ based on this dictionary.
 
             <hardware>: <int>
                 hardware bitmask validation
-                determines whether the setting is valid for a hardware (bit=1) or not (bit=0)
-                bit0=ESP82xx, bit1=ESP32
+                determines whether the setting is valid for a specific ESP platform (1) or not (0)
 
             <format>:   <formatstring> | <setting>
                 data type & format definition

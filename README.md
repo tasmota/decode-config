@@ -120,7 +120,7 @@ python -m pip install decode-config
 Alternatively, if you want to run decode-config.py from this repository, install the required modules manually first:
 
 ```shell
-python -m pip install requests configargparse paho-mqtt
+python -m pip install -r requirements.txt
 ```
 
 ## Usage
