@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.1.0.1',
+    'VERSION': '11.1.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2510,7 +2510,24 @@ SETTING_11_1_0_1['SensorBits1'][1].update ({
         'flowratemeter_unit':       (HARDWARE.ESP,   'B',  (0x717,1, 1), (None, '0 <= $ <= 1',                  ('Sensor',      '"Sensor96 0 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_11_1_0_2 = copy.deepcopy(SETTING_11_1_0_1)
+SETTING_11_1_0_2.update            ({
+    'webcam_config2':               (HARDWARE.ESP32, {
+        'wb_mode':                  (HARDWARE.ESP32, '<L', (0x730,3, 0), (None, '0 <= $ <= 6',                  ('Control',     '"WCWBMode {}".format($)')) ),
+        'ae_level':                 (HARDWARE.ESP32, '<L', (0x730,3, 3), (None, '-2 <= $ <= 2',                 ('Control',     '"WCAELevel {}".format($)')), ('$ - 2','$ + 2') ),
+        'aec_value':                (HARDWARE.ESP32, '<L', (0x730,11,6), (None, '0 <= $ <= 1200',               ('Control',     '"WCAECValue {}".format($)')) ),
+        'gainceiling':              (HARDWARE.ESP32, '<L', (0x730,3,17), (None, '0 <= $ <= 6',                  ('Control',     '"WCGainCeiling {}".format($)')) ),
+        'agc_gain':                 (HARDWARE.ESP32, '<L', (0x730,5,20), (None, '0 <= $ <= 30',                 ('Control',     '"WCAGCGain {}".format($)')) ),
+        'special_effect':           (HARDWARE.ESP32, '<L', (0x730,3,25), (None, '0 <= $ <= 6',                  ('Control',     '"WCSpecialEffect {}".format($)')) ),
+        'upgraded':                 (HARDWARE.ESP32, '<L', (0x730,1,31), (None, None,                           ('Control',     None)) ),
+                                    },                      0x730,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
+SETTING_11_1_0_2['flag5'][1].update({
+        'mqtt_persistent':          (HARDWARE.ESP,   '<L', (0xFB4,1,26), (None, None,                           ('SetOption',   '"SO140 {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0B010002,0x1000, SETTING_11_1_0_2),
             (0x0B010001,0x1000, SETTING_11_1_0_1),
             (0x0B000007,0x1000, SETTING_11_0_0_7),
             (0x0B000006,0x1000, SETTING_11_0_0_6),

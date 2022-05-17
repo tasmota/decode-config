@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v11.1.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v11.1.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
@@ -917,14 +917,20 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SwitchDebounce              |                        |             |
 |                | SwitchMode<x\>              |                        |             |
 |                | Webbutton<x\>               |                        |             |
-|                | WCStream<sup>2</sup>        |                        |             |
-|                | WCMirror<sup>2</sup>        |                        |             |
-|                | WCFlip<sup>2</sup>          |                        |             |
-|                | WCRtsp<sup>2</sup>          |                        |             |
+|                | WCAECValue<sup>2</sup>      |                        |             |
+|                | WCAELevel<sup>2</sup>       |                        |             |
+|                | WCAGCGain<sup>2</sup>       |                        |             |
 |                | WCBrightness<sup>2</sup>    |                        |             |
 |                | WCContrast<sup>2</sup>      |                        |             |
-|                | WCSaturation<sup>2</sup>    |                        |             |
+|                | WCFlip<sup>2</sup>          |                        |             |
+|                | WCGainCeiling<sup>2</sup>   |                        |             |
+|                | WCMirror<sup>2</sup>        |                        |             |
 |                | WCResolution<sup>2</sup>    |                        |             |
+|                | WCRtsp<sup>2</sup>          |                        |             |
+|                | WCSaturation<sup>2</sup>    |                        |             |
+|                | WCSpecialEffect<sup>2</sup> |                        |             |
+|                | WCStream<sup>2</sup>        |                        |             |
+|                | WCWBMode<sup>2</sup>        |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | DeviceName                  | *Gpios*                |             |
 |                | Emulation                   | *I2Cscan*              |             |
