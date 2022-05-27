@@ -917,13 +917,23 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SwitchDebounce              |                        |             |
 |                | SwitchMode<x\>              |                        |             |
 |                | Webbutton<x\>               |                        |             |
+|                | WCAEC<sup>2</sup>           |                        |             |
+|                | WCAECDSP<sup>2</sup>        |                        |             |
 |                | WCAECValue<sup>2</sup>      |                        |             |
 |                | WCAELevel<sup>2</sup>       |                        |             |
 |                | WCAGCGain<sup>2</sup>       |                        |             |
+|                | WCAWB<sup>2</sup>           |                        |             |
+|                | WCAWBGain<sup>2</sup>       |                        |             |
+|                | WCBPC<sup>2</sup>           |                        |             |
 |                | WCBrightness<sup>2</sup>    |                        |             |
+|                | WCColorbar<sup>2</sup>      |                        |             |
 |                | WCContrast<sup>2</sup>      |                        |             |
+|                | WCDCW<sup>2</sup>           |                        |             |
+|                | WCFeature<sup>2</sup>       |                        |             |
 |                | WCFlip<sup>2</sup>          |                        |             |
 |                | WCGainCeiling<sup>2</sup>   |                        |             |
+|                | WCGammaCorrect<sup>2</sup>  |                        |             |
+|                | WCLensCorrect<sup>2</sup>   |                        |             |
 |                | WCMirror<sup>2</sup>        |                        |             |
 |                | WCResolution<sup>2</sup>    |                        |             |
 |                | WCRtsp<sup>2</sup>          |                        |             |
@@ -931,6 +941,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WCSpecialEffect<sup>2</sup> |                        |             |
 |                | WCStream<sup>2</sup>        |                        |             |
 |                | WCWBMode<sup>2</sup>        |                        |             |
+|                | WCWPC<sup>2</sup>           |                        |             |
 | **Management** | DeepSleepTime               | *Delay*                |             |
 |                | DeviceName                  | *Gpios*                |             |
 |                | Emulation                   | *I2Cscan*              |             |
