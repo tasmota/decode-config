@@ -2575,6 +2575,12 @@ SETTING_11_1_0_2['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_11_1_0_3 = copy.deepcopy(SETTING_11_1_0_2)
+SETTING_11_1_0_3.update              ({
+    'flag6':                        (HARDWARE.ESP,   '<L',  0xF74,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
+                                    })
+SETTING_11_1_0_3['flag5'][1].update({
+        'gui_module_name':          (HARDWARE.ESP,   '<L', (0xFB4,1,27), (None, None,                           ('SetOption',   '"SO141 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B010003,0x1000, SETTING_11_1_0_3),
