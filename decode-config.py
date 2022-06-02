@@ -2499,6 +2499,22 @@ SETTING_11_0_0_7['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_11_1_0_1 = copy.deepcopy(SETTING_11_0_0_7)
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_INFLUXDB_RP'])
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_INFLUXDB_RP'])
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_INFLUXDB_RP'])
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_11_1_0_1.update            ({
+    'influxdb_rp':                  (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_RP'),
+                                                                         (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $$)')) ),
+    'influxdb_rp':                  (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
+                                                                         (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $)')) ),
+                                    })
+
 SETTING_11_1_0_1.update            ({
     'energy_kWhexport_ph':          (HARDWARE.ESP,   '<l',  0xF7C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyExportActive{} {}".format(#+1,int(round(float($)//100)))')) ),
     'flowratemeter_calibration':    (HARDWARE.ESP,   '<H',  0xF78,       ([2], None,                            ('Sensor',      '"Sensor96 {} {}".format(#+1,$)'))),
