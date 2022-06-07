@@ -922,6 +922,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WCAECValue<sup>2</sup>      |                        |             |
 |                | WCAELevel<sup>2</sup>       |                        |             |
 |                | WCAGCGain<sup>2</sup>       |                        |             |
+|                | WCSAuth<sup>2</sup>         |                        |             |
 |                | WCAWB<sup>2</sup>           |                        |             |
 |                | WCAWBGain<sup>2</sup>       |                        |             |
 |                | WCBPC<sup>2</sup>           |                        |             |

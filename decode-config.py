@@ -2597,6 +2597,9 @@ SETTING_11_1_0_3.update              ({
 SETTING_11_1_0_3['flag5'][1].update({
         'gui_module_name':          (HARDWARE.ESP,   '<L', (0xFB4,1,27), (None, None,                           ('SetOption',   '"SO141 {}".format($)')) ),
                                     })
+SETTING_11_1_0_3['webcam_config2'][1].update({
+        'auth':                     (HARDWARE.ESP32, '<L', (0x730,1,28), (None, '0 <= $ <= 1',                  ('Control',     '"WCSAuth {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTING_11_1_0_4 = copy.deepcopy(SETTING_11_1_0_3)
 # ======================================================================
