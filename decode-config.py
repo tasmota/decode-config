@@ -2602,6 +2602,9 @@ SETTING_11_1_0_3['webcam_config2'][1].update({
                                     })
 # ======================================================================
 SETTING_11_1_0_4 = copy.deepcopy(SETTING_11_1_0_3)
+SETTING_11_1_0_4['sbflag1'][1].update({
+        'serbridge_console':        (HARDWARE.ESP,   '<L', (0xFA0,1,11),  (None, '0 <= $ <= 1',                 ('Serial',      '"SSerialSend9 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0B010004,0x1000, SETTING_11_1_0_4),

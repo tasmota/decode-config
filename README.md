@@ -1140,6 +1140,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SerialConfig                | *TCPStart*             |             |
 |                | SerialDelimiter             | *TuyaSend<x\>*         |             |
 |                | SSerialConfig               |                        |             |
+|                | SSerialSend9                |                        |             |
 |                | TCPBaudrate                 |                        |             |
 |                | TCPConfig                   |                        |             |
 | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
