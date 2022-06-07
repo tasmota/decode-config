@@ -2474,7 +2474,7 @@ SETTING_11_0_0_5.update            ({
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          None)) ),
                                     })
 SETTING_11_0_0_5['sbflag1'][1].update({
-        'influxdb_sensor':          (HARDWARE.ESP32, '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
+        'influxdb_sensor':          (HARDWARE.ESP,   '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
                                     })
 SETTING_11_0_0_5['flag5'][1].pop('tuya_exclude_heartbeat',None)
 SETTING_11_0_0_5['flag5'][1].update({
