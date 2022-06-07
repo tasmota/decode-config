@@ -2537,7 +2537,8 @@ SETTING_11_1_0_2.update            ({
         'special_effect':           (HARDWARE.ESP32, '<L', (0x730,3,25), (None, '0 <= $ <= 6',                  ('Control',     '"WCSpecialEffect {}".format($)')) ),
         'upgraded':                 (HARDWARE.ESP32, '<L', (0x730,1,31), (None, None,                           ('Control',     None)) ),
                                     },                      0x730,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'webcam_config':                (HARDWARE.ESP32ex, {
+                                    })
+SETTING_11_1_0_2['webcam_config'][1].update({
         'awb':                      (HARDWARE.ESP32ex,
                                                      '<L', (0x44C,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
         'awb_gain':                 (HARDWARE.ESP32ex,
@@ -2560,8 +2561,8 @@ SETTING_11_1_0_2.update            ({
                                                      '<L', (0x44C,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
         'feature':                  (HARDWARE.ESP32ex,
                                                      '<L', (0x44C,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
-                                    },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'webcam_config_esp32s3':        (HARDWARE.ESP32S3, {
+                                    })
+SETTING_11_1_0_2['webcam_config_esp32s3'][1].update({
         'awb':                      (HARDWARE.ESP32S3,
                                                      '<L', (0x460,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
         'awb_gain':                 (HARDWARE.ESP32S3,
@@ -2584,7 +2585,6 @@ SETTING_11_1_0_2.update            ({
                                                      '<L', (0x460,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
         'feature':                  (HARDWARE.ESP32S3,
                                                      '<L', (0x460,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
-                                    },                      0x460,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 SETTING_11_1_0_2['flag5'][1].update({
         'mqtt_persistent':          (HARDWARE.ESP,   '<L', (0xFB4,1,26), (None, None,                           ('SetOption',   '"SO140 {}".format($)')) ),
