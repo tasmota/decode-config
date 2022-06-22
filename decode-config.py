@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '11.1.0.4',
+    'VERSION': '12.0.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2603,13 +2603,19 @@ SETTING_11_1_0_3['webcam_config2'][1].update({
 # ======================================================================
 SETTING_11_1_0_4 = copy.deepcopy(SETTING_11_1_0_3)
 SETTING_11_1_0_4['sbflag1'][1].update({
-        'serbridge_console':        (HARDWARE.ESP,   '<L', (0xFA0,1,11),  (None, '0 <= $ <= 1',                 ('Serial',      '"SSerialSend9 {}".format($)')) ),
+        'serbridge_console':        (HARDWARE.ESP,   '<L', (0xFA0,1,11), (None, '0 <= $ <= 1',                  ('Serial',      '"SSerialSend9 {}".format($)')) ),
                                     })
 SETTING_11_1_0_4['flag5'][1].update({
         'wait_for_wifi_result':     (HARDWARE.ESP,   '<L', (0xFB4,1,28), (None, None,                           ('SetOption',   '"SO142 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_0_0_1 = copy.deepcopy(SETTING_11_1_0_4)
+SETTING_12_0_0_1.update              ({
+    'dns_timeout':                  (HARDWARE.ESP,   '<H',  0x4C8,       (None, '100 <= $ <= 20000',            ('Wifi',        '"DnsTimeout {}".format($)')) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0C000001,0x1000, SETTING_12_0_0_1),
             (0x0B010004,0x1000, SETTING_11_1_0_4),
             (0x0B010003,0x1000, SETTING_11_1_0_3),
             (0x0B010002,0x1000, SETTING_11_1_0_2),

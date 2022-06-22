@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v11.1.0.4-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v12.0.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
@@ -985,10 +985,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WebLog                      |                        |             |
 |                | WebTime                     |                        |             |
 | **WiFi**       | CORS                        | *AP*                   |             |
-|                | Ethernet<sup>2</sup>        | *Ping<x\>*             |             |
-|                | EthAddress<sup>2</sup>      | *WebSend*              |             |
-|                | EthClockMode<sup>2</sup>    | *Publish*              |             |
-|                | EthType<sup>2</sup>         | *Publish2*             |             |
+|                | DnsTimeout                  | *Ping<x\>*             |             |
+|                | Ethernet<sup>2</sup>        | *WebSend*              |             |
+|                | EthAddress<sup>2</sup>      | *Publish*              |             |
+|                | EthClockMode<sup>2</sup>    | *Publish2*             |             |
+|                | EthType<sup>2</sup>         |                        |             |
 |                | EthIPAddress<sup>2</sup>    |                        |             |
 |                | EthSubnetmask<sup>2</sup>   |                        |             |
 |                | EthGateway<sup>2</sup>      |                        |             |
