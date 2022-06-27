@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.0.1.2',
+    'VERSION': '12.0.2.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2614,8 +2614,14 @@ SETTING_12_0_1_2.update              ({
     'dns_timeout':                  (HARDWARE.ESP,   '<H',  0x4C8,       (None, '100 <= $ <= 20000',            ('Wifi',        '"DnsTimeout {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_0_2_2 = copy.deepcopy(SETTING_12_0_1_2)
+SETTING_12_0_2_2.update              ({
+    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',        None)) ),
+                                    })
+# ======================================================================
 SETTINGS = [
-            (0x0C000102,0x1000, SETTING_12_0_1_2),
+            (0x0C000202,0x1000, SETTING_12_0_2_2),
+            (0x0C000002,0x1000, SETTING_12_0_1_2),
             (0x0B010004,0x1000, SETTING_11_1_0_4),
             (0x0B010003,0x1000, SETTING_11_1_0_3),
             (0x0B010002,0x1000, SETTING_11_1_0_2),
