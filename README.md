@@ -47,8 +47,8 @@ It is not necessary to use the developer version of decode-config if you are usi
 
 ## Content
 
-To run **decode-config.py** you need an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
-See [Running as Python script](#running-as-python-script) for more details.
+To run **decode-config.py** you need an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
+See [Running the program](#running-the-program) for more details.
 
 ### Table of contents
 
@@ -91,7 +91,7 @@ The program does not have a graphical user interface (GUI), you have to run it f
 
 #### Python
 
-**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) environment.
+**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
 
 ##### Linux
 
@@ -241,7 +241,7 @@ All basic examples above will output a readable configuration in [JSON](http://w
 ```
 
 > **Note**  
-The json names (like `"altitude"` or `"blinktime"` are internal names from Tasmotas [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) STRUCT `Settings` and are not the same as known from Tasmota [web-console commands](https://tasmota.github.io/docs/Commands/). However, since most variable names are self-describing, the functional meaning should be given in most cases.
+The json names (like `"altitude"` or `"blinktime"` are internal names from Tasmotas [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/include/tasmota_types.h) STRUCT `Settings` and are not the same as known from Tasmota [web-console commands](https://tasmota.github.io/docs/Commands/). However, since most variable names are self-describing, the functional meaning should be given in most cases.
 
 The default JSON output can be formatted for better reading using the `--json-indent <n>` parameter:
 
@@ -690,7 +690,7 @@ The .json format can be created by **decode-config** using the backup function (
 In contrast to the other two binary formats [.dmp](#dmp-format) and [.bin](#bin-format), this type of format also allows the [partial modification](#restore-a-subset-of-backup-data) of configurations.
 
 > **Note**  
-The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/settings.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
+The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/include/tasmota_types.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
 
 ### .bin format
 
