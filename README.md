@@ -1137,9 +1137,11 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                |                             | *IRhvac*               |             |
 | **SetOption**  | SetOption<x\>               |                        |             |
 | **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
-|                | SBaudrate                   | *SSerialSend<x\>*      |             |
-|                | SerialConfig                | *TCPStart*             |             |
-|                | SerialDelimiter             | *TuyaSend<x\>*         |             |
+|                | ModbusBaudrate              | *SSerialSend<x\>*      |             |
+|                | ModbusSerialConfig          | *TCPStart*             |             |
+|                | SBaudrate                   | *TuyaSend<x\>*         |             |
+|                | SerialConfig                |                        |             |
+|                | SerialDelimiter             |                        |             |
 |                | SSerialConfig               |                        |             |
 |                | SSerialSend9                |                        |             |
 |                | TCPBaudrate                 |                        |             |

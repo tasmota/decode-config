@@ -2610,16 +2610,20 @@ SETTING_11_1_0_4['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_12_0_1_2 = copy.deepcopy(SETTING_11_1_0_4)
-SETTING_12_0_1_2.update              ({
+SETTING_12_0_1_2.update             ({
     'dns_timeout':                  (HARDWARE.ESP,   '<H',  0x4C8,       (None, '100 <= $ <= 20000',            ('Wifi',        '"DnsTimeout {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_12_0_2_2 = copy.deepcopy(SETTING_12_0_1_2)
-SETTING_12_0_2_2.update              ({
+SETTING_12_0_2_2.update             ({
     'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',        None)) ),
                                     })
 # ======================================================================
 SETTING_12_0_2_4 = copy.deepcopy(SETTING_12_0_2_2)
+SETTING_12_0_2_4.update             ({
+    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
+    'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',        '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C000204,0x1000, SETTING_12_0_2_4),
