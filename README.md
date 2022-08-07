@@ -1090,7 +1090,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | WeightRes                   |                        |             |
 |                | Wiper<x\>                   |                        |             |
 | **Power**      | AmpRes                      | *CurrentSet*           |             |
-|                | CurrentCal                  | *FrequencySet*         |`EnergyReset`|
+|                | CurrentCal                  | *FrequencySet*         |             |
 |                | CurrentHigh                 | *ModuleAddress*        |             |
 |                | CurrentLow                  | *PowerSet*             |             |
 |                | EnergyRes                   | *Status8*              |             |

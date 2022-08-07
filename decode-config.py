@@ -2627,6 +2627,9 @@ SETTING_12_0_2_4.update             ({
 SETTING_12_0_2_4['flag5'][1].update({
         'zigbee_no_batt_autoprobe': (HARDWARE.ESP,   '<L', (0xFB4,1,29), (None, None,                           ('SetOption',   '"SO143 {}".format($)')) ),
                                     })
+SETTING_12_0_2_4.pop('energy_kWhtoday',None)
+SETTING_12_0_2_4.pop('energy_kWhyesterday',None)
+SETTING_12_0_2_4.pop('energy_kWhtotal',None)
 # ======================================================================
 SETTINGS = [
             (0x0C000204,0x1000, SETTING_12_0_2_4),
