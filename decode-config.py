@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.0.2.4',
+    'VERSION': '12.1.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2632,7 +2632,10 @@ SETTING_12_0_2_4.pop('energy_kWhtoday',None)
 SETTING_12_0_2_4.pop('energy_kWhyesterday',None)
 SETTING_12_0_2_4.pop('energy_kWhtotal',None)
 # ======================================================================
+SETTING_12_1_0_0 = copy.deepcopy(SETTING_12_0_2_4)
+# ======================================================================
 SETTINGS = [
+            (0x0C010000,0x1000, SETTING_12_1_0_0),
             (0x0C000204,0x1000, SETTING_12_0_2_4),
             (0x0C000202,0x1000, SETTING_12_0_2_2),
             (0x0C000002,0x1000, SETTING_12_0_1_2),
