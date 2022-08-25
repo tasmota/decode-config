@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.1.1.0',
+    'VERSION': '12.1.1.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
-    'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
+    'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
     'AUTHOR': 'Norbert Richter',
     'AUTHOR_EMAIL': 'nr@prsolution.eu',
@@ -2637,10 +2637,10 @@ SETTING_12_1_0_1['flag5'][1].update({
         'mqtt_status_retain':       (HARDWARE.ESP,   '<L', (0xFB4,1,31), (None, None,                           ('MQTT',        '"StatusRetain {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_12_1_1_0 = copy.deepcopy(SETTING_12_1_0_1)
+SETTING_12_1_1_1 = copy.deepcopy(SETTING_12_1_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0C010100,0x1000, SETTING_12_1_1_0),
+            (0x0C010101,0x1000, SETTING_12_1_1_1),
             (0x0C010001,0x1000, SETTING_12_1_0_1),
             (0x0C000204,0x1000, SETTING_12_0_2_4),
             (0x0C000202,0x1000, SETTING_12_0_2_2),
