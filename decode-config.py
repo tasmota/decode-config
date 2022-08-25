@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.2.0.0',
+    'VERSION': '12.1.1.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
-    'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
+    'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
     'AUTHOR': 'Norbert Richter',
     'AUTHOR_EMAIL': 'nr@prsolution.eu',
@@ -2638,40 +2638,8 @@ SETTING_12_1_0_1['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_12_1_1_1 = copy.deepcopy(SETTING_12_1_0_1)
-SETTING_12_1_1_1.update              ({
-    'flag6':                        (HARDWARE.ESP, {
-        'use_esp32_temperature':    (HARDWARE.ESP,   '<L', (0xF74,1, 0), (None, None,                           ('SetOption',   '"SO146 {}".format($)')) ),
-                                    },                      0xF74,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-                                    })
-# ======================================================================
-SETTING_12_1_1_2 = copy.deepcopy(SETTING_12_1_1_1)
-SETTING_12_1_1_2['flag6'][1].update({
-        'mqtt_disable_sserialrec':  (HARDWARE.ESP,   '<L', (0xF74,1, 1), (None, None,                           ('SetOption',   '"SO147 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_12_1_1_3 = copy.deepcopy(SETTING_12_1_1_2)
-SETTING_12_1_1_3.update             ({
-    'touch_threshold':              (HARDWARE.ESP32, '<L',  0xF70,       (None, None,                           ('Management',  '"TouchThres {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_12_1_1_5 = copy.deepcopy(SETTING_12_1_1_3)
-SETTING_12_1_1_5['mbflag2'][1].update({
-        'sunrise_dawn_angle':       (HARDWARE.ESP,   '<L', (0xFD8,2,28), (None, '0 <= $ <= 3',                  ('Management',  '"Sunrise {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_12_1_1_6 = copy.deepcopy(SETTING_12_1_1_5)
-SETTING_12_1_1_6.update             ({
-    'webcam_clk':                   (HARDWARE.ESP32, 'B',   0x72F,       (None, '10 <= $ <= 200',               ('Control',     '"WcClock {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_12_2_0_0 = copy.deepcopy(SETTING_12_1_1_6)
 # ======================================================================
 SETTINGS = [
-            (0x0C020000,0x1000, SETTING_12_2_0_0),
-            (0x0C010106,0x1000, SETTING_12_1_1_6),
-            (0x0C010105,0x1000, SETTING_12_1_1_5),
-            (0x0C010103,0x1000, SETTING_12_1_1_3),
-            (0x0C010102,0x1000, SETTING_12_1_1_2),
             (0x0C010101,0x1000, SETTING_12_1_1_1),
             (0x0C010001,0x1000, SETTING_12_1_0_1),
             (0x0C000204,0x1000, SETTING_12_0_2_4),
