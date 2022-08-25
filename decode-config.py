@@ -2632,13 +2632,13 @@ SETTING_12_0_2_4.pop('energy_kWhtoday',None)
 SETTING_12_0_2_4.pop('energy_kWhyesterday',None)
 SETTING_12_0_2_4.pop('energy_kWhtotal',None)
 # ======================================================================
-SETTING_12_1_0_0 = copy.deepcopy(SETTING_12_0_2_4)
-# ======================================================================
-SETTING_12_1_0_1 = copy.deepcopy(SETTING_12_1_0_0)
+SETTING_12_1_0_1 = copy.deepcopy(SETTING_12_0_2_4)
+SETTING_12_1_0_1['flag5'][1].update({
+        'mqtt_status_retain':       (HARDWARE.ESP,   '<L', (0xFB4,1,31), (None, None,                           ('MQTT',        '"StatusRetain {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C010001,0x1000, SETTING_12_1_0_1),
-            (0x0C010000,0x1000, SETTING_12_1_0_0),
             (0x0C000204,0x1000, SETTING_12_0_2_4),
             (0x0C000202,0x1000, SETTING_12_0_2_2),
             (0x0C000002,0x1000, SETTING_12_0_1_2),
