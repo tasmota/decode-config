@@ -1033,6 +1033,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | SensorRetain                |                        |             |
 |                | StateRetain                 |                        |             |
 |                | StateText<x\>               |                        |             |
+|                | StatusRetain                |                        |             |
 |                | SwitchRetain                |                        |             |
 |                | SwitchTopic                 |                        |             |
 |                | TelePeriod                  |                        |             |
