@@ -277,7 +277,7 @@ EXIT_CODE = 0
 Settings dictionary
 
 The Tasmota permanent setttings are stored in binary format using
-'struct SYSCFG' defined in tasmota/settings.h.
+'struct SYSCFG' defined in tasmota/include/tasmota_types.h.
 
 decode-config handles the binary data described by this Settings
 dictionary. The processing from/to Tasmota configuration data is
@@ -289,7 +289,7 @@ based on this dictionary.
     <name>: "string"
         key (string)
         for simply identifying value from Tasmota configuration this key has the same
-        name as the structure element of tasmota/settings.h
+        name as the structure element of tasmota/include/tasmota_types.h
 
     <def>:  ( <hardware>, <format>, <addrdef>, <datadef> [,<converter>] )
         tuple with 4 or 5 objects which describes the format, address and structure
