@@ -2638,6 +2638,11 @@ SETTING_12_1_0_1['flag5'][1].update({
                                     })
 # ======================================================================
 SETTING_12_1_1_1 = copy.deepcopy(SETTING_12_1_0_1)
+SETTING_12_1_1_1.update              ({
+    'flag6':                        (HARDWARE.ESP, {
+        'use_esp32_temperature':    (HARDWARE.ESP,   '<L', (0xF74,1, 0), (None, None,                           ('SetOption',   '"SO146 {}".format($)')) ),
+                                    },                      0xF74,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C010101,0x1000, SETTING_12_1_1_1),
