@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-latest-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v12.1.1.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
@@ -74,7 +74,7 @@ See [Running the program](#running-the-program) for more details.
   * [Use batch processing](#use-batch-processing)
 * [File Formats](#file-formats)
   * [.dmp format](#dmp-format)
-  * [.json format](#json-format)
+  * [.json format](#json-format-1)
   * [.bin format](#bin-format)
 * [Program parameter list](#program-parameter-list)
   * [--full-help](#--full-help)
