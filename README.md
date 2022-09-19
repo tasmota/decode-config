@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v12.1.1.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v12.1.1.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
