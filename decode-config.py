@@ -2645,6 +2645,9 @@ SETTING_12_1_1_1.update              ({
                                     })
 # ======================================================================
 SETTING_12_1_1_2 = copy.deepcopy(SETTING_12_1_1_1)
+SETTING_12_1_1_2['flag6'][1].update({
+        'mqtt_disable_sserialrec':  (HARDWARE.ESP,   '<L', (0xF74,1, 1), (None, None,                           ('SetOption',   '"SO147 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C010102,0x1000, SETTING_12_1_1_2),
