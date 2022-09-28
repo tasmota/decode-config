@@ -980,6 +980,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | TimeSTD                     |                        |             |
 |                | TimeDST                     |                        |             |
 |                | Timezone                    |                        |             |
+|                | TouchThres<sup>2</sup>      |                        |             |
 |                | TuyaMCU                     |                        |             |
 |                | TuyaTempSetRes              |                        |             |
 |                | WebLog                      |                        |             |
