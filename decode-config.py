@@ -2650,6 +2650,9 @@ SETTING_12_1_1_2['flag6'][1].update({
                                     })
 # ======================================================================
 SETTING_12_1_1_3 = copy.deepcopy(SETTING_12_1_1_2)
+SETTING_12_1_1_3.update             ({
+    'touch_threshold':              (HARDWARE.ESP32, '<L',  0xF70,       (None, None,                           ('Management',  '"TouchThres {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C010103,0x1000, SETTING_12_1_1_3),
