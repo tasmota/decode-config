@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.1.1.2',
+    'VERSION': '12.1.1.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2649,7 +2649,10 @@ SETTING_12_1_1_2['flag6'][1].update({
         'mqtt_disable_sserialrec':  (HARDWARE.ESP,   '<L', (0xF74,1, 1), (None, None,                           ('SetOption',   '"SO147 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_1_1_3 = copy.deepcopy(SETTING_12_1_1_2)
+# ======================================================================
 SETTINGS = [
+            (0x0C010103,0x1000, SETTING_12_1_1_3),
             (0x0C010102,0x1000, SETTING_12_1_1_2),
             (0x0C010101,0x1000, SETTING_12_1_1_1),
             (0x0C010001,0x1000, SETTING_12_1_0_1),
