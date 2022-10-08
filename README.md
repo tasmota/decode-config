@@ -435,9 +435,9 @@ Screen output is suppressed when using backup or restore parameter. In that case
 
 The console screen output supports two formats:
 
-* [JSON](#console-json-format):<br>
+* [JSON](#json-format):<br>
 This is identical with the backup/restore [json file Format](#json-format) but printed on screen standard output.
-* [Tasmota command](#console-tasmota-command-format):<br>
+* [Tasmota command](#tasmota-web-command-format):<br>
 This outputs the most (but not all!) configuration data as Tasmota [web-console commands](https://tasmota.github.io/docs/Commands/).
 
 #### JSON format
@@ -687,7 +687,7 @@ This format uses the [JSON](http://www.json.org/) notation and contains the comp
 
 The .json format can be created by **decode-config** using the backup function (`--backup-file <filename>`) (for better identification you can append the optional parameter `--backup-type json`, but that's optional as json is the default backup format).
 
-In contrast to the other two binary formats [.dmp](#dmp-format) and [.bin](#bin-format), this type of format also allows the [partial modification](#restore-a-subset-of-backup-data) of configurations.
+In contrast to the other two binary formats [.dmp](#dmp-format) and [.bin](#bin-format), this type of format also allows the [partial modification](#restore-subset-of-data) of configurations.
 
 > **Note**  
 The keys used within the JSON file are based on the variable names of Tasmota source code in [settings.h](https://github.com/arendst/Tasmota/blob/master/tasmota/include/tasmota_types.h) so they do not have the same naming as known for Tasmota web commands. However, since the variable names are self-explanatory, there should be no difficulties in assigning the functionality of the variables.
