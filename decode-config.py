@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.1.1.4',
+    'VERSION': '12.1.1.5',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2654,10 +2654,10 @@ SETTING_12_1_1_3.update             ({
     'touch_threshold':              (HARDWARE.ESP32, '<L',  0xF70,       (None, None,                           ('Management',  '"TouchThres {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_12_1_1_4 = copy.deepcopy(SETTING_12_1_1_3)
+SETTING_12_1_1_5 = copy.deepcopy(SETTING_12_1_1_3)
 # ======================================================================
 SETTINGS = [
-            (0x0C010104,0x1000, SETTING_12_1_1_4),
+            (0x0C010105,0x1000, SETTING_12_1_1_5),
             (0x0C010103,0x1000, SETTING_12_1_1_3),
             (0x0C010102,0x1000, SETTING_12_1_1_2),
             (0x0C010101,0x1000, SETTING_12_1_1_1),
