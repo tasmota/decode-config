@@ -2655,6 +2655,9 @@ SETTING_12_1_1_3.update             ({
                                     })
 # ======================================================================
 SETTING_12_1_1_5 = copy.deepcopy(SETTING_12_1_1_3)
+SETTING_12_1_1_5['mbflag2'][1].update({
+        'sunrise_dawn_angle':       (HARDWARE.ESP,   '<L', (0xFD8,2,28), (None, '0 <= $ <= 3',                  ('Management',  '"Sunrise {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C010105,0x1000, SETTING_12_1_1_5),
