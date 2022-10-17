@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/tasmota/decode-config/blob/master/media/pic/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v12.1.1.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![master](https://img.shields.io/badge/master-v12.2.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
 ![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
@@ -40,10 +40,10 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Development
 
-It is not necessary to use the developer version of decode-config if you are using a release from Tasmota. Only if you are also using the latest developer version of tasmota, you should also use the latest developer version of decode-config.
+Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v12.1.1.6-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-latest-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Content
 
