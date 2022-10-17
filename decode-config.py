@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.1.1.6',
+    'VERSION': '12.2.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2664,7 +2664,10 @@ SETTING_12_1_1_6.update             ({
     'webcam_clk':                   (HARDWARE.ESP32, 'B',   0x72F,       (None, '10 <= $ <= 200',               ('Control',     '"WcClock {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_2_0_0 = copy.deepcopy(SETTING_12_1_1_6)
+# ======================================================================
 SETTINGS = [
+            (0x0C020000,0x1000, SETTING_12_2_0_0),
             (0x0C010106,0x1000, SETTING_12_1_1_6),
             (0x0C010105,0x1000, SETTING_12_1_1_5),
             (0x0C010103,0x1000, SETTING_12_1_1_3),
