@@ -2673,6 +2673,13 @@ SETTING_12_1_1_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_2_0_2 = copy.deepcopy(SETTING_12_1_1_6)
+SETTING_12_2_0_2.update              ({
+    'energy_power_calibration2':    (HARDWARE.ESP,   '<L',  0x370,       (None, None,                           ('Power',       None)) ),
+    'energy_voltage_calibration2':  (HARDWARE.ESP,   '<L',  0x374,       (None, None,                           ('Power',       None)) ),
+    'energy_current_calibration2':  (HARDWARE.ESP,   '<L',  0x378,       (None, None,                           ('Power',       None)) ),
+    'energy_kWhdoy':                (HARDWARE.ESP,   '<H',  0x3A4,       (None, None,                           ('Power',       None)) ),
+    'energy_min_power':             (HARDWARE.ESP,   '<H',  0x3A6,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C020002,0x1000, SETTING_12_2_0_2),
