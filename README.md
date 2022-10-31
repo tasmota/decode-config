@@ -45,18 +45,12 @@ Using the latest development version of decode-config is only necessary if you a
 <!-- markdownlint-disable MD033 -->
 [![development version](https://img.shields.io/badge/development-v12.2.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
-## Content
-
-To run **decode-config.py** you need an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
-See [Running the program](#running-the-program) for more details.
-
-### Table of contents
+## Table of contents
 
 * [Development](#development)
-* [Content](#content)
-  * [Table of contents](#table-of-contents)
+* [Table of contents](#table-of-contents)
 * [Running the program](#running-the-program)
-  * [Prerequisite](#prerequisite)
+  * [Installation](#installation)
 * [Usage](#usage)
   * [Basics](#basics)
   * [Tasmota source](#tasmota-source)
@@ -85,43 +79,53 @@ See [Running the program](#running-the-program) for more details.
 
 ## Running the program
 
-The program does not have a graphical user interface (GUI), you have to run it from your OS command line using [program arguments](#usage).
+### Installation
 
-### Prerequisite
+**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment - (see [Prerequisite](#prerequisite)).
 
-#### Python
+After you have installed your Python environment, there are two ways to install deocde-config:
 
-**decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
+#### Installation using PyPi
+
+```shell
+pip install decode-config
+```
+
+The program does not have a graphical user interface (GUI), you have to run it from your OS command line using [program arguments](#usage) - see [Usage](#usage) for more details.
+
+#### Manual installation
+
+This is only necessary if you want to run **decode-config.py** from [development branch](https://github.com/tasmota/decode-config/tree/development). First install the required modules manually
+
+```shell
+python -m pip install -r requirements.txt
+```
+
+After that you can use the Phython script **decode-config.py** as normal program:
+
+```shell
+decode-config.py
+```
+
+#### Prerequisite
+
+Since **decode-config.py** is a Python program, it requires an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
 
 ##### Linux
 
-Install [Python 3.x](https://www.python.org/downloads/), Pip and follow [library installation for all OS](#all-os) below.
+Install [Python 3.x](https://www.python.org/downloads/) and Pip:
 
 ```bash
 sudo apt-get install python3 python3-pip
 ```
 
-##### Windows 10
+##### Windows
 
-Install [Python 3.x](https://www.python.org/downloads/windows/) as described and follow [library installation for all OS](#all-os) below.
+Install [Python 3.x](https://www.python.org/downloads/windows/) as described
 
 ##### MacOS
 
-Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described and follow [library installation for all OS](#all-os) below.
-
-##### All OS
-
-After python and pip is installed you can install the latest release with:
-
-```shell
-python -m pip install decode-config
-```
-
-Alternatively, if you want to run decode-config.py from this repository, install the required modules manually first:
-
-```shell
-python -m pip install -r requirements.txt
-```
+Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described
 
 ## Usage
 
