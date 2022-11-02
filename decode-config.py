@@ -2679,7 +2679,7 @@ SETTING_12_2_0_2.update              ({
     'energy_current_calibration2':  (HARDWARE.ESP,   '<L',  0x378,       (None, None,                           ('Power',       '"CurrentSet2 {}".format($)')) ),
     'energy_kWhdoy':                (HARDWARE.ESP,   '<H',  0x3A4,       (None, None,                           ('Power',       None)) ),
     'energy_min_power':             (HARDWARE.ESP,   '<H',  0x3A6,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
-    'pn532_password':               (HARDWARE.ESP,   '<L',  0x3A8,       (None, None,                           ('Sensor',      '"Sensor40 AUTH {},{}".format($, @["pn532_pack"])')) ),
+    'pn532_password':               (HARDWARE.ESP,   '<L',  0x3A8,       (None, None,                           ('Sensor',      '"Sensor40 AUTH,{},{}".format($, @["pn532_pack"])')) ),
     'pn532_pack':                   (HARDWARE.ESP,   '<H',  0x576,       (None, None,                           ('Sensor',      None)) ),
                                     })
 # ======================================================================
