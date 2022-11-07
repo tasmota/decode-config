@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.2.0.2',
+    'VERSION': '12.2.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2683,7 +2683,10 @@ SETTING_12_2_0_2.update              ({
     'pn532_pack':                   (HARDWARE.ESP,   '<H',  0x576,       (None, None,                           ('Sensor',      None)) ),
                                     })
 # ======================================================================
+SETTING_12_2_0_3 = copy.deepcopy(SETTING_12_2_0_2)
+# ======================================================================
 SETTINGS = [
+            (0x0C020003,0x1000, SETTING_12_2_0_3),
             (0x0C020002,0x1000, SETTING_12_2_0_2),
             (0x0C010106,0x1000, SETTING_12_1_1_6),
             (0x0C010105,0x1000, SETTING_12_1_1_5),
