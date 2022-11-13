@@ -40,13 +40,11 @@ Installation:
         python -m pip install -r requirements.txt
 
 Instructions:
-    Execute decode-config with option -d <host|url> to retrieve config data
-    from a Tasmota host or use -f <configfile.dmp> to read the configuration
-    data from a file previously saved using Tasmota Web-UI
+    Execute decode-config.py with option -s <file|host|url|mqttbroker>
+    to retrieve config data from a Tasmota host
 
-    For further information see 'README.md'
-
-    For help execute command with argument -h (or -H for advanced help)
+    For further information see 'README.md' and start decode-config
+    with -h (short help) or -H (full help)
 
 Returns:
     0: successful
