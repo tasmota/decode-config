@@ -30,17 +30,15 @@ METADATA = {
 
 
 Requirements:
-    - Python 3.x and Pip:
-        sudo apt-get install python3 python3-pip
+    decode-config is a Python 3.x program. Before installation prepare
+    python and pip for your system:
+      sudo apt-get install python3 python3-pip
 
 Installation:
-    - Using pypi:
-        python -m pip install decode-config
-    - Manually:
-        python -m pip install -r requirements.txt
+    python -m pip install decode-config
 
 Instructions:
-    Execute decode-config.py with option -s <file|host|url|mqttbroker>
+    Start decode-config.py with option -s <file|host|url|mqttbroker>
     to retrieve config data from a Tasmota host
 
     For further information see 'README.md' and start decode-config
