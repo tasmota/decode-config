@@ -6381,6 +6381,7 @@ def parseargs():
         if _args.version or _args.debug:
             print()
             print("Script:   {}".format(os.path.basename(__file__)))
+            print("Version:  {}".format(METADATA['VERSION_BUILD']))
             print("Python:   {}".format(platform.python_version()))
             print("Platform: {} - {}".format(platform.platform(), platform.machine()))
             print("OS:       {} {} {}".format(platform.system(), platform.release(), platform.version()))
