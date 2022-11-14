@@ -2680,6 +2680,12 @@ SETTING_12_2_0_2.update              ({
                                     })
 # ======================================================================
 SETTING_12_2_0_4 = copy.deepcopy(SETTING_12_2_0_2)
+SETTING_12_2_0_4.update             ({
+    'artnet_universe':              (HARDWARE.ESP,   '<H',  0x734,       (None, None,                           ('Light',       None)) ),
+                                    })
+SETTING_12_2_0_4['flag6'][1].update({
+        'artnet_autorun':           (HARDWARE.ESP,   '<L', (0xF74,1, 2), (None, None,                           ('SetOption',   '"SO148 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C020004,0x1000, SETTING_12_2_0_4),
