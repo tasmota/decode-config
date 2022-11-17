@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.2.0.4',
+    'VERSION': '12.2.0.5',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2687,7 +2687,13 @@ SETTING_12_2_0_4['flag6'][1].update({
         'artnet_autorun':           (HARDWARE.ESP,   '<L', (0xF74,1, 2), (None, None,                           ('SetOption',   '"SO148 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_2_0_5 = copy.deepcopy(SETTING_12_2_0_4)
+SETTING_12_2_0_5.update             ({
+    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0x736,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0C020005,0x1000, SETTING_12_2_0_5),
             (0x0C020004,0x1000, SETTING_12_2_0_4),
             (0x0C020002,0x1000, SETTING_12_2_0_2),
             (0x0C010106,0x1000, SETTING_12_1_1_6),
