@@ -183,7 +183,7 @@ decode-config -s file://path/to/tasmota-4281.dmp
 
 #### HTTP connection (Online)
 
-Source is an online HTTP connection to a running Tasmota device. To use this source, **decode-config** must have access to the network on which Tasmota is running.
+Source is an online HTTP connection to a running Tasmota device. To use this source, **decode-config** must have access to the network on which Tasmota is running, [Tasmota Webserver](https://tasmota.github.io/docs/Commands/#webserver) running in admin mode (`WebServer 2`) is mandatory.
 
 Specify the hostname, IP o or [http-url](https://en.wikipedia.org/wiki/URL) of the Tasmota device.
 
