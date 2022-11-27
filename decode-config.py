@@ -3807,7 +3807,7 @@ def get_mqtt_parts():
                 mqtt_host = urllib.parse.unquote(URLPARSE.hostname)
             if URLPARSE.port is not None:
                 mqtt_port = URLPARSE.port
-            if URLPARSE.path is not None:
+            if URLPARSE.path is not None and URLPARSE.path != '':
                 mqtt_topic = urllib.parse.unquote(URLPARSE.path)[1:]
             if URLPARSE.username is not None:
                 mqtt_username = urllib.parse.unquote(URLPARSE.username)
