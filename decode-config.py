@@ -2689,10 +2689,13 @@ SETTING_12_2_0_4['flag6'][1].update({
 # ======================================================================
 SETTING_12_2_0_5 = copy.deepcopy(SETTING_12_2_0_4)
 SETTING_12_2_0_5.update             ({
-    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0x736,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
+    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0x736,       (None, '1 <= $ <= 384',                ('Serial',      '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
                                     })
 # ======================================================================
 SETTING_12_2_0_6 = copy.deepcopy(SETTING_12_2_0_5)
+SETTING_12_2_0_6.update             ({
+    'shutter_motorstop':            (HARDWARE.ESP,   '<H',  0x738,       (None, None,                           ('Shutter',     '"ShutterMotorStop {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C020006,0x1000, SETTING_12_2_0_6),
