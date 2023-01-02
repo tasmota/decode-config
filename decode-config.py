@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.3.1.2',
+    'VERSION': '12.3.1.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2702,10 +2702,10 @@ SETTING_12_3_1_1['flag6'][1].update({
         'dns_ipv6_priority':        (HARDWARE.ESP,   '<L', (0xF74,1, 3), (None, None,                           ('SetOption',   '"SO149 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_12_3_1_2 = copy.deepcopy(SETTING_12_3_1_1)
+SETTING_12_3_1_3 = copy.deepcopy(SETTING_12_3_1_1)
 # ======================================================================
 SETTINGS = [
-            (0x0C030102,0x1000, SETTING_12_3_1_2),
+            (0x0C030103,0x1000, SETTING_12_3_1_3),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
             (0x0C020006,0x1000, SETTING_12_2_0_6),
             (0x0C020005,0x1000, SETTING_12_2_0_5),
