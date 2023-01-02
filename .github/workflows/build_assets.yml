@@ -15,7 +15,8 @@ jobs:
         include:
           - os: ubuntu-latest
             TARGET: ubuntu
-            CMD_BUILD: > pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu.tar.xz decode-config
+            CMD_BUILD: >
+              pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu.tar.xz decode-config
             OUT_FILE_NAME: decode-config-ubuntu.tar.xz
             ASSET_MIME: application/x-xz
           - os: macos-latest
