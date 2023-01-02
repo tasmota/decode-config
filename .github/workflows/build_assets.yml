@@ -13,6 +13,11 @@ jobs:
     strategy:
       matrix:
         include:
+          - os: ubuntu-latest
+            TARGET: ubuntu
+            CMD_BUILD: > pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu.tar.xz decode-config
+            OUT_FILE_NAME: decode-config-ubuntu.tar.xz
+            ASSET_MIME: application/x-xz
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
@@ -37,6 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install build wheel
           pip install -r requirements.txt
+          pip install pyinstaller
       - name: Build self-contained executable with pyinstaller for ${{matrix.TARGET}}
         run: ${{matrix.CMD_BUILD}}
       - name: Upload asset for ${{matrix.TARGET}}
