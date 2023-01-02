@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-              pyinstaller --onefile decode-config.py && cd dist && ls -l && zip -r9 ../decode-config-mac.zip -i *
+              pyinstaller --onefile decode-config.py && cd dist && zip -r9 ../decode-config-mac.zip decode-config
             OUT_FILE_NAME: decode-config-mac.zip 
             ASSET_MIME: application/zip
           - os: windows-latest
