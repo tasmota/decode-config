@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: show_env
-        with:
-          rn1: ${{github.event.payload.release.name}}
-          rid1: ${{github.event.payload.release.id}}
-          r1: ${{github.event.payload.release}}
+#        with:
+#          rn1: ${{github.event.payload.release.name}}
+#          rid1: ${{github.event.payload.release.id}}
+#          r1: ${{github.event.payload.release}}
         env:
           rn2: ${{github.event.payload.release.name}}
           rid2: ${{github.event.payload.release.id}}
