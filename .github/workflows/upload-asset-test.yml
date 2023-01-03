@@ -12,21 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: show_env
-        env:
-          rn2: ${{github.event.payload.release.name}}
-          rid2: ${{github.event.payload.release.id}}
-          r2: ${{github.event.payload.release}}
         run: |
           ls -l
-          echo release name ${{ github.event.payload.release.name }} > Release.txt
+          echo release name ${{ github.event.release.name }} > Release.txt
           echo release id ${{ github.event.payload.release.id }} >> Release.txt
+          echo release ${{ github.event.payload.release.tag_name }} >> Release.txt
           echo release ${{ github.event.payload.release }} >> Release.txt
       - name: example
         run: echo ${{ github.sha }} >> Release.txt
       - name: Test
         run: cat Release.txt
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            Release.txt
