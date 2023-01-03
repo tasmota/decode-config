@@ -1,0 +1,19 @@
+name: Test asset upload
+
+on:
+  release:
+    types: [published]
+ 
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        run: |
+          ls -l
+          echo release name ${{github.event.payload.release.name}}
+          echo release id ${{github.event.payload.release.id}}
+          echo release ${{github.event.payload.release}}
+
