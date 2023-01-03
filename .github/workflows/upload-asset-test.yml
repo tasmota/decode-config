@@ -12,20 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: show_env
-#        with:
-#          rn1: ${{github.event.payload.release.name}}
-#          rid1: ${{github.event.payload.release.id}}
-#          r1: ${{github.event.payload.release}}
         env:
           rn2: ${{github.event.payload.release.name}}
           rid2: ${{github.event.payload.release.id}}
           r2: ${{github.event.payload.release}}
         run: |
           ls -l
-          echo release name $rn1
-          echo release id $rid1
-          echo release $r1
-          echo release name $rn2
-          echo release id $rid2
-          echo release $r2
-
+          echo release name ${{ github.event.payload.release.name }} > Release.txt
+          echo release id ${{ github.event.payload.release.id }} >> Release.txt
+          echo release ${{ github.event.payload.release }} >> Release.txt
+      - name: example
+        run: echo ${{ github.sha }} >> Release.txt
+      - name: Test
+        run: cat Release.txt
