@@ -15,9 +15,9 @@ jobs:
         run: |
           ls -l
           echo release name ${{ github.event.release.name }} > Release.txt
-          echo release id ${{ github.event.payload.release.id }} >> Release.txt
-          echo release ${{ github.event.payload.release.tag_name }} >> Release.txt
-          echo release ${{ github.event.payload.release }} >> Release.txt
+          echo release id ${{ github.event.release.id }} >> Release.txt
+          echo release ${{ github.event.release.tag_name }} >> Release.txt
+          echo release ${{ github.event.release }} >> Release.txt
       - name: example
         run: echo ${{ github.sha }} >> Release.txt
       - name: Test
