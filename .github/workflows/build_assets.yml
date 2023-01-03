@@ -13,17 +13,29 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            TARGET: ubuntu
+          - os: ubuntu-22.04
+            TARGET: ubuntu-22.04
             CMD_BUILD: >
-              pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu.tar.xz decode-config
-            OUT_FILE_NAME: decode-config-ubuntu.tar.xz
+              pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu-22.04.tar.xz decode-config
+            OUT_FILE_NAME: decode-config-ubuntu-22.04.tar.xz
             ASSET_MIME: application/x-xz
-          - os: macos-latest
-            TARGET: macos
+          - os: ubuntu-20.04
+            TARGET: ubuntu-20.04
             CMD_BUILD: >
-              pyinstaller --onefile decode-config.py && cd dist && zip -r9 ../decode-config-mac.zip decode-config
-            OUT_FILE_NAME: decode-config-mac.zip 
+              pyinstaller --onefile decode-config.py && cd dist && tar -cJf ../decode-config-ubuntu-20.04.tar.xz decode-config
+            OUT_FILE_NAME: decode-config-ubuntu-20.04.tar.xz
+            ASSET_MIME: application/x-xz
+          - os: macos-10.15
+            TARGET: macos-10.15
+            CMD_BUILD: >
+              pyinstaller --onefile decode-config.py && cd dist && zip -r9 ../decode-config-macos-10.15.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-10.15.zip 
+            ASSET_MIME: application/zip
+          - os: macos-11
+            TARGET: macos-11
+            CMD_BUILD: >
+              pyinstaller --onefile decode-config.py && cd dist && zip -r9 ../decode-config-macos-11.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-11.zip 
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
@@ -33,11 +45,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Python # Set Python version
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      # Install pip and pytest
+      # Install pip and pyinstaller
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
