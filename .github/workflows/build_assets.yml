@@ -47,7 +47,6 @@ jobs:
       - name: Build self-contained executable with pyinstaller for ${{matrix.TARGET}}
         run: ${{matrix.CMD_BUILD}}
       - name: Upload asset for ${{matrix.TARGET}}
-        uses: actions/upload-artifact@v3
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{matrix.OUT_FILE_NAME}}
-          path: ${{matrix.OUT_FILE_NAME}}
+          files: ${{matrix.OUT_FILE_NAME}}
