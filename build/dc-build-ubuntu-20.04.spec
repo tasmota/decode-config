@@ -2,7 +2,7 @@
 
 block_cipher = None
 a = Analysis(
-    ['decode-config.py'],
+    ['../decode-config.py'],
     pathex=[],
     binaries=[],
     datas=[],
