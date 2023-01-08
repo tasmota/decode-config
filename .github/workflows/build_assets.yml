@@ -39,7 +39,7 @@ jobs:
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller --onefile --noconfirm --icon build/images/icon-256.ico ../decode-config.py && copy dist/decode-config.exe . && type *.spec
+            CMD_BUILD: pyinstaller --onefile --noconfirm decode-config.py && copy dist/decode-config.exe . && type *.spec
             OUT_FILE_NAME: decode-config.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 
