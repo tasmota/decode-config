@@ -3,7 +3,7 @@ name: Build self-contained executables for multiple platforms
 on:
   release:
     types: [published]
- 
+
 
 jobs:
   build:
@@ -16,30 +16,30 @@ jobs:
           - os: ubuntu-22.04
             TARGET: ubuntu-22.04
             CMD_BUILD: >
-              pyinstaller --noconfirm build/dc-build-ubuntu-22.04.spec && cd dist && tar -czf ../decode-config-ubuntu-22.04.tar.gz decode-config
+              pyinstaller --noconfirm build-executables/dc-build-ubuntu-22.04.spec && cd dist && tar -czf ../decode-config-ubuntu-22.04.tar.gz decode-config
             OUT_FILE_NAME: decode-config-ubuntu-22.04.tar.gz
             ASSET_MIME: application/x-gzip
           - os: ubuntu-20.04
             TARGET: ubuntu-20.04
             CMD_BUILD: >
-              pyinstaller --noconfirm build/dc-build-ubuntu-20.04.spec && cd dist && tar -czf ../decode-config-ubuntu-20.04.tar.gz decode-config
+              pyinstaller --noconfirm build-executables/dc-build-ubuntu-20.04.spec && cd dist && tar -czf ../decode-config-ubuntu-20.04.tar.gz decode-config
             OUT_FILE_NAME: decode-config-ubuntu-20.04.tar.gz
             ASSET_MIME: application/x-gzip
           - os: macos-10.15
             TARGET: macos-10.15
             CMD_BUILD: >
-              pyinstaller --noconfirm build/dc-build-macos-10.15.spec && cd dist && zip -r9 ../decode-config-macos-10.15.zip decode-config
-            OUT_FILE_NAME: decode-config-macos-10.15.zip 
+              pyinstaller --noconfirm build-executables/dc-build-macos-10.15.spec && cd dist && zip -r9 ../decode-config-macos-10.15.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-10.15.zip
             ASSET_MIME: application/zip
           - os: macos-11
             TARGET: macos-11
             CMD_BUILD: >
-              pyinstaller --noconfirm build/dc-build-macos-11.spec && cd dist && zip -r9 ../decode-config-macos-11.zip decode-config
-            OUT_FILE_NAME: decode-config-macos-11.zip 
+              pyinstaller --noconfirm build-executables/dc-build-macos-11.spec && cd dist && zip -r9 ../decode-config-macos-11.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-11.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller --noconfirm build/dc-build-windows.spec && copy dist/decode-config.exe .
+            CMD_BUILD: pyinstaller --noconfirm build-executables/dc-build-windows.spec && copy dist/decode-config.exe .
             OUT_FILE_NAME: decode-config.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
 

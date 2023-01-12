@@ -11,6 +11,5 @@ __pycache__/
 # pypi setup
 /dist/
 /*.egg-info/
+/build/
 /.venv/
-
-
