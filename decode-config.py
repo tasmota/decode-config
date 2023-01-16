@@ -1042,6 +1042,7 @@ SETTING_6_3_0.update                ({
 # ======================================================================
 SETTING_6_3_0_2 = copy.deepcopy(SETTING_6_3_0)
 SETTING_6_3_0_2.update              ({
+    'timezone':                     (HARDWARE.ESP,   'b',   0x016,       (None, '-13 <= $ <= 13 or $==99',      ('Management',  '"Timezone {}".format($ if @["timezone_minutes"]==0 else "{}:{}".format($, @["timezone_minutes"]))')) ),
     'timezone_minutes':             (HARDWARE.ESP,   'B',   0x66D,       (None, None,                           (INTERNAL,      None)) ),
                                     })
 SETTING_6_3_0_2['flag'][1].pop('rules_once',None)
