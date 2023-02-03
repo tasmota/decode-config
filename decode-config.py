@@ -2704,6 +2704,10 @@ SETTING_12_3_1_1['flag6'][1].update({
                                     })
 # ======================================================================
 SETTING_12_3_1_5 = copy.deepcopy(SETTING_12_3_1_1)
+SETTING_12_3_1_5['flag6'][1].update({
+        'no_voltage_common':        (HARDWARE.ESP,   '<L', (0xF74,1, 4), (None, None,                           ('SetOption',   '"SO150 {}".format($)')) ),
+        'matter_enabled':           (HARDWARE.ESP,   '<L', (0xF74,1, 5), (None, None,                           ('SetOption',   '"SO151 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C030105,0x1000, SETTING_12_3_1_5),
