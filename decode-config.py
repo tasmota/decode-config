@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.3.1.5',
+    'VERSION': '12.3.1.6',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2702,7 +2702,10 @@ SETTING_12_3_1_1 = copy.deepcopy(SETTING_12_2_0_6)
 # ======================================================================
 SETTING_12_3_1_5 = copy.deepcopy(SETTING_12_3_1_1)
 # ======================================================================
+SETTING_12_3_1_6 = copy.deepcopy(SETTING_12_3_1_5)
+# ======================================================================
 SETTINGS = [
+            (0x0C030106,0x1000, SETTING_12_3_1_6),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
             (0x0C020006,0x1000, SETTING_12_2_0_6),
