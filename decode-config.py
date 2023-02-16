@@ -13,7 +13,7 @@ METADATA = {
 """
     decode-config.py - Backup/Restore Tasmota configuration data
 
-    Copyright (C) 2022 Norbert Richter <nr@prsolution.eu>
+    Copyright (C) 2023 Norbert Richter <nr@prsolution.eu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

@@ -40,10 +40,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 
 ## Development
 
-Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
-
-<!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v12.4.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+Using the [latest development](https://github.com/tasmota/decode-config/tree/development) version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 ## Table of contents
 
@@ -330,11 +327,11 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_10.1.json` (the part `Tasmota` and `10.1` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_12.4.json` (the part `Tasmota` and `12.4` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
-Since **decode-config** v8.2.0.5 the `--backup-file` parameter can be specified multiple times. With that it's easy to create different backup with different names and/or different formats at once:
+The `--backup-file` parameter can be specified multiple times to create different backup with different names and/or different formats at once:
 
 ```bash
 decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Backup_@H.dmp
@@ -342,7 +339,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_10.1.json` using JSON format
+* `Config_Tasmota_12.4.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -350,10 +347,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_10.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_12.4.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_10.1
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_12.4
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
