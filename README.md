@@ -79,6 +79,10 @@ Using the latest development version of decode-config is only necessary if you a
 
 ## Running the program
 
+To use **decode-config.py** you can install it using Python environment and following the [Installation](#installation) section below.
+
+Alternatively you can download a ready-made binary from [Releases](https://github.com/tasmota/decode-config/releases) to use it without installing Python.
+
 ### Installation
 
 **decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment - (see [Prerequisite](#prerequisite)).
