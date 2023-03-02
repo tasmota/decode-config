@@ -2699,8 +2699,15 @@ SETTING_12_2_0_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_3_1_1 = copy.deepcopy(SETTING_12_2_0_6)
+SETTING_12_3_1_1['flag6'][1].update({
+        'dns_ipv6_priority':        (HARDWARE.ESP,   '<L', (0xF74,1, 3), (None, None,                           ('SetOption',   '"SO149 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTING_12_3_1_5 = copy.deepcopy(SETTING_12_3_1_1)
+SETTING_12_3_1_5['flag6'][1].update({
+        'no_voltage_common':        (HARDWARE.ESP,   '<L', (0xF74,1, 4), (None, None,                           ('SetOption',   '"SO150 {}".format($)')) ),
+        'matter_enabled':           (HARDWARE.ESP,   '<L', (0xF74,1, 5), (None, None,                           ('SetOption',   '"SO151 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTING_12_4_0_1 = copy.deepcopy(SETTING_12_3_1_5)
 # ======================================================================
