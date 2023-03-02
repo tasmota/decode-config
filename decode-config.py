@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.4.0.1',
+    'VERSION': '12.4.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2709,10 +2709,10 @@ SETTING_12_3_1_5['flag6'][1].update({
         'matter_enabled':           (HARDWARE.ESP,   '<L', (0xF74,1, 5), (None, None,                           ('SetOption',   '"SO151 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_12_4_0_1 = copy.deepcopy(SETTING_12_3_1_5)
+SETTING_12_4_0_2 = copy.deepcopy(SETTING_12_3_1_5)
 # ======================================================================
 SETTINGS = [
-            (0x0C040001,0x1000, SETTING_12_4_0_1),
+            (0x0C040002,0x1000, SETTING_12_4_0_2),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
             (0x0C020006,0x1000, SETTING_12_2_0_6),
