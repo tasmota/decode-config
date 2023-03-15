@@ -2710,6 +2710,12 @@ SETTING_12_3_1_5['flag6'][1].update({
                                     })
 # ======================================================================
 SETTING_12_4_0_2 = copy.deepcopy(SETTING_12_3_1_5)
+SETTING_12_4_0_2['mbflag2'][1].update({
+        'tariff_forced':            (HARDWARE.ESP,   '<L', (0xFD8,2,26), (None, '0 <= $ <= 2',                  ('Power',       None)) ),
+                                    })
+SETTING_12_4_0_2['teleinfo'][1].update({
+        'show_stats':               (HARDWARE.ESP,   '<L', (0xFA4,1,12), (None, None,                           ('Power',       None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C040002,0x1000, SETTING_12_4_0_2),
