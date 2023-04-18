@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.4.0.5',
+    'VERSION': '12.5.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2717,10 +2717,10 @@ SETTING_12_4_0_2['teleinfo'][1].update({
         'show_stats':               (HARDWARE.ESP,   '<L', (0xFA4,1,12), (None, None,                           ('Power',       None)) ),
                                     })
 # ======================================================================
-SETTING_12_4_0_5 = copy.deepcopy(SETTING_12_4_0_2)
+SETTING_12_5_0_0 = copy.deepcopy(SETTING_12_4_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x0C040005,0x1000, SETTING_12_4_0_5),
+            (0x0C050000,0x1000, SETTING_12_5_0_0),
             (0x0C040002,0x1000, SETTING_12_4_0_2),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
