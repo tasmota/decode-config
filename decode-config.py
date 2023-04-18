@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.1.0.4',
+    'VERSION': '12.5.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2733,74 +2733,10 @@ SETTING_12_4_0_2['teleinfo'][1].update({
         'show_stats':               (HARDWARE.ESP,   '<L', (0xFA4,1,12), (None, None,                           ('Power',       None)) ),
                                     })
 # ======================================================================
-SETTING_12_5_0_1 = copy.copy(SETTING_12_4_0_2)
-SETTING_12_5_0_1['flag6'][1].update ({
-        'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_12_5_0_3 = copy.copy(SETTING_12_5_0_1)
-SETTING_12_5_0_3['flag6'][1].update ({
-        'berry_no_autoexec':        (HARDWARE.ESP,   '<L', (0xF74,1, 7), (None, None,                           ('SetOption',   '"SO153 {}".format($)')) ),
-        'berry_light_scheme':       (HARDWARE.ESP,   '<L', (0xF74,1, 8), (None, None,                           ('SetOption',   '"SO154 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_13_0_0_1 = copy.copy(SETTING_12_5_0_3)
-SETTING_13_0_0_1.update             ({
-    'zcdimmerset':                  (HARDWARE.ESP,   '<H',  0xEA6,       ([5],  None,                           ('Light',       '"ZCDimmerSet{} {}".format(#+1,$/100)')) ),
-                                    })
-SETTING_13_0_0_1['flag6'][1].update ({
-        'zcfallingedge':            (HARDWARE.ESP,   '<L', (0xF74,1, 9), (None, None,                           ('SetOption',   '"SO155 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_13_0_0_2 = copy.copy(SETTING_13_0_0_1)
-SETTING_13_0_0_2.update             ({
-    'battery_level_percent':        (HARDWARE.ESP,   'B',   0x73A,       (None, '0 <= $ <= 101',                ('Zigbee',      '"BatteryPercentage {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_13_1_0_1 = copy.copy(SETTING_13_0_0_2)
-SETTING_13_1_0_1.update             ({
-    'my_gp_esp32c2':                (HARDWARE.ESP32C2,
-                                                     '<H',  0x3AC,       ([21], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'my_gp_esp32c6':                (HARDWARE.ESP32C6,
-                                                     '<H',  0x3AC,       ([31], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-                                    })
-SETTING_13_1_0_1['user_template_esp32'][1].update({
-        'base_esp32c2':             (HARDWARE.ESP32C2,
-                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c2"],@["user_template_esp32"]["flag_esp32c2"],$)')), ('$+1','$-1') ),
-        'gpio_esp32c2':             (HARDWARE.ESP32C2,
-                                                     '<H',  0x3FC,       ([21], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
-        'flag_esp32c2':             (HARDWARE.ESP32C2,
-                                                     '<H',  0x3FC+(2*21),(None, None,                           ('Management',  None)) ),
-        'base_esp32c6':             (HARDWARE.ESP32C6,
-                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c6"],@["user_template_esp32"]["flag_esp32c6"],$)')), ('$+1','$-1') ),
-        'gpio_esp32c6':             (HARDWARE.ESP32C6,
-                                                     '<H',  0x3FC,       ([31], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
-        'flag_esp32c6':             (HARDWARE.ESP32C6,
-                                                     '<H',  0x3FC+(2*31),(None, None,                           ('Management',  None)) ),
-                                    })
-SETTING_13_1_0_1['flag6'][1].update ({
-        'sen5x_passive_mode':       (HARDWARE.ESP,   '<L', (0xF74,1,10), (None, None,                           ('SetOption',   '"SO156 {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_13_1_0_2 = copy.copy(SETTING_13_1_0_1)
-SETTING_13_1_0_2.update             ({
-    'hdmi_addr':                    (HARDWARE.ESP,   '<H',  0x73B,       (None, None,                           ('Hdmi',      '"HdmiAddr {}".format($)')) ),
-    'hdmi_cec_device_type':         (HARDWARE.ESP,   'B',   0xF61,       (None, None,                           ('Hdmi',      '"HdmiType {}".format($)')) ),
-                                    })
-# ======================================================================
-SETTING_13_1_0_4 = copy.copy(SETTING_13_1_0_2)
-SETTING_13_1_0_4.update             ({
-    'windmeter_measure_intvl':      (HARDWARE.ESP,   'B',   0xF63,       (None, None,                           ('Sensor',      '"Sensor68 6,{}".format($)')) ),
-                                    })
+SETTING_12_5_0_0 = copy.deepcopy(SETTING_12_4_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x0D010004,0x1000, SETTING_13_1_0_4),
-            (0x0D010002,0x1000, SETTING_13_1_0_2),
-            (0x0D010001,0x1000, SETTING_13_1_0_1),
-            (0x0D000002,0x1000, SETTING_13_0_0_2),
-            (0x0D000001,0x1000, SETTING_13_0_0_1),
-            (0x0C050003,0x1000, SETTING_12_5_0_3),
-            (0x0C050001,0x1000, SETTING_12_5_0_1),
+            (0x0C050000,0x1000, SETTING_12_5_0_0),
             (0x0C040002,0x1000, SETTING_12_4_0_2),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
