@@ -2734,6 +2734,9 @@ SETTING_12_4_0_2['teleinfo'][1].update({
                                     })
 # ======================================================================
 SETTING_12_5_0_1 = copy.deepcopy(SETTING_12_4_0_2)
+SETTING_12_5_0_1['flag6'][1].update({
+        'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0C050001,0x1000, SETTING_12_5_0_1),
