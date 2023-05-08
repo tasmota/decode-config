@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.5.0.1',
+    'VERSION': '12.5.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2722,7 +2722,10 @@ SETTING_12_5_0_1['flag6'][1].update({
         'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_12_5_0_2 = copy.deepcopy(SETTING_12_5_0_1)
+# ======================================================================
 SETTINGS = [
+            (0x0C050002,0x1000, SETTING_12_5_0_2),
             (0x0C050001,0x1000, SETTING_12_5_0_1),
             (0x0C040002,0x1000, SETTING_12_4_0_2),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
