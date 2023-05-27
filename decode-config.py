@@ -2724,7 +2724,8 @@ SETTING_12_5_0_1['flag6'][1].update({
 # ======================================================================
 SETTING_12_5_0_3 = copy.deepcopy(SETTING_12_5_0_1)
 SETTING_12_5_0_3['flag6'][1].update({
-        'berry_autoexec':           (HARDWARE.ESP,   '<L', (0xF74,1, 7), (None, None,                           ('SetOption',   '"SO153 {}".format($)')) ),
+        'berry_no_autoexec':        (HARDWARE.ESP,   '<L', (0xF74,1, 7), (None, None,                           ('SetOption',   '"SO153 {}".format($)')) ),
+        'berry_light_scheme':       (HARDWARE.ESP,   '<L', (0xF74,1, 8), (None, None,                           ('SetOption',   '"SO154 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
