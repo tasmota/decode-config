@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '12.5.0.4',
+    'VERSION': '13.0.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2728,10 +2728,10 @@ SETTING_12_5_0_3['flag6'][1].update({
         'berry_light_scheme':       (HARDWARE.ESP,   '<L', (0xF74,1, 8), (None, None,                           ('SetOption',   '"SO154 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_12_5_0_4 = copy.deepcopy(SETTING_12_5_0_3)
+SETTING_13_0_0_0 = copy.deepcopy(SETTING_12_5_0_3)
 # ======================================================================
 SETTINGS = [
-            (0x0C050004,0x1000, SETTING_12_5_0_4),
+            (0x0D000000,0x1000, SETTING_13_0_0_0),
             (0x0C050003,0x1000, SETTING_12_5_0_3),
             (0x0C050001,0x1000, SETTING_12_5_0_1),
             (0x0C040002,0x1000, SETTING_12_4_0_2),
