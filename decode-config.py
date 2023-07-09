@@ -1368,7 +1368,7 @@ SETTING_6_6_0_21['flag3'][1].update ({
 # ======================================================================
 SETTING_7_0_0_1 = copy.deepcopy(SETTING_6_6_0_21)
 SETTING_7_0_0_1.pop('register8',None)
-SETTING_7_0_0_1.update             ({
+SETTING_7_0_0_1.update              ({
     'shutter_motordelay':           (HARDWARE.ESP,   'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#+1,float($)/20.0)')) ),
     'flag4':                        (HARDWARE.ESP,   '<L',  0x1E0,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
@@ -1706,7 +1706,7 @@ SETTING_8_2_0_3.update              ({
                                     },                      0x5A4,       (None, None,                           ('Management',  None)) ),
                                     },                      0x71F,       (None, None,                           ('Management',  None)) ),
                                     })
-SETTING_8_2_0_3['user_template'][1].update ({
+SETTING_8_2_0_3['user_template'][1].update({
         'base':                     (HARDWARE.ESP82, 'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"BASE\\\":{}}}".format($)')), ('$+1','$-1') ),
         'name':                     (HARDWARE.ESP82, '15s', 0x720,       (None, None,                           ('Management',  None)) ),
         'gpio':                     (HARDWARE.ESP82, 'B',   0x72F,       ([13], None,                           ('Management',  '"Template {{\\\"GPIO\\\":{}}}".format(@["user_template"]["gpio"])')) ),
@@ -1721,7 +1721,7 @@ SETTING_8_2_0_3['flag4'][1].update  ({
         'only_json_message':        (HARDWARE.ESP,   '<L', (0xEF8,1, 8), (None, None,                           ('SetOption',   '"SetOption90 {}".format($)')) ),
         'fade_at_startup':          (HARDWARE.ESP,   '<L', (0xEF8,1, 9), (None, None,                           ('SetOption',   '"SetOption91 {}".format($)')) ),
                                     })
-SETTING_8_2_0_3['SensorBits1'][1].update ({
+SETTING_8_2_0_3['SensorBits1'][1].update({
         'bh1750_resolution':        (HARDWARE.ESP,   'B',  (0x717,2, 4), (None, '0 <= $ <= 2',                  ('Sensor',      '"Sensor10 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -2095,7 +2095,7 @@ SETTING_9_2_0_4['flag5'][1].update  ({
                                     })
 # ======================================================================
 SETTING_9_2_0_5 = copy.deepcopy(SETTING_9_2_0_4)
-SETTING_9_2_0_5.update             ({
+SETTING_9_2_0_5.update              ({
     'power_esp32':                  (HARDWARE.ESP32, '<L',  0x2E8,       (None, '0 <= $ <= 0b1111111111111111111111111111',
                                                                                                                 ('Control',     'list("Power{} {}".format(i+1, (int($,0)>>i & 1) ) for i in range(0, 28))')),'"0x{:08x}".format($)' ),
                                     })
@@ -2259,7 +2259,7 @@ SETTING_9_5_0_5.update              ({
 SETTING_9_5_0_5['flag5'][1].update  ({
         'disable_referer_chk':      (HARDWARE.ESP,   '<L', (0xFB4,1,14), (None, None,                           ('SetOption',   '"SO128 {}".format($)')) ),
                                     })
-SETTING_9_5_0_5['sbflag1'][1].update  ({
+SETTING_9_5_0_5['sbflag1'][1].update({
         'range_extender':           (HARDWARE.ESP,   '<L', (0xFA0,1,3), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxState {}".format($)')) ),
         'range_extender_napt':      (HARDWARE.ESP,   '<L', (0xFA0,1,4), (None, '0 <= $ <= 1',                   ('Wifi',        '"RgxNAPT {}".format($)')) ),
         'sonoff_l1_music_sync':     (HARDWARE.ESP,   '<L', (0xFA0,1,5), (None, '0 <= $ <= 1',                   ('Management',  '"L1MusicSync {}".format($)')) ),
@@ -2324,12 +2324,12 @@ SETTING_10_1_0_3.update             ({
                                     })
 # ======================================================================
 SETTING_10_1_0_5 = copy.deepcopy(SETTING_10_1_0_3)
-SETTING_10_1_0_5.update            ({
+SETTING_10_1_0_5.update             ({
     'eth_ipv4_address':             (HARDWARE.ESP32, '<L',  0xF88,       ([5], None,                            ('Wifi',        'list("{} {}".format(["EthIPAddress","EthGateway","EthSubnetmask","EthDNSServer","EthDNSServer2"][i], socket.inet_ntoa(struct.pack("<L", @["eth_ipv4_address"][i]))) for i in range(0, len(@["eth_ipv4_address"])))')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
                                     })
 # ======================================================================
 SETTING_10_1_0_6 = copy.deepcopy(SETTING_10_1_0_5)
-SETTING_10_1_0_6.update            ({
+SETTING_10_1_0_6.update             ({
     'web_time_start':               (HARDWARE.ESP,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
@@ -2448,16 +2448,16 @@ SETTING_10_1_0_6['user_template_esp32'][1].update({
         'flag_esp32s3':             (HARDWARE.ESP32S3,
                                                      '<H',  0x410+(2*33),(None, None,                           ('Management',  None)) ),
                                     })
-SETTING_10_1_0_6['flag5'][1].update({
+SETTING_10_1_0_6['flag5'][1].update ({
         'pwm_force_same_phase':     (HARDWARE.ESP,   '<L', (0xFB4,1,20), (None, None,                           ('SetOption',   '"SO134 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_3 = copy.deepcopy(SETTING_10_1_0_6)
-SETTING_11_0_0_3.update            ({
+SETTING_11_0_0_3.update             ({
     'pulse_timer':                  (HARDWARE.ESP,   '<H',  0x57C,       ([32], '0 <= $ <= 65535',              ('Control',     '"PulseTime{} {}".format(#+1,$)')) ),
     'rf_duplicate_time':            (HARDWARE.ESP,   '<H',  0x522,       (None, '10 <= $ <= 65535',             ('Rf',          '"RfTimeOut {}".format($)')) ),
                                     })
-SETTING_11_0_0_3['flag5'][1].update({
+SETTING_11_0_0_3['flag5'][1].update ({
         'display_no_splash':        (HARDWARE.ESP,   '<L', (0xFB4,1,21), (None, None,                           ('SetOption',   '"SO135 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -2465,16 +2465,16 @@ SETTING_11_0_0_4 = copy.deepcopy(SETTING_11_0_0_3)
 SETTING_11_0_0_4['sbflag1'][1].update({
         'local_ntp_server':         (HARDWARE.ESP32, '<L', (0xFA0,1,9),  (None, '0 <= $ <= 1',                  ('Management',  '"RtcNtpserver {}".format($)')) ),
                                     })
-SETTING_11_0_0_4.update            ({
+SETTING_11_0_0_4.update             ({
     'ds3502_state':                 (HARDWARE.ESP,   'B',  0x4CA,       ([4], '0 <= $ <= 127',                  ('Sensor',      '"Wiper{} {}".format(#+1,$)')) ),
                                     })
-SETTING_11_0_0_4['flag5'][1].update({
+SETTING_11_0_0_4['flag5'][1].update ({
         'tuyasns_no_immediate':     (HARDWARE.ESP,   '<L', (0xFB4,1,22), (None, None,                           ('SetOption',   '"SO136 {}".format($)')) ),
         'tuya_exclude_heartbeat':   (HARDWARE.ESP,   '<L', (0xFB4,1,23), (None, None,                           ('SetOption',   '"SO137 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_5 = copy.deepcopy(SETTING_11_0_0_4)
-SETTING_11_0_0_5.update            ({
+SETTING_11_0_0_5.update             ({
     'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          None)) ),
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          None)) ),
                                     })
@@ -2482,24 +2482,24 @@ SETTING_11_0_0_5['sbflag1'][1].update({
         'influxdb_sensor':          (HARDWARE.ESP,   '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
                                     })
 SETTING_11_0_0_5['flag5'][1].pop('tuya_exclude_heartbeat',None)
-SETTING_11_0_0_5['flag5'][1].update({
+SETTING_11_0_0_5['flag5'][1].update ({
         'tuya_exclude_from_mqtt':   (HARDWARE.ESP,   '<L', (0xFB4,1,23), (None, None,                           ('SetOption',   '"SO137 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_6 = copy.deepcopy(SETTING_11_0_0_5)
-SETTING_11_0_0_6.update            ({
+SETTING_11_0_0_6.update             ({
     'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_7 = copy.deepcopy(SETTING_11_0_0_6)
-SETTING_11_0_0_7.update            ({
+SETTING_11_0_0_7.update             ({
     'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',          None)) ),
     'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
     'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
     'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 12 {}".format($)')) ),
                                     })
-SETTING_11_0_0_7['flag5'][1].update({
+SETTING_11_0_0_7['flag5'][1].update ({
         'gui_table_align':          (HARDWARE.ESP,   '<L', (0xFB4,1,24), (None, None,                           ('SetOption',   '"SO138 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -2513,18 +2513,18 @@ SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_INFLUXD
 SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
 SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
 SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
-SETTING_11_1_0_1.update            ({
+SETTING_11_1_0_1.update             ({
     'influxdb_rp':                  (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $$)')) ),
     'influxdb_rp':                  (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
-SETTING_11_1_0_1.update            ({
+SETTING_11_1_0_1.update             ({
     'energy_kWhexport_ph':          (HARDWARE.ESP,   '<l',  0xF7C,       ([3], '0 <= $ <= 4294967295',          ('Power',       '"EnergyExportActive{} {}".format(#+1,int(round(float($)//100)))')) ),
     'flowratemeter_calibration':    (HARDWARE.ESP,   '<H',  0xF78,       ([2], None,                            ('Sensor',      '"Sensor96 {} {}".format(#+1,$)'))),
                                     })
-SETTING_11_1_0_1['flag5'][1].update({
+SETTING_11_1_0_1['flag5'][1].update ({
         'mm_vs_inch':               (HARDWARE.ESP,   '<L', (0xFB4,1,25), (None, None,                           ('SetOption',   '"SO139 {}".format($)')) ),
                                     })
 SETTING_11_1_0_1['SensorBits1'][1].update ({
@@ -2532,7 +2532,7 @@ SETTING_11_1_0_1['SensorBits1'][1].update ({
                                     })
 # ======================================================================
 SETTING_11_1_0_2 = copy.deepcopy(SETTING_11_1_0_1)
-SETTING_11_1_0_2.update            ({
+SETTING_11_1_0_2.update             ({
     'webcam_config2':               (HARDWARE.ESP32, {
         'wb_mode':                  (HARDWARE.ESP32, '<L', (0x730,3, 0), (None, '0 <= $ <= 6',                  ('Control',     '"WCWBMode {}".format($)')) ),
         'ae_level':                 (HARDWARE.ESP32, '<L', (0x730,3, 3), (None, '-2 <= $ <= 2',                 ('Control',     '"WCAELevel {}".format($)')), ('$ - 2','$ + 2') ),
@@ -2591,15 +2591,15 @@ SETTING_11_1_0_2['webcam_config_esp32s3'][1].update({
         'feature':                  (HARDWARE.ESP32S3,
                                                      '<L', (0x460,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
                                     })
-SETTING_11_1_0_2['flag5'][1].update({
+SETTING_11_1_0_2['flag5'][1].update ({
         'mqtt_persistent':          (HARDWARE.ESP,   '<L', (0xFB4,1,26), (None, None,                           ('SetOption',   '"SO140 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_1_0_3 = copy.deepcopy(SETTING_11_1_0_2)
-SETTING_11_1_0_3.update              ({
+SETTING_11_1_0_3.update             ({
     'flag6':                        (HARDWARE.ESP,   '<L',  0xF74,       (None, None,                           (INTERNAL,      None)), '"0x{:08x}".format($)' ),
                                     })
-SETTING_11_1_0_3['flag5'][1].update({
+SETTING_11_1_0_3['flag5'][1].update ({
         'gui_module_name':          (HARDWARE.ESP,   '<L', (0xFB4,1,27), (None, None,                           ('SetOption',   '"SO141 {}".format($)')) ),
                                     })
 SETTING_11_1_0_3['webcam_config2'][1].update({
@@ -2610,7 +2610,7 @@ SETTING_11_1_0_4 = copy.deepcopy(SETTING_11_1_0_3)
 SETTING_11_1_0_4['sbflag1'][1].update({
         'serbridge_console':        (HARDWARE.ESP,   '<L', (0xFA0,1,11), (None, '0 <= $ <= 1',                  ('Serial',      '"SSerialSend9 {}".format($)')) ),
                                     })
-SETTING_11_1_0_4['flag5'][1].update({
+SETTING_11_1_0_4['flag5'][1].update ({
         'wait_for_wifi_result':     (HARDWARE.ESP,   '<L', (0xFB4,1,28), (None, None,                           ('SetOption',   '"SO142 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -2629,7 +2629,7 @@ SETTING_12_0_2_4.update             ({
     'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
     'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',        '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
-SETTING_12_0_2_4['flag5'][1].update({
+SETTING_12_0_2_4['flag5'][1].update ({
         'zigbee_no_batt_autoprobe': (HARDWARE.ESP,   '<L', (0xFB4,1,29), (None, None,                           ('SetOption',   '"SO143 {}".format($)')) ),
         'zigbee_include_time':      (HARDWARE.ESP,   '<L', (0xFB4,1,30), (None, None,                           ('SetOption',   '"SO144 {}".format($)')) ),
                                     })
@@ -2638,12 +2638,12 @@ SETTING_12_0_2_4.pop('energy_kWhyesterday',None)
 SETTING_12_0_2_4.pop('energy_kWhtotal',None)
 # ======================================================================
 SETTING_12_1_0_1 = copy.deepcopy(SETTING_12_0_2_4)
-SETTING_12_1_0_1['flag5'][1].update({
+SETTING_12_1_0_1['flag5'][1].update ({
         'mqtt_status_retain':       (HARDWARE.ESP,   '<L', (0xFB4,1,31), (None, None,                           ('MQTT',        '"StatusRetain {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_12_1_1_1 = copy.deepcopy(SETTING_12_1_0_1)
-SETTING_12_1_1_1.update              ({
+SETTING_12_1_1_1.update             ({
     'flag6':                        (HARDWARE.ESP, {
         'use_esp32_temperature':    (HARDWARE.ESP,   '<L', (0xF74,1, 0), (None, None,                           ('SetOption',   '"SO146 {}".format($)')) ),
                                     },                      0xF74,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
@@ -2670,7 +2670,7 @@ SETTING_12_1_1_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_2_0_2 = copy.deepcopy(SETTING_12_1_1_6)
-SETTING_12_2_0_2.update              ({
+SETTING_12_2_0_2.update             ({
     'energy_power_calibration2':    (HARDWARE.ESP,   '<L',  0x370,       (None, None,                           ('Power',       '"PowerSet2 {}".format($)')) ),
     'energy_voltage_calibration2':  (HARDWARE.ESP,   '<L',  0x374,       (None, None,                           ('Power',       '"VoltageSet2 {}".format($)')) ),
     'energy_current_calibration2':  (HARDWARE.ESP,   '<L',  0x378,       (None, None,                           ('Power',       '"CurrentSet2 {}".format($)')) ),
@@ -2684,7 +2684,7 @@ SETTING_12_2_0_4 = copy.deepcopy(SETTING_12_2_0_2)
 SETTING_12_2_0_4.update             ({
     'artnet_universe':              (HARDWARE.ESP,   '<H',  0x734,       (None, None,                           ('Light',       None)) ),
                                     })
-SETTING_12_2_0_4['flag6'][1].update({
+SETTING_12_2_0_4['flag6'][1].update ({
         'artnet_autorun':           (HARDWARE.ESP,   '<L', (0xF74,1, 2), (None, None,                           ('SetOption',   '"SO148 {}".format($)')) ),
                                     })
 # ======================================================================
@@ -2699,12 +2699,12 @@ SETTING_12_2_0_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_3_1_1 = copy.deepcopy(SETTING_12_2_0_6)
-SETTING_12_3_1_1['flag6'][1].update({
+SETTING_12_3_1_1['flag6'][1].update ({
         'dns_ipv6_priority':        (HARDWARE.ESP,   '<L', (0xF74,1, 3), (None, None,                           ('SetOption',   '"SO149 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_12_3_1_5 = copy.deepcopy(SETTING_12_3_1_1)
-SETTING_12_3_1_5['flag6'][1].update({
+SETTING_12_3_1_5['flag6'][1].update ({
         'no_voltage_common':        (HARDWARE.ESP,   '<L', (0xF74,1, 4), (None, None,                           ('SetOption',   '"SO150 {}".format($)')) ),
         'matter_enabled':           (HARDWARE.ESP,   '<L', (0xF74,1, 5), (None, None,                           ('SetOption',   '"SO151 {}".format($)')) ),
                                     })
@@ -2718,17 +2718,23 @@ SETTING_12_4_0_2['teleinfo'][1].update({
                                     })
 # ======================================================================
 SETTING_12_5_0_1 = copy.deepcopy(SETTING_12_4_0_2)
-SETTING_12_5_0_1['flag6'][1].update({
+SETTING_12_5_0_1['flag6'][1].update ({
         'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_12_5_0_3 = copy.deepcopy(SETTING_12_5_0_1)
-SETTING_12_5_0_3['flag6'][1].update({
+SETTING_12_5_0_3['flag6'][1].update ({
         'berry_no_autoexec':        (HARDWARE.ESP,   '<L', (0xF74,1, 7), (None, None,                           ('SetOption',   '"SO153 {}".format($)')) ),
         'berry_light_scheme':       (HARDWARE.ESP,   '<L', (0xF74,1, 8), (None, None,                           ('SetOption',   '"SO154 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_13_0_0_1 = copy.deepcopy(SETTING_12_5_0_3)
+SETTING_13_0_0_1.update             ({
+    'zcdimmerset':                  (HARDWARE.ESP,   '<H',  0xEA6,       ([5],  None,                           ('Light',       '"ZCDimmerSet{} {}".format(#+1,$/100)')) ),
+                                    })
+SETTING_13_0_0_1['flag6'][1].update ({
+        'zcfallingedge':            (HARDWARE.ESP,   '<L', (0xF74,1, 9), (None, None,                           ('SetOption',   '"SO155 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D000001,0x1000, SETTING_13_0_0_1),

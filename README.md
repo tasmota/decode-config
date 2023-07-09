@@ -1139,6 +1139,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 |                | StepPixels                  |                        |             |
 |                | Wakeup                      |                        |             |
 |                | WakeupDuration              |                        |             |
+|                | ZCDimmerSet                 |                        |             |
 | **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
 |                | RfTimeOut                   |                        | `RfHigh`    |
 |                |                             |                        | `RfHost`    |
