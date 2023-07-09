@@ -2734,17 +2734,23 @@ SETTING_12_4_0_2['teleinfo'][1].update({
                                     })
 # ======================================================================
 SETTING_12_5_0_1 = copy.deepcopy(SETTING_12_4_0_2)
-SETTING_12_5_0_1['flag6'][1].update({
+SETTING_12_5_0_1['flag6'][1].update ({
         'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_12_5_0_3 = copy.deepcopy(SETTING_12_5_0_1)
-SETTING_12_5_0_3['flag6'][1].update({
+SETTING_12_5_0_3['flag6'][1].update ({
         'berry_no_autoexec':        (HARDWARE.ESP,   '<L', (0xF74,1, 7), (None, None,                           ('SetOption',   '"SO153 {}".format($)')) ),
         'berry_light_scheme':       (HARDWARE.ESP,   '<L', (0xF74,1, 8), (None, None,                           ('SetOption',   '"SO154 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_13_0_0_1 = copy.deepcopy(SETTING_12_5_0_3)
+SETTING_13_0_0_1.update             ({
+    'zcdimmerset':                  (HARDWARE.ESP,   '<H',  0xEA6,       ([5],  None,                           ('Light',       '"ZCDimmerSet{} {}".format(#+1,$/100)')) ),
+                                    })
+SETTING_13_0_0_1['flag6'][1].update ({
+        'zcfallingedge':            (HARDWARE.ESP,   '<L', (0xF74,1, 9), (None, None,                           ('SetOption',   '"SO155 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D000001,0x1000, SETTING_13_0_0_1),
