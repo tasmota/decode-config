@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.0.0.1',
+    'VERSION': '13.0.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2736,7 +2736,10 @@ SETTING_13_0_0_1['flag6'][1].update ({
         'zcfallingedge':            (HARDWARE.ESP,   '<L', (0xF74,1, 9), (None, None,                           ('SetOption',   '"SO155 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_13_0_0_2 = copy.deepcopy(SETTING_13_0_0_1)
+# ======================================================================
 SETTINGS = [
+            (0x0D000002,0x1000, SETTING_13_0_0_2),
             (0x0D000001,0x1000, SETTING_13_0_0_1),
             (0x0C050003,0x1000, SETTING_12_5_0_3),
             (0x0C050001,0x1000, SETTING_12_5_0_1),
