@@ -2737,6 +2737,9 @@ SETTING_13_0_0_1['flag6'][1].update ({
                                     })
 # ======================================================================
 SETTING_13_0_0_2 = copy.deepcopy(SETTING_13_0_0_1)
+SETTING_13_0_0_2.update             ({
+    'battery_level_percent':        (HARDWARE.ESP,   'B',   0x73A,       (None, '0 <= $ <= 101',                ('Zigbee',      '"BatteryPercentage {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D000002,0x1000, SETTING_13_0_0_2),
