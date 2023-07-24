@@ -1216,8 +1216,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 | **Telegram**   | TmChatId                    | *TmPoll*               |             |
 |                | TmState                     | *TmSend*               |             |
 |                | TmToken                     |                        |             |
-| **Zigbee**     | ZbConfig                    | *ZbBind*               |             |
-|                |                             | *ZbForget*             |             |
+| **Zigbee**     | BatteryPercentage           | *ZbBind*               |             |
+|                | ZbConfig                    | *ZbForget*             |             |
 |                |                             | *ZbLight*              |             |
 |                |                             | *ZbName*               |             |
 |                |                             | *ZbPermitJoin*         |             |
