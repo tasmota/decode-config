@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.1.0.0',
+    'VERSION': '13.1.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2741,10 +2741,10 @@ SETTING_13_0_0_2.update             ({
     'battery_level_percent':        (HARDWARE.ESP,   'B',   0x73A,       (None, '0 <= $ <= 101',                ('Zigbee',      '"BatteryPercentage {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_1_0_0 = copy.deepcopy(SETTING_13_0_0_2)
+SETTING_13_1_0_1 = copy.deepcopy(SETTING_13_0_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x0D010000,0x1000, SETTING_13_1_0_0),
+            (0x0D010001,0x1000, SETTING_13_1_0_1),
             (0x0D000002,0x1000, SETTING_13_0_0_2),
             (0x0D000001,0x1000, SETTING_13_0_0_1),
             (0x0C050003,0x1000, SETTING_12_5_0_3),
