@@ -196,6 +196,7 @@ MAX_BACKLOGLEN = 320
 MQTT_MESSAGE_MAX_SIZE = 700
 MQTT_TIMEOUT = 5000
 MQTT_FILETYPE = 2
+TASM_FILE_SETTINGS = '/.settings'
 
 # decode-config constant
 STR_CODING = 'utf-8'
@@ -4488,12 +4489,14 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     return ExitCode.OK, ""
 
-def decrypt_encrypt(obj):
+def decrypt_encrypt(obj, offset=0):
     """
     Decrpt/Encrypt binary config data
 
     @param obj:
         binary config data
+    @param offset:
+        offset for scramble counter (needed for data containing setting files)
 
     @return:
         decrypted configuration (if obj contains encrypted data)
@@ -4502,7 +4505,7 @@ def decrypt_encrypt(obj):
         obj = bytearray(obj)
     dobj = bytearray(obj[0:2])
     for i in range(2, len(obj)):
-        dobj.append((obj[i] ^ (CONFIG_FILE_XOR +i)) & 0xff)
+        dobj.append((obj[i] ^ (CONFIG_FILE_XOR + i + offset)) & 0xff)
     return dobj
 
 def get_settingcrc(dobj):
@@ -6532,8 +6535,15 @@ if __name__ == "__main__":
               ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
               line=inspect.getlineno(inspect.currentframe()))
 
+    # workaround for Tasmota since v13.1
+    OFFSET = 0
+    # remove possible USE_UFILESYS tar header and trailing setting files
+    if CONFIG['encode'][0:len(TASM_FILE_SETTINGS)].decode("utf-8") == TASM_FILE_SETTINGS:
+        OFFSET = 16
+    CONFIG['encode'] = CONFIG['encode'][OFFSET:4096 + OFFSET]
+
     # decrypt Tasmota config
-    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'])
+    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], OFFSET)
 
     # config dict
     CONFIG['info'] = get_config_info(CONFIG['decode'])
