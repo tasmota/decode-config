@@ -614,26 +614,28 @@ class Hardware:
     """
     # Bit mask for supported hardware
     ESP82       = 0b00000001        # All ESP82xx
-    ESP32ex     = 0b00000010        # ESP32 excluding S3/S2/C3
-    ESP82_32ex  = 0b00000011        # ESP82xx + ESP32 excluding ESP32 S3/S2/C3
+    ESP32ex     = 0b00000010        # ESP32 excluding S2-S3/C2-C6
+    ESP82_32ex  = 0b00000011        # ESP82xx + ESP32 excluding ESP32 S2-S3/C2-C6
     ESP32S3     = 0b00000100        # ESP32S3
     ESP32S2     = 0b00001000        # ESP32S2
     ESP32C3     = 0b00010000        # ESP32C3
-    ESP32       = 0b00011110        # All ESP32
+    ESP32C2     = 0b00100000        # ESP32C2
+    ESP32C6     = 0b01000000        # ESP32C6
+    ESP32       = 0b01111110        # All ESP32
     ESP         = 0b11111111        # All ESP
 
     # Hardware bitmask and description
     config = (
         (ESP82,         "ESP82"),
-        (ESP32ex,       "ESP32 (excl S3/S2/C3)"),
-        (ESP82_32ex,    "ESP82/32 (excl ESP32S3/S2/C3)"),
+        (ESP32ex,       "ESP32 (excl S2-S3/C2-C6)"),
+        (ESP82_32ex,    "ESP82/32 (excl ESP32 S2-S3/C2-C6)"),
         (ESP32S3,       "ESP32S3"),
         (ESP32,         "ESP32"),
         (ESP,           "ESP82/32")
     )
 
     # Tasmota config_version values
-    config_versions = (ESP82, ESP32ex, ESP32S3, ESP32S2, ESP32C3)
+    config_versions = (ESP82, ESP32ex, ESP32S3, ESP32S2, ESP32C3, ESP32C2, ESP32C6)
 
     def get_bitmask(self, config_version):
         """
@@ -2743,6 +2745,26 @@ SETTING_13_0_0_2.update             ({
                                     })
 # ======================================================================
 SETTING_13_1_0_1 = copy.deepcopy(SETTING_13_0_0_2)
+SETTING_13_1_0_1.update             ({
+    'my_gp_esp32c2':                (HARDWARE.ESP32C2,
+                                                     '<H',  0x3AC,       ([21], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32c6':                (HARDWARE.ESP32C6,
+                                                     '<H',  0x3AC,       ([31], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+                                    })
+SETTING_13_1_0_1['user_template_esp32'][1].update({
+        'base_esp32c2':             (HARDWARE.ESP32C2,
+                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c2"],@["user_template_esp32"]["flag_esp32c2"],$)')), ('$+1','$-1') ),
+        'gpio_esp32c2':             (HARDWARE.ESP32C2,
+                                                     '<H',  0x3FC,       ([21], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32c2':             (HARDWARE.ESP32C2,
+                                                     '<H',  0x3FC+(2*21),(None, None,                           ('Management',  None)) ),
+        'base_esp32c6':             (HARDWARE.ESP32C6,
+                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c6"],@["user_template_esp32"]["flag_esp32c6"],$)')), ('$+1','$-1') ),
+        'gpio_esp32c6':             (HARDWARE.ESP32C6,
+                                                     '<H',  0x3FC,       ([31], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32c6':             (HARDWARE.ESP32C6,
+                                                     '<H',  0x3FC+(2*31),(None, None,                           ('Management',  None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D010001,0x1000, SETTING_13_1_0_1),
