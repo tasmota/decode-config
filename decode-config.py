@@ -2758,6 +2758,26 @@ SETTING_13_0_0_2.update             ({
                                     })
 # ======================================================================
 SETTING_13_1_0_1 = copy.deepcopy(SETTING_13_0_0_2)
+SETTING_13_1_0_1.update             ({
+    'my_gp_esp32c2':                (HARDWARE.ESP32C2,
+                                                     '<H',  0x3AC,       ([21], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32c6':                (HARDWARE.ESP32C6,
+                                                     '<H',  0x3AC,       ([31], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+                                    })
+SETTING_13_1_0_1['user_template_esp32'][1].update({
+        'base_esp32c2':             (HARDWARE.ESP32C2,
+                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c2"],@["user_template_esp32"]["flag_esp32c2"],$)')), ('$+1','$-1') ),
+        'gpio_esp32c2':             (HARDWARE.ESP32C2,
+                                                     '<H',  0x3FC,       ([21], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32c2':             (HARDWARE.ESP32C2,
+                                                     '<H',  0x3FC+(2*21),(None, None,                           ('Management',  None)) ),
+        'base_esp32c6':             (HARDWARE.ESP32C6,
+                                                     'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c6"],@["user_template_esp32"]["flag_esp32c6"],$)')), ('$+1','$-1') ),
+        'gpio_esp32c6':             (HARDWARE.ESP32C6,
+                                                     '<H',  0x3FC,       ([31], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'flag_esp32c6':             (HARDWARE.ESP32C6,
+                                                     '<H',  0x3FC+(2*31),(None, None,                           ('Management',  None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D010001,0x1000, SETTING_13_1_0_1),
