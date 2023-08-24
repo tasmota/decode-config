@@ -5705,11 +5705,11 @@ def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedval
 
     return cmnds
 
-def config_has_settings_header(obj):
+def config_has_settings(obj):
     """
-    Check if config contains additonal setting file header
+    Check if config contains additonal setting files
 
-    @param obj: binary
+    @param obj: binarry
         binary config data
 
     @return:
@@ -5719,108 +5719,6 @@ def config_has_settings_header(obj):
         return obj[0:len(TASM_FILE_SETTINGS)].decode(STR_CODING) == TASM_FILE_SETTINGS
     except:     # pylint: disable=bare-except
         return False
-
-
-def config_settings_size(config):
-    """
-    Returns whole settings size (without unscrambled tar header)
-
-    @param config: dict
-
-    @return:
-        settings size
-    """
-    return struct.unpack_from('<H', config['encode'][0:16], 14)[0] - 16
-
-def setting2mapping(obj):
-    """
-    Decodes binary setting files data to mappings dict
-
-    @param obj:
-        binary decoded setting file data
-
-    @return:
-        mapped data as dictionary
-    """
-    files = {}
-    offset = 0
-    while True:
-        try:
-            name_ = struct.unpack_from('14s', obj, offset)[0][:struct.unpack_from('14s', obj, offset)[0].find(0)].decode(STR_CODING)
-            if "" == name_:
-                break
-            length_ = struct.unpack_from('<H', obj[offset:], 14)[0]
-            if 0 == length_:
-                break
-            cfg = obj[offset + 16:offset + 16 + length_]
-            # use base64 encoding
-            files[name_] = base64.b64encode(cfg).decode(STR_CODING)
-            offset += (int((length_ + 16) / 16) * 16) + 16
-        except:     # pylint: disable=bare-except
-            break
-
-    return files
-
-def mapping2setting(obj, new_files, template_size):
-    """
-    Merge setting files data from mapping dict into decoded binary
-
-    @param obj:
-        binary decoded config data
-
-    @param new_files:
-        new setting files dict
-
-    @param template_size:
-        legacy config size
-
-    @return:
-        merged binary decoded config data
-    """
-
-    # extract legacy config data w/o appened files
-    try:
-        new_decode = obj[:template_size]
-    except:     # pylint: disable=bare-except
-        new_decode = bytearray()
-    # extract appened files settings
-    try:
-        new_settings = obj[template_size:]
-    except:     # pylint: disable=bare-except
-        new_settings = bytearray()
-    if len(new_decode) < len(obj) and len(new_files) > 0:
-        # config data has any setting files appended
-        # extract settings files as dict
-        files_ = setting2mapping(new_settings)
-        if ARGS.verbose:
-            for filename in new_files:
-                if filename in files_:
-                    if new_files[filename] != files_[filename]:
-                        log(msg="Setting file '{}' changed".format(filename), type_=LogType.INFO)
-                else:
-                    log(msg="Setting file '{}' added".format(filename), type_=LogType.INFO)
-        files_.update(new_files)
-        new_settings = bytearray()
-        for filename in files_:
-            try:
-                # backward compatibility: try hex string decoding
-                cfg = bytearray(bytes.fromhex(files_[filename]))
-            except:     # pylint: disable=bare-except
-                # try base64 string decoding
-                try:
-                    cfg = bytearray(base64.decodebytes(files_[filename].encode(STR_CODING)))
-                except:     # pylint: disable=bare-except
-                    cfg = bytearray()
-                    log(ExitCode.DATA_SIZE_MISMATCH, "JSON value for the settings file '{}' is invalid (must be base64 or hex)".format(files_[filename]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
-
-            fsize = len(cfg)
-            header = bytearray(filename.encode())
-            header.extend(bytearray(16 - len(filename)))
-            struct.pack_into("<H", header, 14, fsize)
-            cfg.extend(bytearray(((int(fsize / 16) * 16) + 16) - fsize))
-            new_settings += header + cfg
-
-    return new_decode + new_settings
 
 def bin2mapping(config, raw=False):
     """
@@ -6735,7 +6633,7 @@ if __name__ == "__main__":
     # workaround for Tasmota since v13.1
     OFFSET = 0
     # remove possible USE_UFILESYS tar header and trailing setting files
-    if CONFIG['encode'][0:len(TASM_FILE_SETTINGS)].decode("utf-8") == TASM_FILE_SETTINGS:
+    if config_has_settings(CONFIG['encode']):
         OFFSET = 16
     CONFIG['encode'] = CONFIG['encode'][OFFSET:4096 + OFFSET]
 
