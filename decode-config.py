@@ -6737,7 +6737,7 @@ if __name__ == "__main__":
     # workaround for Tasmota since v13.1
     OFFSET = 0
     # remove possible USE_UFILESYS tar header and trailing setting files
-    if CONFIG['encode'][0:len(TASM_FILE_SETTINGS)].decode("utf-8") == TASM_FILE_SETTINGS:
+    if config_has_settings(CONFIG['encode']):
         OFFSET = 16
     CONFIG['encode'] = CONFIG['encode'][OFFSET:4096 + OFFSET]
 
