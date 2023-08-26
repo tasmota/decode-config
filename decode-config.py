@@ -2765,6 +2765,9 @@ SETTING_13_1_0_1['user_template_esp32'][1].update({
         'flag_esp32c6':             (HARDWARE.ESP32C6,
                                                      '<H',  0x3FC+(2*31),(None, None,                           ('Management',  None)) ),
                                     })
+SETTING_13_1_0_1['flag6'][1].update ({
+        'sen5x_passive_mode':       (HARDWARE.ESP,   '<L', (0xF74,1,10), (None, None,                           ('SetOption',   '"SO156 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D010001,0x1000, SETTING_13_1_0_1),
