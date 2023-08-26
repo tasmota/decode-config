@@ -920,314 +920,315 @@ These Tasmota commands are used for immediate action and do not change settings 
 * **Unsupported**  
 These Tasmota commands are unsupported and not implemented in **decode-config**
 
-| Group          | Supported                   | *Ad hoc*               |`Unsupported`|
-|----------------|-----------------------------|------------------------|-------------|
-| **Control**    | BlinkCount                  | *Backlog*              |             |
-|                | BlinkTime                   | *Buzzer*               |             |
-|                | ButtonDebounce              | *FanSpeed*             |             |
-|                | DevGroupName                | *LedPower*             |             |
-|                | DevGroupShare               |                        |             |
-|                | DevGroupTie                 |                        |             |
-|                | Interlock                   |                        |             |
-|                | LedMask                     |                        |             |
-|                | LedPwmMode<x\>              |                        |             |
-|                | LedPwmOn                    |                        |             |
-|                | LedPwmOff                   |                        |             |
-|                | LedState                    |                        |             |
-|                | Power<x\>                   |                        |             |
-|                | PowerOnState                |                        |             |
-|                | PulseTime<x\>               |                        |             |
-|                | SwitchDebounce              |                        |             |
-|                | SwitchMode<x\>              |                        |             |
-|                | Webbutton<x\>               |                        |             |
-|                | WCAEC<sup>2</sup>           |                        |             |
-|                | WCAECDSP<sup>2</sup>        |                        |             |
-|                | WCAECValue<sup>2</sup>      |                        |             |
-|                | WCAELevel<sup>2</sup>       |                        |             |
-|                | WCAGCGain<sup>2</sup>       |                        |             |
-|                | WCAWB<sup>2</sup>           |                        |             |
-|                | WCAWBGain<sup>2</sup>       |                        |             |
-|                | WCBPC<sup>2</sup>           |                        |             |
-|                | WCBrightness<sup>2</sup>    |                        |             |
-|                | WCClock<sup>2</sup>         |                        |             |
-|                | WCColorbar<sup>2</sup>      |                        |             |
-|                | WCContrast<sup>2</sup>      |                        |             |
-|                | WCDCW<sup>2</sup>           |                        |             |
-|                | WCFeature<sup>2</sup>       |                        |             |
-|                | WCFlip<sup>2</sup>          |                        |             |
-|                | WCGainCeiling<sup>2</sup>   |                        |             |
-|                | WCGammaCorrect<sup>2</sup>  |                        |             |
-|                | WCLensCorrect<sup>2</sup>   |                        |             |
-|                | WCMirror<sup>2</sup>        |                        |             |
-|                | WCResolution<sup>2</sup>    |                        |             |
-|                | WCRtsp<sup>2</sup>          |                        |             |
-|                | WCSAuth<sup>2</sup>         |                        |             |
-|                | WCSaturation<sup>2</sup>    |                        |             |
-|                | WCSpecialEffect<sup>2</sup> |                        |             |
-|                | WCStream<sup>2</sup>        |                        |             |
-|                | WCWBMode<sup>2</sup>        |                        |             |
-|                | WCWPC<sup>2</sup>           |                        |             |
-| **Management** | DeepSleepTime               | *Delay*                |             |
-|                | DeviceName                  | *Gpios*                |             |
-|                | Emulation                   | *I2Cscan*              |             |
-|                | FriendlyName<x\>            | *Modules*              |             |
-|                | Gpio<x\>                    | *Reset*                |             |
-|                | I2CDriver<x\>               | *Restart*              |             |
-|                | Ifx                         | *State*                |             |
-|                | IfxBucket                   | *Status*               |             |
-|                | IfxHost                     | *Upgrade*              |             |
-|                | IfxPassword                 | *Upload*               |             |
-|                | IfxPort                     | *SSPMLog<sup>2</sup>*  |             |
-|                | IfxUser                     | *SSPEnergy<sup>2</sup>*|             |
-|                | IfxRP                       | *SSPHistory<sup>2</sup>*|            |
-|                | IfxPeriod                   | *SSPScan<sup>2</sup>*  |             |
-|                | IfxSensor                   | *SSPIamHere<sup>2</sup>*|            |
-|                | L1MusicSync                 |                        |             |
-|                | LogHost                     |                        |             |
-|                | LogPort                     |                        |             |
-|                | Module                      |                        |             |
-|                | Module2                     |                        |             |
-|                | MqttLog                     |                        |             |
-|                | NtpServer<x\>               |                        |             |
-|                | OtaUrl                      |                        |             |
-|                | Pwm<x\>                     |                        |             |
-|                | PwmFrequency                |                        |             |
-|                | PwmRange                    |                        |             |
-|                | RtcNtpserver                |                        |             |
-|                | SaveData                    |                        |             |
-|                | SerialLog                   |                        |             |
-|                | Sleep                       |                        |             |
-|                | SSPMDisplay<sup>2</sup>     |                        |             |
-|                | SysLog                      |                        |             |
-|                | Template                    |                        |             |
-|                | Time                        |                        |             |
-|                | TimeSTD                     |                        |             |
-|                | TimeDST                     |                        |             |
-|                | Timezone                    |                        |             |
-|                | TouchThres<sup>2</sup>      |                        |             |
-|                | TuyaMCU                     |                        |             |
-|                | TuyaTempSetRes              |                        |             |
-|                | WebLog                      |                        |             |
-|                | WebTime                     |                        |             |
-| **WiFi**       | CORS                        | *AP*                   |             |
-|                | DnsTimeout                  | *Ping<x\>*             |             |
-|                | Ethernet<sup>2</sup>        | *WebSend*              |             |
-|                | EthAddress<sup>2</sup>      | *Publish*              |             |
-|                | EthClockMode<sup>2</sup>    | *Publish2*             |             |
-|                | EthType<sup>2</sup>         |                        |             |
-|                | EthIPAddress<sup>2</sup>    |                        |             |
-|                | EthSubnetmask<sup>2</sup>   |                        |             |
-|                | EthGateway<sup>2</sup>      |                        |             |
-|                | EthDNSServer<sup>2</sup>    |                        |             |
-|                | EthDNSServer2<sup>2</sup>   |                        |             |
-|                | Hostname                    |                        |             |
-|                | IPAddress<x\>               |                        |             |
-|                | Password<x\>                |                        |             |
-|                | RgxAddress                  |                        |             |
-|                | RgxNAPT                     |                        |             |
-|                | RgxPassword                 |                        |             |
-|                | RgxSsid                     |                        |             |
-|                | RgxState                    |                        |             |
-|                | RgxSubnet                   |                        |             |
-|                | Ssid<x\>                    |                        |             |
-|                | WebColor<x\>                |                        |             |
-|                | WebPassword                 |                        |             |
-|                | WebRefresh                  |                        |             |
-|                | WebSensor<x\>               |                        |             |
-|                | WebServer                   |                        |             |
-|                | Wifi                        |                        |             |
-|                | WifiConfig                  |                        |             |
-|                | WifiPower                   |                        |             |
-| **MQTT**       | ButtonRetain                | *Subscribe*            |             |
-|                | ButtonTopic                 | *Unsubscribe*          |             |
-|                | FullTopic                   |                        |             |
-|                | GroupTopic<x\>              |                        |             |
-|                | InfoRetain                  |                        |             |
-|                | MqttClient                  |                        |             |
-|                | MqttFingerprint             |                        |             |
-|                | MqttHost                    |                        |             |
-|                | MqttKeepAlive               |                        |             |
-|                | MqttPassword                |                        |             |
-|                | MqttPort                    |                        |             |
-|                | MqttRetry                   |                        |             |
-|                | MqttUser                    |                        |             |
-|                | MqttTimeout                 |                        |             |
-|                | MqttWifiTimeout             |                        |             |
-|                | PowerRetain                 |                        |             |
-|                | Prefix<x\>                  |                        |             |
-|                | SensorRetain                |                        |             |
-|                | StateRetain                 |                        |             |
-|                | StateText<x\>               |                        |             |
-|                | StatusRetain                |                        |             |
-|                | SwitchRetain                |                        |             |
-|                | SwitchTopic                 |                        |             |
-|                | TelePeriod                  |                        |             |
-|                | Topic                       |                        |             |
-| **Rules**      | CalcRes                     | *Add<x\>*              |             |
-|                | Mem<x\>                     | *Event*                |             |
-|                | Rule<x\>                    | *Mult<x\>*             |             |
-|                | Script                      | *RuleTimer<x\>*        |             |
-|                |                             | *Scale<x\>*            |             |
-|                |                             | *Sub<x\>*              |             |
-|                |                             | *Var<x\>*              |             |
-| **Telegram**   | TmState                     |                        |             |
-| **Timer**      | Latitude                    |                        |             |
-|                | Longitude                   |                        |             |
-|                | Timers                      |                        |             |
-|                | Timer<x\>                   |                        |             |
-| **Sensor**     | Altitude                    | *Bh1750MTime<x\>*      | `AdcParam`  |
-|                | AmpRes                      | *GlobalHum*            |             |
-|                | AS3935AutoNF                | *GlobalTemp*           |             |
-|                | AS3935AutoDisturber         | *Sensor27*             |             |
-|                | AS3935AutoNFMax             | *Sensor50*             |             |
-|                | AS3935MQTTEvent             | *Sensor52*             |             |
-|                | AS3935NFTime                | *Sensor53*             |             |
-|                | AS3935NoIrqEvent            | *Sensor60<sup>1</sup>* |             |
-|                | AS3935DistTime              |                        |             |
-|                | AS3935SetMinStage           |                        |             |
-|                | Bh1750Resolution<x\>        |                        |             |
-|                | Counter<x\>                 |                        |             |
-|                | CounterDebounce             |                        |             |
-|                | CounterDebounceLow          |                        |             |
-|                | CounterDebounceHigh         |                        |             |
-|                | CounterType<x\>             |                        |             |
-|                | HumOffset                   |                        |             |
-|                | HumRes                      |                        |             |
-|                | PressRes                    |                        |             |
-|                | OT_Flags                    |                        |             |
-|                | OT_Save_Setpoints           |                        |             |
-|                | OT_TBoiler                  |                        |             |
-|                | OT_TWater                   |                        |             |
-|                | Sensor13                    |                        |             |
-|                | Sensor15                    |                        |             |
-|                | Sensor18                    |                        |             |
-|                | Sensor20                    |                        |             |
-|                | Sensor29                    |                        |             |
-|                | Sensor34                    |                        |             |
-|                | Sensor40                    |                        |             |
-|                | Sensor54                    |                        |             |
-|                | Sensor68                    |                        |             |
-|                | Sensor96                    |                        |             |
-|                | Shift595DeviceCount         |                        |             |
-|                | SpeedUnit                   |                        |             |
-|                | TempRes                     |                        |             |
-|                | TempOffset                  |                        |             |
-|                | VoltRes                     |                        |             |
-|                | WattRes                     |                        |             |
-|                | WeightRes                   |                        |             |
-|                | Wiper<x\>                   |                        |             |
-| **Power**      | AmpRes                      | *CurrentSet*           |             |
-|                | CurrentCal                  | *FrequencySet*         |             |
-|                | CurrentHigh                 | *ModuleAddress*        |             |
-|                | CurrentLow                  | *PowerSet*             |             |
-|                | EnergyRes                   | *Status8*              |             |
-|                | EnergyToday                 | *Status9*              |             |
-|                | EnergyTotal                 | *VoltageSet*           |             |
-|                | EnergyYesterday             |                        |             |
-|                | FreqRes                     |                        |             |
-|                | MaxPower                    |                        |             |
-|                | MaxPowerHold                |                        |             |
-|                | MaxPowerWindow              |                        |             |
-|                | PowerCal                    |                        |             |
-|                | PowerDelta                  |                        |             |
-|                | PowerHigh                   |                        |             |
-|                | PowerLow                    |                        |             |
-|                | Tariff<x\>                  |                        |             |
-|                | VoltageCal                  |                        |             |
-|                | VoltageHigh                 |                        |             |
-|                | VoltageLow                  |                        |             |
-|                | VoltRes                     |                        |             |
-|                | WattRes                     |                        |             |
-| **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
-|                | DimmerStep                  | *CT*                   | `Dimmer`    |
-|                | Fade                        | *CTRange*              |             |
-|                | LedTable                    | *HsbColor*             |             |
-|                | Pixels                      | *Led<x\>*              |             |
-|                | PWMDimmerPWMs               | *Palette*              |             |
-|                | RGBWWTable                  | *White*                |             |
-|                | Rotation                    | *VirtualCT*            |             |
-|                | Scheme                      |                        |             |
-|                | ShdLeadingEdge              |                        |             |
-|                | ShdWarmupBrightness         |                        |             |
-|                | ShdWarmupTime               |                        |             |
-|                | Speed                       |                        |             |
-|                | StepPixels                  |                        |             |
-|                | Wakeup                      |                        |             |
-|                | WakeupDuration              |                        |             |
-|                | ZCDimmerSet                 |                        |             |
-| **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
-|                | RfTimeOut                   |                        | `RfHigh`    |
-|                |                             |                        | `RfHost`    |
-|                |                             |                        | `RfKey<x>`  |
-|                |                             |                        | `RfLow`     |
-|                |                             |                        | `RfSync`    |
-| **IR**         |                             | *IRsend<x\>*           |             |
-|                |                             | *IRhvac*               |             |
-| **SetOption**  | SetOption<x\>               |                        |             |
-| **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
-|                | ModbusBaudrate              | *SSerialSend<x\>*      |             |
-|                | ModbusSerialConfig          | *TCPStart*             |             |
-|                | SBaudrate                   | *TuyaSend<x\>*         |             |
-|                | SerialConfig                |                        |             |
-|                | SerialDelimiter             |                        |             |
-|                | SSerialConfig               |                        |             |
-|                | SSerialSend9                |                        |             |
-|                | TCPBaudrate                 |                        |             |
-|                | TCPConfig                   |                        |             |
-| **Domoticz**   | DomoticzIdx<x\>             |                        |             |
-|                | DomoticzKeyIdx<x\>          |                        |             |
-|                | DomoticzSensorIdx<x\>       |                        |             |
-|                | DomoticzSwitchIdx<x\>       |                        |             |
-|                | DomoticzUpdateTimer         |                        |             |
-| **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x\>*       | `KNX_PA`    |
-|                | KNX_ENHANCED                | *KnxTx_Val<x\>*        | `KNX_GA<x>` |
-|                |                             |                        | `KNX_CB<x>` |
-| **Display**    | DisplayAddress              | *Display*              |             |
-|                | DisplayDimmer               | *DisplayText*          |             |
-|                | DisplayILIMode              |                        |             |
-|                | DisplayInvert               |                        |             |
-|                | DisplayMode                 |                        |             |
-|                | DisplayModel                |                        |             |
-|                | DisplayRefresh              |                        |             |
-|                | DisplaySize                 |                        |             |
-|                | DisplayType                 |                        |             |
-|                | DisplayRotate               |                        |             |
-|                | DisplayCols                 |                        |             |
-|                | DisplayRows                 |                        |             |
-|                | DisplayFont                 |                        |             |
-|                | DisplayWidth                |                        |             |
-|                | DisplayHeight               |                        |             |
-| **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     |             |
-|                | ShutterCalibration<x\>      | *ShutterFrequency<x\>* |             |
-|                | ShutterCloseDuration<x\>    | *ShutterOpen<x\>*      |             |
-|                | ShutterEnableEndStopTime<x\>| *ShutterSetClose<x\>*  |             |
-|                | ShutterInvert<x\>           | *ShutterStop<x\>*      |             |
-|                | ShutterInvertWebButtons<x\> | *ShutterStopClose<x\>* |             |
-|                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
-|                | ShutterMode<x\>             | *ShutterStopPosition<x\>*|           |
-|                | ShutterMotorDelay<x\>       | *ShutterStopToggle<x\>*|             |
-|                | ShutterMotorStop            | *ShutterStopToggleDir<x\>*|          |
-|                | ShutterOpenDuration<x\>     | *ShutterToggle<x\>*    |             |
-|                | ShutterPosition<x\>         | *ShutterToggleDir<x\>* |             |
-|                | ShutterPWMRange<x\>         |                        |             |
-|                | ShutterRelay<x\>            |                        |             |
-|                | ShutterSetHalfway<x\>       |                        |             |
-|                | ShutterTiltConfig<x\>       |                        |             |
-| **Telegram**   | TmChatId                    | *TmPoll*               |             |
-|                | TmState                     | *TmSend*               |             |
-|                | TmToken                     |                        |             |
-| **Zigbee**     | BatteryPercentage           | *ZbBind*               |             |
-|                | ZbConfig                    | *ZbForget*             |             |
-|                |                             | *ZbLight*              |             |
-|                |                             | *ZbName*               |             |
-|                |                             | *ZbPermitJoin*         |             |
-|                |                             | *ZbPing*               |             |
-|                |                             | *ZbSend*               |             |
-|                |                             | *ZbStatus<x\>*         |             |
-|                |                             | *ZbUnbind*             |             |
-| **Bluetooth**  |                             | *- all -*              |             |
-| **Stepper Motors** |                         | *- all -*              |             |
-| **MP3 Player** |                             | *- all -*              |             |
+<details>
+  | Group          | Supported                   | *Ad hoc*               |`Unsupported`|
+  |----------------|-----------------------------|------------------------|-------------|
+  | **Control**    | BlinkCount                  | *Backlog*              |             |
+  |                | BlinkTime                   | *Buzzer*               |             |
+  |                | ButtonDebounce              | *FanSpeed*             |             |
+  |                | DevGroupName                | *LedPower*             |             |
+  |                | DevGroupShare               |                        |             |
+  |                | DevGroupTie                 |                        |             |
+  |                | Interlock                   |                        |             |
+  |                | LedMask                     |                        |             |
+  |                | LedPwmMode<x\>              |                        |             |
+  |                | LedPwmOn                    |                        |             |
+  |                | LedPwmOff                   |                        |             |
+  |                | LedState                    |                        |             |
+  |                | Power<x\>                   |                        |             |
+  |                | PowerOnState                |                        |             |
+  |                | PulseTime<x\>               |                        |             |
+  |                | SwitchDebounce              |                        |             |
+  |                | SwitchMode<x\>              |                        |             |
+  |                | Webbutton<x\>               |                        |             |
+  |                | WCAEC<sup>2</sup>           |                        |             |
+  |                | WCAECDSP<sup>2</sup>        |                        |             |
+  |                | WCAECValue<sup>2</sup>      |                        |             |
+  |                | WCAELevel<sup>2</sup>       |                        |             |
+  |                | WCAGCGain<sup>2</sup>       |                        |             |
+  |                | WCAWB<sup>2</sup>           |                        |             |
+  |                | WCAWBGain<sup>2</sup>       |                        |             |
+  |                | WCBPC<sup>2</sup>           |                        |             |
+  |                | WCBrightness<sup>2</sup>    |                        |             |
+  |                | WCClock<sup>2</sup>         |                        |             |
+  |                | WCColorbar<sup>2</sup>      |                        |             |
+  |                | WCContrast<sup>2</sup>      |                        |             |
+  |                | WCDCW<sup>2</sup>           |                        |             |
+  |                | WCFeature<sup>2</sup>       |                        |             |
+  |                | WCFlip<sup>2</sup>          |                        |             |
+  |                | WCGainCeiling<sup>2</sup>   |                        |             |
+  |                | WCGammaCorrect<sup>2</sup>  |                        |             |
+  |                | WCLensCorrect<sup>2</sup>   |                        |             |
+  |                | WCMirror<sup>2</sup>        |                        |             |
+  |                | WCResolution<sup>2</sup>    |                        |             |
+  |                | WCRtsp<sup>2</sup>          |                        |             |
+  |                | WCSAuth<sup>2</sup>         |                        |             |
+  |                | WCSaturation<sup>2</sup>    |                        |             |
+  |                | WCSpecialEffect<sup>2</sup> |                        |             |
+  |                | WCStream<sup>2</sup>        |                        |             |
+  |                | WCWBMode<sup>2</sup>        |                        |             |
+  |                | WCWPC<sup>2</sup>           |                        |             |
+  | **Management** | DeepSleepTime               | *Delay*                |             |
+  |                | DeviceName                  | *Gpios*                |             |
+  |                | Emulation                   | *I2Cscan*              |             |
+  |                | FriendlyName<x\>            | *Modules*              |             |
+  |                | Gpio<x\>                    | *Reset*                |             |
+  |                | I2CDriver<x\>               | *Restart*              |             |
+  |                | Ifx                         | *State*                |             |
+  |                | IfxBucket                   | *Status*               |             |
+  |                | IfxHost                     | *Upgrade*              |             |
+  |                | IfxPassword                 | *Upload*               |             |
+  |                | IfxPort                     | *SSPMLog<sup>2</sup>*  |             |
+  |                | IfxUser                     | *SSPEnergy<sup>2</sup>*|             |
+  |                | IfxRP                       | *SSPHistory<sup>2</sup>*|            |
+  |                | IfxPeriod                   | *SSPScan<sup>2</sup>*  |             |
+  |                | IfxSensor                   | *SSPIamHere<sup>2</sup>*|            |
+  |                | L1MusicSync                 |                        |             |
+  |                | LogHost                     |                        |             |
+  |                | LogPort                     |                        |             |
+  |                | Module                      |                        |             |
+  |                | Module2                     |                        |             |
+  |                | MqttLog                     |                        |             |
+  |                | NtpServer<x\>               |                        |             |
+  |                | OtaUrl                      |                        |             |
+  |                | Pwm<x\>                     |                        |             |
+  |                | PwmFrequency                |                        |             |
+  |                | PwmRange                    |                        |             |
+  |                | RtcNtpserver                |                        |             |
+  |                | SaveData                    |                        |             |
+  |                | SerialLog                   |                        |             |
+  |                | Sleep                       |                        |             |
+  |                | SSPMDisplay<sup>2</sup>     |                        |             |
+  |                | SysLog                      |                        |             |
+  |                | Template                    |                        |             |
+  |                | Time                        |                        |             |
+  |                | TimeSTD                     |                        |             |
+  |                | TimeDST                     |                        |             |
+  |                | Timezone                    |                        |             |
+  |                | TouchThres<sup>2</sup>      |                        |             |
+  |                | TuyaMCU                     |                        |             |
+  |                | TuyaTempSetRes              |                        |             |
+  |                | WebLog                      |                        |             |
+  |                | WebTime                     |                        |             |
+  | **WiFi**       | CORS                        | *AP*                   |             |
+  |                | DnsTimeout                  | *Ping<x\>*             |             |
+  |                | Ethernet<sup>2</sup>        | *WebSend*              |             |
+  |                | EthAddress<sup>2</sup>      | *Publish*              |             |
+  |                | EthClockMode<sup>2</sup>    | *Publish2*             |             |
+  |                | EthType<sup>2</sup>         |                        |             |
+  |                | EthIPAddress<sup>2</sup>    |                        |             |
+  |                | EthSubnetmask<sup>2</sup>   |                        |             |
+  |                | EthGateway<sup>2</sup>      |                        |             |
+  |                | EthDNSServer<sup>2</sup>    |                        |             |
+  |                | EthDNSServer2<sup>2</sup>   |                        |             |
+  |                | Hostname                    |                        |             |
+  |                | IPAddress<x\>               |                        |             |
+  |                | Password<x\>                |                        |             |
+  |                | RgxAddress                  |                        |             |
+  |                | RgxNAPT                     |                        |             |
+  |                | RgxPassword                 |                        |             |
+  |                | RgxSsid                     |                        |             |
+  |                | RgxState                    |                        |             |
+  |                | RgxSubnet                   |                        |             |
+  |                | Ssid<x\>                    |                        |             |
+  |                | WebColor<x\>                |                        |             |
+  |                | WebPassword                 |                        |             |
+  |                | WebRefresh                  |                        |             |
+  |                | WebSensor<x\>               |                        |             |
+  |                | WebServer                   |                        |             |
+  |                | Wifi                        |                        |             |
+  |                | WifiConfig                  |                        |             |
+  |                | WifiPower                   |                        |             |
+  | **MQTT**       | ButtonRetain                | *Subscribe*            |             |
+  |                | ButtonTopic                 | *Unsubscribe*          |             |
+  |                | FullTopic                   |                        |             |
+  |                | GroupTopic<x\>              |                        |             |
+  |                | InfoRetain                  |                        |             |
+  |                | MqttClient                  |                        |             |
+  |                | MqttFingerprint             |                        |             |
+  |                | MqttHost                    |                        |             |
+  |                | MqttKeepAlive               |                        |             |
+  |                | MqttPassword                |                        |             |
+  |                | MqttPort                    |                        |             |
+  |                | MqttRetry                   |                        |             |
+  |                | MqttUser                    |                        |             |
+  |                | MqttTimeout                 |                        |             |
+  |                | MqttWifiTimeout             |                        |             |
+  |                | PowerRetain                 |                        |             |
+  |                | Prefix<x\>                  |                        |             |
+  |                | SensorRetain                |                        |             |
+  |                | StateRetain                 |                        |             |
+  |                | StateText<x\>               |                        |             |
+  |                | StatusRetain                |                        |             |
+  |                | SwitchRetain                |                        |             |
+  |                | SwitchTopic                 |                        |             |
+  |                | TelePeriod                  |                        |             |
+  |                | Topic                       |                        |             |
+  | **Rules**      | CalcRes                     | *Add<x\>*              |             |
+  |                | Mem<x\>                     | *Event*                |             |
+  |                | Rule<x\>                    | *Mult<x\>*             |             |
+  |                | Script                      | *RuleTimer<x\>*        |             |
+  |                |                             | *Scale<x\>*            |             |
+  |                |                             | *Sub<x\>*              |             |
+  |                |                             | *Var<x\>*              |             |
+  | **Telegram**   | TmState                     |                        |             |
+  | **Timer**      | Latitude                    |                        |             |
+  |                | Longitude                   |                        |             |
+  |                | Timers                      |                        |             |
+  |                | Timer<x\>                   |                        |             |
+  | **Sensor**     | Altitude                    | *Bh1750MTime<x\>*      | `AdcParam`  |
+  |                | AmpRes                      | *GlobalHum*            |             |
+  |                | AS3935AutoNF                | *GlobalTemp*           |             |
+  |                | AS3935AutoDisturber         | *Sensor27*             |             |
+  |                | AS3935AutoNFMax             | *Sensor50*             |             |
+  |                | AS3935MQTTEvent             | *Sensor52*             |             |
+  |                | AS3935NFTime                | *Sensor53*             |             |
+  |                | AS3935NoIrqEvent            | *Sensor60<sup>1</sup>* |             |
+  |                | AS3935DistTime              |                        |             |
+  |                | AS3935SetMinStage           |                        |             |
+  |                | Bh1750Resolution<x\>        |                        |             |
+  |                | Counter<x\>                 |                        |             |
+  |                | CounterDebounce             |                        |             |
+  |                | CounterDebounceLow          |                        |             |
+  |                | CounterDebounceHigh         |                        |             |
+  |                | CounterType<x\>             |                        |             |
+  |                | HumOffset                   |                        |             |
+  |                | HumRes                      |                        |             |
+  |                | PressRes                    |                        |             |
+  |                | OT_Flags                    |                        |             |
+  |                | OT_Save_Setpoints           |                        |             |
+  |                | OT_TBoiler                  |                        |             |
+  |                | OT_TWater                   |                        |             |
+  |                | Sensor13                    |                        |             |
+  |                | Sensor15                    |                        |             |
+  |                | Sensor18                    |                        |             |
+  |                | Sensor20                    |                        |             |
+  |                | Sensor29                    |                        |             |
+  |                | Sensor34                    |                        |             |
+  |                | Sensor40                    |                        |             |
+  |                | Sensor54                    |                        |             |
+  |                | Sensor68                    |                        |             |
+  |                | Sensor96                    |                        |             |
+  |                | Shift595DeviceCount         |                        |             |
+  |                | SpeedUnit                   |                        |             |
+  |                | TempRes                     |                        |             |
+  |                | TempOffset                  |                        |             |
+  |                | VoltRes                     |                        |             |
+  |                | WattRes                     |                        |             |
+  |                | WeightRes                   |                        |             |
+  |                | Wiper<x\>                   |                        |             |
+  | **Power**      | AmpRes                      | *CurrentSet*           |             |
+  |                | CurrentCal                  | *FrequencySet*         |             |
+  |                | CurrentHigh                 | *ModuleAddress*        |             |
+  |                | CurrentLow                  | *PowerSet*             |             |
+  |                | EnergyRes                   | *Status8*              |             |
+  |                | EnergyToday                 | *Status9*              |             |
+  |                | EnergyTotal                 | *VoltageSet*           |             |
+  |                | EnergyYesterday             |                        |             |
+  |                | FreqRes                     |                        |             |
+  |                | MaxPower                    |                        |             |
+  |                | MaxPowerHold                |                        |             |
+  |                | MaxPowerWindow              |                        |             |
+  |                | PowerCal                    |                        |             |
+  |                | PowerDelta                  |                        |             |
+  |                | PowerHigh                   |                        |             |
+  |                | PowerLow                    |                        |             |
+  |                | Tariff<x\>                  |                        |             |
+  |                | VoltageCal                  |                        |             |
+  |                | VoltageHigh                 |                        |             |
+  |                | VoltageLow                  |                        |             |
+  |                | VoltRes                     |                        |             |
+  |                | WattRes                     |                        |             |
+  | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
+  |                | DimmerStep                  | *CT*                   | `Dimmer`    |
+  |                | Fade                        | *CTRange*              |             |
+  |                | LedTable                    | *HsbColor*             |             |
+  |                | Pixels                      | *Led<x\>*              |             |
+  |                | PWMDimmerPWMs               | *Palette*              |             |
+  |                | RGBWWTable                  | *White*                |             |
+  |                | Rotation                    | *VirtualCT*            |             |
+  |                | Scheme                      |                        |             |
+  |                | ShdLeadingEdge              |                        |             |
+  |                | ShdWarmupBrightness         |                        |             |
+  |                | ShdWarmupTime               |                        |             |
+  |                | Speed                       |                        |             |
+  |                | StepPixels                  |                        |             |
+  |                | Wakeup                      |                        |             |
+  |                | WakeupDuration              |                        |             |
+  |                | ZCDimmerSet                 |                        |             |
+  | **RF**         | RfProtocol                  | *RfRaw*                | `RfCode`    |
+  |                | RfTimeOut                   |                        | `RfHigh`    |
+  |                |                             |                        | `RfHost`    |
+  |                |                             |                        | `RfKey<x>`  |
+  |                |                             |                        | `RfLow`     |
+  |                |                             |                        | `RfSync`    |
+  | **IR**         |                             | *IRsend<x\>*           |             |
+  |                |                             | *IRhvac*               |             |
+  | **SetOption**  | SetOption<x\>               |                        |             |
+  | **Serial**     | Baudrate                    | *SerialSend<x\>*       |             |
+  |                | ModbusBaudrate              | *SSerialSend<x\>*      |             |
+  |                | ModbusSerialConfig          | *TCPStart*             |             |
+  |                | SBaudrate                   | *TuyaSend<x\>*         |             |
+  |                | SerialConfig                |                        |             |
+  |                | SerialDelimiter             |                        |             |
+  |                | SSerialConfig               |                        |             |
+  |                | SSerialSend9                |                        |             |
+  |                | TCPBaudrate                 |                        |             |
+  |                | TCPConfig                   |                        |             |
+  | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
+  |                | DomoticzKeyIdx<x\>          |                        |             |
+  |                | DomoticzSensorIdx<x\>       |                        |             |
+  |                | DomoticzSwitchIdx<x\>       |                        |             |
+  |                | DomoticzUpdateTimer         |                        |             |
+  | **KNX**        | KNX_ENABLED                 | *KnxTx_Cmnd<x\>*       | `KNX_PA`    |
+  |                | KNX_ENHANCED                | *KnxTx_Val<x\>*        | `KNX_GA<x>` |
+  |                |                             |                        | `KNX_CB<x>` |
+  | **Display**    | DisplayAddress              | *Display*              |             |
+  |                | DisplayDimmer               | *DisplayText*          |             |
+  |                | DisplayILIMode              |                        |             |
+  |                | DisplayInvert               |                        |             |
+  |                | DisplayMode                 |                        |             |
+  |                | DisplayModel                |                        |             |
+  |                | DisplayRefresh              |                        |             |
+  |                | DisplaySize                 |                        |             |
+  |                | DisplayType                 |                        |             |
+  |                | DisplayRotate               |                        |             |
+  |                | DisplayCols                 |                        |             |
+  |                | DisplayRows                 |                        |             |
+  |                | DisplayFont                 |                        |             |
+  |                | DisplayWidth                |                        |             |
+  |                | DisplayHeight               |                        |             |
+  | **Shutter**    | ShutterButton<x\>           | *ShutterClose<x\>*     |             |
+  |                | ShutterCalibration<x\>      | *ShutterFrequency<x\>* |             |
+  |                | ShutterCloseDuration<x\>    | *ShutterOpen<x\>*      |             |
+  |                | ShutterEnableEndStopTime<x\>| *ShutterSetClose<x\>*  |             |
+  |                | ShutterInvert<x\>           | *ShutterStop<x\>*      |             |
+  |                | ShutterInvertWebButtons<x\> | *ShutterStopClose<x\>* |             |
+  |                | ShutterLock<x\>             | *ShutterStopOpen<x\>*  |             |
+  |                | ShutterMode<x\>             | *ShutterStopPosition<x\>*|           |
+  |                | ShutterMotorDelay<x\>       | *ShutterStopToggle<x\>*|             |
+  |                | ShutterMotorStop            | *ShutterStopToggleDir<x\>*|          |
+  |                | ShutterOpenDuration<x\>     | *ShutterToggle<x\>*    |             |
+  |                | ShutterPosition<x\>         | *ShutterToggleDir<x\>* |             |
+  |                | ShutterPWMRange<x\>         |                        |             |
+  |                | ShutterRelay<x\>            |                        |             |
+  |                | ShutterSetHalfway<x\>       |                        |             |
+  |                | ShutterTiltConfig<x\>       |                        |             |
+  | **Telegram**   | TmChatId                    | *TmPoll*               |             |
+  |                | TmState                     | *TmSend*               |             |
+  |                | TmToken                     |                        |             |
+  | **Zigbee**     | BatteryPercentage           | *ZbBind*               |             |
+  |                | ZbConfig                    | *ZbForget*             |             |
+  |                |                             | *ZbLight*              |             |
+  |                |                             | *ZbName*               |             |
+  |                |                             | *ZbPermitJoin*         |             |
+  |                |                             | *ZbPing*               |             |
+  |                |                             | *ZbSend*               |             |
+  |                |                             | *ZbStatus<x\>*         |             |
+  |                |                             | *ZbUnbind*             |             |
+  | **Bluetooth**  |                             | *- all -*              |             |
+  | **Stepper Motors** |                         | *- all -*              |             |
+  | **MP3 Player** |                             | *- all -*              |             |
 
   > **Notes**  
   <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
