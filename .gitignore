@@ -1,6 +1,7 @@
 # local conf files
 *.conf
 *.dmp
+*.bin
 *.json
 /build-executables/build/
 /build-executables/dist/
