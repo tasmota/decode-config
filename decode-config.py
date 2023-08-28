@@ -264,8 +264,21 @@ DEFAULTS = {
 
 PARSER = None
 ARGS = {}
-CONFIG = {}
 EXIT_CODE = 0
+
+# CONFIG map
+# 'encode'          binary - raw (XOR encoded) configuration data incl. possible file tar header and files
+# 'decode'          binary - encoded configuration data (without tar header/files)
+# 'header'          binary - raw config file tar file header if any, otherwise None
+# 'settings'        map    - appended setting files: filename and binary filedata
+# 'info'            map    - info about device and used configuration data template
+#   'hardware'          int - ESP hardware type (see class Hardware.ESPxx const)
+#   'version'           int - Tasmota version
+#   'template_version'  int - Template version used for this Tasmota version
+#   'template_size'     int - configuration data size used for this Tasmota version
+# 'valuemapping'     map - full configuration data (with raw values)
+# 'groupmapping'     map - grouped configuration data (filtered by possible functions)
+CONFIG = {}
 
 # ======================================================================
 # Settings mapping
@@ -1730,7 +1743,7 @@ SETTING_8_2_0_3['SensorBits1'][1].update({
 # ======================================================================
 SETTING_8_2_0_4 = copy.deepcopy(SETTING_8_2_0_3)
 SETTING_8_2_0_4.update              ({
-    'config_version':               (HARDWARE.ESP,   'B',   0xF36,       (None, '0 <= $ < len(HARDWARE.STR)',   (INTERNAL,      None)), (None,      False) ),
+    'config_version':               (HARDWARE.ESP,   'B',   0xF36,       (None, '0 <= $ < len(HARDWARE.config_versions)',   (INTERNAL,      None)), (None,      False) ),
                                     })
 SETTING_8_2_0_4.update              ({
     'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([18], None,                           ('SetOption',   '"SO{} {}".format(#+32,$)')) ),
@@ -3579,7 +3592,7 @@ def get_config_info(decode_cfg):
             if fielddef is not None:
                 config_version = get_field(decode_cfg, HARDWARE.ESP, 'config_version', fielddef, raw=True, ignoregroup=True)
                 if config_version >= len(HARDWARE.config_versions):
-                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.STR)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.config_versions)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                     config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
             break
     # search setting definition for hardware top-down
@@ -3668,18 +3681,25 @@ def get_filetype(filename):
 
                 header_format = '<L'
                 sizes = get_templatesizes()
-                # size is one of a dmp file size
-                if size in sizes:
-                    filetype = FileType.DMP
-                elif size - struct.calcsize(header_format) in sizes:
-                    # check if the binary file has the magic header
-                    with open(filename, "rb") as inputfile:
-                        inputbin = inputfile.read()
-                    if BINARYFILE_MAGIC in (struct.unpack_from(header_format, inputbin, 0)[0],
-                                            struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0]):
+                with open(filename, "rb") as inputfile:
+                    inputbin = inputfile.read()
+                if config_has_settings_header(inputbin):
+                    if BINARYFILE_MAGIC in (struct.unpack(header_format, inputbin[-struct.calcsize(header_format):])[0],
+                                            struct.unpack_from(header_format, inputbin, 0)[0]):
                         filetype = FileType.BIN
                     else:
-                        filetype = FileType.INVALID_BIN
+                        filetype = FileType.DMP
+                else:
+                    # size is one of a dmp file size
+                    if size in sizes:
+                        filetype = FileType.DMP
+                    elif size - struct.calcsize(header_format) in sizes:
+                        # check if the binary file has the magic header
+                        if BINARYFILE_MAGIC in (struct.unpack_from(header_format, inputbin, 0)[0],
+                                                struct.unpack_from(header_format, inputbin, len(inputbin)-struct.calcsize(header_format))[0]):
+                            filetype = FileType.BIN
+                        else:
+                            filetype = FileType.INVALID_BIN
 
     except:     # pylint: disable=bare-except
         filetype = FileType.FILE_NOT_FOUND
@@ -4154,7 +4174,7 @@ def pull_mqtt(use_base64=True):
         rcv_id = 0
 
         try:
-            root = json.loads(msg.payload.decode("utf-8"))
+            root = json.loads(msg.payload.decode(STR_CODING))
             if root:
                 if "FileDownload" in root:
                     rcv_code = root["FileDownload"]
@@ -4208,7 +4228,7 @@ def pull_mqtt(use_base64=True):
 
         if file_md5 == "" and file_name:
             if use_base64 and base64_data:
-                base64_decoded_data = base64_data.encode('utf-8')
+                base64_decoded_data = base64_data.encode(STR_CODING)
                 chunk = base64.decodebytes(base64_decoded_data)
                 in_hash_md5.update(chunk)    # Update hash
                 dobj += chunk
@@ -4364,7 +4384,7 @@ def push_mqtt(encode_cfg, use_base64=True):
         rcv_id = 0
 
         try:
-            root = json.loads(msg.payload.decode("utf-8"))
+            root = json.loads(msg.payload.decode(STR_CODING))
             if root:
                 if "FileUpload" in root:
                     rcv_code = root["FileUpload"]
@@ -4492,7 +4512,7 @@ def push_mqtt(encode_cfg, use_base64=True):
             out_hash_md5.update(chunk)       # Update hash
             if use_base64:
                 base64_encoded_data = base64.b64encode(chunk)
-                base64_data = base64_encoded_data.decode('utf-8')
+                base64_data = base64_encoded_data.decode(STR_CODING)
                 client.publish(topic_publish, json.dumps({"Id":file_id,"Data":base64_data}))
             else:
                 client.publish(topic_publish+"201", chunk)
@@ -4514,14 +4534,14 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     return ExitCode.OK, ""
 
-def decrypt_encrypt(obj, offset=0):
+def decrypt_encrypt(obj, has_header=False):
     """
     Decrpt/Encrypt binary config data
 
     @param obj:
         binary config data
-    @param offset:
-        offset for scramble counter (needed for data containing setting files)
+    @param has_header:
+        True if config data contains a tar header
 
     @return:
         decrypted configuration (if obj contains encrypted data)
@@ -4529,6 +4549,7 @@ def decrypt_encrypt(obj, offset=0):
     if isinstance(obj, str):
         obj = bytearray(obj)
     dobj = bytearray(obj[0:2])
+    offset = 16 if has_header else 0
     for i in range(2, len(obj)):
         dobj.append((obj[i] ^ (CONFIG_FILE_XOR + i + offset)) & 0xff)
     return dobj
@@ -5684,11 +5705,11 @@ def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedval
 
     return cmnds
 
-def config_has_settings(obj):
+def config_has_settings_header(obj):
     """
-    Check if config contains additonal setting files
+    Check if config contains additonal setting file header
 
-    @param obj: binarry
+    @param obj: binary
         binary config data
 
     @return:
@@ -5698,6 +5719,98 @@ def config_has_settings(obj):
         return obj[0:len(TASM_FILE_SETTINGS)].decode(STR_CODING) == TASM_FILE_SETTINGS
     except:     # pylint: disable=bare-except
         return False
+
+
+def config_settings_size(config):
+    """
+    Returns whole settings size (without unscrambled tar header)
+
+    @param config: dict
+
+    @return:
+        true if config contains appended setting files
+    """
+    return struct.unpack_from('<H', config['encode'][0:16], 14)[0] - 16
+
+def setting2mapping(obj):
+    """
+    Decodes binary setting files data to mappings dict
+
+    @param obj:
+        binary decoded setting file data
+
+    @return:
+        mapped data as dictionary
+    """
+    files = {}
+    offset = 0
+    while True:
+        try:
+            name_ = struct.unpack_from('14s', obj, offset)[0][:struct.unpack_from('14s', obj, offset)[0].find(0)].decode(STR_CODING)
+            if "" == name_:
+                break
+            length_ = struct.unpack_from('<H', obj[offset:], 14)[0]
+            if 0 == length_:
+                break
+            cfg = obj[offset + 16:offset + 16 + length_]
+            files[name_] = ''.join(format(x, '02x') for x in cfg)
+            offset += (int((length_ + 16) / 16) * 16) + 16
+        except:     # pylint: disable=bare-except
+            break
+
+    return files
+
+def mapping2setting(obj, new_files, template_size):
+    """
+    Merge setting files data from mapping dict into decoded binary
+
+    @param obj:
+        binary decoded config data
+
+    @param new_files:
+        new setting files dict
+
+    @param template_size:
+        legacy config size
+
+    @return:
+        merged binary decoded config data
+    """
+
+    # extract legacy config data w/o appened files
+    try:
+        new_decode = obj[:template_size]
+    except:     # pylint: disable=bare-except
+        new_decode = bytearray()
+    # extract appened files settings
+    try:
+        new_settings = obj[template_size:]
+    except:     # pylint: disable=bare-except
+        new_settings = bytearray()
+    if len(new_decode) < len(obj) and len(new_files) > 0:
+        # config data has any setting files appended
+        # extract settings files as dict
+        files_ = setting2mapping(new_settings)
+        if ARGS.verbose:
+            for filename in new_files:
+                if filename in files_:
+                    if new_files[filename] != files_[filename]:
+                        message("Setting file '{}' changed".format(filename), type_=LogType.INFO)
+                else:
+                    message("Setting file '{}' added".format(filename), type_=LogType.INFO)
+        files_.update(new_files)
+        new_settings = bytearray()
+        for filename in files_:
+            # convert hex string to bytes
+            cfg = bytearray(bytes.fromhex(files_[filename]))
+            fsize = len(cfg)
+            header = bytearray(filename.encode())
+            header.extend(bytearray(16 - len(filename)))
+            struct.pack_into("<H", header, 14, fsize)
+            cfg.extend(bytearray(((int(fsize / 16) * 16) + 16) - fsize))
+            new_settings += header + cfg
+
+    return new_decode + new_settings
 
 def bin2mapping(config, raw=False):
     """
@@ -5732,14 +5845,14 @@ def bin2mapping(config, raw=False):
     if cfg_crc_fielddef is not None:
         cfg_crc = get_field(config['decode'], HARDWARE.ESP, 'cfg_crc', cfg_crc_fielddef, raw=True, ignoregroup=True)
     else:
-        cfg_crc = get_settingcrc(config['decode'])
+        cfg_crc = get_settingcrc(config['decode'][:config['info']['template_size']])
 
     # get/calc crc32
     cfg_crc32_fielddef = config['info']['template'].get('cfg_crc32', None)
     if cfg_crc32_fielddef is not None:
         cfg_crc32 = get_field(config['decode'], HARDWARE.ESP, 'cfg_crc32', cfg_crc32_fielddef, raw=True, ignoregroup=True)
     else:
-        cfg_crc32 = get_settingcrc32(config['decode'])
+        cfg_crc32 = get_settingcrc32(config['decode'][:config['info']['template_size']])
 
     # get config timestamp
     cfg_timestamp_fielddef = config['info']['template'].get('cfg_timestamp', None)
@@ -5749,11 +5862,11 @@ def bin2mapping(config, raw=False):
         cfg_timestamp = int(time.time())
 
     if cfg_crc32_fielddef is not None:
-        if cfg_crc32 != get_settingcrc32(config['decode']):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        if cfg_crc32 != get_settingcrc32(config['decode'][:config['info']['template_size']]):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
     elif cfg_crc_fielddef is not None:
-        if cfg_crc != get_settingcrc(config['decode']):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        if cfg_crc != get_settingcrc(config['decode'][:config['info']['template_size']]):
+            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
     if raw:
@@ -5765,11 +5878,19 @@ def bin2mapping(config, raw=False):
             for key in {k: v for k, v in valuemapping.items() if isinstance(v, (dict, list, tuple)) and len(valuemapping[k]) == 0}:
                 valuemapping.pop(key, None)
 
+    # get possible setting files
+    if config_has_settings_header(config['encode']) and (raw or is_filtergroup("Settings")):
+        try:
+            cfg = config['decode'][config['info']['template_size']:]
+        except:     # pylint: disable=bare-except
+            cfg = bytearray()
+        valuemapping['settings'] = setting2mapping(cfg)
+
     # add header info
     valuemapping['header'] = {
         'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
         'data': {
-            'crc':      hex(get_settingcrc(config['decode'])),
+            'crc':      hex(get_settingcrc(config['decode'][:config['info']['template_size']])),
             'size':     len(config['decode']),
         },
         'template': {
@@ -5794,7 +5915,7 @@ def bin2mapping(config, raw=False):
         valuemapping['header']['template'].update({'size': cfg_size})
     if cfg_crc32_fielddef is not None:
         valuemapping['header']['template'].update({'crc32': hex(cfg_crc32)})
-        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode']))})
+        valuemapping['header']['data'].update({'crc32': hex(get_settingcrc32(config['decode'][:config['info']['template_size']]))})
     if config['info']['version'] != 0x0:
         valuemapping['header']['data'].update({'version': {'name':get_versionstr(config['info']['version']),
                                                            'id':hex(config['info']['version'])}})
@@ -5830,23 +5951,27 @@ def mapping2bin(config, jsonconfig, filename=""):
     if config['info']['template'] is not None:
         # iterate through restore data mapping
         for name, data in jsonconfig.items():
-            # key must exist in both dict
-            setting_fielddef = config['info']['template'].get(name, None)
-            if setting_fielddef is not None:
-                set_field(_buffer, config['info']['hardware'], name, setting_fielddef, data, addroffset=0, filename=filename)
+            if 'settings' == name:
+                # merge existing driver config with the given from map
+                _buffer = mapping2setting(_buffer, data, config['info']['template_size'])
             else:
-                if name != 'header':
-                    exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                # key must exist in both dict
+                setting_fielddef = config['info']['template'].get(name, None)
+                if setting_fielddef is not None:
+                    set_field(_buffer, config['info']['hardware'], name, setting_fielddef, data, addroffset=0, filename=filename)
+                else:
+                    if name != 'header':
+                        exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
 
         # CRC32 calc takes precedence over CRC
         cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
         if cfg_crc32_setting is not None:
-            crc32 = get_settingcrc32(_buffer)
+            crc32 = get_settingcrc32(_buffer[:config['info']['template_size']])
             struct.pack_into(cfg_crc32_setting[1], _buffer, cfg_crc32_setting[2], crc32)
         else:
             cfg_crc_setting = config['info']['template'].get('cfg_crc', None)
             if cfg_crc_setting is not None:
-                crc = get_settingcrc(_buffer)
+                crc = get_settingcrc(_buffer[:config['info']['template_size']])
                 struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
         return _buffer
 
@@ -5904,6 +6029,11 @@ def backup(backupfile, backupfileformat, config):
     def backup_bin(backup_filename, config):
         # do bin file write
         with open(backup_filename, "wb") as backupfp:
+            # add tar header for config with driver config files
+            if config['header'] is not None:
+                header = bytearray(TASM_FILE_SETTINGS.encode() + bytearray(16 - len(TASM_FILE_SETTINGS)))
+                struct.pack_into("<H", header, 14, len(config['decode']) + 16)
+                backupfp.write(header)
             backupfp.write(config['decode'])
             backupfp.write(struct.pack('<L', BINARYFILE_MAGIC))
     def backup_json(backup_filename, config):
@@ -5985,6 +6115,10 @@ def restore(restorefile, backupfileformat, config):
                 new_encode_cfg = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
             exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+        # remove tar header if any
+        if config_has_settings_header(new_encode_cfg):
+            new_encode_cfg = new_encode_cfg[16:]
+
 
     elif filetype == FileType.BIN:
         if ARGS.verbose:
@@ -5994,6 +6128,9 @@ def restore(restorefile, backupfileformat, config):
                 restorebin = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
             exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+        # remove tar header if any
+        if config_has_settings_header(restorebin):
+            restorebin = restorebin[16:]
         decode_cfg = None
         header_format = '<L'
         if struct.unpack_from(header_format, restorebin, 0)[0] == BINARYFILE_MAGIC:
@@ -6004,7 +6141,7 @@ def restore(restorefile, backupfileformat, config):
             decode_cfg = restorebin[:len(restorebin)-struct.calcsize(header_format)]
         if decode_cfg is not None:
             # process binary to binary config
-            new_encode_cfg = decrypt_encrypt(decode_cfg)
+            new_encode_cfg = decrypt_encrypt(decode_cfg, has_header=(len(decode_cfg) > config['info']['template_size']))
 
     elif filetype in (FileType.JSON, FileType.INVALID_JSON):
         if ARGS.verbose:
@@ -6016,7 +6153,7 @@ def restore(restorefile, backupfileformat, config):
             exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # process json config to binary config
         new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
-        new_encode_cfg = decrypt_encrypt(new_decode_cfg)
+        new_encode_cfg = decrypt_encrypt(new_decode_cfg, has_header=(len(new_decode_cfg) > config['info']['template_size']))
 
     elif filetype == FileType.FILE_NOT_FOUND:
         exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
@@ -6028,7 +6165,13 @@ def restore(restorefile, backupfileformat, config):
         exit_(ExitCode.FILE_READ_ERROR, "File '{}' unknown error".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
 
     if new_encode_cfg is not None:
-        new_decode_cfg = decrypt_encrypt(new_encode_cfg)
+        new_decode_cfg = decrypt_encrypt(new_encode_cfg, has_header=(len(new_encode_cfg) > config['info']['template_size']))
+        # add tar header if config contains appended settings
+        if (len(new_encode_cfg) > config['info']['template_size']):
+            fsize = len(new_encode_cfg)
+            header = bytearray(TASM_FILE_SETTINGS.encode() + bytearray(16 - len(TASM_FILE_SETTINGS)))
+            struct.pack_into("<H", header, 14, fsize + 16)
+            new_encode_cfg = header + new_encode_cfg
 
         # Platform compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
@@ -6444,6 +6587,8 @@ def parseargs():
     groups = get_grouplist(SETTINGS[0][2])
     if VIRTUAL in groups:
         groups.remove(VIRTUAL)
+    groups.append('Settings')
+    groups.sort()
     common.add_argument('-g', '--group',
                         dest='filter',
                         metavar='<groupname>',
@@ -6451,7 +6596,7 @@ def parseargs():
                         nargs='+',
                         type=lambda s: s.title(),
                         default=DEFAULTS['common']['filter'],
-                        help="limit data processing to command groups (default {})".format("no filter" if DEFAULTS['common']['filter'] is None else DEFAULTS['common']['filter']))
+                        help="limit data processing to command groups {} (default {})".format(groups, "no filter" if DEFAULTS['common']['filter'] is None else DEFAULTS['common']['filter']))
     common.add_argument('-w', '--ignore-warnings',
                         dest='ignorewarning',
                         action='store_true',
@@ -6511,7 +6656,7 @@ if __name__ == "__main__":
 
     # check for ambiguous source parameters
     if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) > 1:
-        exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources have been specified by -s, -d or -f parameter - limit it to a single one", line=inspect.getlineno(inspect.currentframe()))
+        exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources were given by -s, -d or -f parameter. Limit source to a single one", line=inspect.getlineno(inspect.currentframe()))
 
     # default no configuration available
     CONFIG['encode'] = None
@@ -6575,15 +6720,22 @@ if __name__ == "__main__":
               ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
               line=inspect.getlineno(inspect.currentframe()))
 
-    # workaround for Tasmota since v13.1
-    OFFSET = 0
-    # remove possible USE_UFILESYS tar header and trailing setting files
-    if config_has_settings(CONFIG['encode']):
-        OFFSET = 16
-    CONFIG['encode'] = CONFIG['encode'][OFFSET:4096 + OFFSET]
-
     # decrypt Tasmota config
-    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], OFFSET)
+    if config_has_settings_header(CONFIG['encode']):
+        # config contains USE_UFILESYS tar header and trailing files
+        CONFIG['header'] = CONFIG['encode'][0:16]
+        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'][16:], has_header=True)
+        # check length with given header info
+        if len(CONFIG['decode']) > config_settings_size(CONFIG):
+            # may be processed
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+        elif len(CONFIG['decode']) < config_settings_size(CONFIG):
+            # less number of bytes can not be processed
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+    else:
+        # legacy config
+        CONFIG['header'] = None
+        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], has_header=False)
 
     # config dict
     CONFIG['info'] = get_config_info(CONFIG['decode'])
