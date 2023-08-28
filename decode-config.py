@@ -4541,14 +4541,14 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     return ExitCode.OK, ""
 
-def decrypt_encrypt(obj, offset=0):
+def decrypt_encrypt(obj, has_header=False):
     """
     Decrpt/Encrypt binary config data
 
     @param obj:
         binary config data
-    @param offset:
-        offset for scramble counter (needed for data containing setting files)
+    @param has_header:
+        True if config data contains a tar header
 
     @return:
         decrypted configuration (if obj contains encrypted data)
@@ -6737,15 +6737,22 @@ if __name__ == "__main__":
                 ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
                 line=inspect.getlineno(inspect.currentframe()))
 
-    # workaround for Tasmota since v13.1
-    OFFSET = 0
-    # remove possible USE_UFILESYS tar header and trailing setting files
-    if config_has_settings(CONFIG['encode']):
-        OFFSET = 16
-    CONFIG['encode'] = CONFIG['encode'][OFFSET:4096 + OFFSET]
-
     # decrypt Tasmota config
-    CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], OFFSET)
+    if config_has_settings_header(CONFIG['encode']):
+        # config contains USE_UFILESYS tar header and trailing files
+        CONFIG['header'] = CONFIG['encode'][0:16]
+        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'][16:], has_header=True)
+        # check length with given header info
+        if len(CONFIG['decode']) > config_settings_size(CONFIG):
+            # may be processed
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+        elif len(CONFIG['decode']) < config_settings_size(CONFIG):
+            # less number of bytes can not be processed
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+    else:
+        # legacy config
+        CONFIG['header'] = None
+        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], has_header=False)
 
         # config dict
         CONFIG['info'] = get_config_info(CONFIG['decode'])
