@@ -479,7 +479,7 @@ def scriptread(value):
             try:
                 uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
             except UnicodeDecodeError as err:
-                exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
             return uncompressed_str
         return value
@@ -534,7 +534,7 @@ def rulesread(value):
             try:
                 uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
             except UnicodeDecodeError as err:
-                exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                 uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
             return uncompressed_str
 
@@ -2972,29 +2972,7 @@ class LogType:
     WARNING = 'WARNING'
     ERROR = 'ERROR'
 
-def message(msg, type_=None, status=None, line=None):
-    """
-    Writes a message to stdout
-
-    @param msg:
-        message to output
-    @param type_:
-        INFO, WARNING or ERROR
-    @param status:
-        status number
-    """
-    sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
-    print('{styp}{sdelimiter1}{sstatus}{sdelimiter2}{slineno}{scolon}{smgs}'\
-          .format(styp=type_ if type_ is not None else '',
-                  sdelimiter1=sdelimiter,
-                  sdelimiter2=sdelimiter if line is not None else '',
-                  sstatus=status if status is not None and status > 0 else '',
-                  scolon=': ' if type_ is not None or line is not None else '',
-                  smgs=msg,
-                  slineno='(@{:04d})'.format(line) if line is not None else ''),
-          file=sys.stderr)
-
-def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=None):
+def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=None):
     """
     Called when the program should be exit
 
@@ -3009,12 +2987,40 @@ def exit_(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=True, line=
     """
     global EXIT_CODE    # pylint: disable=global-statement
 
+    def message(msg, type_=None, status=None, line=None):
+        """
+        Writes a message to stdout
+
+        @param msg:
+            message to output
+        @param type_:
+            INFO, WARNING or ERROR
+        @param status:
+            status number
+        """
+        sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
+        print('{styp}{sdelimiter1}{sstatus}{sdelimiter2}{slineno}{scolon}{smgs}'\
+            .format(styp=type_ if type_ is not None else '',
+                    sdelimiter1=sdelimiter,
+                    sdelimiter2=sdelimiter if line is not None else '',
+                    sstatus=status if status is not None and status > 0 else '',
+                    scolon=': ' if type_ is not None or line is not None else '',
+                    smgs=msg,
+                    slineno='(@{:04d})'.format(line) if line is not None else ''),
+            file=sys.stderr)
+
     if src is not None:
         msg = '{} ({})'.format(src, msg)
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
     EXIT_CODE = status
+    if LogType.INFO == type_ and doexit is None:
+        doexit = False
+    if LogType.WARNING == type_:
+        doexit = not ARGS.ignorewarning
+    if LogType.ERROR == type_ and doexit is None:
+        doexit = True
     if doexit:
-        message("Premature exit - #{} {}".format(status, ExitCode.str(status)), type_=None, status=None, line=None)
+        log(msg="Premature exit - #{} {}".format(status, ExitCode.str(status)), type_=None, status=None, line=None)
         sys.exit(EXIT_CODE)
 
 def shorthelp(doexit=True):
@@ -3592,7 +3598,7 @@ def get_config_info(decode_cfg):
             if fielddef is not None:
                 config_version = get_field(decode_cfg, HARDWARE.ESP, 'config_version', fielddef, raw=True, ignoregroup=True)
                 if config_version >= len(HARDWARE.config_versions):
-                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.config_versions)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    log(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.config_versions)-1), line=inspect.getlineno(inspect.currentframe()))
                     config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
             break
     # search setting definition for hardware top-down
@@ -3604,7 +3610,7 @@ def get_config_info(decode_cfg):
             break
 
     if setting is None:
-        exit_(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version v{} not supported".format(get_versionstr(version)), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.UNSUPPORTED_VERSION, "Tasmota configuration version v{} not supported".format(get_versionstr(version)), line=inspect.getlineno(inspect.currentframe()))
 
     return {
         'hardware': config_version,
@@ -3875,10 +3881,9 @@ def get_http_parts():
     except:     # pylint: disable=bare-except
         pass
     if not SSL_MODULE:
-        exit_(ExitCode.MODULE_NOT_FOUND,
+        log(ExitCode.MODULE_NOT_FOUND,
             "Missing python SSL module - HTTP scheme '{}' not possible, use http instead".format(http_scheme),
             type_=LogType.WARNING,
-            doexit=not ARGS.ignorewarning,
             line=inspect.getlineno(inspect.currentframe()))
         ARGS.httpsource = ARGS.httpsource.replace('https', 'http')
         http_scheme = 'http'
@@ -3924,10 +3929,9 @@ def get_mqtt_parts():
     except:     # pylint: disable=bare-except
         pass
     if not SSL_MODULE and len(mqtt_scheme) and mqtt_scheme[-1] == 's':
-        exit_(ExitCode.MODULE_NOT_FOUND,
+        log(ExitCode.MODULE_NOT_FOUND,
             "Missing python SSL module - MQTT scheme '{}' not possible, use mqtt instead".format(mqtt_scheme),
             type_=LogType.WARNING,
-            doexit=not ARGS.ignorewarning,
             line=inspect.getlineno(inspect.currentframe()))
         ARGS.mqttsource = ARGS.mqttsource.replace('mqtts', 'mqtt')
         mqtt_scheme = 'mqtt'
@@ -3952,15 +3956,15 @@ def load_tasmotaconfig(filename):
 
     # read config from a file
     if not os.path.isfile(filename):    # check file exists
-        exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(filename), line=inspect.getlineno(inspect.currentframe()))
 
     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-        message("Load data from file '{}'".format(ARGS.filesource), type_=LogType.INFO if ARGS.verbose else None)
+        log(msg="Load data from file '{}'".format(ARGS.filesource), type_=LogType.INFO if ARGS.verbose else None)
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
     except Exception as err:    # pylint: disable=broad-except
-        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(filename, err), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(filename, err), line=inspect.getlineno(inspect.currentframe()))
 
     return encode_cfg
 
@@ -3989,13 +3993,13 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     try:
         res = requests.get(url, auth=auth, headers={'referer': referer})
     except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as _:
-        exit_(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
+        log(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
 
     if not res.ok:
-        exit_(res.status_code, "Error on http GET request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
+        log(res.status_code, "Error on http GET request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if contenttype is not None and res.headers['Content-Type'] != contenttype:
-        exit_(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not respond properly, maybe Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not respond properly, maybe Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     return res.status_code, res.content
 
@@ -4029,7 +4033,7 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
             hostname = statusnet.get('Hostname', None)
             if hostname is not None:
                 if ARGS.verbose:
-                    message("Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
+                    log(msg="Hostname for '{}' retrieved: '{}'".format(host, hostname), type_=LogType.INFO)
 
     return hostname
 
@@ -4043,7 +4047,7 @@ def pull_http():
     _, http_host, http_port, http_username, http_password = get_http_parts()
 
     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-        message("Load data by http from device '{}'".format(http_host), type_=LogType.INFO if ARGS.verbose else None)
+        log(msg="Load data by http from device '{}'".format(http_host), type_=LogType.INFO if ARGS.verbose else None)
 
     _, body = get_tasmotaconfig('dl', http_host, http_port, http_username, http_password, contenttype='application/octet-stream')
 
@@ -4079,13 +4083,13 @@ def push_http(encode_cfg):
     try:
         res = requests.post(url, auth=auth, files=files)
     except ConnectionError as err:
-        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
     if not res.ok:
-        exit_(res.status_code, "Error on http POST request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
+        log(res.status_code, "Error on http POST request for {} - {}".format(url, res.reason), line=inspect.getlineno(inspect.currentframe()))
 
     if res.headers['Content-Type'] != 'text/html':
-        exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     body = res.text
 
@@ -4140,7 +4144,7 @@ def pull_mqtt(use_base64=True):
     mqtt_scheme, mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, tasmota_mqtt_password = get_mqtt_parts()
 
     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-        message("Load data by mqtt using '{}'".format(ARGS.mqttsource), type_=LogType.INFO if ARGS.verbose else None)
+        log(msg="Load data by mqtt using '{}'".format(ARGS.mqttsource), type_=LogType.INFO if ARGS.verbose else None)
 
     cmnd = 'FILEDOWNLOAD'
     topic_publish = mqtt_maketopic(mqtt_topic, 'cmnd', cmnd)
@@ -4302,12 +4306,12 @@ def pull_mqtt(use_base64=True):
     try:
         client.connect(mqtt_host, mqtt_port, ARGS.keepalive)
     except Exception as err:    # pylint: disable=broad-except,unused-variable
-        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: {}'".format(mqtt_host, mqtt_port, err.strerror))
+        log(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: {}'".format(mqtt_host, mqtt_port, err.strerror))
     client.loop_start()                    # Start loop to process received messages
     if not wait_for_connect():
-        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Connection timeout'".format(mqtt_host, mqtt_port))
+        log(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Connection timeout'".format(mqtt_host, mqtt_port))
     elif conn_rc != mqtt.MQTT_ERR_SUCCESS:
-        exit_(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Code {} - {}'".format(mqtt_host, mqtt_port, conn_rc, mqtt.connack_string(conn_rc)))
+        log(ExitCode.MQTT_CONNECTION_ERROR, "Failed to establish MQTT connection to '{}:{}: Code {} - {}'".format(mqtt_host, mqtt_port, conn_rc, mqtt.connack_string(conn_rc)))
     client.subscribe(mqtt_maketopic(mqtt_topic, 'stat', cmnd))
 
     in_hash_md5 = hashlib.md5()
@@ -4336,9 +4340,9 @@ def pull_mqtt(use_base64=True):
             file_type_name = "Settings"
         ARGS.filesource = file_name
         if ARGS.verbose:
-            message("{} downloaded by MQTT as {}".format(file_type_name, file_name), type_=LogType.INFO)
+            log(msg="{} downloaded by MQTT as {}".format(file_type_name, file_name), type_=LogType.INFO)
     else:
-        exit_(ExitCode.DOWNLOAD_CONFIG_ERROR, "Error during MQTT data processing: {}".format(err_str), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.DOWNLOAD_CONFIG_ERROR, "Error during MQTT data processing: {}".format(err_str), line=inspect.getlineno(inspect.currentframe()))
 
     client.disconnect()                    # Disconnect
     client.loop_stop()                     # Stop loop
@@ -4525,7 +4529,7 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     if not err_flag:
         if ARGS.verbose:
-            message("Settings uploaded by MQTT", type_=LogType.INFO)
+            log(msg="Settings uploaded by MQTT", type_=LogType.INFO)
     else:
        return ExitCode.DOWNLOAD_CONFIG_ERROR, "MQTT data processing error: {}".format(err_str)
 
@@ -4826,7 +4830,7 @@ def exec_function(func_, value, idx=None):
                 value = func_(value)
 
     except Exception as err:    # pylint: disable=broad-except
-        exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.INTERNAL_ERROR, '{}'.format(err), line=inspect.getlineno(inspect.currentframe()))
 
     return value
 
@@ -5242,20 +5246,18 @@ def set_fieldvalue(fielddef, dobj, addr, value):
             try:
                 struct.pack_into(singletype, dobj, addr, val)
             except struct.error as err:
-                exit_(ExitCode.RESTORE_DATA_ERROR,
+                log(ExitCode.RESTORE_DATA_ERROR,
                       "Single type {} [fielddef={}, addr=0x{:04x}, value={}] - skipped!".format(err, fielddef, addr, val),
                       type_=LogType.WARNING,
-                      doexit=not ARGS.ignorewarning,
                       line=inspect.getlineno(inspect.currentframe()))
             value >>= bitsize
     else:
         try:
             struct.pack_into(format_, dobj, addr, value)
         except struct.error as err:
-            exit_(ExitCode.RESTORE_DATA_ERROR,
+            log(ExitCode.RESTORE_DATA_ERROR,
                   "String type {} [fielddef={}, addr=0x{:04x}, value={} - skipped!".format(err, fielddef, addr, value),
                   type_=LogType.WARNING,
-                  doexit=not ARGS.ignorewarning,
                   line=inspect.getlineno(inspect.currentframe()))
 
     return dobj
@@ -5351,7 +5353,7 @@ def get_field(dobj, config_version, fieldname, fielddef, raw=False, addroffset=0
                 valuemapping = value
 
     else:
-        exit_(ExitCode.INTERNAL_ERROR, "Wrong mapping format definition: '{}'".format(format_), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.INTERNAL_ERROR, "Wrong mapping format definition: '{}'".format(format_), line=inspect.getlineno(inspect.currentframe()))
 
     return valuemapping
 
@@ -5402,7 +5404,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
         offset = 0
         try:
             if len(restoremapping) > arraydef[0]:
-                exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sfile=filename, sname=fieldname, selem=len(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
             for i in range(0, arraydef[0]):
                 subfielddef = get_subfielddef(fielddef)
                 length = get_fieldlength(subfielddef)
@@ -5416,7 +5418,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                         dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
                 offset += length
         except:     # pylint: disable=bare-except
-            exit_(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
     # <format> contains a dict
     elif isinstance(format_, dict):
@@ -5443,7 +5445,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
             try:
                 value = write_converter(restoremapping.encode(STR_CODING)[0], fielddef)
             except Exception as err:    # pylint: disable=broad-except
-                exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.INTERNAL_ERROR, '{}'.format(err), line=inspect.getlineno(inspect.currentframe()))
                 valid = False
 
         # bool
@@ -5451,7 +5453,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
             try:
                 value = write_converter(bool(restoremapping), fielddef)
             except Exception as err:  # pylint: disable=broad-except
-                exit_(ExitCode.INTERNAL_ERROR, '{}'.format(err), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.INTERNAL_ERROR, '{}'.format(err), line=inspect.getlineno(inspect.currentframe()))
                 valid = False
 
         # integer
@@ -5586,10 +5588,10 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                             prevvalue = '"{}"'.format(prevvalue)
                         if isinstance(curvalue, str):
                             curvalue = '"{}"'.format(curvalue)
-                        message("Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
+                        log(msg="Value for '{}' changed from {} to {}".format(fieldname, prevvalue, curvalue), type_=LogType.INFO)
         else:
             sformat = "file '{sfile}' - {{'{sname}': {svalue}}} ({serror})"+errformat
-            exit_(ExitCode.RESTORE_DATA_ERROR, sformat.format(sfile=filename, sname=fieldname, serror=err_text, svalue=_value, smin=min_, smax=max_), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+            log(ExitCode.RESTORE_DATA_ERROR, sformat.format(sfile=filename, sname=fieldname, serror=err_text, svalue=_value, smin=min_, smax=max_), type_=LogType.WARNING)
 
     return dobj
 
@@ -5655,7 +5657,7 @@ def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedval
         idx.append(0)
         offset = 0
         if len(mappedvalue) > arraydef[0]:
-            exit_(ExitCode.RESTORE_DATA_ERROR, "array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sname=fieldname, selem=len(mappedvalue), smax=arraydef[0]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.RESTORE_DATA_ERROR, "array '{sname}[{selem}]' exceeds max number of elements [{smax}]".format(sname=fieldname, selem=len(mappedvalue), smax=arraydef[0]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
         for i in range(0, arraydef[0]):
             subfielddef = get_subfielddef(fielddef)
             length = get_fieldlength(subfielddef)
@@ -5698,7 +5700,7 @@ def set_cmnd(cmnds, config_version, fieldname, fielddef, valuemapping, mappedval
                 try:
                     uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
                 except UnicodeDecodeError as err:
-                    exit_(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+                    log(ExitCode.INVALID_DATA, "Compressed string - {}:\n                   {}".format(err, err.args[1]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
                     uncompressed_str = str(uncompressed_data, STR_CODING, 'backslashreplace').split('\x00')[0]
 
                 cmnds = set_cmnds(cmnds, group, uncompressed_str, idx, readconverter, writeconverter, tasmotacmnd)
@@ -5795,9 +5797,9 @@ def mapping2setting(obj, new_files, template_size):
             for filename in new_files:
                 if filename in files_:
                     if new_files[filename] != files_[filename]:
-                        message("Setting file '{}' changed".format(filename), type_=LogType.INFO)
+                        log(msg="Setting file '{}' changed".format(filename), type_=LogType.INFO)
                 else:
-                    message("Setting file '{}' added".format(filename), type_=LogType.INFO)
+                    log(msg="Setting file '{}' added".format(filename), type_=LogType.INFO)
         files_.update(new_files)
         new_settings = bytearray()
         for filename in files_:
@@ -5835,10 +5837,10 @@ def bin2mapping(config, raw=False):
         # read size should be same as definied in setting
         if cfg_size > config['info']['template_size']:
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
         elif cfg_size < config['info']['template_size']:
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read to small to process - read {}, expected {} byte".format(cfg_size, config['info']['template_size']), line=inspect.getlineno(inspect.currentframe()))
 
     # get/calc crc
     cfg_crc_fielddef = config['info']['template'].get('cfg_crc', None)
@@ -5863,10 +5865,10 @@ def bin2mapping(config, raw=False):
 
     if cfg_crc32_fielddef is not None:
         if cfg_crc32 != get_settingcrc32(config['decode'][:config['info']['template_size']]):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
     elif cfg_crc_fielddef is not None:
         if cfg_crc != get_settingcrc(config['decode'][:config['info']['template_size']]):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
     if raw:
@@ -5961,7 +5963,7 @@ def mapping2bin(config, jsonconfig, filename=""):
                     set_field(_buffer, config['info']['hardware'], name, setting_fielddef, data, addroffset=0, filename=filename)
                 else:
                     if name != 'header':
-                        exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                        log(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING)
 
         # CRC32 calc takes precedence over CRC
         cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
@@ -5975,7 +5977,7 @@ def mapping2bin(config, jsonconfig, filename=""):
                 struct.pack_into(cfg_crc_setting[1], _buffer, cfg_crc_setting[2], crc)
         return _buffer
 
-    exit_(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+    log(ExitCode.UNSUPPORTED_VERSION, "File '{}', Tasmota configuration version v{} not supported".format(filename, get_versionstr(config['info']['version'])), type_=LogType.WARNING)
 
     return None
 
@@ -6001,7 +6003,7 @@ def mapping2cmnd(config):
             cmnds = set_cmnd(cmnds, config['info']['hardware'], name, setting_fielddef, config['groupmapping'], mapping, addroffset=0)
         else:
             if name != 'header':
-                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                log(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING)
     # cleanup duplicates
     for key in list(cmnds):
         cmnds[key] = list(dict.fromkeys(cmnds[key]))
@@ -6059,7 +6061,7 @@ def backup(backupfile, backupfileformat, config):
     dryrun = ""
     if ARGS.dryrun:
         if ARGS.verbose:
-            message("Do not write backup files for dry run", type_=LogType.INFO)
+            log(msg="Do not write backup files for dry run", type_=LogType.INFO)
         dryrun = SIMULATING
 
     fileformat = None
@@ -6068,15 +6070,15 @@ def backup(backupfile, backupfileformat, config):
         fileformat = _backup[0]
         backup_filename = make_filename(backupfile, _backup[1], config['valuemapping'])
         if ARGS.verbose:
-            message("{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
+            log(msg="{}Writing backup file '{}' ({} format)".format(dryrun, backup_filename, fileformat), type_=LogType.INFO)
         if not ARGS.dryrun:
             try:
                 _backup[2](backup_filename, config)
             except Exception as err:    # pylint: disable=broad-except
-                exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
+                log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(backup_filename, err), line=inspect.getlineno(inspect.currentframe()))
 
     if fileformat is not None and (ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output)):
-        message("{}Backup successful to '{}' ({} format)"\
+        log(msg="{}Backup successful to '{}' ({} format)"\
             .format(dryrun, backup_filename, fileformat), type_=LogType.INFO if ARGS.verbose else None)
 
 def restore(restorefile, backupfileformat, config):
@@ -6109,12 +6111,12 @@ def restore(restorefile, backupfileformat, config):
 
     if filetype == FileType.DMP:
         if ARGS.verbose:
-            message("Reading restore file '{}' (Tasmota format)".format(restorefilename), type_=LogType.INFO)
+            log(msg="Reading restore file '{}' (Tasmota format)".format(restorefilename), type_=LogType.INFO)
         try:
             with open(restorefilename, "rb") as restorefp:
                 new_encode_cfg = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # remove tar header if any
         if config_has_settings_header(new_encode_cfg):
             new_encode_cfg = new_encode_cfg[16:]
@@ -6122,12 +6124,12 @@ def restore(restorefile, backupfileformat, config):
 
     elif filetype == FileType.BIN:
         if ARGS.verbose:
-            message("Reading restore file '{}' (Binary format)".format(restorefilename), type_=LogType.INFO)
+            log(msg="Reading restore file '{}' (Binary format)".format(restorefilename), type_=LogType.INFO)
         try:
             with open(restorefilename, "rb") as restorefp:
                 restorebin = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # remove tar header if any
         if config_has_settings_header(restorebin):
             restorebin = restorebin[16:]
@@ -6145,24 +6147,24 @@ def restore(restorefile, backupfileformat, config):
 
     elif filetype in (FileType.JSON, FileType.INVALID_JSON):
         if ARGS.verbose:
-            message("Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
+            log(msg="Reading restore file '{}' (JSON format)".format(restorefilename), type_=LogType.INFO)
         try:
             with codecs.open(restorefilename, "r", encoding=STR_CODING) as restorefp:
                 jsonconfig = json.load(restorefp)
         except ValueError as err:
-            exit_(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.JSON_READ_ERROR, "File '{}' invalid JSON: {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # process json config to binary config
         new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
         new_encode_cfg = decrypt_encrypt(new_decode_cfg, has_header=(len(new_decode_cfg) > config['info']['template_size']))
 
     elif filetype == FileType.FILE_NOT_FOUND:
-        exit_(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.FILE_NOT_FOUND, "File '{}' not found".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
     elif filetype == FileType.INCOMPLETE_JSON:
-        exit_(ExitCode.JSON_READ_ERROR, "File '{}' incomplete JSON, missing name 'header'".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.JSON_READ_ERROR, "File '{}' incomplete JSON, missing name 'header'".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
     elif filetype == FileType.INVALID_BIN:
-        exit_(ExitCode.FILE_READ_ERROR, "File '{}' invalid BIN format".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.FILE_READ_ERROR, "File '{}' invalid BIN format".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
     else:
-        exit_(ExitCode.FILE_READ_ERROR, "File '{}' unknown error".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.FILE_READ_ERROR, "File '{}' unknown error".format(restorefilename), line=inspect.getlineno(inspect.currentframe()))
 
     if new_encode_cfg is not None:
         new_decode_cfg = decrypt_encrypt(new_encode_cfg, has_header=(len(new_encode_cfg) > config['info']['template_size']))
@@ -6183,76 +6185,76 @@ def restore(restorefile, backupfileformat, config):
                 new_config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
         config_version = config['info']['hardware']
         if config_version != new_config_version:
-            exit_(ExitCode.RESTORE_DATA_ERROR, "Data incompatibility: {} '{}' hardware is '{}', restore file '{}' is for hardware '{}'".format(\
+            log(ExitCode.RESTORE_DATA_ERROR, "Restore data incompatibility: {} '{}' hardware is '{}', restore file '{}' is for hardware '{}'".format(\
                 "File" if ARGS.filesource is not None else "Device",
                 ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
                 HARDWARE.str(config_version),
                 restorefilename,
-                HARDWARE.str(new_config_version)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                HARDWARE.str(new_config_version)))
 
         # Data version compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
             version_new_data = get_config_info(new_decode_cfg)['version']
             version_device = config['info']['version']
             if version_device != version_new_data:
-                exit_(ExitCode.RESTORE_DATA_ERROR, "Restore binary data incompatibility: {} '{}' v'{}', restore file '{}' v'{}'".format(\
+                log(ExitCode.RESTORE_DATA_ERROR, "Restore binary data incompatibility: {} '{}' v'{}', restore file '{}' v'{}'".format(\
                     "File" if ARGS.filesource is not None else "Device",
                     ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource,
                     get_versionstr(version_device),
                     restorefilename,
-                    get_versionstr(version_new_data)), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                    get_versionstr(version_new_data)))
 
         if ARGS.verbose:
             # get binary header and template to use
-            message("Config file contains data of Tasmota v{}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
+            log(msg="Config file contains data of Tasmota v{}".format(get_versionstr(config['info']['version'])), type_=LogType.INFO)
         if ARGS.forcerestore or new_encode_cfg != config['encode']:
             dryrun = ""
             if ARGS.dryrun:
                 if ARGS.verbose:
-                    message("Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
+                    log(msg="Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
                 dryrun = SIMULATING
                 error_code = 0
             # write config direct to device via http
             if ARGS.httpsource is not None:
                 if not ARGS.dryrun:
                     if ARGS.verbose:
-                        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO)
+                        log(msg="{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO)
                     error_code, error_str = push_http(new_encode_cfg)
                 if error_code:
-                    exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
+                    log(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
                     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+                        log(msg="{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.httpsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
             # write config direct to mqttsource via mqtt
             elif ARGS.mqttsource is not None:
                 if not ARGS.dryrun:
                     if ARGS.verbose:
-                        message("{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO)
+                        log(msg="{}Push new data to '{}' using restore file '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO)
                     error_code, error_str = push_mqtt(new_encode_cfg)
                 if error_code:
-                    exit_(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
+                    log(ExitCode.UPLOAD_CONFIG_ERROR, "Config data upload failed - {}".format(error_str), line=inspect.getlineno(inspect.currentframe()))
                 else:
                     if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                        message("{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+                        log(msg="{}Restore successful to device '{}' from '{}'".format(dryrun, ARGS.mqttsource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
             # write config from a file
             elif ARGS.filesource is not None:
                 if ARGS.verbose:
-                    message("{}Write new data to file '{}' using restore file '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO)
+                    log(msg="{}Write new data to file '{}' using restore file '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO)
                 if not ARGS.dryrun:
                     try:
                         with open(ARGS.filesource, "wb") as outputfile:
                             outputfile.write(new_encode_cfg)
                     except Exception as err:    # pylint: disable=broad-except
-                        exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.filesource, err), line=inspect.getlineno(inspect.currentframe()))
+                        log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(ARGS.filesource, err), line=inspect.getlineno(inspect.currentframe()))
                 if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                    message("{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
+                    log(msg="{}Restore successful to file '{}' from '{}'".format(dryrun, ARGS.filesource, restorefilename), type_=LogType.INFO if ARGS.verbose else None)
 
         else:
             EXIT_CODE = ExitCode.RESTORE_SKIPPED
             if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                message("Restore skipped, configuration data unchanged", type_=LogType.INFO if ARGS.verbose else None)
+                log(msg="Restore skipped, configuration data unchanged", type_=LogType.INFO if ARGS.verbose else None)
 
 def output_tasmotacmnds(tasmotacmnds):
     """
@@ -6656,7 +6658,7 @@ if __name__ == "__main__":
 
     # check for ambiguous source parameters
     if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) > 1:
-        exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources were given by -s, -d or -f parameter. Limit source to a single one", line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources were given by -s, -d or -f parameter. Limit source to a single one", line=inspect.getlineno(inspect.currentframe()))
 
     # default no configuration available
     CONFIG['encode'] = None
@@ -6714,7 +6716,7 @@ if __name__ == "__main__":
         sys.exit(ExitCode.OK)
 
     if len(CONFIG['encode']) == 0:
-        exit_(ExitCode.FILE_READ_ERROR,
+        log(ExitCode.FILE_READ_ERROR,
               "Unable to read configuration data from {}'{}'"\
               .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
               ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
@@ -6728,10 +6730,10 @@ if __name__ == "__main__":
         # check length with given header info
         if len(CONFIG['decode']) > config_settings_size(CONFIG):
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
         elif len(CONFIG['decode']) < config_settings_size(CONFIG):
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), line=inspect.getlineno(inspect.currentframe()))
     else:
         # legacy config
         CONFIG['header'] = None
@@ -6749,7 +6751,7 @@ if __name__ == "__main__":
     # check version compatibility
     if CONFIG['info']['version'] is not None:
         if ARGS.verbose:
-            message("{}'{}' is using Tasmota v{} on {}"\
+            log(msg="{}'{}' is using Tasmota v{} on {}"\
                     .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
                     ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
                     get_versionstr(CONFIG['info']['version']),
@@ -6761,7 +6763,7 @@ if __name__ == "__main__":
                 COLUMNS = os.get_terminal_size()[0]
             except:     # pylint: disable=bare-except
                 COLUMNS = 80
-            exit_(ExitCode.UNSUPPORTED_VERSION, \
+            log(ExitCode.UNSUPPORTED_VERSION, \
                 "\n           ".join(textwrap.wrap(\
                 "Tasmota configuration data v{} currently unsupported! "
                 "The read configuration data is newer than the last supported v{} by this program. "
@@ -6775,7 +6777,7 @@ if __name__ == "__main__":
                 "program from https://github.com/tasmota/decode-config/tree/development.", \
                 COLUMNS - 16)) \
                 .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
-                  type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                  type_=LogType.WARNING)
 
     if ARGS.backupfile is not None:
         # backup to file(s)
