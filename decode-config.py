@@ -6745,10 +6745,10 @@ if __name__ == "__main__":
         # check length with given header info
         if len(CONFIG['decode']) > config_settings_size(CONFIG):
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
         elif len(CONFIG['decode']) < config_settings_size(CONFIG):
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), SIZE_FROM_HEADER), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
     else:
         # legacy config
         CONFIG['header'] = None
