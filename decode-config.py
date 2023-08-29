@@ -3010,6 +3010,28 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
                     slineno='(@{:04d})'.format(line) if line is not None else ''),
             file=sys.stderr)
 
+    def message(msg, type_=None, status=None, line=None):
+        """
+        Writes a message to stdout
+
+        @param msg:
+            message to output
+        @param type_:
+            INFO, WARNING or ERROR
+        @param status:
+            status number
+        """
+        sdelimiter = ' ' if status is not None and type_ is not None and status > 0 else ''
+        print('{styp}{sdelimiter1}{sstatus}{sdelimiter2}{slineno}{scolon}{smgs}'\
+            .format(styp=type_ if type_ is not None else '',
+                    sdelimiter1=sdelimiter,
+                    sdelimiter2=sdelimiter if line is not None else '',
+                    sstatus=status if status is not None and status > 0 else '',
+                    scolon=': ' if type_ is not None or line is not None else '',
+                    smgs=msg,
+                    slineno='(@{:04d})'.format(line) if line is not None else ''),
+            file=sys.stderr)
+
     if src is not None:
         msg = '{} ({})'.format(src, msg)
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO if ARGS.version is None else None, status=status, line=line)
@@ -3599,7 +3621,7 @@ def get_config_info(decode_cfg):
             if fielddef is not None:
                 config_version = get_field(decode_cfg, HARDWARE.ESP, 'config_version', fielddef, raw=True, ignoregroup=True)
                 if config_version >= len(HARDWARE.config_versions):
-                    exit_(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.config_versions)-1), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+                    log(ExitCode.INVALID_DATA, "Invalid data in config (config_version is {}, valid range [0,{}])".format(config_version, len(HARDWARE.config_versions)-1), line=inspect.getlineno(inspect.currentframe()))
                     config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
             break
     # search setting definition for hardware top-down
@@ -5798,9 +5820,9 @@ def mapping2setting(obj, new_files, template_size):
             for filename in new_files:
                 if filename in files_:
                     if new_files[filename] != files_[filename]:
-                        message("Setting file '{}' changed".format(filename), type_=LogType.INFO)
+                        log(msg="Setting file '{}' changed".format(filename), type_=LogType.INFO)
                 else:
-                    message("Setting file '{}' added".format(filename), type_=LogType.INFO)
+                    log(msg="Setting file '{}' added".format(filename), type_=LogType.INFO)
         files_.update(new_files)
         new_settings = bytearray()
         for filename in files_:
@@ -5866,10 +5888,10 @@ def bin2mapping(config, raw=False):
 
     if cfg_crc32_fielddef is not None:
         if cfg_crc32 != get_settingcrc32(config['decode'][:config['info']['template_size']]):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_CRC_ERROR, 'Data CRC32 error, read 0x{:8x} should be 0x{:8x}'.format(cfg_crc32, get_settingcrc32(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
     elif cfg_crc_fielddef is not None:
         if cfg_crc != get_settingcrc(config['decode'][:config['info']['template_size']]):
-            exit_(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, doexit=not ARGS.ignorewarning, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_CRC_ERROR, 'Data CRC error, read 0x{:4x} should be 0x{:4x}'.format(cfg_crc, get_settingcrc(config['decode'][:config['info']['template_size']])), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
     # get valuemapping
     if raw:
@@ -5964,7 +5986,7 @@ def mapping2bin(config, jsonconfig, filename=""):
                     set_field(_buffer, config['info']['hardware'], name, setting_fielddef, data, addroffset=0, filename=filename)
                 else:
                     if name != 'header':
-                        exit_(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING, doexit=not ARGS.ignorewarning)
+                        log(ExitCode.RESTORE_DATA_ERROR, "Restore file '{}' contains obsolete name '{}', skipped".format(filename, name), type_=LogType.WARNING)
 
         # CRC32 calc takes precedence over CRC
         cfg_crc32_setting = config['info']['template'].get('cfg_crc32', None)
@@ -6003,7 +6025,7 @@ def mapping2cmnd(config):
         if setting_fielddef is not None:
             cmnds = set_cmnd(cmnds, config['info']['hardware'], name, setting_fielddef, config['groupmapping'], mapping, addroffset=0)
         else:
-            if name != 'header' and name != 'settings':
+            if name != 'header':
                 log(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING)
     # cleanup duplicates
     for key in list(cmnds):
@@ -6117,7 +6139,7 @@ def restore(restorefile, backupfileformat, config):
             with open(restorefilename, "rb") as restorefp:
                 new_encode_cfg = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # remove tar header if any
         if config_has_settings_header(new_encode_cfg):
             new_encode_cfg = new_encode_cfg[16:]
@@ -6130,7 +6152,7 @@ def restore(restorefile, backupfileformat, config):
             with open(restorefilename, "rb") as restorefp:
                 restorebin = restorefp.read()
         except Exception as err:    # pylint: disable=broad-except
-            exit_(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.INTERNAL_ERROR, "'{}' {}".format(restorefilename, err), line=inspect.getlineno(inspect.currentframe()))
         # remove tar header if any
         if config_has_settings_header(restorebin):
             restorebin = restorebin[16:]
@@ -6659,7 +6681,7 @@ if __name__ == "__main__":
 
     # check for ambiguous source parameters
     if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) > 1:
-        exit_(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources were given by -s, -d or -f parameter. Limit source to a single one", line=inspect.getlineno(inspect.currentframe()))
+        log(ExitCode.ARGUMENT_ERROR, "I am confused! Several sources were given by -s, -d or -f parameter. Limit source to a single one", line=inspect.getlineno(inspect.currentframe()))
 
     # default no configuration available
     CONFIG['encode'] = None
@@ -6718,12 +6740,12 @@ if __name__ == "__main__":
             print(PARSER.epilog)
             sys.exit(ExitCode.OK)
 
-        if len(CONFIG['encode']) == 0:
-            log(ExitCode.FILE_READ_ERROR,
-                "Unable to read configuration data from {}'{}'"\
-                .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
-                ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
-                line=inspect.getlineno(inspect.currentframe()))
+    if len(CONFIG['encode']) == 0:
+        log(ExitCode.FILE_READ_ERROR,
+              "Unable to read configuration data from {}'{}'"\
+              .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+              ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
+              line=inspect.getlineno(inspect.currentframe()))
 
     # decrypt Tasmota config
     if config_has_settings_header(CONFIG['encode']):
@@ -6733,10 +6755,10 @@ if __name__ == "__main__":
         # check length with given header info
         if len(CONFIG['decode']) > config_settings_size(CONFIG):
             # may be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
         elif len(CONFIG['decode']) < config_settings_size(CONFIG):
             # less number of bytes can not be processed
-            exit_(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.ERROR, line=inspect.getlineno(inspect.currentframe()))
+            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), line=inspect.getlineno(inspect.currentframe()))
     else:
         # legacy config
         CONFIG['header'] = None
@@ -6753,39 +6775,35 @@ if __name__ == "__main__":
         CONFIG['groupmapping'] = bin2mapping(CONFIG, raw=False)
 
     # check version compatibility
-    if 'info' in CONFIG:
-        if CONFIG['info']['version'] is not None:
-            if ARGS.verbose or ARGS.version is not None:
-                log(msg="{}'{}' is using Tasmota v{} on {}"\
-                        .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
-                        ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
-                        get_versionstr(CONFIG['info']['version']),
-                        HARDWARE.str(CONFIG['info']['hardware'])),
-                        type_=LogType.INFO if ARGS.version is None else None)
-            SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-            if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
-                try:
-                    COLUMNS = os.get_terminal_size()[0]
-                except:     # pylint: disable=bare-except
-                    COLUMNS = 80
-                log(ExitCode.UNSUPPORTED_VERSION, \
-                    "\n           ".join(textwrap.wrap(\
-                    "Tasmota configuration data v{} currently unsupported! "
-                    "The read configuration data is newer than the last supported v{} by this program. "
-                    "Newer Tasmota versions may contain changed data structures so that the data with "
-                    "older versions may become incompatible. You can force proceeding at your own risk "
-                    "by appending the parameter '--ignore-warnings'. "
-                    "Be warned: Forcing can lead to unpredictable results for your Tasmota device. "
-                    "In the worst case, your Tasmota device  will not respond and you will have to flash "
-                    "it again using the serial interface. If you are unsure and do not know the  changes "
-                    "in the configuration structure, you may able to use the developer version of this "
-                    "program from https://github.com/tasmota/decode-config/tree/development.", \
-                    COLUMNS - 16)) \
-                    .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
-                    type_=LogType.WARNING)
-
-    if ARGS.version is not None:
-        sys.exit(ExitCode.OK)
+    if CONFIG['info']['version'] is not None:
+        if ARGS.verbose:
+            log(msg="{}'{}' is using Tasmota v{} on {}"\
+                    .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+                    ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
+                    get_versionstr(CONFIG['info']['version']),
+                    HARDWARE.str(CONFIG['info']['hardware'])),
+                    type_=LogType.INFO)
+        SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
+        if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
+            try:
+                COLUMNS = os.get_terminal_size()[0]
+            except:     # pylint: disable=bare-except
+                COLUMNS = 80
+            log(ExitCode.UNSUPPORTED_VERSION, \
+                "\n           ".join(textwrap.wrap(\
+                "Tasmota configuration data v{} currently unsupported! "
+                "The read configuration data is newer than the last supported v{} by this program. "
+                "Newer Tasmota versions may contain changed data structures so that the data with "
+                "older versions may become incompatible. You can force proceeding at your own risk "
+                "by appending the parameter '--ignore-warnings'. "
+                "Be warned: Forcing can lead to unpredictable results for your Tasmota device. "
+                "In the worst case, your Tasmota device  will not respond and you will have to flash "
+                "it again using the serial interface. If you are unsure and do not know the  changes "
+                "in the configuration structure, you may able to use the developer version of this "
+                "program from https://github.com/tasmota/decode-config/tree/development.", \
+                COLUMNS - 16)) \
+                .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
+                  type_=LogType.WARNING)
 
     if ARGS.backupfile is not None:
         # backup to file(s)
