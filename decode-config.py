@@ -2986,6 +2986,7 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
         True to exit program, otherwise return
     """
     global EXIT_CODE    # pylint: disable=global-statement
+    global ARGS         # pylint: disable=global-statement
 
     def message(msg, type_=None, status=None, line=None):
         """
@@ -3011,7 +3012,7 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
 
     if src is not None:
         msg = '{} ({})'.format(src, msg)
-    message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO, status=status, line=line)
+    message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO if ARGS.version is None else None, status=status, line=line)
     EXIT_CODE = status
     if LogType.INFO == type_ and doexit is None:
         doexit = False
@@ -6630,13 +6631,13 @@ def parseargs():
     info.add_argument('-V', '--version',
                       dest='version',
                       action='count',
-                      help="show program's version number and exit")
+                      help="show program version (and config version if --source is given) and exit")
 
     _args = PARSER.parse_args()
 
     if _args.version is not None:
         print(PROG)
-        if _args.version or _args.debug:
+        if _args.debug:
             print()
             print("Script:   {}".format(os.path.basename(__file__)))
             print("Version:  {}".format(METADATA['VERSION_BUILD']))
@@ -6644,7 +6645,7 @@ def parseargs():
             print("Platform: {} - {}".format(platform.platform(), platform.machine()))
             print("OS:       {} {} {}".format(platform.system(), platform.release(), platform.version()))
             print("Time:     {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        sys.exit(ExitCode.OK)
+        # sys.exit(ExitCode.OK)
 
     return _args
 
@@ -6693,7 +6694,8 @@ if __name__ == "__main__":
         else:
             ARGS.httpsource = ARGS.source
 
-    if sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource))) == 0:
+    SOURCES = sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource)))
+    if 0 == SOURCES and ARGS.version is None:
         shorthelp()
 
     # souce is a file: pull config from Tasmota file
@@ -6708,76 +6710,82 @@ if __name__ == "__main__":
     if ARGS.mqttsource is not None:
         CONFIG['encode'] = pull_mqtt()
 
-    if CONFIG['encode'] is None:
-        # no config source given
-        shorthelp(False)
-        print()
-        print(PARSER.epilog)
-        sys.exit(ExitCode.OK)
+    if SOURCES > 0:
+        if CONFIG['encode'] is None:
+            # no config source given
+            shorthelp(False)
+            print()
+            print(PARSER.epilog)
+            sys.exit(ExitCode.OK)
 
-    if len(CONFIG['encode']) == 0:
-        log(ExitCode.FILE_READ_ERROR,
-              "Unable to read configuration data from {}'{}'"\
-              .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
-              ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
-              line=inspect.getlineno(inspect.currentframe()))
+        if len(CONFIG['encode']) == 0:
+            log(ExitCode.FILE_READ_ERROR,
+                "Unable to read configuration data from {}'{}'"\
+                .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+                ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource),
+                line=inspect.getlineno(inspect.currentframe()))
 
-    # decrypt Tasmota config
-    if config_has_settings_header(CONFIG['encode']):
-        # config contains USE_UFILESYS tar header and trailing files
-        CONFIG['header'] = CONFIG['encode'][0:16]
-        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'][16:], has_header=True)
-        # check length with given header info
-        if len(CONFIG['decode']) > config_settings_size(CONFIG):
-            # may be processed
-            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
-        elif len(CONFIG['decode']) < config_settings_size(CONFIG):
-            # less number of bytes can not be processed
-            log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), line=inspect.getlineno(inspect.currentframe()))
-    else:
-        # legacy config
-        CONFIG['header'] = None
-        CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], has_header=False)
+        # decrypt Tasmota config
+        if config_has_settings_header(CONFIG['encode']):
+            # config contains USE_UFILESYS tar header and trailing files
+            CONFIG['header'] = CONFIG['encode'][0:16]
+            CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'][16:], has_header=True)
+            # check length with given header info
+            if len(CONFIG['decode']) > config_settings_size(CONFIG):
+                # may be processed
+                log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+            elif len(CONFIG['decode']) < config_settings_size(CONFIG):
+                # less number of bytes can not be processed
+                log(ExitCode.DATA_SIZE_MISMATCH, "Number of bytes read does not match with header information, to small to process - read {}, expected {} byte".format(len(CONFIG['decode']), config_settings_size(CONFIG)), line=inspect.getlineno(inspect.currentframe()))
+        else:
+            # legacy config
+            CONFIG['header'] = None
+            CONFIG['decode'] = decrypt_encrypt(CONFIG['encode'], has_header=False)
 
-    # config dict
-    CONFIG['info'] = get_config_info(CONFIG['decode'])
+        # config dict
+        CONFIG['info'] = get_config_info(CONFIG['decode'])
 
-    # decode into mapping dictionary
-    # first we need full mapped data for function macros in 2. step
-    CONFIG['valuemapping'] = bin2mapping(CONFIG, raw=True)
-    # second decode data using function macros
-    CONFIG['groupmapping'] = bin2mapping(CONFIG, raw=False)
+    if ARGS.version is None:
+        # decode into mapping dictionary
+        # first we need full mapped data for function macros in 2. step
+        CONFIG['valuemapping'] = bin2mapping(CONFIG, raw=True)
+        # second decode data using function macros
+        CONFIG['groupmapping'] = bin2mapping(CONFIG, raw=False)
 
     # check version compatibility
-    if CONFIG['info']['version'] is not None:
-        if ARGS.verbose:
-            log(msg="{}'{}' is using Tasmota v{} on {}"\
-                    .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
-                    ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
-                    get_versionstr(CONFIG['info']['version']),
-                    HARDWARE.str(CONFIG['info']['hardware'])),
-                    type_=LogType.INFO)
-        SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-        if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
-            try:
-                COLUMNS = os.get_terminal_size()[0]
-            except:     # pylint: disable=bare-except
-                COLUMNS = 80
-            log(ExitCode.UNSUPPORTED_VERSION, \
-                "\n           ".join(textwrap.wrap(\
-                "Tasmota configuration data v{} currently unsupported! "
-                "The read configuration data is newer than the last supported v{} by this program. "
-                "Newer Tasmota versions may contain changed data structures so that the data with "
-                "older versions may become incompatible. You can force proceeding at your own risk "
-                "by appending the parameter '--ignore-warnings'. "
-                "Be warned: Forcing can lead to unpredictable results for your Tasmota device. "
-                "In the worst case, your Tasmota device  will not respond and you will have to flash "
-                "it again using the serial interface. If you are unsure and do not know the  changes "
-                "in the configuration structure, you may able to use the developer version of this "
-                "program from https://github.com/tasmota/decode-config/tree/development.", \
-                COLUMNS - 16)) \
-                .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
-                  type_=LogType.WARNING)
+    if 'info' in CONFIG:
+        if CONFIG['info']['version'] is not None:
+            if ARGS.verbose or ARGS.version is not None:
+                log(msg="{}'{}' is using Tasmota v{} on {}"\
+                        .format('Device ' if ARGS.httpsource is not None else 'Data ' if ARGS.mqttsource is not None else 'File ',
+                        ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource,
+                        get_versionstr(CONFIG['info']['version']),
+                        HARDWARE.str(CONFIG['info']['hardware'])),
+                        type_=LogType.INFO if ARGS.version is None else None)
+            SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
+            if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
+                try:
+                    COLUMNS = os.get_terminal_size()[0]
+                except:     # pylint: disable=bare-except
+                    COLUMNS = 80
+                log(ExitCode.UNSUPPORTED_VERSION, \
+                    "\n           ".join(textwrap.wrap(\
+                    "Tasmota configuration data v{} currently unsupported! "
+                    "The read configuration data is newer than the last supported v{} by this program. "
+                    "Newer Tasmota versions may contain changed data structures so that the data with "
+                    "older versions may become incompatible. You can force proceeding at your own risk "
+                    "by appending the parameter '--ignore-warnings'. "
+                    "Be warned: Forcing can lead to unpredictable results for your Tasmota device. "
+                    "In the worst case, your Tasmota device  will not respond and you will have to flash "
+                    "it again using the serial interface. If you are unsure and do not know the  changes "
+                    "in the configuration structure, you may able to use the developer version of this "
+                    "program from https://github.com/tasmota/decode-config/tree/development.", \
+                    COLUMNS - 16)) \
+                    .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
+                    type_=LogType.WARNING)
+
+    if ARGS.version is not None:
+        sys.exit(ExitCode.OK)
 
     if ARGS.backupfile is not None:
         # backup to file(s)
