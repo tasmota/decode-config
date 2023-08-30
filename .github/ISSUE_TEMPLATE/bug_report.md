@@ -24,7 +24,7 @@ _A clear and concise description of what you expected to happen._
 ### Version Information
 
 _Please complete the following information_  
-_use `decode-config.py -V` to retrieve the info_
+_use `decode-config.py -V --debug` to retrieve the info_
 
 ```bash
 
