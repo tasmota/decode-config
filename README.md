@@ -857,7 +857,8 @@ For advanced help use parameter `-H` or `--full-help`.
     -h, --help            show usage help message and exit
     -H, --full-help       show full help message and exit
     -v, --verbose         produce more output about what the program does
-    -V, --version         show program's version number and exit
+    -V, --version         show program version (and config version if
+                          --source is given) and exit
 
   The arguments -s <filename|host|url> must be given.
   ```
