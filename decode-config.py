@@ -5756,7 +5756,8 @@ def setting2mapping(obj):
             if 0 == length_:
                 break
             cfg = obj[offset + 16:offset + 16 + length_]
-            files[name_] = ''.join(format(x, '02x') for x in cfg)
+            # use base64 encoding
+            files[name_] = base64.b64encode(cfg).decode(STR_CODING)
             offset += (int((length_ + 16) / 16) * 16) + 16
         except:     # pylint: disable=bare-except
             break
@@ -5804,8 +5805,17 @@ def mapping2setting(obj, new_files, template_size):
         files_.update(new_files)
         new_settings = bytearray()
         for filename in files_:
-            # convert hex string to bytes
-            cfg = bytearray(bytes.fromhex(files_[filename]))
+            try:
+                # backward compatibility: try hex string decoding
+                cfg = bytearray(bytes.fromhex(files_[filename]))
+            except:     # pylint: disable=bare-except
+                # try base64 string decoding
+                try:
+                    cfg = bytearray(base64.decodebytes(files_[filename].encode(STR_CODING)))
+                except:     # pylint: disable=bare-except
+                    cfg = bytearray()
+                    log(ExitCode.DATA_SIZE_MISMATCH, "JSON value for the settings file '{}' is invalid (must be base64 or hex)".format(files_[filename]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
+
             fsize = len(cfg)
             header = bytearray(filename.encode())
             header.extend(bytearray(16 - len(filename)))
