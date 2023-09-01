@@ -2260,7 +2260,7 @@ SETTING_9_5_0_5.update              ({
     'influxdb_token32':             (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_TOKEN'),
                                                                          (None,  None,                          ('Management',  '"Ifx{} {}".format("Token" if @["influxdb_version"] == 2 else "Password", "\\"" if len($) == 0 else $)')) ),
     'influxdb_bucket':              (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
-                                                                         (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $$)')) ),
+                                                                         (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $)')) ),
     'influxdb_bucket32':            (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_BUCKET'),
                                                                          (None,  None,                          ('Management',  '"IfxBucket {}".format("\\"" if len($) == 0 else $)')) ),
     'rgx_ssid':                     (HARDWARE.ESP82, '699s',(0x017,'SET_RGX_SSID'),
