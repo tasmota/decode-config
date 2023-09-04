@@ -6016,7 +6016,7 @@ def mapping2cmnd(config):
         if setting_fielddef is not None:
             cmnds = set_cmnd(cmnds, config['info']['hardware'], name, setting_fielddef, config['groupmapping'], mapping, addroffset=0)
         else:
-            if name != 'header':
+            if name != 'header' and name != 'settings':
                 log(ExitCode.RESTORE_DATA_ERROR, "Restore file contains obsolete name '{}', skipped".format(name), type_=LogType.WARNING)
     # cleanup duplicates
     for key in list(cmnds):
