@@ -2783,6 +2783,10 @@ SETTING_13_1_0_1['flag6'][1].update ({
                                     })
 # ======================================================================
 SETTING_13_1_0_2 = copy.deepcopy(SETTING_13_1_0_1)
+SETTING_13_1_0_2.update             ({
+    'hdmi_addr':                    (HARDWARE.ESP,   '<H',  0x73B,       (None, None,                           ('Hdmi',      '"HdmiAddr {}".format($)')) ),
+    'hdmi_cec_device_type':         (HARDWARE.ESP,   'B',   0xF61,       (None, None,                           ('Hdmi',      '"HdmiType {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D010002,0x1000, SETTING_13_1_0_2),
