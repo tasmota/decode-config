@@ -1229,6 +1229,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   | **Bluetooth**  |                             | *- all -*              |             |
   | **Stepper Motors** |                         | *- all -*              |             |
   | **MP3 Player** |                             | *- all -*              |             |
+  | **Hdmi**       | HdmiAddr                    |                        |             |
+  |                | HdmiType                    |                        |             |
 
   > **Notes**  
   <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
