@@ -742,11 +742,7 @@ For advanced help use parameter `-H` or `--full-help`.
                           [-g <groupname> [<groupname> ...]] [-w] [--dry-run]
                           [-h] [-H] [-v] [-V]
 
-  Backup/Restore Tasmota configuration data. Args that start with '--' (eg.
-  -s) can also be set in a config file (specified via -c). Config file syntax
-  allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
-  https://goo.gl/R74nmi). If an arg is specified in more than one place, then
-  commandline values override config file values which override defaults.
+  Backup/Restore Tasmota configuration data.
 
   Source:
     Read/Write Tasmota configuration from/to
@@ -755,33 +751,33 @@ For advanced help use parameter `-H` or `--full-help`.
                           source used for the Tasmota configuration (default:
                           None). Specify source type, path, file, user,
                           password, hostname, port and topic at once as an
-                          URL. The URL must be in the form 'scheme://[username
-                          [:password]@]host[:port][/topic]|pathfile'where
+                          URL. The URL must be in the form 'scheme://[usernam
+                          e[:password]@]host[:port][/topic]|pathfile'where
                           scheme is 'file' for a tasmota binary config file,
                           'http' for a Tasmota HTTP web connection and
-                          'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a
-                          TLS connection to MQTT server)
+                          'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses
+                          a TLS connection to MQTT server)
     -p, --password <password>
                           Web server password on HTTP source (set by Tasmota
-                          'WebPassword' command), MQTT server password in MQTT
-                          source (set by Tasmota 'MqttPassword' command)
+                          'WebPassword' command), MQTT server password in
+                          MQTT source (set by Tasmota 'MqttPassword' command)
                           (default: None)
 
   MQTT:
     MQTT transport settings
 
-    --fulltopic <topic>   Optional MQTT transport fulltopic used for accessing
-                          Tasmota device (default: )
-    --cafile <file>       Enables SSL/TLS connection: path to a or filename of
-                          the Certificate Authority certificate files that are
-                          to be treated as trusted by this client (default
-                          None)
+    --fulltopic <topic>   Optional MQTT transport fulltopic used for
+                          accessing Tasmota device (default: )
+    --cafile <file>       Enables SSL/TLS connection: path to a or filename
+                          of the Certificate Authority certificate files that
+                          are to be treated as trusted by this client
+                          (default None)
     --certfile <file>     Enables SSL/TLS connection: filename of a PEM
                           encoded client certificate file (default None)
     --keyfile <file>      Enables SSL/TLS connection: filename of a PEM
                           encoded client private key file (default None)
-    --insecure            suppress verification of the MQTT server hostname in
-                          the server certificate (default False)
+    --insecure            suppress verification of the MQTT server hostname
+                          in the server certificate (default False)
     --keepalive <sec>     keepalive timeout for the client (default 60)
 
   Backup/Restore:
@@ -796,9 +792,10 @@ For advanced help use parameter `-H` or `--full-help`.
                           file to backup configuration to, can be specified
                           multiple times (default: None). Replacements:
                           @v=firmware version from config, @d=devicename,
-                          @f=friendlyname1, @h=hostname from config, @H=device
-                          hostname (http source only), @F=configuration
-                          filename from MQTT request (mqtt source only)
+                          @f=friendlyname1, @h=hostname from config,
+                          @H=device hostname (http source only),
+                          @F=configuration filename from MQTT request (mqtt
+                          source only)
     -t, --backup-type json|bin|dmp
                           backup filetype (default: 'json')
     -E, --extension       append filetype extension for -i and -o filename
@@ -818,8 +815,9 @@ For advanced help use parameter `-H` or `--full-help`.
     --json-show-pw        unhide passwords (default)
 
   Tasmota command output:
-    Tasmota command output format specification. To revert an option, insert
-    "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
+    Tasmota command output format specification. To revert an option,
+    insert "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-
+    sort
 
     --cmnd-indent <indent>
                           Tasmota command grouping indent level (default:
@@ -843,8 +841,12 @@ For advanced help use parameter `-H` or `--full-help`.
     -T, --output-format json|cmnd|command
                           display output format (default: 'json')
     -g, --group <groupname>
-                          limit data processing to command groups (default no
-                          filter)
+                          limit data processing to command groups ['Control',
+                          'Display', 'Domoticz', 'Hdmi', 'Internal', 'Knx',
+                          'Light', 'Management', 'Mqtt', 'Power', 'Rf',
+                          'Rules', 'Sensor', 'Serial', 'Setoption',
+                          'Settings', 'Shutter', 'System', 'Telegram',
+                          'Timer', 'Wifi', 'Zigbee'] (default no filter)
     -w, --ignore-warnings
                           do not exit on warnings. Not recommended, used by
                           your own responsibility!
@@ -861,6 +863,12 @@ For advanced help use parameter `-H` or `--full-help`.
                           --source is given) and exit
 
   The arguments -s <filename|host|url> must be given.
+
+  Args that start with '--' (eg. -s) can also be set in a config file
+  (specified via -c). Config file syntax allows: key=value, flag=true,
+  stuff=[a,b,c] (for details, see syntax at https://goo.gl/R74nmi). If an arg
+  is specified in more than one place, then commandline values override
+  config file values which override defaults.
   ```
 
 > **Note**  
@@ -1221,6 +1229,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   | **Bluetooth**  |                             | *- all -*              |             |
   | **Stepper Motors** |                         | *- all -*              |             |
   | **MP3 Player** |                             | *- all -*              |             |
+  | **Hdmi**       | HdmiAddr                    |                        |             |
+  |                | HdmiType                    |                        |             |
 
   > **Notes**  
   <sup>1</sup> `Sensor60 13` sets the latitude/longitude, use `Latitude` and `Logitude` command instead.  
