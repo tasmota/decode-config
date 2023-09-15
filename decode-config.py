@@ -3018,7 +3018,7 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
                     scolon=': ' if type_ is not None or line is not None else '',
                     smgs=msg,
                     slineno='(@{:04d})'.format(line) if line is not None else ''),
-            file=sys.stderr)
+            file=sys.stderr if LogType.ERROR==type_ else sys.stdout)
 
     if src is not None:
         msg = '{} ({})'.format(src, msg)
