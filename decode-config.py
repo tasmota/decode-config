@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.1.0.2',
+    'VERSION': '13.1.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
-    'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
+    'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
     'AUTHOR': 'Norbert Richter',
     'AUTHOR_EMAIL': 'nr@prsolution.eu',
@@ -2788,7 +2788,10 @@ SETTING_13_1_0_2.update             ({
     'hdmi_cec_device_type':         (HARDWARE.ESP,   'B',   0xF61,       (None, None,                           ('Hdmi',      '"HdmiType {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_13_1_0_3 = copy.deepcopy(SETTING_13_1_0_2)
+# ======================================================================
 SETTINGS = [
+            (0x0D010003,0x1000, SETTING_13_1_0_3),
             (0x0D010002,0x1000, SETTING_13_1_0_2),
             (0x0D010001,0x1000, SETTING_13_1_0_1),
             (0x0D000002,0x1000, SETTING_13_0_0_2),
