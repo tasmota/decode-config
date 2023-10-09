@@ -63,7 +63,7 @@ Returns:
     22: HTTP connection error
     23: MQTT connection error
     >23: python library exit code
-    4xx, 5xx: HTTP errors
+    255: Other errors
 """
 
 class ExitCode:
@@ -3031,7 +3031,9 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
     if LogType.ERROR == type_ and doexit is None:
         doexit = True
     if doexit:
-        log(msg="Premature exit - #{} {}".format(status, ExitCode.str(status)), type_=None, status=None, line=None)
+        message(msg="Premature exit - #{} {}".format(status, ExitCode.str(status)), type_=None, status=None, line=None)
+        if EXIT_CODE > len(ExitCode.STR):
+            EXIT_CODE = -1
         sys.exit(EXIT_CODE)
 
 def shorthelp(doexit=True):
