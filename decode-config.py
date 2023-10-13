@@ -2789,6 +2789,9 @@ SETTING_13_1_0_2.update             ({
                                     })
 # ======================================================================
 SETTING_13_1_0_4 = copy.copy(SETTING_13_1_0_2)
+SETTING_13_1_0_4.update             ({
+    'windmeter_measure_intvl':      (HARDWARE.ESP,   'B',   0xF63,       (None, None,                           ('Sensor',      '"Sensor68 6,{}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D010004,0x1000, SETTING_13_1_0_4),
