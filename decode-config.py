@@ -4,7 +4,7 @@ from __future__ import print_function
 METADATA = {
     'VERSION': '13.1.0.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
-    'CLASSIFIER': 'Development Status :: 4 - Beta',
+    'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
     'AUTHOR': 'Norbert Richter',
     'AUTHOR_EMAIL': 'nr@prsolution.eu',
@@ -2793,7 +2793,10 @@ SETTING_13_1_0_4.update             ({
     'windmeter_measure_intvl':      (HARDWARE.ESP,   'B',   0xF63,       (None, None,                           ('Sensor',      '"Sensor68 6,{}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_13_2_0_0 = copy.copy(SETTING_13_1_0_4)
+# ======================================================================
 SETTINGS = [
+            (0x0D020000,0x1000, SETTING_13_2_0_0),
             (0x0D010004,0x1000, SETTING_13_1_0_4),
             (0x0D010002,0x1000, SETTING_13_1_0_2),
             (0x0D010001,0x1000, SETTING_13_1_0_1),
