@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.1.0.4',
+    'VERSION': '13.2.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
