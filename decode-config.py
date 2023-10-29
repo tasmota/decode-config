@@ -2794,6 +2794,9 @@ SETTING_13_1_0_4.update             ({
                                     })
 # ======================================================================
 SETTING_13_2_0_1 = copy.copy(SETTING_13_1_0_4)
+SETTING_13_2_0_1['flag6'][1].update ({
+        'neopool_outputsensitive':  (HARDWARE.ESP,   '<L', (0xF74,1,11), (None, None,                           ('SetOption',   '"SO157 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0D020001,0x1000, SETTING_13_2_0_1),
