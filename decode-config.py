@@ -137,7 +137,7 @@ if sys.version_info[0] < 3:
     sys.exit(ExitCode.UNSUPPORTED_VERSION)
 import platform
 try:
-    from datetime import datetime
+    from datetime import datetime, timezone
     import base64
     import time
     import copy
@@ -5923,7 +5923,7 @@ def bin2mapping(config, raw=False):
 
     # add header info
     valuemapping['header'] = {
-        'timestamp':datetime.utcfromtimestamp(cfg_timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+        'timestamp':datetime.fromtimestamp(cfg_timestamp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         'data': {
             'crc':      hex(get_settingcrc(config['decode'][:config['info']['template_size']])),
             'size':     len(config['decode']),
