@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.2.0.2',
+    'VERSION': '13.2.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2798,10 +2798,10 @@ SETTING_13_2_0_1['flag6'][1].update ({
         'neopool_outputsensitive':  (HARDWARE.ESP,   '<L', (0xF74,1,11), (None, None,                           ('SetOption',   '"SO157 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_2_0_2 = copy.copy(SETTING_13_2_0_1)
+SETTING_13_2_0_3 = copy.copy(SETTING_13_2_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0D020002,0x1000, SETTING_13_2_0_2),
+            (0x0D020003,0x1000, SETTING_13_2_0_3),
             (0x0D020001,0x1000, SETTING_13_2_0_1),
             (0x0D010004,0x1000, SETTING_13_1_0_4),
             (0x0D010002,0x1000, SETTING_13_1_0_2),
