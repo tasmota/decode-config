@@ -4208,7 +4208,6 @@ def pull_mqtt(use_base64=True):
         try:
             root = json.loads(msg.payload.decode(STR_CODING))
             if root:
-                time.sleep(0.01)
                 if "FileDownload" in root:
                     rcv_code = root["FileDownload"]
                     if "Aborted" in rcv_code:
@@ -4256,7 +4255,6 @@ def pull_mqtt(use_base64=True):
             dobj = bytearray()
         else:
             if use_base64 and file_id > 0 and file_id != rcv_id:
-                err_str = "File ID mismatch"
                 err_flag = True
                 return
 
@@ -4305,7 +4303,7 @@ def pull_mqtt(use_base64=True):
     def wait_for_connect():
         nonlocal conn_flag
 
-        timeout = MQTT_TIMEOUT/10
+        timeout = 200
         while not conn_flag and timeout > 0:
             time.sleep(0.01)
             timeout = timeout -1
@@ -4420,7 +4418,6 @@ def push_mqtt(encode_cfg, use_base64=True):
         try:
             root = json.loads(msg.payload.decode(STR_CODING))
             if root:
-                time.sleep(0.01)
                 if "FileUpload" in root:
                     rcv_code = root["FileUpload"]
                     if "Aborted" in rcv_code:
