@@ -4229,6 +4229,8 @@ def pull_mqtt(use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
+                    if "Done" in rcv_code:
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -4443,6 +4445,8 @@ def push_mqtt(encode_cfg, use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
+                    if "Done" in rcv_code:
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
