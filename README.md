@@ -671,7 +671,7 @@ decode-config -s mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/ta
 Linux
 
 ```bash
-for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -s $device -o Config_@d_@v
+for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -s $device -o Config_@d_@v; done
 ```
 
 under Windows
