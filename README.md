@@ -921,6 +921,7 @@ These Tasmota commands are used for immediate action and do not change settings 
 These Tasmota commands are unsupported and not implemented in **decode-config**
 
 <details>
+  
   | Group          | Supported                   | *Ad hoc*               |`Unsupported`|
   |----------------|-----------------------------|------------------------|-------------|
   | **Control**    | BlinkCount                  | *Backlog*              |             |
@@ -1239,6 +1240,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 
 ## Program return codes
 <details>
+  
   **decode-config** returns the following codes:
 
   * **0** - successful:  
