@@ -1140,6 +1140,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | VoltageLow                  |                        |             |
   |                | VoltRes                     |                        |             |
   |                | WattRes                     |                        |             |
+  | **Usf**        | UsfFTP                      |                        | `UsfType`   |
+  |                |                             |                        | `UsfSize`   |
+  |                |                             |                        | `UsfFree`   |
+  |                |                             |                        | `UsfDelete` |
+  |                |                             |                        | `UsfRename` |
+  |                |                             |                        | `UsfRun`    |
+  |                |                             |                        | `UsfServe`  |
   | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
   |                | DimmerStep                  | *CT*                   | `Dimmer`    |
   |                | Fade                        | *CTRange*              |             |
