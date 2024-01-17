@@ -2537,7 +2537,7 @@ SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_11_1_0_1.update             ({
     'influxdb_rp':                  (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $$)')) ),
-    'influxdb_rp':                  (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
+    'influxdb_rp32':                (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
