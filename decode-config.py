@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.3.0.3',
+    'VERSION': '13.3.0.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2825,10 +2825,10 @@ SETTING_13_3_0_2['mbflag2'][1].update({
         'FTP_Mode':                 (HARDWARE.ESP,   '<L', (0xFD8,2,24), (None, '0 <= $ <= 2',                  ('Usf',         '"UfsFTP {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_3_0_3 = copy.copy(SETTING_13_3_0_2)
+SETTING_13_3_0_4 = copy.copy(SETTING_13_3_0_2)
 # ======================================================================
 SETTINGS = [
-            (0x0D030003,0x1000, SETTING_13_3_0_3),
+            (0x0D030004,0x1000, SETTING_13_3_0_4),
             (0x0D030002,0x1000, SETTING_13_3_0_2),
             (0x0D020003,0x1000, SETTING_13_2_0_3),
             (0x0D020001,0x1000, SETTING_13_2_0_1),
