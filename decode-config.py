@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.1.0.0',
+    'VERSION': '13.4.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2832,28 +2832,10 @@ SETTING_13_3_0_5['flag6'][1].update ({
         'counter_both_edges':       (HARDWARE.ESP,   '<L', (0xF74,1,13), (None, None,                           ('SetOption',   '"SO159 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_4_0_4 = copy.copy(SETTING_13_3_0_5)
-SETTING_13_4_0_4.update             ({
-     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
-                                    })
-# ======================================================================
-SETTING_14_0_0_2 = copy.copy(SETTING_13_4_0_4)
-SETTING_14_0_0_2['sbflag1'][1].update({
-        'telegram_disable_af':      (HARDWARE.ESP,   '<L', (0xFA0,1,12), (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+6)')) ),
-                                    })
-# ======================================================================
-SETTING_14_0_0_4 = copy.copy(SETTING_14_0_0_2)
-SETTING_14_0_0_4.update             ({
-    'tcp_baudrate':                 (HARDWARE.ESP,   '<H',  0x540,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
-                                    })
-# ======================================================================
-SETTING_14_1_0_0 = copy.copy(SETTING_14_0_0_4)
+SETTING_13_4_0_1 = copy.copy(SETTING_13_3_0_5)
 # ======================================================================
 SETTINGS = [
-            (0x0E010000,0x1000, SETTING_14_1_0_0),
-            (0x0E000004,0x1000, SETTING_14_0_0_4),
-            (0x0E000002,0x1000, SETTING_14_0_0_2),
-            (0x0D040004,0x1000, SETTING_13_4_0_4),
+            (0x0D040001,0x1000, SETTING_13_4_0_1),
             (0x0D030005,0x1000, SETTING_13_3_0_5),
             (0x0D030002,0x1000, SETTING_13_3_0_2),
             (0x0D020003,0x1000, SETTING_13_2_0_3),
