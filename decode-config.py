@@ -5577,7 +5577,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
             else:
                 value = write_converter(restoremapping.encode(STR_CODING), fielddef)
             err_text = "string length exceeding"
-            if value is not None:
+            if value is not None and not isinstance(value, bool):
                 max_ -= 1
                 valid = min_ <= len(value) <= max_
             else:
