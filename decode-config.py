@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.3.0.0',
+    'VERSION': '13.4.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -13,7 +13,7 @@ METADATA = {
 """
     decode-config.py - Backup/Restore Tasmota configuration data
 
-    Copyright (C) 2023 Norbert Richter <nr@prsolution.eu>
+    Copyright (C) 2024 Norbert Richter <nr@prsolution.eu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -679,7 +679,7 @@ class Hardware:
         Create hardware string
 
         @param config_version:
-            config_version vvalue from Tasmota configuration
+            config_version value from Tasmota configuration
 
         @return:
             hardware string
@@ -1938,6 +1938,11 @@ SETTING_8_3_1_7.update              ({
     'scripting_compressed':         (HARDWARE.ESP,   'B',  (0x4A0,1,6),  (None, None,                           ('Rules',       None)), (False, False)),
     'script_enabled':               (HARDWARE.ESP,   'B',  (0x49F,1,0),  (None, None,                           ('Rules',       '"Script {}".format($)')), isscript),
     'script':                       (HARDWARE.ESP,  '1536s',0x800,       (None, None,                           ('Rules',       None)), (scriptread, scriptwrite)),
+    'domoticz_update_timer':        (HARDWARE.ESP,   '<H',  0x340,       (None, '0 <= $ <= 3600',               ('Domoticz',    '"DzUpdateTimer {}".format($)')) ),
+    'domoticz_relay_idx':           (HARDWARE.ESP,   '<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DzIdx{} {}".format(#+1,$)')) ),
+    'domoticz_key_idx':             (HARDWARE.ESP,   '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DzKeyIdx{} {}".format(#+1,$)')) ),
+    'domoticz_switch_idx':          (HARDWARE.ESP,   '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_sensor_idx':          (HARDWARE.ESP,   '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DzSensorIdx{} {}".format(#+1,$)')) ),
                                     })
 SETTING_8_3_1_7['flag4'][1].update  ({
         'remove_zbreceived':        (HARDWARE.ESP,   '<L', (0xEF8,1,18), (None, None,                           ('SetOption',   '"SO100 {}".format($)')) ),
@@ -2349,38 +2354,38 @@ SETTING_10_1_0_6.update             ({
     'web_time_start':               (HARDWARE.ESP,   'B',   0x33C,       (None, None,                           ('Management',  '"WebTime {},{}".format($,@["web_time_end"])')) ),
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
-    'eth_type':                     (HARDWARE.ESP32ex,
+    'eth_type':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_type_esp32s3':             (HARDWARE.ESP32S3,
                                                      'B',   0x40E,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
-    'eth_clk_mode':                 (HARDWARE.ESP32ex,
+    'eth_clk_mode':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
     'eth_clk_mode_esp32s3':         (HARDWARE.ESP32S3,
                                                      'B',   0x40F,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
-    'eth_address':                  (HARDWARE.ESP32ex,
+    'eth_address':                  (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
     'eth_address_esp32s3':          (HARDWARE.ESP32S3,
                                                      'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
-    'module':                       (HARDWARE.ESP82_32ex,
+    'module':                       (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
     'module_esp32s3':               (HARDWARE.ESP32S3,
                                                      'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
-    'webcam_config':                (HARDWARE.ESP32ex, {
-        'stream':                   (HARDWARE.ESP32ex,
+    'webcam_config':                (HARDWARE.ESP32 ^ HARDWARE.ESP32S3, {
+        'stream':                   (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
-        'mirror':                   (HARDWARE.ESP32ex,
+        'mirror':                   (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
-        'flip':                     (HARDWARE.ESP32ex,
+        'flip':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
-        'rtsp':                     (HARDWARE.ESP32ex,
+        'rtsp':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
-        'contrast':                 (HARDWARE.ESP32ex,
+        'contrast':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
-        'brightness':               (HARDWARE.ESP32ex,
+        'brightness':               (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
-        'saturation':               (HARDWARE.ESP32ex,
+        'saturation':               (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
-        'resolution':               (HARDWARE.ESP32ex,
+        'resolution':               (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
                                     },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
     'webcam_config_esp32s3':        (HARDWARE.ESP32S3, {
@@ -2401,35 +2406,35 @@ SETTING_10_1_0_6.update             ({
         'resolution':               (HARDWARE.ESP32S3,
                                                      '<L', (0x460,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
                                     },                      0x460,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'ws_width':                     (HARDWARE.ESP82_32ex,
+    'ws_width':                     (HARDWARE.ESP ^ HARDWARE.ESP32S3,
                                                      'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
     'ws_width_esp32s3':             (HARDWARE.ESP32S3,
                                                      'B',   0x464,       ([3],  None,                           ('Light',       None)) ),
-    'serial_delimiter':             (HARDWARE.ESP82_32ex,
+    'serial_delimiter':             (HARDWARE.ESP ^ HARDWARE.ESP32S3,
                                                      'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
     'serial_delimiter_esp32s3':     (HARDWARE.ESP32S3,
                                                      'B',   0x467,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
-    'seriallog_level':              (HARDWARE.ESP82_32ex,
+    'seriallog_level':              (HARDWARE.ESP ^ HARDWARE.ESP32S3,
                                                      'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
     'seriallog_level_esp32s3':      (HARDWARE.ESP32S3,
                                                      'B',   0x468,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sleep':                        (HARDWARE.ESP82_32ex,
+    'sleep':                        (HARDWARE.ESP ^ HARDWARE.ESP32S3,
                                                      'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
     'sleep_esp32s3':                (HARDWARE.ESP32S3,
                                                      'B',   0x469,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
-    'domoticz_switch_idx':          (HARDWARE.ESP82_32ex,
-                                                     '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_switch_idx':          (HARDWARE.ESP ^ HARDWARE.ESP32S3,
+                                                     '<H',  0x454,       ([4],  None,                           ('Domoticz',    '"DzSwitchIdx{} {}".format(#+1,$)')) ),
     'domoticz_switch_idx_esp32s3':  (HARDWARE.ESP32S3,
-                                                     '<H',  0x46A,       ([4],  None,                           ('Domoticz',    '"DomoticzSwitchIdx{} {}".format(#+1,$)')) ),
-    'domoticz_sensor_idx':          (HARDWARE.ESP82_32ex,
-                                                     '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
+                                                     '<H',  0x46A,       ([4],  None,                           ('Domoticz',    '"DzSwitchIdx{} {}".format(#+1,$)')) ),
+    'domoticz_sensor_idx':          (HARDWARE.ESP ^ HARDWARE.ESP32S3,
+                                                     '<H',  0x45C,       ([12], None,                           ('Domoticz',    '"DzSensorIdx{} {}".format(#+1,$)')) ),
     'domoticz_sensor_idx_esp32s3':  (HARDWARE.ESP32S3,
-                                                     '<H',  0x472,       ([12], None,                           ('Domoticz',    '"DomoticzSensorIdx{} {}".format(#+1,$)')) ),
-    'ws_color':                     (HARDWARE.ESP82_32ex,
+                                                     '<H',  0x472,       ([12], None,                           ('Domoticz',    '"DzSensorIdx{} {}".format(#+1,$)')) ),
+    'ws_color':                     (HARDWARE.ESP ^ HARDWARE.ESP32S3,
                                                      'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
     'ws_color_esp32s3':             (HARDWARE.ESP32S3,
                                                      'B',   0x48A,       ([4,3],None,                           ('Light',       None)) ),
-    'my_gp_esp32':                  (HARDWARE.ESP32ex,
+    'my_gp_esp32':                  (HARDWARE.ESP ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3),
                                                      '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
     'my_gp_esp32c3':                (HARDWARE.ESP32C3,
                                                      '<H',  0x3AC,       ([22], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
@@ -2439,11 +2444,11 @@ SETTING_10_1_0_6.update             ({
                                                      '<H',  0x3AC,       ([49], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
                                     })
 SETTING_10_1_0_6['user_template_esp32'][1].update({
-        'base':                     (HARDWARE.ESP32ex,
+        'base':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3),
                                                      'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio"],@["user_template_esp32"]["flag"],$)')), ('$+1','$-1') ),
-        'gpio':                     (HARDWARE.ESP32ex,
+        'gpio':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3),
                                                      '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
-        'flag':                     (HARDWARE.ESP32ex,
+        'flag':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3),
                                                      '<H',  0x3FC+(2*36),(None, None,                           ('Management',  None)) ),
         'base_esp32c3':             (HARDWARE.ESP32C3,
                                                      'B',   0x71F,       (None, None,                           ('Management',  '"Template {{\\\"NAME\\\":\\\"{}\\\",\\\"GPIO\\\":{},\\\"FLAG\\\":{},\\\"BASE\\\":{}}}".format(@["templatename"],@["user_template_esp32"]["gpio_esp32c3"],@["user_template_esp32"]["flag_esp32c3"],$)')), ('$+1','$-1') ),
@@ -2532,7 +2537,7 @@ SETTING_11_1_0_1[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_11_1_0_1.update             ({
     'influxdb_rp':                  (HARDWARE.ESP82, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $$)')) ),
-    'influxdb_rp':                  (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
+    'influxdb_rp32':                (HARDWARE.ESP32, '699s',(0x017,'SET_INFLUXDB_RP'),
                                                                          (None,  None,                          ('Management',  '"IfxRP {}".format("\\"" if len($) == 0 else $)')) ),
                                     })
 
@@ -2560,27 +2565,27 @@ SETTING_11_1_0_2.update             ({
                                     },                      0x730,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 SETTING_11_1_0_2['webcam_config'][1].update({
-        'awb':                      (HARDWARE.ESP32ex,
+        'awb':                      (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
-        'awb_gain':                 (HARDWARE.ESP32ex,
+        'awb_gain':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 5), (None, None,                           ('Control',     '"WCAWBGain {}".format($)')) ),
-        'aec':                      (HARDWARE.ESP32ex,
+        'aec':                      (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 6), (None, None,                           ('Control',     '"WCAEC {}".format($)')) ),
-        'aec2':                     (HARDWARE.ESP32ex,
+        'aec2':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 7), (None, None,                           ('Control',     '"WCAECDSP {}".format($)')) ),
-        'raw_gma':                  (HARDWARE.ESP32ex,
+        'raw_gma':                  (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 8), (None, None,                           ('Control',     '"WCGammaCorrect {}".format($)')) ),
-        'lenc':                     (HARDWARE.ESP32ex,
+        'lenc':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 9), (None, None,                           ('Control',     '"WCLensCorrect {}".format($)')) ),
-        'colorbar':                 (HARDWARE.ESP32ex,
+        'colorbar':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1,10), (None, None,                           ('Control',     '"WCColorbar {}".format($)')) ),
-        'wpc':                      (HARDWARE.ESP32ex,
+        'wpc':                      (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1,11), (None, None,                           ('Control',     '"WCWPC {}".format($)')) ),
-        'dcw':                      (HARDWARE.ESP32ex,
+        'dcw':                      (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1,12), (None, None,                           ('Control',     '"WCDCW {}".format($)')) ),
-        'bpc':                      (HARDWARE.ESP32ex,
+        'bpc':                      (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
-        'feature':                  (HARDWARE.ESP32ex,
+        'feature':                  (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
                                     })
 SETTING_11_1_0_2['webcam_config_esp32s3'][1].update({
@@ -2798,10 +2803,41 @@ SETTING_13_2_0_1['flag6'][1].update ({
         'neopool_outputsensitive':  (HARDWARE.ESP,   '<L', (0xF74,1,11), (None, None,                           ('SetOption',   '"SO157 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_3_0_0 = copy.copy(SETTING_13_2_0_1)
+SETTING_13_2_0_3 = copy.copy(SETTING_13_2_0_1)
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_CANVAS'])
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_CANVAS'])
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_CANVAS'])
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_13_2_0_3[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_13_2_0_3.update             ({
+    'webcanvas':                    (HARDWARE.ESP82, '699s',(0x017,'SET_CANVAS'),
+                                                                         (None,  None,                          ('Wifi',        '"WebCanvas {}".format("\\"" if len($) == 0 else $$)')) ),
+    'webcanvas32':                  (HARDWARE.ESP32, '699s',(0x017,'SET_CANVAS'),
+                                                                         (None,  None,                          ('Wifi',        '"WebCanvas {}".format("\\"" if len($) == 0 else $)')) ),
+                                    })
+# ======================================================================
+SETTING_13_3_0_2 = copy.copy(SETTING_13_2_0_3)
+SETTING_13_3_0_2['mbflag2'][1].update({
+        'FTP_Mode':                 (HARDWARE.ESP,   '<L', (0xFD8,2,24), (None, '0 <= $ <= 2',                  ('Usf',         '"UfsFTP {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_13_3_0_5 = copy.copy(SETTING_13_3_0_2)
+SETTING_13_3_0_5['flag6'][1].update ({
+        'mqtt_disable_modbus':      (HARDWARE.ESP,   '<L', (0xF74,1,12), (None, None,                           ('SetOption',   '"SO158 {}".format($)')) ),
+        'counter_both_edges':       (HARDWARE.ESP,   '<L', (0xF74,1,13), (None, None,                           ('SetOption',   '"SO159 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_13_4_0_0 = copy.copy(SETTING_13_3_0_5)
 # ======================================================================
 SETTINGS = [
-            (0x0D030000,0x1000, SETTING_13_3_0_0),
+            (0x0D040000,0x1000, SETTING_13_4_0_0),
+            (0x0D030005,0x1000, SETTING_13_3_0_5),
+            (0x0D030002,0x1000, SETTING_13_3_0_2),
+            (0x0D020003,0x1000, SETTING_13_2_0_3),
             (0x0D020001,0x1000, SETTING_13_2_0_1),
             (0x0D010004,0x1000, SETTING_13_1_0_4),
             (0x0D010002,0x1000, SETTING_13_1_0_2),
@@ -4224,6 +4260,8 @@ def pull_mqtt(use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
+                    if "Done" in rcv_code:
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -4438,6 +4476,8 @@ def push_mqtt(encode_cfg, use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
+                    if "Done" in rcv_code:
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -5541,7 +5581,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
             else:
                 value = write_converter(restoremapping.encode(STR_CODING), fielddef)
             err_text = "string length exceeding"
-            if value is not None:
+            if value is not None and not isinstance(value, bool):
                 max_ -= 1
                 valid = min_ <= len(value) <= max_
             else:

@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/tasmota/decode-config/blob/master/media/pic/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v13.3.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![master](https://img.shields.io/badge/master-v13.4.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
 ![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v13.3.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v13.4.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -337,7 +337,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_13.3.json` (the part `Tasmota` and `13.3` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_13.4.json` (the part `Tasmota` and `13.4` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -349,7 +349,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_13.3.json` using JSON format
+* `Config_Tasmota_13.4.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -357,10 +357,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_13.3.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_13.4.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_13.3
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_13.4
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -671,7 +671,7 @@ decode-config -s mqtts://mqttuser:myBrokerPaszxwo!z@mybroker.example.com/tele/ta
 Linux
 
 ```bash
-for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -s $device -o Config_@d_@v
+for device in tasmota1 tasmota2 tasmota3; do ./decode-config -c my.conf -s $device -o Config_@d_@v; done
 ```
 
 under Windows
@@ -921,6 +921,7 @@ These Tasmota commands are used for immediate action and do not change settings 
 These Tasmota commands are unsupported and not implemented in **decode-config**
 
 <details>
+  
   | Group          | Supported                   | *Ad hoc*               |`Unsupported`|
   |----------------|-----------------------------|------------------------|-------------|
   | **Control**    | BlinkCount                  | *Backlog*              |             |
@@ -1139,6 +1140,13 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | VoltageLow                  |                        |             |
   |                | VoltRes                     |                        |             |
   |                | WattRes                     |                        |             |
+  | **Usf**        | UsfFTP                      |                        | `UsfType`   |
+  |                |                             |                        | `UsfSize`   |
+  |                |                             |                        | `UsfFree`   |
+  |                |                             |                        | `UsfDelete` |
+  |                |                             |                        | `UsfRename` |
+  |                |                             |                        | `UsfRun`    |
+  |                |                             |                        | `UsfServe`  |
   | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
   |                | DimmerStep                  | *CT*                   | `Dimmer`    |
   |                | Fade                        | *CTRange*              |             |
@@ -1239,6 +1247,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
 
 ## Program return codes
 <details>
+  
   **decode-config** returns the following codes:
 
   * **0** - successful:  
