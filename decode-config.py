@@ -2828,6 +2828,7 @@ SETTING_13_3_0_2['mbflag2'][1].update({
 SETTING_13_3_0_5 = copy.copy(SETTING_13_3_0_2)
 SETTING_13_3_0_5['flag6'][1].update ({
         'mqtt_disable_modbus':      (HARDWARE.ESP,   '<L', (0xF74,1,12), (None, None,                           ('SetOption',   '"SO158 {}".format($)')) ),
+        'counter_both_edges':       (HARDWARE.ESP,   '<L', (0xF74,1,13), (None, None,                           ('SetOption',   '"SO159 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
