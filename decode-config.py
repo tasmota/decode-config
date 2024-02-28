@@ -1921,7 +1921,7 @@ SETTING_8_3_1_5.update              ({
 # ======================================================================
 SETTING_8_3_1_6 = copy.copy(SETTING_8_3_1_5)
 SETTING_8_3_1_6.update              ({
-    'fallback_module':              (HARDWARE.ESP,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
+    'fallback_module':              (HARDWARE.ESP,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($+1 & 0xff)')) ),
     'zb_channel':                   (HARDWARE.ESP,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
     'zb_txradio_dbm':               (HARDWARE.ESP,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
                                     })
