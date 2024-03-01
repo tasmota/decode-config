@@ -2367,9 +2367,9 @@ SETTING_10_1_0_6.update             ({
     'eth_address_esp32s3':          (HARDWARE.ESP32S3,
                                                      'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
     'module':                       (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
-                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'module_esp32s3':               (HARDWARE.ESP32S3,
-                                                     'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+                                                     'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'webcam_config':                (HARDWARE.ESP32 ^ HARDWARE.ESP32S3, {
         'stream':                   (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
