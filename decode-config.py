@@ -2247,6 +2247,7 @@ SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_RGX_SSID
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_9_5_0_5.pop('adc_param_type', None)
 SETTING_9_5_0_5.update              ({
     'ipv4_rgx_address':             (HARDWARE.ESP,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
     'ipv4_rgx_subnetmask':          (HARDWARE.ESP,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
@@ -2355,9 +2356,9 @@ SETTING_10_1_0_6.update             ({
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
     'eth_type':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
-                                                     'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+                                                     'B',   0x446,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_type_esp32s3':             (HARDWARE.ESP32S3,
-                                                     'B',   0x40E,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+                                                     'B',   0x40E,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_clk_mode':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
     'eth_clk_mode_esp32s3':         (HARDWARE.ESP32S3,
