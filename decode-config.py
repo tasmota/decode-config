@@ -317,8 +317,7 @@ based on this dictionary.
                 <formatstring>: <string>
                     defines the use of data at <addrdef>
                     format is defined in 'struct module format string'
-                    see
-                    https://docs.python.org/3.8/library/struct.html#format-strings
+                    see https://docs.python.org/3/library/struct.html#format-strings
                 <setting>:      <setting>
                     A dictionary describes a (sub)setting dictonary
                     and can recursively define another <setting>
@@ -772,7 +771,7 @@ SETTING_5_10_0 = {
                                     },                      0x2E8,       (None, None,                           ('Control',     None)), (None, None) ),
     'pwm_value':                    (HARDWARE.ESP,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1,$)')) ),
     'altitude':                     (HARDWARE.ESP,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
-    'tele_period':                  (HARDWARE.ESP,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',       '"TelePeriod {}".format($)')) ),
+    'tele_period':                  (HARDWARE.ESP,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',        '"TelePeriod {}".format($)')) ),
     'ledstate':                     (HARDWARE.ESP,   'B',   0x2FB,       (None, '0 <= $ <= 8',                  ('Control',     '"LedState {}".format(($ & 0x7))')) ),
     'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
     'state_text':                   (HARDWARE.ESP,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
@@ -1450,7 +1449,7 @@ SETTING_7_1_2_5.update              ({
     'weblog_level':                 (HARDWARE.ESP,   'B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
     'mqtt_fingerprint1':            (HARDWARE.ESP,   'B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
     'mqtt_fingerprint2':            (HARDWARE.ESP,   'B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
-    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_6 = copy.copy(SETTING_7_1_2_5)
@@ -1878,7 +1877,7 @@ SETTING_8_3_1_2.update              ({
     'ledpwm_off':                   (HARDWARE.ESP,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
                                     })
 SETTING_8_3_1_2['flag2'][1].update  ({
-        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
+        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management',  '"Time {}".format($+1)')) ),
                                     })
 SETTING_8_3_1_2['SensorBits1'][1].pop('bh1750_resolution',None)
 SETTING_8_3_1_2['SensorBits1'][1].update ({
@@ -2208,9 +2207,9 @@ SETTING_9_4_0_0.update              ({
 SETTING_9_4_0_3 = copy.copy(SETTING_9_4_0_0)
 SETTING_9_4_0_3.update              ({
     'sbflag1':                      (HARDWARE.ESP, {
-        'telegram_send_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
-        'telegram_recv_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
-        'telegram_echo_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+        'telegram_send_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+4)')) ),
                                     },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2321,8 +2320,8 @@ SETTING_10_0_0_1.update             ({
 # ======================================================================
 SETTING_10_0_0_3 = copy.copy(SETTING_10_0_0_1)
 SETTING_10_0_0_3.update             ({
-    'light_step_pixels':            (HARDWARE.ESP,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
-    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
+    'light_step_pixels':            (HARDWARE.ESP,   'B',   0xF60,       (None, None,                           ('Light',       '"StepPixels {}".format($)')) ),
+    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management',  '"IfxPeriod {}".format($)')) ),
                                     })
 SETTING_10_0_0_3['flag5'][1].update ({
         'tuya_allow_dimmer_0':      (HARDWARE.ESP,   '<L', (0xFB4,1,17), (None, None,                           ('SetOption',   '"SO131 {}".format($)')) ),
@@ -2330,7 +2329,7 @@ SETTING_10_0_0_3['flag5'][1].update ({
 # ======================================================================
 SETTING_10_0_0_4 = copy.copy(SETTING_10_0_0_3)
 SETTING_10_0_0_4.update             ({
-    'shift595_device_count':        (HARDWARE.ESP,   'B',   0xEC6,       (None, None,                           ('Sensor',     '"Shift595DeviceCount {}".format($)')) ),
+    'shift595_device_count':        (HARDWARE.ESP,   'B',   0xEC6,       (None, None,                           ('Sensor',      '"Shift595DeviceCount {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['sbflag1'][1].update({
         'sspm_display':             (HARDWARE.ESP32, '<L', (0xFA0,1,8),  (None, '0 <= $ <= 1',                  ('Management',  '"SSPMDisplay {}".format($)')) ),
@@ -2497,8 +2496,8 @@ SETTING_11_0_0_4['flag5'][1].update ({
 # ======================================================================
 SETTING_11_0_0_5 = copy.deepcopy(SETTING_11_0_0_4)
 SETTING_11_0_0_5.update             ({
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          None)) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          None)) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      None)) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_11_0_0_5['sbflag1'][1].update({
         'influxdb_sensor':          (HARDWARE.ESP,   '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
@@ -2510,16 +2509,16 @@ SETTING_11_0_0_5['flag5'][1].update ({
 # ======================================================================
 SETTING_11_0_0_6 = copy.deepcopy(SETTING_11_0_0_5)
 SETTING_11_0_0_6.update             ({
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      '"Sensor34 11 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_7 = copy.deepcopy(SETTING_11_0_0_6)
 SETTING_11_0_0_7.update             ({
-    'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',          None)) ),
-    'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 12 {}".format($)')) ),
+    'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',      None)) ),
+    'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',      '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      '"Sensor34 11 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      '"Sensor34 12 {}".format($)')) ),
                                     })
 SETTING_11_0_0_7['flag5'][1].update ({
         'gui_table_align':          (HARDWARE.ESP,   '<L', (0xFB4,1,24), (None, None,                           ('SetOption',   '"SO138 {}".format($)')) ),
@@ -2643,13 +2642,13 @@ SETTING_12_0_1_2.update             ({
 # ======================================================================
 SETTING_12_0_2_2 = copy.copy(SETTING_12_0_1_2)
 SETTING_12_0_2_2.update             ({
-    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',        None)) ),
+    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',      None)) ),
                                     })
 # ======================================================================
 SETTING_12_0_2_4 = copy.copy(SETTING_12_0_2_2)
 SETTING_12_0_2_4.update             ({
-    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
-    'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',        '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',      '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
+    'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',      '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 SETTING_12_0_2_4['flag5'][1].update ({
         'zigbee_no_batt_autoprobe': (HARDWARE.ESP,   '<L', (0xFB4,1,29), (None, None,                           ('SetOption',   '"SO143 {}".format($)')) ),
