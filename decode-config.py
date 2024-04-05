@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.4.0.3',
+    'VERSION': '13.4.0.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2692,6 +2692,7 @@ SETTING_12_1_1_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_2_0_2 = copy.deepcopy(SETTING_12_1_1_6)
+SETTING_12_2_0_2.pop('energy_kWhtotal',None)
 SETTING_12_2_0_2.update             ({
     'energy_power_calibration2':    (HARDWARE.ESP,   '<L',  0x370,       (None, None,                           ('Power',       '"PowerSet2 {}".format($)')) ),
     'energy_voltage_calibration2':  (HARDWARE.ESP,   '<L',  0x374,       (None, None,                           ('Power',       '"VoltageSet2 {}".format($)')) ),
@@ -2832,10 +2833,13 @@ SETTING_13_3_0_5['flag6'][1].update ({
         'counter_both_edges':       (HARDWARE.ESP,   '<L', (0xF74,1,13), (None, None,                           ('SetOption',   '"SO159 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_4_0_3 = copy.copy(SETTING_13_3_0_5)
+SETTING_13_4_0_4 = copy.copy(SETTING_13_3_0_5)
+SETTING_13_4_0_4.update             ({
+     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x0D040003,0x1000, SETTING_13_4_0_3),
+            (0x0D040004,0x1000, SETTING_13_4_0_4),
             (0x0D030005,0x1000, SETTING_13_3_0_5),
             (0x0D030002,0x1000, SETTING_13_3_0_2),
             (0x0D020003,0x1000, SETTING_13_2_0_3),
