@@ -3821,6 +3821,8 @@ def make_filename(filename, filetype, configmapping):
             hostname from device (http source only)
         @F:
             configuration filename from MQTT request (mqtt source only)
+        @t:
+            topic from config data
     @param filetype:
         FileType.x object - creates extension if not None
     @param configmapping:
@@ -3829,7 +3831,7 @@ def make_filename(filename, filetype, configmapping):
     @return:
         New filename with replacements
     """
-    config_version = config_friendlyname = config_hostname = device_hostname = filesource = ''
+    config_version = config_friendlyname = config_hostname = device_hostname = filesource = config_topic = ''
 
     try:
         config_version = configmapping['header']['data']['version']['id']
@@ -3854,6 +3856,10 @@ def make_filename(filename, filetype, configmapping):
             device_hostname = ''
     if filename.find('@F') >= 0 and ARGS.mqttsource is not None and ARGS.filesource is not None:
         filesource = ARGS.filesource.strip().rstrip('.dmp')
+    config_topic = configmapping.get('mqtt_topic', '')
+    if config_topic != '':
+        if str(config_topic).find('%') < 0:
+            config_topic = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_topic)).strip('_'))
 
     dirname = basename = ext = ''
 
@@ -3893,6 +3899,7 @@ def make_filename(filename, filetype, configmapping):
     filename = filename.replace('@h', config_hostname)
     filename = filename.replace('@H', device_hostname)
     filename = filename.replace('@F', filesource)
+    filename = filename.replace('@t', config_topic)
 
     return filename
 
@@ -6459,8 +6466,8 @@ def parseargs():
                         default=DEFAULTS['source']['source'],
                         help="source used for the Tasmota configuration (default: {}). "
                         "Specify source type, path, file, user, password, hostname, port and topic at once as an URL. "
-                        "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile'"
-                        "where scheme is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
+                        "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile' "
+                        "where 'scheme' is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
                         "{}".format(DEFAULTS['source']['source'],
                             "and 'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT server)" if MQTT_MODULE else ""))
     source.add_argument('-f', '--file', dest='filesource', default=DEFAULTS['source']['filesource'], help=configargparse.SUPPRESS)
@@ -6517,13 +6524,13 @@ def parseargs():
                          metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @t=topic".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @F=configuration filename from MQTT request (mqtt source only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @F=configuration filename from MQTT request (mqtt source only), @t=topic".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),
