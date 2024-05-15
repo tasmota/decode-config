@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.4.1.2',
+    'VERSION': '14.0.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2837,10 +2837,10 @@ SETTING_13_4_0_4.update             ({
      'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
                                     })
 # ======================================================================
-SETTING_13_4_1_2 = copy.copy(SETTING_13_4_0_4)
+SETTING_14_0_0_0 = copy.copy(SETTING_13_4_0_4)
 # ======================================================================
 SETTINGS = [
-            (0x0D040102,0x1000, SETTING_13_4_1_2),
+            (0x0E000000,0x1000, SETTING_14_0_0_0),
             (0x0D040004,0x1000, SETTING_13_4_0_4),
             (0x0D030005,0x1000, SETTING_13_3_0_5),
             (0x0D030002,0x1000, SETTING_13_3_0_2),
