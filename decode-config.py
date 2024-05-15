@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '13.4.0.0',
+    'VERSION': '14.0.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -317,8 +317,7 @@ based on this dictionary.
                 <formatstring>: <string>
                     defines the use of data at <addrdef>
                     format is defined in 'struct module format string'
-                    see
-                    https://docs.python.org/3.8/library/struct.html#format-strings
+                    see https://docs.python.org/3/library/struct.html#format-strings
                 <setting>:      <setting>
                     A dictionary describes a (sub)setting dictonary
                     and can recursively define another <setting>
@@ -772,7 +771,7 @@ SETTING_5_10_0 = {
                                     },                      0x2E8,       (None, None,                           ('Control',     None)), (None, None) ),
     'pwm_value':                    (HARDWARE.ESP,   '<H',  0x2EC,       ([5],  '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1,$)')) ),
     'altitude':                     (HARDWARE.ESP,   '<h',  0x2F6,       (None, '-30000 <= $ <= 30000',         ('Sensor',      '"Altitude {}".format($)')) ),
-    'tele_period':                  (HARDWARE.ESP,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',       '"TelePeriod {}".format($)')) ),
+    'tele_period':                  (HARDWARE.ESP,   '<H',  0x2F8,       (None, '0 == $ or 10 <= $ <= 3600',    ('MQTT',        '"TelePeriod {}".format($)')) ),
     'ledstate':                     (HARDWARE.ESP,   'B',   0x2FB,       (None, '0 <= $ <= 8',                  ('Control',     '"LedState {}".format(($ & 0x7))')) ),
     'param':                        (HARDWARE.ESP,   'B',   0x2FC,       ([23], None,                           ('SetOption',   '"SetOption{} {}".format(#+32,$)')) ),
     'state_text':                   (HARDWARE.ESP,   '11s', 0x313,       ([4],  None,                           ('MQTT',        '"StateText{} {}".format(#+1,$)')) ),
@@ -1450,7 +1449,7 @@ SETTING_7_1_2_5.update              ({
     'weblog_level':                 (HARDWARE.ESP,   'B',   0xECE,       (None, '0 <= $ <= 4',                  ('Management',  '"WebLog {}".format($)')) ),
     'mqtt_fingerprint1':            (HARDWARE.ESP,   'B',   0xECF,       ([20], None,                           ('MQTT',        '"MqttFingerprint1 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint1"]))')), '"0x{:02x}".format($)' ),
     'mqtt_fingerprint2':            (HARDWARE.ESP,   'B',   0xECF+20,    ([20], None,                           ('MQTT',        '"MqttFingerprint2 {}".format(" ".join("{:02X}".format(c) for c in @["mqtt_fingerprint2"]))')), '"0x{:02x}".format($)' ),
-    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',       '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
+    'adc_param_type':               (HARDWARE.ESP,   'B',   0xEF7,       (None, '2 <= $ <= 3',                  ('Sensor',      '"AdcParam {type},{param1},{param2},{param3}".format(type=$,param1=@["adc_param1"],param2=@["adc_param2"],param3=@["adc_param3"]//10000)')) ),
                                     })
 # ======================================================================
 SETTING_7_1_2_6 = copy.copy(SETTING_7_1_2_5)
@@ -1878,7 +1877,7 @@ SETTING_8_3_1_2.update              ({
     'ledpwm_off':                   (HARDWARE.ESP,   'B',   0xF40,       (None, None,                           ('Control',     '"LedPwmOff {}".format($)')) ),
                                     })
 SETTING_8_3_1_2['flag2'][1].update  ({
-        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management', '"Time {}".format($+1)')) ),
+        'time_format':              (HARDWARE.ESP,   '<L', (0x5BC,2, 4), (None, '0 <= $ <= 3',                  ('Management',  '"Time {}".format($+1)')) ),
                                     })
 SETTING_8_3_1_2['SensorBits1'][1].pop('bh1750_resolution',None)
 SETTING_8_3_1_2['SensorBits1'][1].update ({
@@ -1921,7 +1920,7 @@ SETTING_8_3_1_5.update              ({
 # ======================================================================
 SETTING_8_3_1_6 = copy.copy(SETTING_8_3_1_5)
 SETTING_8_3_1_6.update              ({
-    'fallback_module':              (HARDWARE.ESP,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($)')) ),
+    'fallback_module':              (HARDWARE.ESP,   'B',   0xF42,       (None, None,                           ('Management',  '"Module2 {}".format($+1 & 0xff)')) ),
     'zb_channel':                   (HARDWARE.ESP,   'B',   0xF32,       (None, '11 <= $ <= 26',                ('Zigbee',      None)) ),
     'zb_txradio_dbm':               (HARDWARE.ESP,   'B',   0xF33,       (None, None,                           ('Zigbee',      '"ZbConfig {{\\\"Channel\\\":{},\\\"PanID\\\":\\\"0x{:04X}\\\",\\\"ExtPanID\\\":\\\"0x{:016X}\\\",\\\"KeyL\\\":\\\"0x{:016X}\\\",\\\"KeyH\\\":\\\"0x{:016X}\\\",\\\"TxRadio\\\":{}}}".format(@["zb_channel"], @["zb_pan_id"], @["zb_ext_panid"], @["zb_precfgkey_l"], @["zb_precfgkey_h"],@["zb_txradio_dbm"])')) ),
                                     })
@@ -2208,9 +2207,9 @@ SETTING_9_4_0_0.update              ({
 SETTING_9_4_0_3 = copy.copy(SETTING_9_4_0_0)
 SETTING_9_4_0_3.update              ({
     'sbflag1':                      (HARDWARE.ESP, {
-        'telegram_send_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($)')) ),
-        'telegram_recv_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+2)')) ),
-        'telegram_echo_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',     '"TmState {}".format($+4)')) ),
+        'telegram_send_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,0),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($)')) ),
+        'telegram_recv_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,1),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+2)')) ),
+        'telegram_echo_enable':     (HARDWARE.ESP,   '<L', (0xFA0,1,2),  (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+4)')) ),
                                     },                      0xFA0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
                                     })
 # ======================================================================
@@ -2247,6 +2246,7 @@ SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_RGX_SSID
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
 SETTING_9_5_0_5[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_9_5_0_5.pop('adc_param_type', None)
 SETTING_9_5_0_5.update              ({
     'ipv4_rgx_address':             (HARDWARE.ESP,   '<L',  0x558,       (None, None,                           ('Wifi',        '"RgxAddress {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
     'ipv4_rgx_subnetmask':          (HARDWARE.ESP,   '<L',  0x55C,       (None, None,                           ('Wifi',        '"RgxSubnet {}".format($)')), ("socket.inet_ntoa(struct.pack('<L', $))", "struct.unpack('<L', socket.inet_aton($))[0]") ),
@@ -2320,8 +2320,8 @@ SETTING_10_0_0_1.update             ({
 # ======================================================================
 SETTING_10_0_0_3 = copy.copy(SETTING_10_0_0_1)
 SETTING_10_0_0_3.update             ({
-    'light_step_pixels':            (HARDWARE.ESP,   'B',   0xF60,       (None, None,                           ('Light',      '"StepPixels {}".format($)')) ),
-    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management', '"IfxPeriod {}".format($)')) ),
+    'light_step_pixels':            (HARDWARE.ESP,   'B',   0xF60,       (None, None,                           ('Light',       '"StepPixels {}".format($)')) ),
+    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x520,       (None, '0 <= $ <= 3600',               ('Management',  '"IfxPeriod {}".format($)')) ),
                                     })
 SETTING_10_0_0_3['flag5'][1].update ({
         'tuya_allow_dimmer_0':      (HARDWARE.ESP,   '<L', (0xFB4,1,17), (None, None,                           ('SetOption',   '"SO131 {}".format($)')) ),
@@ -2329,7 +2329,7 @@ SETTING_10_0_0_3['flag5'][1].update ({
 # ======================================================================
 SETTING_10_0_0_4 = copy.copy(SETTING_10_0_0_3)
 SETTING_10_0_0_4.update             ({
-    'shift595_device_count':        (HARDWARE.ESP,   'B',   0xEC6,       (None, None,                           ('Sensor',     '"Shift595DeviceCount {}".format($)')) ),
+    'shift595_device_count':        (HARDWARE.ESP,   'B',   0xEC6,       (None, None,                           ('Sensor',      '"Shift595DeviceCount {}".format($)')) ),
                                     })
 SETTING_10_0_0_4['sbflag1'][1].update({
         'sspm_display':             (HARDWARE.ESP32, '<L', (0xFA0,1,8),  (None, '0 <= $ <= 1',                  ('Management',  '"SSPMDisplay {}".format($)')) ),
@@ -2355,9 +2355,9 @@ SETTING_10_1_0_6.update             ({
     'web_time_end':                 (HARDWARE.ESP,   'B',   0x33D,       (None, None,                           ('Management',  None)) ),
     'pwm_value_ext':                (HARDWARE.ESP32, '<H',  0x560,       ([11], '0 <= $ <= 1023',               ('Management',  '"Pwm{} {}".format(#+1+5,$)')) ),
     'eth_type':                     (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
-                                                     'B',   0x446,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+                                                     'B',   0x446,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_type_esp32s3':             (HARDWARE.ESP32S3,
-                                                     'B',   0x40E,       (None, '0 <= $ <= 1',                  ('Wifi',        '"EthType {}".format($)')) ),
+                                                     'B',   0x40E,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
     'eth_clk_mode':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
     'eth_clk_mode_esp32s3':         (HARDWARE.ESP32S3,
@@ -2367,9 +2367,9 @@ SETTING_10_1_0_6.update             ({
     'eth_address_esp32s3':          (HARDWARE.ESP32S3,
                                                      'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
     'module':                       (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
-                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'module_esp32s3':               (HARDWARE.ESP32S3,
-                                                     'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($)')) ),
+                                                     'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'webcam_config':                (HARDWARE.ESP32 ^ HARDWARE.ESP32S3, {
         'stream':                   (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
@@ -2496,8 +2496,8 @@ SETTING_11_0_0_4['flag5'][1].update ({
 # ======================================================================
 SETTING_11_0_0_5 = copy.deepcopy(SETTING_11_0_0_4)
 SETTING_11_0_0_5.update             ({
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          None)) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          None)) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      None)) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      None)) ),
                                     })
 SETTING_11_0_0_5['sbflag1'][1].update({
         'influxdb_sensor':          (HARDWARE.ESP,   '<L', (0xFA0,1,10),  (None, '0 <= $ <= 1',                 ('Management',  '"IfxSensor {}".format($)')) ),
@@ -2509,16 +2509,16 @@ SETTING_11_0_0_5['flag5'][1].update ({
 # ======================================================================
 SETTING_11_0_0_6 = copy.deepcopy(SETTING_11_0_0_5)
 SETTING_11_0_0_6.update             ({
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      '"Sensor34 11 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTING_11_0_0_7 = copy.deepcopy(SETTING_11_0_0_6)
 SETTING_11_0_0_7.update             ({
-    'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',          None)) ),
-    'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',          '"Sensor34 10 {}".format($)')) ),
-    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',          '"Sensor34 11 {}".format($)')) ),
-    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',          '"Sensor34 12 {}".format($)')) ),
+    'weight_offset':                (HARDWARE.ESP,   '<l',  0x578,       (None, None,                           ('Sensor',      None)) ),
+    'weight_user_tare':             (HARDWARE.ESP,   '<l',  0x338,       (None, None,                           ('Sensor',      '"Sensor34 10 {}".format($)')) ),
+    'weight_absconv_a':             (HARDWARE.ESP,   '<l',  0x524,       (None, None,                           ('Sensor',      '"Sensor34 11 {}".format($)')) ),
+    'weight_absconv_b':             (HARDWARE.ESP,   '<l',  0x528,       (None, None,                           ('Sensor',      '"Sensor34 12 {}".format($)')) ),
                                     })
 SETTING_11_0_0_7['flag5'][1].update ({
         'gui_table_align':          (HARDWARE.ESP,   '<L', (0xFB4,1,24), (None, None,                           ('SetOption',   '"SO138 {}".format($)')) ),
@@ -2642,13 +2642,13 @@ SETTING_12_0_1_2.update             ({
 # ======================================================================
 SETTING_12_0_2_2 = copy.copy(SETTING_12_0_1_2)
 SETTING_12_0_2_2.update             ({
-    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',        None)) ),
+    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x4C5,       ([3], '0 <= $ <= 251',                 ('Sensor',      None)) ),
                                     })
 # ======================================================================
 SETTING_12_0_2_4 = copy.copy(SETTING_12_0_2_2)
 SETTING_12_0_2_4.update             ({
-    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',        '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
-    'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',        '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
+    'modbus_sbaudrate':             (HARDWARE.ESP,   'B',   0xF61,       (None, '1 <= $ <= 384',                ('Serial',      '"ModbusBaudrate {}".format($)')), ('$ * 300','$ // 300') ),
+    'modbus_sconfig':               (HARDWARE.ESP,   'B',   0xF62,       (None, None,                           ('Serial',      '"ModbusSerialConfig {}".format(("5N1","6N1","7N1","8N1","5N2","6N2","7N2","8N2","5E1","6E1","7E1","8E1","5E2","6E2","7E2","8E2","5O1","6O1","7O1","8O1","5O2","6O2","7O2","8O2")[$ % 24])')) ),
                                     })
 SETTING_12_0_2_4['flag5'][1].update ({
         'zigbee_no_batt_autoprobe': (HARDWARE.ESP,   '<L', (0xFB4,1,29), (None, None,                           ('SetOption',   '"SO143 {}".format($)')) ),
@@ -2691,6 +2691,7 @@ SETTING_12_1_1_6.update             ({
                                     })
 # ======================================================================
 SETTING_12_2_0_2 = copy.deepcopy(SETTING_12_1_1_6)
+SETTING_12_2_0_2.pop('energy_kWhtotal',None)
 SETTING_12_2_0_2.update             ({
     'energy_power_calibration2':    (HARDWARE.ESP,   '<L',  0x370,       (None, None,                           ('Power',       '"PowerSet2 {}".format($)')) ),
     'energy_voltage_calibration2':  (HARDWARE.ESP,   '<L',  0x374,       (None, None,                           ('Power',       '"VoltageSet2 {}".format($)')) ),
@@ -2831,10 +2832,16 @@ SETTING_13_3_0_5['flag6'][1].update ({
         'counter_both_edges':       (HARDWARE.ESP,   '<L', (0xF74,1,13), (None, None,                           ('SetOption',   '"SO159 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_13_4_0_0 = copy.copy(SETTING_13_3_0_5)
+SETTING_13_4_0_4 = copy.copy(SETTING_13_3_0_5)
+SETTING_13_4_0_4.update             ({
+     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
+                                    })
+# ======================================================================
+SETTING_14_0_0_0 = copy.copy(SETTING_13_4_0_4)
 # ======================================================================
 SETTINGS = [
-            (0x0D040000,0x1000, SETTING_13_4_0_0),
+            (0x0E000000,0x1000, SETTING_14_0_0_0),
+            (0x0D040004,0x1000, SETTING_13_4_0_4),
             (0x0D030005,0x1000, SETTING_13_3_0_5),
             (0x0D030002,0x1000, SETTING_13_3_0_2),
             (0x0D020003,0x1000, SETTING_13_2_0_3),
@@ -3817,6 +3824,8 @@ def make_filename(filename, filetype, configmapping):
             hostname from device (http source only)
         @F:
             configuration filename from MQTT request (mqtt source only)
+        @t:
+            topic from config data
     @param filetype:
         FileType.x object - creates extension if not None
     @param configmapping:
@@ -3825,7 +3834,7 @@ def make_filename(filename, filetype, configmapping):
     @return:
         New filename with replacements
     """
-    config_version = config_friendlyname = config_hostname = device_hostname = filesource = ''
+    config_version = config_friendlyname = config_hostname = device_hostname = filesource = config_topic = ''
 
     try:
         config_version = configmapping['header']['data']['version']['id']
@@ -3850,6 +3859,10 @@ def make_filename(filename, filetype, configmapping):
             device_hostname = ''
     if filename.find('@F') >= 0 and ARGS.mqttsource is not None and ARGS.filesource is not None:
         filesource = ARGS.filesource.strip().rstrip('.dmp')
+    config_topic = configmapping.get('mqtt_topic', '')
+    if config_topic != '':
+        if str(config_topic).find('%') < 0:
+            config_topic = re.sub('_{2,}', '_', re.sub('[^0-9a-zA-Z]', '_', str(config_topic)).strip('_'))
 
     dirname = basename = ext = ''
 
@@ -3889,6 +3902,7 @@ def make_filename(filename, filetype, configmapping):
     filename = filename.replace('@h', config_hostname)
     filename = filename.replace('@H', device_hostname)
     filename = filename.replace('@F', filesource)
+    filename = filename.replace('@t', config_topic)
 
     return filename
 
@@ -6455,8 +6469,8 @@ def parseargs():
                         default=DEFAULTS['source']['source'],
                         help="source used for the Tasmota configuration (default: {}). "
                         "Specify source type, path, file, user, password, hostname, port and topic at once as an URL. "
-                        "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile'"
-                        "where scheme is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
+                        "The URL must be in the form 'scheme://[username[:password]@]host[:port][/topic]|pathfile' "
+                        "where 'scheme' is 'file' for a tasmota binary config file, 'http' for a Tasmota HTTP web connection "
                         "{}".format(DEFAULTS['source']['source'],
                             "and 'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT server)" if MQTT_MODULE else ""))
     source.add_argument('-f', '--file', dest='filesource', default=DEFAULTS['source']['filesource'], help=configargparse.SUPPRESS)
@@ -6513,13 +6527,13 @@ def parseargs():
                          metavar='<restorefile>',
                          dest='restorefile',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only)".format(DEFAULTS['backup']['restorefile']))
+                         help="file to restore configuration from (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @t=topic".format(DEFAULTS['backup']['restorefile']))
     backres.add_argument('-o', '--backup-file',
                          metavar='<backupfile>',
                          dest='backupfile',
                          action='append',
                          default=DEFAULTS['backup']['backupfile'],
-                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @F=configuration filename from MQTT request (mqtt source only)".format(DEFAULTS['backup']['backupfile']))
+                         help="file to backup configuration to, can be specified multiple times (default: {}). Replacements: @v=firmware version from config, @d=devicename, @f=friendlyname1, @h=hostname from config, @H=device hostname (http source only), @F=configuration filename from MQTT request (mqtt source only), @t=topic".format(DEFAULTS['backup']['backupfile']))
     backup_file_formats = ['json', 'bin', 'dmp']
     backres.add_argument('-t', '--backup-type',
                          metavar='|'.join(backup_file_formats),

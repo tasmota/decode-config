@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/tasmota/decode-config/blob/master/media/pic/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v13.4.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![master](https://img.shields.io/badge/master-v14.0.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
 ![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v13.4.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v14.0.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -330,6 +330,7 @@ Note: This is the static hostname which is configured by the command *Hostname*,
 Note: This can be different to the configured hostname as this can contain also macros).source
 * **@F** is replaced by the filename of MQTT request (only for MQTT sources, backup filenames only).  
 This is usually the filename that Tasmota uses when saving the configuration in the WebUI.
+* **@t** is replaced by *Topic* (backup & restore filenames)
 
 Example:
 
@@ -337,7 +338,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_13.4.json` (the part `Tasmota` and `13.4` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_14.0.json` (the part `Tasmota` and `14.0` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -349,7 +350,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_13.4.json` using JSON format
+* `Config_Tasmota_14.0.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -357,10 +358,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_13.4.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_14.0.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_13.4
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_14.0
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -729,18 +730,15 @@ For advanced help use parameter `-H` or `--full-help`.
 <details>
 
   ```help
-  usage: decode-config.py [-s <filename|host|url>] [-p <password>]
-                          [--fulltopic <topic>] [--cafile <file>]
-                          [--certfile <file>] [--keyfile <file>] [--insecure]
-                          [--keepalive <sec>] [-i <restorefile>]
+  usage: decode-config.py [-s <filename|host|url>] [-p <password>] [--fulltopic <topic>]
+                          [--cafile <file>] [--certfile <file>] [--keyfile <file>]
+                          [--insecure] [--keepalive <sec>] [-i <restorefile>]
                           [-o <backupfile>] [-t json|bin|dmp] [-E] [-e] [-F]
-                          [--json-indent <indent>] [--json-compact]
-                          [--json-show-pw] [--cmnd-indent <indent>]
-                          [--cmnd-groups] [--cmnd-sort]
-                          [--cmnd-use-rule-concat] [--cmnd-use-backlog]
-                          [-c <configfile>] [-S] [-T json|cmnd|command]
-                          [-g <groupname> [<groupname> ...]] [-w] [--dry-run]
-                          [-h] [-H] [-v] [-V]
+                          [--json-indent <indent>] [--json-compact] [--json-show-pw]
+                          [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-sort]
+                          [--cmnd-use-rule-concat] [--cmnd-use-backlog] [-c <configfile>]
+                          [-S] [-T json|cmnd|command] [-g <groupname> [<groupname> ...]]
+                          [-w] [--dry-run] [-h] [-H] [-v] [-V]
 
   Backup/Restore Tasmota configuration data.
 
@@ -748,36 +746,33 @@ For advanced help use parameter `-H` or `--full-help`.
     Read/Write Tasmota configuration from/to
 
     -s, --source <filename|host|url>
-                          source used for the Tasmota configuration (default:
-                          None). Specify source type, path, file, user,
-                          password, hostname, port and topic at once as an
-                          URL. The URL must be in the form 'scheme://[usernam
-                          e[:password]@]host[:port][/topic]|pathfile'where
-                          scheme is 'file' for a tasmota binary config file,
-                          'http' for a Tasmota HTTP web connection and
-                          'mqtt(s)' for Tasmota MQTT transport ('mqtts' uses
-                          a TLS connection to MQTT server)
+                          source used for the Tasmota configuration (default: None).
+                          Specify source type, path, file, user, password, hostname, port
+                          and topic at once as an URL. The URL must be in the form
+                          'scheme://[username[:password]@]host[:port][/topic]|pathfile'
+                          where 'scheme' is 'file' for a tasmota binary config file,
+                          'http' for a Tasmota HTTP web connection and 'mqtt(s)' for
+                          Tasmota MQTT transport ('mqtts' uses a TLS connection to MQTT
+                          server)
     -p, --password <password>
-                          Web server password on HTTP source (set by Tasmota
-                          'WebPassword' command), MQTT server password in
-                          MQTT source (set by Tasmota 'MqttPassword' command)
-                          (default: None)
+                          Web server password on HTTP source (set by Tasmota 'WebPassword'
+                          command), MQTT server password in MQTT source (set by Tasmota
+                          'MqttPassword' command) (default: None)
 
   MQTT:
     MQTT transport settings
 
-    --fulltopic <topic>   Optional MQTT transport fulltopic used for
-                          accessing Tasmota device (default: )
-    --cafile <file>       Enables SSL/TLS connection: path to a or filename
-                          of the Certificate Authority certificate files that
-                          are to be treated as trusted by this client
-                          (default None)
-    --certfile <file>     Enables SSL/TLS connection: filename of a PEM
-                          encoded client certificate file (default None)
-    --keyfile <file>      Enables SSL/TLS connection: filename of a PEM
-                          encoded client private key file (default None)
-    --insecure            suppress verification of the MQTT server hostname
-                          in the server certificate (default False)
+    --fulltopic <topic>   Optional MQTT transport fulltopic used for accessing Tasmota
+                          device (default: )
+    --cafile <file>       Enables SSL/TLS connection: path to a or filename of the
+                          Certificate Authority certificate files that are to be treated
+                          as trusted by this client (default None)
+    --certfile <file>     Enables SSL/TLS connection: filename of a PEM encoded client
+                          certificate file (default None)
+    --keyfile <file>      Enables SSL/TLS connection: filename of a PEM encoded client
+                          private key file (default None)
+    --insecure            suppress verification of the MQTT server hostname in the server
+                          certificate (default False)
     --keepalive <sec>     keepalive timeout for the client (default 60)
 
   Backup/Restore:
@@ -785,73 +780,66 @@ For advanced help use parameter `-H` or `--full-help`.
 
     -i, --restore-file <restorefile>
                           file to restore configuration from (default: None).
-                          Replacements: @v=firmware version from config,
-                          @d=devicename, @f=friendlyname1, @h=hostname from
-                          config, @H=device hostname (http source only)
+                          Replacements: @v=firmware version from config, @d=devicename,
+                          @f=friendlyname1, @h=hostname from config, @H=device hostname
+                          (http source only), @t=topic
     -o, --backup-file <backupfile>
-                          file to backup configuration to, can be specified
-                          multiple times (default: None). Replacements:
-                          @v=firmware version from config, @d=devicename,
-                          @f=friendlyname1, @h=hostname from config,
-                          @H=device hostname (http source only),
-                          @F=configuration filename from MQTT request (mqtt
-                          source only)
+                          file to backup configuration to, can be specified multiple times
+                          (default: None). Replacements: @v=firmware version from config,
+                          @d=devicename, @f=friendlyname1, @h=hostname from config,
+                          @H=device hostname (http source only), @F=configuration filename
+                          from MQTT request (mqtt source only), @t=topic
     -t, --backup-type json|bin|dmp
                           backup filetype (default: 'json')
-    -E, --extension       append filetype extension for -i and -o filename
-                          (default)
-    -e, --no-extension    do not append filetype extension, use -i and -o
-                          filename as passed
+    -E, --extension       append filetype extension for -i and -o filename (default)
+    -e, --no-extension    do not append filetype extension, use -i and -o filename as
+                          passed
     -F, --force-restore   force restore even configuration is identical
 
   JSON output:
-    JSON format specification. To revert an option, insert "dont" or "no"
-    after "json", e.g. --json-no-indent, --json-dont-show-pw
+    JSON format specification. To revert an option, insert "dont" or "no" after "json",
+    e.g. --json-no-indent, --json-dont-show-pw
 
     --json-indent <indent>
-                          pretty-printed JSON output using indent level
-                          (default: 'None'). -1 disables indent.
+                          pretty-printed JSON output using indent level (default: 'None').
+                          -1 disables indent.
     --json-compact        compact JSON output by eliminate whitespace
     --json-show-pw        unhide passwords (default)
 
   Tasmota command output:
-    Tasmota command output format specification. To revert an option,
-    insert "dont" or "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-
-    sort
+    Tasmota command output format specification. To revert an option, insert "dont" or
+    "no" after "cmnd", e.g. --cmnd-no-indent, --cmnd-dont-sort
 
     --cmnd-indent <indent>
-                          Tasmota command grouping indent level (default:
-                          '2'). 0 disables indent
+                          Tasmota command grouping indent level (default: '2'). 0 disables
+                          indent
     --cmnd-groups         group Tasmota commands (default)
     --cmnd-sort           sort Tasmota commands (default)
     --cmnd-use-rule-concat
-                          use rule concatenation with + for Tasmota 'Rule'
-                          command
-    --cmnd-use-backlog    use 'Backlog' for Tasmota commands as much as
-                          possible
+                          use rule concatenation with + for Tasmota 'Rule' command
+    --cmnd-use-backlog    use 'Backlog' for Tasmota commands as much as possible
 
   Common:
     Optional arguments
 
     -c, --config <configfile>
-                          program config file - can be used to set default
-                          command parameters (default: None)
-    -S, --output          display output regardsless of backup/restore usage
-                          (default do not output on backup or restore usage)
+                          program config file - can be used to set default command
+                          parameters (default: None)
+    -S, --output          display output regardsless of backup/restore usage (default do
+                          not output on backup or restore usage)
     -T, --output-format json|cmnd|command
                           display output format (default: 'json')
     -g, --group <groupname>
-                          limit data processing to command groups ['Control',
-                          'Display', 'Domoticz', 'Hdmi', 'Internal', 'Knx',
-                          'Light', 'Management', 'Mqtt', 'Power', 'Rf',
-                          'Rules', 'Sensor', 'Serial', 'Setoption',
-                          'Settings', 'Shutter', 'System', 'Telegram',
-                          'Timer', 'Wifi', 'Zigbee'] (default no filter)
+                          limit data processing to command groups ['Control', 'Display',
+                          'Domoticz', 'Hdmi', 'Internal', 'Knx', 'Light', 'Management',
+                          'Mqtt', 'Power', 'Rf', 'Rules', 'Sensor', 'Serial', 'Setoption',
+                          'Settings', 'Shutter', 'System', 'Telegram', 'Timer', 'Usf',
+                          'Wifi', 'Zigbee'] (default no filter)
     -w, --ignore-warnings
-                          do not exit on warnings. Not recommended, used by
-                          your own responsibility!
-    --dry-run             test program without changing configuration data on
-                          device or file
+                          do not exit on warnings. Not recommended, used by your own
+                          responsibility!
+    --dry-run             test program without changing configuration data on device or
+                          file
 
   Info:
     Extra information
@@ -859,16 +847,15 @@ For advanced help use parameter `-H` or `--full-help`.
     -h, --help            show usage help message and exit
     -H, --full-help       show full help message and exit
     -v, --verbose         produce more output about what the program does
-    -V, --version         show program version (and config version if
-                          --source is given) and exit
+    -V, --version         show program version (and config version if --source is given)
+                          and exit
 
   The arguments -s <filename|host|url> must be given.
 
-  Args that start with '--' (eg. -s) can also be set in a config file
-  (specified via -c). Config file syntax allows: key=value, flag=true,
-  stuff=[a,b,c] (for details, see syntax at https://goo.gl/R74nmi). If an arg
-  is specified in more than one place, then commandline values override
-  config file values which override defaults.
+  Args that start with '--' (eg. -s) can also be set in a config file (specified via -c).
+  Config file syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax
+  at https://goo.gl/R74nmi). If an arg is specified in more than one place, then
+  commandline values override config file values which override defaults.
   ```
 
 > **Note**  
