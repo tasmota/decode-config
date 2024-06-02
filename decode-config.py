@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.0.0.3',
+    'VERSION': '14.0.0.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2842,10 +2842,13 @@ SETTING_14_0_0_2['sbflag1'][1].update({
         'telegram_disable_af':      (HARDWARE.ESP,   '<L', (0xFA0,1,12), (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+6)')) ),
                                     })
 # ======================================================================
-SETTING_14_0_0_3 = copy.copy(SETTING_14_0_0_2)
+SETTING_14_0_0_4 = copy.copy(SETTING_14_0_0_2)
+SETTING_14_0_0_4.update             ({
+    'tcp_baudrate':                 (HARDWARE.ESP,   '<H',  0x540,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x0E000003,0x1000, SETTING_14_0_0_3),
+            (0x0E000004,0x1000, SETTING_14_0_0_4),
             (0x0E000002,0x1000, SETTING_14_0_0_2),
             (0x0D040004,0x1000, SETTING_13_4_0_4),
             (0x0D030005,0x1000, SETTING_13_3_0_5),
