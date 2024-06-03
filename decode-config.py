@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.1.0.0',
+    'VERSION': '14.1.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2847,10 +2847,10 @@ SETTING_14_0_0_4.update             ({
     'tcp_baudrate':                 (HARDWARE.ESP,   '<H',  0x540,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
-SETTING_14_1_0_0 = copy.copy(SETTING_14_0_0_4)
+SETTING_14_1_0_1 = copy.copy(SETTING_14_0_0_4)
 # ======================================================================
 SETTINGS = [
-            (0x0E010000,0x1000, SETTING_14_1_0_0),
+            (0x0E010000,0x1000, SETTING_14_1_0_1),
             (0x0E000004,0x1000, SETTING_14_0_0_4),
             (0x0E000002,0x1000, SETTING_14_0_0_2),
             (0x0D040004,0x1000, SETTING_13_4_0_4),
