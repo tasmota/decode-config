@@ -2834,7 +2834,7 @@ SETTING_13_3_0_5['flag6'][1].update ({
 # ======================================================================
 SETTING_13_4_0_4 = copy.copy(SETTING_13_3_0_5)
 SETTING_13_4_0_4.update             ({
-     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
+     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Control',     '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
                                     })
 # ======================================================================
 SETTING_14_0_0_2 = copy.copy(SETTING_13_4_0_4)

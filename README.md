@@ -924,6 +924,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | LedPwmOff                   |                        |             |
   |                | LedState                    |                        |             |
   |                | Power<x\>                   |                        |             |
+  |                | PowerLock<x\>               |                        |             |
   |                | PowerOnState                |                        |             |
   |                | PulseTime<x\>               |                        |             |
   |                | SwitchDebounce              |                        |             |
