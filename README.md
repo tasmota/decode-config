@@ -23,8 +23,8 @@ In comparison with the [Tasmota](https://github.com/arendst/Tasmota) build-in "*
 * uses a human readable and editable [JSON](http://www.json.org/)-format for backup/restore
 * can restore previously backed up and modified JSON-format files
 * is able to process any subsets of configuration data
-* can convert data from older Tasmota versions (from version v5.10.0) to a newer one and vice versa
-* is able to create Tasmota compatible command list for the most available commands
+* can convert data from older Tasmota versions (starting with early v5.10.0) to a newer and current one and vice versa
+* is able to create Tasmota command list for the most available configuration data related commands
 
 Comparing backup files created by **decode-config** and [.dmp](#dmp-format) files created by Tasmota "*Backup Configuration*" / "*Restore Configuration*":
 
@@ -116,7 +116,7 @@ decode-config.py
 
 #### Prerequisite
 
-Since **decode-config.py** is a Python program, it requires an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
+Since **decode-config.py** is a [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) program, it requires an installed [Python](https://www.python.org) environment.
 
 ##### Linux
 
@@ -128,11 +128,11 @@ sudo apt-get install python3 python3-pip
 
 ##### Windows
 
-Install [Python 3.x](https://www.python.org/downloads/windows/) as described
+Install [Python 3.x for Windows](https://www.python.org/downloads/windows/) as described
 
 ##### MacOS
 
-Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described
+Install [Python 3.x for macOS](https://www.python.org/downloads/mac-osx/) as described
 
 ## Usage
 
