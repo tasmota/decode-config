@@ -1020,8 +1020,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | RgxState                    |                        |             |
   |                | RgxSubnet                   |                        |             |
   |                | Ssid<x\>                    |                        |             |
-  |                | WebColor<x\>                |                        |             |
   |                | WebPassword                 |                        |             |
+  |                | WebCanvas                   |                        |             |
+  |                | WebColor<x\>                |                        |             |
   |                | WebRefresh                  |                        |             |
   |                | WebSensor<x\>               |                        |             |
   |                | WebServer                   |                        |             |
