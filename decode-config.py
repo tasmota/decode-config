@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.1.0.1',
+    'VERSION': '14.1.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2847,10 +2847,15 @@ SETTING_14_0_0_4.update             ({
     'tcp_baudrate':                 (HARDWARE.ESP,   '<H',  0x540,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
-SETTING_14_1_0_1 = copy.copy(SETTING_14_0_0_4)
+SETTING_14_1_0_2 = copy.copy(SETTING_14_0_0_4)
+SETTING_14_1_0_2['sbflag1'][1].pop('serbridge_console',None)
+SETTING_14_1_0_2.pop('tcp_baudrate',None)
+SETTING_14_1_0_2.update             ({
+    'sserial_mode':                 (HARDWARE.ESP,   'B',   0xF41,       (None, '0 <= $ <= 3',                  ('Serial',      '"SSerialMode {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x0E010001,0x1000, SETTING_14_1_0_1),
+            (0x0E010002,0x1000, SETTING_14_1_0_2),
             (0x0E000004,0x1000, SETTING_14_0_0_4),
             (0x0E000002,0x1000, SETTING_14_0_0_2),
             (0x0D040004,0x1000, SETTING_13_4_0_4),
