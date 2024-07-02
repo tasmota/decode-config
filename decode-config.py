@@ -2855,6 +2855,14 @@ SETTING_14_1_0_2.update             ({
                                     })
 # ======================================================================
 SETTING_14_1_0_3 = copy.copy(SETTING_14_1_0_2)
+SETTING_14_1_0_3.update             ({
+    'energy_max_power_safe_limit':  (HARDWARE.ESP,   '<H',  0x38C,       (None, None,                           (INTERNAL,      None)), ),
+    'energy_max_power_safe_limit_hold':
+                                    (HARDWARE.ESP,   '<H',  0x38E,       (None, None,                           (INTERNAL,      None)), ),
+    'energy_max_power_safe_limit_window':
+                                    (HARDWARE.ESP,   '<H',  0x390,       (None, None,                           (INTERNAL,      None)), ),
+                                    })
+
 # ======================================================================
 SETTINGS = [
             (0x0E010003,0x1000, SETTING_14_1_0_3),
