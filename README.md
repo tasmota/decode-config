@@ -594,18 +594,17 @@ becomes to
 
 The huge number of Tasmota configuration data can be overstrained and confusing, so the most of the configuration data are grouped into categories.
 
-The following groups are available: `Control`, `Display`, `Domoticz`, `Internal`, `Knx`, `Light`, `Management`, `Mqtt`, `Power`, `Rf`, `Rules`, `Sensor`, `Serial`, `Setoption`, `Shutter`, `System`, `Timer`, `Wifi`, `Zigbee`
+Filtering by groups affects the entire output, regardless of whether this is the screen or a json backup file. The output of a dmp or bin file cannot be filtered. These binary file types must always contain the entire configuration.
+
+The following groups are available: `Control`, `Display`, `Domoticz`, `Hdmi`, `Internal`, `Knx`, `Light`, `Management`, `Mqtt`, `Power`, `Rf`, `Rules`, `Sensor`, `Serial`, `Setoption`, `Settings`, `Shutter`, `System`, `Telegram`, `Timer`, `Usf`, `Wifi`, `Zigbee`
 
 These are similary to the categories on [Tasmota Command Documentation](https://tasmota.github.io/docs/Commands/).
 
 To filter outputs to a subset of groups, use the `-g` or `--group` parameter, concatenating the groups you want, e. g.
 
 ```bash
-decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Main MQTT Management Wifi
+decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Control Management MQTT Wifi
 ```
-
-Filtering by groups affects the entire output, regardless of whether screen output or backup file.
-
 ## Usage examples
 
 ### Using Tasmota binary configuration files
