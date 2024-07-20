@@ -4302,8 +4302,6 @@ def pull_mqtt(use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
-                    if "Done" in rcv_code:
-                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -4325,11 +4323,12 @@ def pull_mqtt(use_base64=True):
         except:
             pass
 
-        if dobj is None and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
+        if dobj is None and file_id == 0 and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
             file_id = rcv_id
             dobj = bytearray()
         else:
-            if use_base64 and file_id > 0 and file_id != rcv_id:
+            if use_base64 and file_id > 0 and file_id != rcv_id and "Id" in rcv_code:
+                err_str = "FileID mismatch ({}!={})".format(file_id, rcv_id)
                 err_flag = True
                 return
 
@@ -4354,6 +4353,7 @@ def pull_mqtt(use_base64=True):
 
     def wait_for_ack():
         nonlocal err_flag
+        nonlocal err_str
 
         timeout = MQTT_TIMEOUT/10
         while ack_flag and not err_flag and timeout > 0:
@@ -4518,8 +4518,6 @@ def push_mqtt(encode_cfg, use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
-                    if "Done" in rcv_code:
-                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
