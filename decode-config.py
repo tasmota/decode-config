@@ -195,7 +195,6 @@ MAX_BACKLOG = 30
 MAX_BACKLOGLEN = 320
 MQTT_MESSAGE_MAX_SIZE = 700
 MQTT_TIMEOUT = 5000
-MQTT_DELAY = 0.2
 MQTT_FILETYPE = 2
 TASM_FILE_SETTINGS = '/.settings'
 
@@ -4304,7 +4303,7 @@ def pull_mqtt(use_base64=True):
                         err_flag = True
                         return
                     if "Done" in rcv_code:
-                        time.sleep(MQTT_DELAY)
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -4520,7 +4519,7 @@ def push_mqtt(encode_cfg, use_base64=True):
                         err_flag = True
                         return
                     if "Done" in rcv_code:
-                        time.sleep(MQTT_DELAY)
+                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
