@@ -4280,6 +4280,8 @@ def pull_mqtt(use_base64=True):
         base64_data = ""
         rcv_id = 0
 
+        if ARGS.debug:
+            print("{}: on_message - payload {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), msg.payload.decode(STR_CODING)))
         try:
             root = json.loads(msg.payload.decode(STR_CODING))
             if root:
@@ -4324,6 +4326,9 @@ def pull_mqtt(use_base64=True):
                     file_md5 = root["Md5"]
         except:
             pass
+
+        if ARGS.debug:
+            print("{}: on_message - use_base64={}, file_id={}, rcv_id={}, file_type={}, file_size={}, file_md5={}, in_hash_md5={}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), use_base64, file_id, rcv_id, file_type, file_size, file_md5, in_hash_md5.hexdigest()))
 
         if dobj is None and file_id == 0 and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
             file_id = rcv_id
@@ -4422,19 +4427,27 @@ def pull_mqtt(use_base64=True):
     in_hash_md5 = hashlib.md5()
 
     data = {"Password":tasmota_mqtt_password, "Type":MQTT_FILETYPE}
+    if ARGS.debug:
+        data_dbg = {"Password":HIDDEN_PASSWORD, "Type":MQTT_FILETYPE}
     if not use_base64:
         data["Binary"] = 1
     client.publish(topic_publish, json.dumps(data))
+    if ARGS.debug:
+        print("{}: client.publish({}, {})".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish, json.dumps(data_dbg)))
 
     ack_flag = True
     run_flag = True
     while run_flag:
         if wait_for_ack():                  # We use Ack here
             client.publish(topic_publish, "0")   # Abort any failed download
+            if ARGS.debug:
+                print('{}: client.publish({}, "0")'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish))
             run_flag = False
         else:
             if file_md5 == "":               # Request chunk
                 client.publish(topic_publish, "?")
+                if ARGS.debug:
+                    print('{}: client.publish({}, "?")'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish))
                 ack_flag = True
             else:
                 run_flag = False
