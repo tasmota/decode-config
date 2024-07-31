@@ -393,6 +393,9 @@ Set this location for a device:
 decode-config -c my.conf -s tasmota-4281 -i location
 ```
 
+> **Note**  
+When using JSON subsets on ESP32 chip types, always keep the key `config_version` in the JSON data, otherwise an error will occur stating that the file is for ESP82xx.
+
 > **Hint**  
 Keep the JSON-format valid e.g. when cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:  
 Invalid JSON (useless comma in line 3: `...2.294442,`):<pre>{
