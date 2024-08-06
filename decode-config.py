@@ -2366,7 +2366,7 @@ SETTING_10_1_0_6.update             ({
                                                      'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
     'eth_address_esp32s3':          (HARDWARE.ESP32S3,
                                                      'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
-    'module':                       (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
+    'module_esp32':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'module_esp32s3':               (HARDWARE.ESP32S3,
                                                      'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
