@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.1.0.4',
+    'VERSION': '14.2.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2863,10 +2863,10 @@ SETTING_14_1_0_3.update             ({
                                     (HARDWARE.ESP,   '<H',  0x390,       (None, None,                           (INTERNAL,      None)), ),
                                     })
 # ======================================================================
-SETTING_14_1_0_4 = copy.copy(SETTING_14_1_0_3)
+SETTING_14_2_0_0 = copy.copy(SETTING_14_1_0_3)
 # ======================================================================
 SETTINGS = [
-            (0x0E010004,0x1000, SETTING_14_1_0_4),
+            (0x0E020000,0x1000, SETTING_14_2_0_0),
             (0x0E010003,0x1000, SETTING_14_1_0_3),
             (0x0E010002,0x1000, SETTING_14_1_0_2),
             (0x0E000004,0x1000, SETTING_14_0_0_4),
