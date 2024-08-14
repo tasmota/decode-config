@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.1.0.0',
+    'VERSION': '14.2.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2366,7 +2366,7 @@ SETTING_10_1_0_6.update             ({
                                                      'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
     'eth_address_esp32s3':          (HARDWARE.ESP32S3,
                                                      'B',   0x45E,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
-    'module':                       (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
+    'module_esp32':                 (HARDWARE.ESP32 ^ HARDWARE.ESP32S3,
                                                      'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
     'module_esp32s3':               (HARDWARE.ESP32S3,
                                                      'B',   0x45F,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
@@ -2834,7 +2834,7 @@ SETTING_13_3_0_5['flag6'][1].update ({
 # ======================================================================
 SETTING_13_4_0_4 = copy.copy(SETTING_13_3_0_5)
 SETTING_13_4_0_4.update             ({
-     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Power',       '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
+     'power_lock':                  (HARDWARE.ESP,   '<L',  0xF9C,       (None, None,                           ('Control',     '"PowerLock0 0" if 0==int($) else "PowerLock0 1" if 0xffffffff==int($) else list("PowerLock{} {}".format(i+1, (int($)>>i & 1) ) for i in range(0, 32))')) ),
                                     })
 # ======================================================================
 SETTING_14_0_0_2 = copy.copy(SETTING_13_4_0_4)
@@ -2847,10 +2847,28 @@ SETTING_14_0_0_4.update             ({
     'tcp_baudrate':                 (HARDWARE.ESP,   '<H',  0x540,       (None, None,                           ('Serial',      '"TCPBaudrate {}".format($)')), ('$ * 1200','$ // 1200') ),
                                     })
 # ======================================================================
-SETTING_14_1_0_0 = copy.copy(SETTING_14_0_0_4)
+SETTING_14_1_0_2 = copy.copy(SETTING_14_0_0_4)
+SETTING_14_1_0_2['sbflag1'][1].pop('serbridge_console',None)
+SETTING_14_1_0_2.pop('tcp_baudrate',None)
+SETTING_14_1_0_2.update             ({
+    'sserial_mode':                 (HARDWARE.ESP,   'B',   0xF41,       (None, '0 <= $ <= 3',                  ('Serial',      '"SSerialMode {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_14_1_0_3 = copy.copy(SETTING_14_1_0_2)
+SETTING_14_1_0_3.update             ({
+    'energy_max_power_safe_limit':  (HARDWARE.ESP,   '<H',  0x38C,       (None, None,                           (INTERNAL,      None)), ),
+    'energy_max_power_safe_limit_hold':
+                                    (HARDWARE.ESP,   '<H',  0x38E,       (None, None,                           (INTERNAL,      None)), ),
+    'energy_max_power_safe_limit_window':
+                                    (HARDWARE.ESP,   '<H',  0x390,       (None, None,                           (INTERNAL,      None)), ),
+                                    })
+# ======================================================================
+SETTING_14_2_0_0 = copy.copy(SETTING_14_1_0_3)
 # ======================================================================
 SETTINGS = [
-            (0x0E010000,0x1000, SETTING_14_1_0_0),
+            (0x0E020000,0x1000, SETTING_14_2_0_0),
+            (0x0E010003,0x1000, SETTING_14_1_0_3),
+            (0x0E010002,0x1000, SETTING_14_1_0_2),
             (0x0E000004,0x1000, SETTING_14_0_0_4),
             (0x0E000002,0x1000, SETTING_14_0_0_2),
             (0x0D040004,0x1000, SETTING_13_4_0_4),
@@ -4262,6 +4280,8 @@ def pull_mqtt(use_base64=True):
         base64_data = ""
         rcv_id = 0
 
+        if ARGS.debug:
+            print("{}: on_message - payload {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), msg.payload.decode(STR_CODING)))
         try:
             root = json.loads(msg.payload.decode(STR_CODING))
             if root:
@@ -4286,8 +4306,6 @@ def pull_mqtt(use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
-                    if "Done" in rcv_code:
-                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":
@@ -4309,11 +4327,15 @@ def pull_mqtt(use_base64=True):
         except:
             pass
 
-        if dobj is None and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
+        if ARGS.debug:
+            print("{}: on_message - use_base64={}, file_id={}, rcv_id={}, file_type={}, file_size={}, file_md5={}, in_hash_md5={}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), use_base64, file_id, rcv_id, file_type, file_size, file_md5, in_hash_md5.hexdigest()))
+
+        if dobj is None and file_id == 0 and rcv_id > 0 and file_size > 0 and file_type > 0 and file_name:
             file_id = rcv_id
             dobj = bytearray()
         else:
-            if use_base64 and file_id > 0 and file_id != rcv_id:
+            if use_base64 and file_id > 0 and file_id != rcv_id and "Id" in rcv_code:
+                err_str = "FileID mismatch ({}!={})".format(file_id, rcv_id)
                 err_flag = True
                 return
 
@@ -4338,6 +4360,7 @@ def pull_mqtt(use_base64=True):
 
     def wait_for_ack():
         nonlocal err_flag
+        nonlocal err_str
 
         timeout = MQTT_TIMEOUT/10
         while ack_flag and not err_flag and timeout > 0:
@@ -4404,19 +4427,27 @@ def pull_mqtt(use_base64=True):
     in_hash_md5 = hashlib.md5()
 
     data = {"Password":tasmota_mqtt_password, "Type":MQTT_FILETYPE}
+    if ARGS.debug:
+        data_dbg = {"Password":HIDDEN_PASSWORD, "Type":MQTT_FILETYPE}
     if not use_base64:
         data["Binary"] = 1
     client.publish(topic_publish, json.dumps(data))
+    if ARGS.debug:
+        print("{}: client.publish({}, {})".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish, json.dumps(data_dbg)))
 
     ack_flag = True
     run_flag = True
     while run_flag:
         if wait_for_ack():                  # We use Ack here
             client.publish(topic_publish, "0")   # Abort any failed download
+            if ARGS.debug:
+                print('{}: client.publish({}, "0")'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish))
             run_flag = False
         else:
             if file_md5 == "":               # Request chunk
                 client.publish(topic_publish, "?")
+                if ARGS.debug:
+                    print('{}: client.publish({}, "?")'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), topic_publish))
                 ack_flag = True
             else:
                 run_flag = False
@@ -4502,8 +4533,6 @@ def push_mqtt(encode_cfg, use_base64=True):
                                     err_str ="Receive code "+rcv_code
                         err_flag = True
                         return
-                    if "Done" in rcv_code:
-                        time.sleep(0.1)
                 if "Command" in root:
                     rcv_code = root["Command"]
                     if rcv_code == "Error":

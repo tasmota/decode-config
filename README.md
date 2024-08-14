@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/tasmota/decode-config/blob/master/media/pic/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v14.1.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![master](https://img.shields.io/badge/master-v14.2.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
 ![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
@@ -23,8 +23,8 @@ In comparison with the [Tasmota](https://github.com/arendst/Tasmota) build-in "*
 * uses a human readable and editable [JSON](http://www.json.org/)-format for backup/restore
 * can restore previously backed up and modified JSON-format files
 * is able to process any subsets of configuration data
-* can convert data from older Tasmota versions (from version v5.10.0) to a newer one and vice versa
-* is able to create Tasmota compatible command list for the most available commands
+* can convert data from older Tasmota versions (starting with early v5.10.0) to a newer and current one and vice versa
+* is able to create Tasmota command list for the most available configuration data related commands
 
 Comparing backup files created by **decode-config** and [.dmp](#dmp-format) files created by Tasmota "*Backup Configuration*" / "*Restore Configuration*":
 
@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v14.1.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v14.2.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -116,7 +116,7 @@ decode-config.py
 
 #### Prerequisite
 
-Since **decode-config.py** is a Python program, it requires an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment.
+Since **decode-config.py** is a [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) program, it requires an installed [Python](https://www.python.org) environment.
 
 ##### Linux
 
@@ -128,11 +128,11 @@ sudo apt-get install python3 python3-pip
 
 ##### Windows
 
-Install [Python 3.x](https://www.python.org/downloads/windows/) as described
+Install [Python 3.x for Windows](https://www.python.org/downloads/windows/) as described
 
 ##### MacOS
 
-Install [Python 3.x](https://www.python.org/downloads/mac-osx/) as described
+Install [Python 3.x for macOS](https://www.python.org/downloads/mac-osx/) as described
 
 ## Usage
 
@@ -338,7 +338,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_14.1.json` (the part `Tasmota` and `14.1` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_14.2.json` (the part `Tasmota` and `14.2` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -350,7 +350,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_14.1.json` using JSON format
+* `Config_Tasmota_14.2.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -358,10 +358,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_14.1.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_14.2.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_14.1
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_14.2
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
@@ -392,6 +392,9 @@ Set this location for a device:
 ```bash
 decode-config -c my.conf -s tasmota-4281 -i location
 ```
+
+> **Note**  
+When using JSON subsets on ESP32 chip types, always keep the key `config_version` in the JSON data, otherwise an error will occur stating that the file is for ESP82xx.
 
 > **Hint**  
 Keep the JSON-format valid e.g. when cutting unnecessary content from a given JSON backup file, consider to remove the last comma on same indent level:  
@@ -594,18 +597,17 @@ becomes to
 
 The huge number of Tasmota configuration data can be overstrained and confusing, so the most of the configuration data are grouped into categories.
 
-The following groups are available: `Control`, `Display`, `Domoticz`, `Internal`, `Knx`, `Light`, `Management`, `Mqtt`, `Power`, `Rf`, `Rules`, `Sensor`, `Serial`, `Setoption`, `Shutter`, `System`, `Timer`, `Wifi`, `Zigbee`
+Filtering by groups affects the entire output, regardless of whether this is the screen or a json backup file. The output of a dmp or bin file cannot be filtered. These binary file types must always contain the entire configuration.
+
+The following groups are available: `Control`, `Display`, `Domoticz`, `Hdmi`, `Internal`, `Knx`, `Light`, `Management`, `Mqtt`, `Power`, `Rf`, `Rules`, `Sensor`, `Serial`, `Setoption`, `Settings`, `Shutter`, `System`, `Telegram`, `Timer`, `Usf`, `Wifi`, `Zigbee`
 
 These are similary to the categories on [Tasmota Command Documentation](https://tasmota.github.io/docs/Commands/).
 
 To filter outputs to a subset of groups, use the `-g` or `--group` parameter, concatenating the groups you want, e. g.
 
 ```bash
-decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Main MQTT Management Wifi
+decode-config -s tasmota-4281 -c my.conf --output-format cmnd --group Control Management MQTT Wifi
 ```
-
-Filtering by groups affects the entire output, regardless of whether screen output or backup file.
-
 ## Usage examples
 
 ### Using Tasmota binary configuration files
@@ -924,6 +926,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | LedPwmOff                   |                        |             |
   |                | LedState                    |                        |             |
   |                | Power<x\>                   |                        |             |
+  |                | PowerLock<x\>               |                        |             |
   |                | PowerOnState                |                        |             |
   |                | PulseTime<x\>               |                        |             |
   |                | SwitchDebounce              |                        |             |
@@ -1019,8 +1022,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | RgxState                    |                        |             |
   |                | RgxSubnet                   |                        |             |
   |                | Ssid<x\>                    |                        |             |
-  |                | WebColor<x\>                |                        |             |
   |                | WebPassword                 |                        |             |
+  |                | WebCanvas                   |                        |             |
+  |                | WebColor<x\>                |                        |             |
   |                | WebRefresh                  |                        |             |
   |                | WebSensor<x\>               |                        |             |
   |                | WebServer                   |                        |             |
@@ -1167,7 +1171,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | SerialConfig                |                        |             |
   |                | SerialDelimiter             |                        |             |
   |                | SSerialConfig               |                        |             |
-  |                | SSerialSend9                |                        |             |
+  |                | SSerialMode                 |                        |             |
   |                | TCPBaudrate                 |                        |             |
   |                | TCPConfig                   |                        |             |
   | **Domoticz**   | DomoticzIdx<x\>             |                        |             |
