@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.2.0.1',
+    'VERSION': '14.2.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2863,10 +2863,14 @@ SETTING_14_1_0_3.update             ({
                                     (HARDWARE.ESP,   '<H',  0x390,       (None, None,                           (INTERNAL,      None)), ),
                                     })
 # ======================================================================
-SETTING_14_2_0_1 = copy.copy(SETTING_14_1_0_3)
+SETTING_14_2_0_3 = copy.copy(SETTING_14_1_0_3)
+SETTING_14_2_0_3['flag3'][1].pop('tuya_dimmer_min_limit',None)
+SETTING_14_2_0_3['flag3'][1].update  ({
+        'sb_receive_invert':        (HARDWARE.ESP,   '<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x0E020001,0x1000, SETTING_14_2_0_1),
+            (0x0E020003,0x1000, SETTING_14_2_0_3),
             (0x0E010003,0x1000, SETTING_14_1_0_3),
             (0x0E010002,0x1000, SETTING_14_1_0_2),
             (0x0E000004,0x1000, SETTING_14_0_0_4),
