@@ -25,11 +25,23 @@ jobs:
               pyinstaller --noconfirm build-executables/dc-build-ubuntu-20.04.spec && cd dist && tar -czf ../decode-config-ubuntu-20.04.tar.gz decode-config
             OUT_FILE_NAME: decode-config-ubuntu-20.04.tar.gz
             ASSET_MIME: application/x-gzip
-          - os: macos-11
-            TARGET: macos-11
+          - os: macos-12
+            TARGET: macos-12
             CMD_BUILD: >
-              pyinstaller --noconfirm build-executables/dc-build-macos-11.spec && cd dist && zip -r9 ../decode-config-macos-11.zip decode-config
-            OUT_FILE_NAME: decode-config-macos-11.zip
+              pyinstaller --noconfirm build-executables/dc-build-macos.spec && cd dist && zip -r9 ../decode-config-macos-12.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-12.zip
+            ASSET_MIME: application/zip
+          - os: macos-13
+            TARGET: macos-13
+            CMD_BUILD: >
+              pyinstaller --noconfirm build-executables/dc-build-macos.spec && cd dist && zip -r9 ../decode-config-macos-13.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-13.zip
+            ASSET_MIME: application/zip
+          - os: macos-latest-large
+            TARGET: macos-14-large
+            CMD_BUILD: >
+              pyinstaller --noconfirm build-executables/dc-build-macos.spec && cd dist && zip -r9 ../decode-config-macos-14.zip decode-config
+            OUT_FILE_NAME: decode-config-macos-14.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
