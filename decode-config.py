@@ -1965,6 +1965,10 @@ SETTING_8_4_0_0.update              ({
     'adc_param':                    (HARDWARE.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
                                                                          ([8],  None,                           ('Management',  None)) ),
                                     })
+SETTING_8_4_0_0.update              ({
+    'adc_param':                    (HARDWARE.ESP82, '699s',(0x017,'SET_ADC_PARAM1'),
+                                                                         (None,  None,                           ('Management',  None)) ),
+                                    })
 # ======================================================================
 SETTING_8_4_0_1 = copy.copy(SETTING_8_4_0_0)
 SETTING_8_4_0_1['flag4'][1].update  ({
