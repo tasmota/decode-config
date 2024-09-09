@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v14.2.0.3-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v14.2.0.4-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -1096,7 +1096,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | Sensor18                    |                        |             |
   |                | Sensor20                    |                        |             |
   |                | Sensor29                    |                        |             |
-  |                | Sensor34                    |                        |             |
+  |                | Sensor34                    | *Sensor34 1,Sensor34 2*|             |
   |                | Sensor40                    |                        |             |
   |                | Sensor54                    |                        |             |
   |                | Sensor68                    |                        |             |
