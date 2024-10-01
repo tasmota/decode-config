@@ -1962,8 +1962,12 @@ SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
 SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
 SETTING_8_4_0_0[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
 SETTING_8_4_0_0.update              ({
-    'adc_param':                    (HARDWARE.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
+    'adc_param32':                  (HARDWARE.ESP32, '699s',(0x017,'SET_ADC_PARAM1'),
                                                                          ([8],  None,                           ('Management',  None)) ),
+                                    })
+SETTING_8_4_0_0.update              ({
+    'adc_param':                    (HARDWARE.ESP82, '699s',(0x017,'SET_ADC_PARAM1'),
+                                                                         (None,  None,                          ('Management',  None)) ),
                                     })
 # ======================================================================
 SETTING_8_4_0_1 = copy.copy(SETTING_8_4_0_0)
