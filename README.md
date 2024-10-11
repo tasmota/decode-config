@@ -1138,14 +1138,15 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                |                             |                        | `UsfRename` |
   |                |                             |                        | `UsfRun`    |
   |                |                             |                        | `UsfServe`  |
-  | **Light**      | DimmerRange                 | *Channel<x\>*          | `Color<x>`  |
-  |                | DimmerStep                  | *CT*                   | `Dimmer`    |
-  |                | Fade                        | *CTRange*              |             |
-  |                | LedTable                    | *HsbColor*             |             |
-  |                | Pixels                      | *Led<x\>*              |             |
-  |                | PWMDimmerPWMs               | *Palette*              |             |
-  |                | RGBWWTable                  | *White*                |             |
-  |                | Rotation                    | *VirtualCT*            |             |
+  | **Light**      | DaliWeb                     | *Channel<x\>*          | `Color<x>`  |
+  |                | DimmerRange                 | *CT*                   | `Dimmer`    |
+  |                | DimmerStep                  | *CTRange*              |             |
+  |                | Fade                        | *HsbColor*             |             |
+  |                | LedTable                    | *Led<x\>*              |             |
+  |                | Pixels                      | *Palette*              |             |
+  |                | PWMDimmerPWMs               | *White*                |             |
+  |                | RGBWWTable                  | *VirtualCT*            |             |
+  |                | Rotation                    |                        |             |
   |                | Scheme                      |                        |             |
   |                | ShdLeadingEdge              |                        |             |
   |                | ShdWarmupBrightness         |                        |             |
