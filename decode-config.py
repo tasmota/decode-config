@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.2.0.6',
+    'VERSION': '14.3.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2883,7 +2883,10 @@ SETTING_14_2_0_6['sbflag1'][1].update({
         'dali_web':                 (HARDWARE.ESP,   '<L', (0xFA0,1,13), (None, '0 <= $ <= 1',                  ('Light',       '"DaliWeb {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_14_3_0_0 = copy.copy(SETTING_14_2_0_6)
+# ======================================================================
 SETTINGS = [
+            (0x0E030000,0x1000, SETTING_14_3_0_0),
             (0x0E020006,0x1000, SETTING_14_2_0_6),
             (0x0E020004,0x1000, SETTING_14_2_0_4),
             (0x0E020003,0x1000, SETTING_14_2_0_3),
