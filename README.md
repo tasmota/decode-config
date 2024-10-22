@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v14.3.0.1-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v14.3.0.2-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -1138,15 +1138,15 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                |                             |                        | `UsfRename` |
   |                |                             |                        | `UsfRun`    |
   |                |                             |                        | `UsfServe`  |
-  | **Light**      | DaliWeb                     | *Channel<x\>*          | `Color<x>`  |
-  |                | DimmerRange                 | *CT*                   | `Dimmer`    |
-  |                | DimmerStep                  | *CTRange*              |             |
-  |                | Fade                        | *HsbColor*             |             |
-  |                | LedTable                    | *Led<x\>*              |             |
-  |                | Pixels                      | *Palette*              |             |
-  |                | PWMDimmerPWMs               | *White*                |             |
-  |                | RGBWWTable                  | *VirtualCT*            |             |
-  |                | Rotation                    |                        |             |
+  | **Light**      | DaliLight                   | *Dali\**               | `Color<x>`  |
+  |                | DimmerRange                 | *Channel<x\>*          | `Dimmer`    |
+  |                | DimmerStep                  | *CT*                   |             |
+  |                | Fade                        | *CTRange*              |             |
+  |                | LedTable                    | *HsbColor*             |             |
+  |                | Pixels                      | *Led<x\>*              |             |
+  |                | PWMDimmerPWMs               | *Palette*              |             |
+  |                | RGBWWTable                  | *White*                |             |
+  |                | Rotation                    | *VirtualCT*            |             |
   |                | Scheme                      |                        |             |
   |                | ShdLeadingEdge              |                        |             |
   |                | ShdWarmupBrightness         |                        |             |
