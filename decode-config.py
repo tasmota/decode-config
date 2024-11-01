@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.3.0.2',
+    'VERSION': '14.3.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2893,7 +2893,10 @@ SETTING_14_3_0_2['flag6'][1].update ({
         'disable_slider_updates':   (HARDWARE.ESP,   '<L', (0xF74,1,15), (None, None,                           ('SetOption',   '"SO161 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_14_3_0_3 = copy.copy(SETTING_14_3_0_2)
+# ======================================================================
 SETTINGS = [
+            (0x0E030003,0x1000, SETTING_14_3_0_3),
             (0x0E030002,0x1000, SETTING_14_3_0_2),
             (0x0E020006,0x1000, SETTING_14_2_0_6),
             (0x0E020004,0x1000, SETTING_14_2_0_4),
