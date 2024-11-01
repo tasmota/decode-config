@@ -2888,6 +2888,10 @@ SETTING_14_3_0_2['sbflag1'][1].pop('dali_web',None)
 SETTING_14_3_0_2['sbflag1'][1].update({
         'dali_light':               (HARDWARE.ESP,   '<L', (0xFA0,1,13), (None, '0 <= $ <= 1',                  ('Light',       '"DaliLight {}".format($)')) ),
                                     })
+SETTING_14_3_0_2['flag6'][1].update ({
+        'ld2410_use_pin':           (HARDWARE.ESP,   '<L', (0xF74,1,14), (None, None,                           ('SetOption',   '"SO160 {}".format($)')) ),
+        'disable_slider_updates':   (HARDWARE.ESP,   '<L', (0xF74,1,15), (None, None,                           ('SetOption',   '"SO161 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0E030002,0x1000, SETTING_14_3_0_2),
