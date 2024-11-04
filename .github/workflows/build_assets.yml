@@ -37,8 +37,8 @@ jobs:
               pyinstaller --noconfirm build-executables/dc-build-macos.spec && cd dist && zip -r9 ../decode-config-macos-13.zip decode-config
             OUT_FILE_NAME: decode-config-macos-13.zip
             ASSET_MIME: application/zip
-          - os: macos-latest-large
-            TARGET: macos-14-large
+          - os: macos-latest
+            TARGET: macos-14
             CMD_BUILD: >
               pyinstaller --noconfirm build-executables/dc-build-macos.spec && cd dist && zip -r9 ../decode-config-macos-14.zip decode-config
             OUT_FILE_NAME: decode-config-macos-14.zip
