@@ -2020,6 +2020,11 @@ SETTING_8_5_1_0 = copy.copy(SETTING_8_5_0_1)
 SETTING_9_0_0_1 = copy.copy(SETTING_8_5_1_0)
 SETTING_9_0_0_1.pop('my_adc0', None)
 SETTING_9_0_0_1.pop('bri_min', None)
+SETTING_9_0_0_1.pop('adc_param1',None)
+SETTING_9_0_0_1.pop('adc_param2',None)
+SETTING_9_0_0_1.pop('adc_param3',None)
+SETTING_9_0_0_1.pop('adc_param4',None)
+SETTING_9_0_0_1.pop('adc_param_type',None)
 SETTING_9_0_0_1.update              ({
     'gpio16_converted':             (HARDWARE.ESP82, '<H',  0x3D0,       (None, None,                           ('Management',  None)) ),
     'my_gp':                        (HARDWARE.ESP82, '<H',  0x3AC,       ([18], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
