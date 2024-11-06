@@ -1216,7 +1216,8 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | ShutterSetHalfway<x\>       |                        |             |
   |                | ShutterTiltConfig<x\>       |                        |             |
   | **Telegram**   | TmChatId                    | *TmPoll*               |             |
-  |                | TmState                     | *TmSend*               |             |
+  |                | TmFingerprint               | *TmSend*               |             |
+  |                | TmState                     |                        |             |
   |                | TmToken                     |                        |             |
   | **Zigbee**     | BatteryPercentage           | *ZbBind*               |             |
   |                | ZbConfig                    | *ZbForget*             |             |

@@ -2847,6 +2847,19 @@ SETTING_13_4_0_4.update             ({
                                     })
 # ======================================================================
 SETTING_14_0_0_2 = copy.copy(SETTING_13_4_0_4)
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].pop()    # SET_MAX
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].pop()  # SET_MAX
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].pop()  # SET_MAX
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_TELEGRAM_FINGERPRINT'])
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_TELEGRAM_FINGERPRINT'])
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_TELEGRAM_FINGERPRINT'])
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].extend(['SET_MAX'])
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP82)].extend(['SET_MAX'])
+SETTING_14_0_0_2[SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP32)].extend(['SET_MAX'])
+SETTING_14_0_0_2.update             ({
+    'telegram_fingerprint':         (HARDWARE.ESP,   '699s',(0x017,'SET_TELEGRAM_FINGERPRINT'),
+                                                                         (None, None,                           ('Telegram',    '"TmFingerprint {}".format("1" if len($) == 0 else $)')) ),
+                                    })
 SETTING_14_0_0_2['sbflag1'][1].update({
         'telegram_disable_af':      (HARDWARE.ESP,   '<L', (0xFA0,1,12), (None, '0 <= $ <= 1',                  ('Telegram',    '"TmState {}".format($+6)')) ),
                                     })
