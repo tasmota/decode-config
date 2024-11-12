@@ -2918,6 +2918,12 @@ SETTING_14_3_0_4['mbflag2'][1].update({
 # ======================================================================
 SETTING_14_3_0_5 = copy.copy(SETTING_14_3_0_4)
 SETTING_14_3_0_5['flag6'][1].pop('disable_slider_updates',None)
+SETTING_14_3_0_5.update             ({
+    'ms5837_pressure_offset':       (HARDWARE.ESP,   'f',   0xF6C,       (None, None,                           ('Sensor',      '"Sensor116 {}".format($)')), ),
+                                    })
+SETTING_14_3_0_5.update              ({
+    'web_color2':                   (HARDWARE.ESP,   '3B',  0xEA0,       ([2],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+19,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0E030005,0x1000, SETTING_14_3_0_5),
@@ -4795,6 +4801,8 @@ def bitsread(value, pos=0, bits=1):
     """
     if isinstance(value, str):
         value = int(value, 0)
+    if isinstance(value, float):
+        value = int(value)
     if isinstance(pos, str):
         pos = int(pos, 0)
 
