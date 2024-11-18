@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.3.0.6',
+    'VERSION': '14.3.0.7',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2925,10 +2925,20 @@ SETTING_14_3_0_5.update              ({
     'web_color2':                   (HARDWARE.ESP,   '3B',  0xEA0,       ([2],  None,                           ('Wifi',        '"WebColor{} {}{:06x}".format(#+19,chr(35),int($,0))')), '"0x{:06x}".format($)' ),
                                     })
 # ======================================================================
-SETTING_14_3_0_6 = copy.copy(SETTING_14_3_0_5)
+SETTING_14_3_0_7 = copy.copy(SETTING_14_3_0_5)
+SETTING_14_3_0_7.update             ({
+    'switchmode':                   (HARDWARE.ESP82, 'B',   0x4A8,       ([32], '0 <= $ <= 16',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'switchmode_esp32':             (HARDWARE.ESP32, 'B',   0x4A8,       ([32], '0 <= $ <= 16',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
+    'shutter_tilt_config':          (HARDWARE.ESP,   'b',   0x510,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
+    'knx_CB_registered':            (HARDWARE.ESP,   'B',   0x533,       (None, None,                           ('KNX',         None)) ),
+    'shutter_tilt_pos':             (HARDWARE.ESP,   'b',   0x534,       ([4],  None,                           ('Shutter',     None)) ),
+    'influxdb_period':              (HARDWARE.ESP,   '<H',  0x538,       (None, '0 <= $ <= 3600',               ('Management',  '"IfxPeriod {}".format($)')) ),
+    'rf_duplicate_time':            (HARDWARE.ESP,   '<H',  0x53A,       (None, '10 <= $ <= 65535',             ('Rf',          '"RfTimeOut {}".format($)')) ),
+    'global_sensor_index':          (HARDWARE.ESP,   'B',   0x53C,       ([3], '0 <= $ <= 251',                 ('Sensor',      None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x0E030006,0x1000, SETTING_14_3_0_6),
+            (0x0E030007,0x1000, SETTING_14_3_0_7),
             (0x0E030005,0x1000, SETTING_14_3_0_5),
             (0x0E030004,0x1000, SETTING_14_3_0_4),
             (0x0E030002,0x1000, SETTING_14_3_0_2),
