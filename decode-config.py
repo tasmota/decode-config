@@ -2936,6 +2936,9 @@ SETTING_14_3_0_7.update             ({
     'rf_duplicate_time':            (HARDWARE.ESP,   '<H',  0x53A,       (None, '10 <= $ <= 65535',             ('Rf',          '"RfTimeOut {}".format($)')) ),
     'global_sensor_index':          (HARDWARE.ESP,   'B',   0x53C,       ([3], '0 <= $ <= 251',                 ('Sensor',      None)) ),
                                     })
+SETTING_14_3_0_7['flag6'][1].update ({
+        'gui_no_state_text':        (HARDWARE.ESP,   '<L', (0xF74,1,15), (None, None,                           ('SetOption',   '"SO161 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0E030007,0x1000, SETTING_14_3_0_7),
