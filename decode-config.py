@@ -2938,6 +2938,7 @@ SETTING_14_3_0_7.update             ({
                                     })
 SETTING_14_3_0_7['flag6'][1].update ({
         'gui_no_state_text':        (HARDWARE.ESP,   '<L', (0xF74,1,15), (None, None,                           ('SetOption',   '"SO161 {}".format($)')) ),
+        'no_export_energy_today':   (HARDWARE.ESP,   '<L', (0xF74,1,16), (None, None,                           ('SetOption',   '"SO162 {}".format($)')) ),
                                     })
 # ======================================================================
 SETTINGS = [
