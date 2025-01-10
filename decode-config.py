@@ -2947,6 +2947,15 @@ SETTING_14_4_1_1['flag6'][1].update ({
                                     })
 # ======================================================================
 SETTING_14_4_1_2 = copy.copy(SETTING_14_4_1_1)
+SETTING_14_4_1_2.update             ({
+    'light_pixels':                 (HARDWARE.ESP,   '<H', (0x496,15,0), (None, '1 <= $ <= 512',                ('Light',       '"Pixels {}".format($)')) ),
+    'light_pixels_reverse':         (HARDWARE.ESP,   '<H', (0x496,1,15), (None, None,                           ('Light',       None)) ),
+    'light_pixels_height_1':        (HARDWARE.ESP,   '<H', (0xEC4,15,0), (None, None,                           ('Light',       None)) ),
+    'light_pixels_alternate':       (HARDWARE.ESP,   '<H', (0xEC4,1,15), (None, None,                           ('Light',       None)) ),
+                                    })
+SETTING_14_4_1_2['mbflag2'][1].update({
+        'log_file_idx':             (HARDWARE.ESP,   '<L', (0xFD8,4,0),  (None, None,                           ('System',      None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0E040102,0x1000, SETTING_14_4_1_2),
