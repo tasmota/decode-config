@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.4.1.2',
+    'VERSION': '14.4.1.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2957,7 +2957,10 @@ SETTING_14_4_1_2['mbflag2'][1].update({
         'log_file_idx':             (HARDWARE.ESP,   '<L', (0xFD8,4,0),  (None, None,                           ('System',      None)) ),
                                     })
 # ======================================================================
+SETTING_14_4_1_3 = copy.copy(SETTING_14_4_1_2)
+# ======================================================================
 SETTINGS = [
+            (0x0E040103,0x1000, SETTING_14_4_1_3),
             (0x0E040102,0x1000, SETTING_14_4_1_2),
             (0x0E040101,0x1000, SETTING_14_4_1_1),
             (0x0E030007,0x1000, SETTING_14_3_0_7),
