@@ -1145,8 +1145,9 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | Fade                        | *HsbColor*             |             |
   |                | LedTable                    | *Led<x\>*              |             |
   |                | Pixels                      | *Palette*              |             |
-  |                | PWMDimmerPWMs               | *White*                |             |
-  |                | RGBWWTable                  | *VirtualCT*            |             |
+  |                | PixelType                   | *White*                |             |
+  |                | PWMDimmerPWMs               | *VirtualCT*            |             |
+  |                | RGBWWTable                  |                        |             |
   |                | Rotation                    |                        |             |
   |                | Scheme                      |                        |             |
   |                | ShdLeadingEdge              |                        |             |

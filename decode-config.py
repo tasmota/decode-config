@@ -2958,6 +2958,11 @@ SETTING_14_4_1_2['mbflag2'][1].update({
                                     })
 # ======================================================================
 SETTING_14_4_1_3 = copy.copy(SETTING_14_4_1_2)
+SETTING_14_4_1_3['mbflag2'][1].update({
+        'light_pixels_order':       (HARDWARE.ESP,   '<L', (0xFD8,3,4),  (None, None,                           ('Light',       '"PixelType {}".format(($ & 0x7) | (@["mbflag2"]["light_pixels_w_first"] >> 3) | (@["mbflag2"]["light_pixels_rgbw"] >> 4) )')) ),
+        'light_pixels_rgbw':        (HARDWARE.ESP,   '<L', (0xFD8,1,7),  (None, None,                           ('Light',       None)) ),
+        'light_pixels_w_first':     (HARDWARE.ESP,   '<L', (0xFD8,1,8),  (None, None,                           ('Light',       None)) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0E040103,0x1000, SETTING_14_4_1_3),
