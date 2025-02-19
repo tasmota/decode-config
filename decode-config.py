@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.6.0.0',
+    'VERSION': '14.5.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2969,10 +2969,10 @@ SETTING_14_4_1_4['flag6'][1].update ({
         'wizmote_enabled':          (HARDWARE.ESP,   '<L', (0xF74,1,18), (None, None,                           ('SetOption',   '"SO164 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_14_6_0_0 = copy.copy(SETTING_14_4_1_4)
+SETTING_14_5_0_1 = copy.copy(SETTING_14_4_1_4)
 # ======================================================================
 SETTINGS = [
-            (0x0E060000,0x1000, SETTING_14_6_0_0),
+            (0x0E050001,0x1000, SETTING_14_5_0_1),
             (0x0E040104,0x1000, SETTING_14_4_1_4),
             (0x0E040103,0x1000, SETTING_14_4_1_3),
             (0x0E040102,0x1000, SETTING_14_4_1_2),
