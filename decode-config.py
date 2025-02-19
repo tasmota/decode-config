@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '14.4.1.0',
+    'VERSION': '14.5.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2941,10 +2941,42 @@ SETTING_14_3_0_7['flag6'][1].update ({
         'no_export_energy_today':   (HARDWARE.ESP,   '<L', (0xF74,1,16), (None, None,                           ('SetOption',   '"SO162 {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_14_4_1_0 = copy.copy(SETTING_14_3_0_7)
+SETTING_14_4_1_1 = copy.copy(SETTING_14_3_0_7)
+SETTING_14_4_1_1['flag6'][1].update ({
+        'gui_device_name':          (HARDWARE.ESP,   '<L', (0xF74,1,17), (None, None,                           ('SetOption',   '"SO163 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_14_4_1_2 = copy.copy(SETTING_14_4_1_1)
+SETTING_14_4_1_2.update             ({
+    'light_pixels':                 (HARDWARE.ESP,   '<H', (0x496,15,0), (None, '1 <= $ <= 512',                ('Light',       '"Pixels {}".format($)')) ),
+    'light_pixels_reverse':         (HARDWARE.ESP,   '<H', (0x496,1,15), (None, None,                           ('Light',       None)) ),
+    'light_pixels_height_1':        (HARDWARE.ESP,   '<H', (0xEC4,15,0), (None, None,                           ('Light',       None)) ),
+    'light_pixels_alternate':       (HARDWARE.ESP,   '<H', (0xEC4,1,15), (None, None,                           ('Light',       None)) ),
+                                    })
+SETTING_14_4_1_2['mbflag2'][1].update({
+        'log_file_idx':             (HARDWARE.ESP,   '<L', (0xFD8,4,0),  (None, None,                           ('System',      None)) ),
+                                    })
+# ======================================================================
+SETTING_14_4_1_3 = copy.copy(SETTING_14_4_1_2)
+SETTING_14_4_1_3['mbflag2'][1].update({
+        'light_pixels_order':       (HARDWARE.ESP,   '<L', (0xFD8,3,4),  (None, None,                           ('Light',       '"PixelType {}".format(($ & 0x7) | (@["mbflag2"]["light_pixels_w_first"] >> 3) | (@["mbflag2"]["light_pixels_rgbw"] >> 4) )')) ),
+        'light_pixels_rgbw':        (HARDWARE.ESP,   '<L', (0xFD8,1,7),  (None, None,                           ('Light',       None)) ),
+        'light_pixels_w_first':     (HARDWARE.ESP,   '<L', (0xFD8,1,8),  (None, None,                           ('Light',       None)) ),
+                                    })
+# ======================================================================
+SETTING_14_4_1_4 = copy.copy(SETTING_14_4_1_3)
+SETTING_14_4_1_4['flag6'][1].update ({
+        'wizmote_enabled':          (HARDWARE.ESP,   '<L', (0xF74,1,18), (None, None,                           ('SetOption',   '"SO164 {}".format($)')) ),
+                                    })
+# ======================================================================
+SETTING_14_5_0_0 = copy.copy(SETTING_14_4_1_4)
 # ======================================================================
 SETTINGS = [
-            (0x0E040100,0x1000, SETTING_14_4_1_0),
+            (0x0E050000,0x1000, SETTING_14_5_0_0),
+            (0x0E040104,0x1000, SETTING_14_4_1_4),
+            (0x0E040103,0x1000, SETTING_14_4_1_3),
+            (0x0E040102,0x1000, SETTING_14_4_1_2),
+            (0x0E040101,0x1000, SETTING_14_4_1_1),
             (0x0E030007,0x1000, SETTING_14_3_0_7),
             (0x0E030005,0x1000, SETTING_14_3_0_5),
             (0x0E030004,0x1000, SETTING_14_3_0_4),
@@ -5439,7 +5471,7 @@ def set_fieldvalue(fielddef, dobj, addr, value):
     format_ = get_fielddef(fielddef, fields='format_')
     formatcnt = get_formatcount(format_)
     singletype, bitsize = get_formattype(format_)
-    if not format_[-1:].lower() in ['s', 'p']:
+    if not format_[-1:].lower() in ['s', 'p', 'f']:
         addr += (bitsize // 8) * formatcnt
         for _ in range(0, formatcnt):
             addr -= (bitsize // 8)
