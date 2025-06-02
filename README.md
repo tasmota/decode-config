@@ -6,7 +6,7 @@ Convert, backup and restore configuration data of devices flashed with [Tasmota 
 <img src="https://github.com/tasmota/decode-config/blob/master/media/pic/decode-config.png" alt="Overview" title="decode-config Overview" width="600">
 
 <!-- markdownlint-disable MD033 -->
-[![master](https://img.shields.io/badge/master-v14.5.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
+[![master](https://img.shields.io/badge/master-v14.6.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/master)
 [![GitHub download](https://img.shields.io/github/downloads/tasmota/decode-config/total.svg)](https://github.com/tasmota/decode-config/releases/latest)
 [![PyPI version](https://badge.fury.io/py/decode-config.svg)](https://badge.fury.io/py/decode-config)
 ![PyPI downloads](https://img.shields.io/pypi/dm/decode-config?label=pypi%20downloads)
@@ -43,7 +43,7 @@ Comparing backup files created by **decode-config** and [.dmp](#dmp-format) file
 Using the latest development version of decode-config is only necessary if you also use the latest development version of Tasmota.
 
 <!-- markdownlint-disable MD033 -->
-[![development version](https://img.shields.io/badge/development-v14.5.0.3-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
+[![development version](https://img.shields.io/badge/development-v14.6.0.0-blue.svg)](https://github.com/tasmota/decode-config/tree/development)
 
 ## Table of contents
 <details>
@@ -338,7 +338,7 @@ Example:
 decode-config -c my.conf -s tasmota-4281 --backup-file Config_@d_@v
 ```
 
-This will create a file like `Config_Tasmota_14.5.json` (the part `Tasmota` and `14.5` will choosen related to your device configuration).
+This will create a file like `Config_Tasmota_14.6.json` (the part `Tasmota` and `14.6` will choosen related to your device configuration).
 
 #### Save multiple backup at once
 
@@ -350,7 +350,7 @@ decode-config -c my.conf -s tasmota-4281 -o Config_@d_@v -o Backup_@H.json -o Ba
 
 creates three backup files:
 
-* `Config_Tasmota_14.5.json` using JSON format
+* `Config_Tasmota_14.6.json` using JSON format
 * `Backup_tasmota-4281.json` using JSON format
 * `Backup_tasmota-4281.dmp` using Tasmota configuration file format
 
@@ -358,10 +358,10 @@ creates three backup files:
 
 Reading back a previously saved backup file, use the `--restore-file <filename>` parameter.
 
-To restore the previously save backup file `Config_Tasmota_14.5.json` to device `tasmota-4281` use:
+To restore the previously save backup file `Config_Tasmota_14.6.json` to device `tasmota-4281` use:
 
 ```bash
-decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_14.5
+decode-config -c my.conf -s tasmota-4281 --restore-file Config_Tasmota_14.6
 ```
 
 Restore operation also allows placeholders **@v**, **@d**, **@f**, **@h** or **@H** like in backup filenames so we can use the same naming as for the backup process:
