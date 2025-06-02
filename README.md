@@ -920,6 +920,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | DevGroupShare               |                        |             |
   |                | DevGroupTie                 |                        |             |
   |                | Interlock                   |                        |             |
+  |                | JsonPP                      |                        |             |
   |                | LedMask                     |                        |             |
   |                | LedPwmMode<x\>              |                        |             |
   |                | LedPwmOn                    |                        |             |
