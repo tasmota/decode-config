@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.0.1.0',
+    'VERSION': '15.0.1.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -2974,10 +2974,10 @@ SETTING_14_6_0_1['mbflag2'][1].update({
         'json_pretty_print':        (HARDWARE.ESP,   '<L', (0xFD8,3,16), (None, '0 <= $ <= 7',                  ('Control',     '"JsonPP {}".format($)')) ),
                                     })
 # ======================================================================
-SETTING_15_0_1_0 = copy.copy(SETTING_14_6_0_1)
+SETTING_15_0_1_1 = copy.copy(SETTING_14_6_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0F000100,0x1000, SETTING_15_0_1_0),
+            (0x0F000101,0x1000, SETTING_15_0_1_1),
             (0x0E060001,0x1000, SETTING_14_6_0_1),
             (0x0E040104,0x1000, SETTING_14_4_1_4),
             (0x0E040103,0x1000, SETTING_14_4_1_3),
