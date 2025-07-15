@@ -626,28 +626,50 @@ class Hardware:
     """
     # Bit mask for supported hardware
     ESP82       = 0b00000001        # All ESP82xx
-    ESP32ex     = 0b00000010        # ESP32 excluding S2-S3/C2-C6
-    ESP82_32ex  = 0b00000011        # ESP82xx + ESP32 excluding ESP32 S2-S3/C2-C6
+    ESP32ex     = 0b00000010        # ESP32 excluding S2-S3/C2-C6/P4
+    ESP82_32ex  = 0b00000011        # ESP82xx + ESP32 excluding ESP32 S2-S3/C2-C6/P4
     ESP32S3     = 0b00000100        # ESP32S3
     ESP32S2     = 0b00001000        # ESP32S2
     ESP32C3     = 0b00010000        # ESP32C3
     ESP32C2     = 0b00100000        # ESP32C2
     ESP32C6     = 0b01000000        # ESP32C6
-    ESP32       = 0b01111110        # All ESP32
+    ESP32P4     = 0b10000000        # ESP32P4
+    ESPnP4      = 0b01111111        # All ESP excluding ESP32P4
+    ESP32       = 0b11111110        # All ESP32
     ESP         = 0b11111111        # All ESP
 
     # Hardware bitmask and description
     config = (
-        (ESP82,         "ESP82"),
-        (ESP32ex,       "ESP32 (excl S2-S3/C2-C6)"),
-        (ESP82_32ex,    "ESP82/32 (excl ESP32 S2-S3/C2-C6)"),
-        (ESP32S3,       "ESP32S3"),
+        (ESP82,         "ESP82xx"),
+        (ESP32ex,       "ESP32 (excl ESP32-S2/S3/C2/C6/P4)"),
+        (ESP82_32ex,    "ESP82xx/32 (excl ESP32-S2/S3/C2/C6/P4)"),
+        (ESP32S3,       "ESP32-S3"),
         (ESP32,         "ESP32"),
-        (ESP,           "ESP82/32")
+        (ESP32P4,       "ESP32-P4"),
+        (ESP,           "ESP82xx/32")
     )
 
     # Tasmota config_version values
-    config_versions = (ESP82, ESP32ex, ESP32S3, ESP32S2, ESP32C3, ESP32C2, ESP32C6)
+    config_versions = (
+        ESP82,
+        ESP32ex,
+        ESP32S3,
+        ESP32S2,
+        ESP32C3,
+        ESP32C2,
+        ESP32C6,
+        ESP32P4
+        )
+    config_versions_str = (
+        "ESP82xx",
+        "ESP32 (not S2/S3/C2/C6/P4)",
+        "ESP32-S3",
+        "ESP32-S2",
+        "ESP32-C3",
+        "ESP32-C2",
+        "ESP32-C6",
+        "ESP32-P4",
+        )
 
     def get_bitmask(self, config_version):
         """
@@ -683,11 +705,10 @@ class Hardware:
         @return:
             hardware string
         """
-        hardware = self.get_bitmask(config_version)
         try:
-            return self.config[[hw[0] for hw in self.config].index(hardware)][1]
+            return self.config_versions_str[config_version]
         except:     # pylint: disable=bare-except
-            return self.config[len(self.config)-1][1]
+            return self.config_versions_str[0]
 
     def match(self, setting_hardware, config_version):
         """
@@ -2975,6 +2996,331 @@ SETTING_14_6_0_1['mbflag2'][1].update({
                                     })
 # ======================================================================
 SETTING_15_0_1_2 = copy.copy(SETTING_14_6_0_1)
+SETTING_15_0_1_2 = {
+    'energy_power_calibration':     (HARDWARE.ESPnP4,'<L',  0x364,       (None, '1000 <= $ <= 32000',           ('Power',       '"PowerCal {}".format($)')) ),
+    'energy_voltage_calibration':   (HARDWARE.ESPnP4,'<L',  0x368,       (None, '1000 <= $ <= 32000',           ('Power',       '"VoltageCal {}".format($)')) ),
+    'energy_current_calibration':   (HARDWARE.ESPnP4,'<L',  0x36C,       (None, '1000 <= $ <= 32000',           ('Power',       '"CurrentCal {}".format($)')) ),
+    'energy_power_calibration2':    (HARDWARE.ESPnP4,'<L',  0x370,       (None, None,                           ('Power',       '"PowerSet2 {}".format($)')) ),
+    'energy_voltage_calibration2':  (HARDWARE.ESPnP4,'<L',  0x374,       (None, None,                           ('Power',       '"VoltageSet2 {}".format($)')) ),
+    'energy_current_calibration2':  (HARDWARE.ESPnP4,'<L',  0x378,       (None, None,                           ('Power',       '"CurrentSet2 {}".format($)')) ),
+    'energy_max_power':             (HARDWARE.ESPnP4,'<H',  0x37C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
+    'energy_min_voltage':           (HARDWARE.ESPnP4,'<H',  0x37E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
+    'energy_max_voltage':           (HARDWARE.ESPnP4,'<H',  0x380,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
+    'energy_min_current':           (HARDWARE.ESPnP4,'<H',  0x382,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
+    'energy_max_current':           (HARDWARE.ESPnP4,'<H',  0x384,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
+    'energy_max_power_limit':       (HARDWARE.ESPnP4,'<H',  0x386,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
+    'energy_max_power_limit_hold':  (HARDWARE.ESPnP4,'<H',  0x388,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
+    'energy_max_power_limit_window':(HARDWARE.ESPnP4,'<H',  0x38A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
+    'energy_max_energy':            (HARDWARE.ESPnP4,'<H',  0x392,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
+    'energy_max_energy_start':      (HARDWARE.ESPnP4,'<H',  0x394,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
+    'mqtt_retry':                   (HARDWARE.ESPnP4,'<H',  0x396,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
+    'poweronstate':                 (HARDWARE.ESPnP4,'B',   0x398,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
+    'last_module':                  (HARDWARE.ESPnP4,'B',   0x399,       (None, None,                           (INTERNAL,      None)) ),
+    'blinktime':                    (HARDWARE.ESPnP4,'<H',  0x39A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
+    'blinkcount':                   (HARDWARE.ESPnP4,'<H',  0x39C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
+    'light_rotation':               (HARDWARE.ESPnP4,'<H',  0x39E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
+    'flag3':                        (HARDWARE.ESPnP4, {
+        'user_esp8285_enable':      (HARDWARE.ESPnP4,'<L', (0x3A0,1, 1), (None, None,                           ('SetOption',   '"SO51 {}".format($)')) ),
+        'time_append_timezone':     (HARDWARE.ESPnP4,'<L', (0x3A0,1, 2), (None, None,                           ('SetOption',   '"SO52 {}".format($)')) ),
+        'gui_hostname_ip':          (HARDWARE.ESPnP4,'<L', (0x3A0,1, 3), (None, None,                           ('SetOption',   '"SO53 {}".format($)')) ),
+        'tuya_apply_o20':           (HARDWARE.ESPnP4,'<L', (0x3A0,1, 4), (None, None,                           ('SetOption',   '"SO54 {}".format($)')) ),
+        'mdns_enabled':             (HARDWARE.ESPnP4,'<L', (0x3A0,1, 5), (None, None,                           ('SetOption',   '"SO55 {}".format($)')) ),
+        'use_wifi_scan':            (HARDWARE.ESPnP4,'<L', (0x3A0,1, 6), (None, None,                           ('SetOption',   '"SO56 {}".format($)')) ),
+        'use_wifi_rescan':          (HARDWARE.ESPnP4,'<L', (0x3A0,1, 7), (None, None,                           ('SetOption',   '"SO57 {}".format($)')) ),
+        'receive_raw':          	(HARDWARE.ESPnP4,'<L', (0x3A0,1, 8), (None, None,                           ('SetOption',   '"SO58 {}".format($)')) ),
+        'hass_tele_on_power':       (HARDWARE.ESPnP4,'<L', (0x3A0,1, 9), (None, None,                           ('SetOption',   '"SO59 {}".format($)')) ),
+        'sleep_normal':             (HARDWARE.ESPnP4,'<L', (0x3A0,1,10), (None, None,                           ('SetOption',   '"SO60 {}".format($)')) ),
+        'button_switch_force_local':(HARDWARE.ESPnP4,'<L', (0x3A0,1,11), (None, None,                           ('SetOption',   '"SO61 {}".format($)')) ),
+        'no_hold_retain':           (HARDWARE.ESPnP4,'<L', (0x3A0,1,12), (None, None,                           ('SetOption',   '"SO62 {}".format($)')) ),
+        'no_power_feedback':        (HARDWARE.ESPnP4,'<L', (0x3A0,1,13), (None, None,                           ('SetOption',   '"SO63 {}".format($)')) ),
+        'use_underscore':           (HARDWARE.ESPnP4,'<L', (0x3A0,1,14), (None, None,                           ('SetOption',   '"SO64 {}".format($)')) ),
+        'fast_power_cycle_disable': (HARDWARE.ESPnP4,'<L', (0x3A0,1,15), (None, None,                           ('SetOption',   '"SO65 {}".format($)')) ),
+        'tuya_serial_mqtt_publish': (HARDWARE.ESPnP4,'<L', (0x3A0,1,16), (None, None,                           ('SetOption',   '"SO66 {}".format($)')) ),
+        'buzzer_enable':            (HARDWARE.ESPnP4,'<L', (0x3A0,1,17), (None, None,                           ('SetOption',   '"SO67 {}".format($)')) ),
+        'pwm_multi_channels':       (HARDWARE.ESPnP4,'<L', (0x3A0,1,18), (None, None,                           ('SetOption',   '"SO68 {}".format($)')) ),
+        'sb_receive_invert':        (HARDWARE.ESPnP4,'<L', (0x3A0,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
+        'dds2382_model':            (HARDWARE.ESPnP4,'<L', (0x3A0,1,21), (None, None,                           ('SetOption',   '"SO71 {}".format($)')) ),
+        'hardware_energy_total':    (HARDWARE.ESPnP4,'<L', (0x3A0,1,22), (None, None,                           ('SetOption',   '"SO72 {}".format($)')) ),
+        'mqtt_buttons':             (HARDWARE.ESPnP4,'<L', (0x3A0,1,23), (None, None,                           ('SetOption',   '"SO73 {}".format($)')) ),
+        'ds18x20_internal_pullup':  (HARDWARE.ESPnP4,'<L', (0x3A0,1,24), (None, None,                           ('SetOption',   '"SO74 {}".format($)')) ),
+        'grouptopic_mode':          (HARDWARE.ESPnP4,'<L', (0x3A0,1,25), (None, None,                           ('SetOption',   '"SO75 {}".format($)')) ),
+        'bootcount_update':         (HARDWARE.ESPnP4,'<L', (0x3A0,1,26), (None, None,                           ('SetOption',   '"SO76 {}".format($)')) ),
+        'slider_dimmer_stay_on':    (HARDWARE.ESPnP4,'<L', (0x3A0,1,27), (None, None,                           ('SetOption',   '"SO77 {}".format($)')) ),
+        'compatibility_check':      (HARDWARE.ESPnP4,'<L', (0x3A0,1,28), (None, None,                           ('SetOption',   '"SO78 {}".format($)')) ),
+        'counter_reset_on_tele':    (HARDWARE.ESPnP4,'<L', (0x3A0,1,29), (None, None,                           ('SetOption',   '"SO79 {}".format($)')) ),
+        'shutter_mode':             (HARDWARE.ESPnP4,'<L', (0x3A0,1,30), (None, None,                           ('SetOption',   '"SO80 {}".format($)')) ),
+        'pcf8574_ports_inverted':   (HARDWARE.ESPnP4,'<L', (0x3A0,1,31), (None, None,                           ('SetOption',   '"SO81 {}".format($)')) ),
+                                    },                      0x3A0,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'energy_kWhdoy':                (HARDWARE.ESPnP4,'<H',  0x3A4,       (None, None,                           ('Power',       None)) ),
+    'energy_min_power':             (HARDWARE.ESPnP4,'<H',  0x3A6,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
+
+    # ESP32-P4
+    'energy_power_calibration_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x344,       (None, '1000 <= $ <= 32000',           ('Power',       '"PowerCal {}".format($)')) ),
+    'energy_voltage_calibration_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x348,       (None, '1000 <= $ <= 32000',           ('Power',       '"VoltageCal {}".format($)')) ),
+    'energy_current_calibration_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x34C,       (None, '1000 <= $ <= 32000',           ('Power',       '"CurrentCal {}".format($)')) ),
+    'energy_power_calibration2_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x350,       (None, None,                           ('Power',       '"PowerSet2 {}".format($)')) ),
+    'energy_voltage_calibration2_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x354,       (None, None,                           ('Power',       '"VoltageSet2 {}".format($)')) ),
+    'energy_current_calibration2_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L',  0x358,       (None, None,                           ('Power',       '"CurrentSet2 {}".format($)')) ),
+    'energy_max_power_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<H',  0x35C,       (None, None,                           ('Power',       '"PowerHigh {}".format($)')) ),
+    'energy_min_voltage_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<H',  0x35E,       (None, None,                           ('Power',       '"VoltageLow {}".format($)')) ),
+    'energy_max_voltage_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<H',  0x360,       (None, None,                           ('Power',       '"VoltageHigh {}".format($)')) ),
+    'energy_min_current_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<H',  0x362,       (None, None,                           ('Power',       '"CurrentLow {}".format($)')) ),
+    'energy_max_current_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<H',  0x364,       (None, None,                           ('Power',       '"CurrentHigh {}".format($)')) ),
+    'energy_max_power_limit_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<H',  0x366,       (None, None,                           ('Power',       '"MaxPower {}".format($)')) ),
+    'energy_max_power_limit_hold_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<H',  0x368,       (None, None,                           ('Power',       '"MaxPowerHold {}".format($)')) ),
+    'energy_max_power_limit_window_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<H',  0x36A,       (None, None,                           ('Power',       '"MaxPowerWindow {}".format($)')) ),
+    'energy_max_energy_esp32p4':    (HARDWARE.ESP32P4,
+                                                     '<H',  0x372,       (None, None,                           ('Power',       '"MaxEnergy {}".format($)')) ),
+    'energy_max_energy_start_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<H',  0x374,       (None, None,                           ('Power',       '"MaxEnergyStart {}".format($)')) ),
+    'mqtt_retry_esp32p4':           (HARDWARE.ESP32P4,
+                                                     '<H',  0x376,       (None, '10 <= $ <= 32000',             ('MQTT',        '"MqttRetry {}".format($)')) ),
+    'poweronstate_esp32p4':         (HARDWARE.ESP32P4,
+                                                     'B',   0x378,       (None, '0 <= $ <= 5',                  ('Control',     '"PowerOnState {}".format($)')) ),
+    'last_module_esp32p4':          (HARDWARE.ESP32P4,
+                                                     'B',   0x379,       (None, None,                           (INTERNAL,      None)) ),
+    'blinktime_esp32p4':            (HARDWARE.ESP32P4,
+                                                     '<H',  0x37A,       (None, '2 <= $ <= 3600',               ('Control',     '"BlinkTime {}".format($)')) ),
+    'blinkcount_esp32p4':           (HARDWARE.ESP32P4,
+                                                     '<H',  0x37C,       (None, '0 <= $ <= 32000',              ('Control',     '"BlinkCount {}".format($)')) ),
+    'light_rotation_esp32p4':       (HARDWARE.ESP32P4,
+                                                     '<H',  0x37E,       (None, None,                           ('Light',       '"Rotation {}".format($)')) ),
+    'flag3_esp32p4':                (HARDWARE.ESP32P4,  {
+        'user_esp8285_enable_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 1), (None, None,                           ('SetOption',   '"SO51 {}".format($)')) ),
+        'time_append_timezone_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 2), (None, None,                           ('SetOption',   '"SO52 {}".format($)')) ),
+        'gui_hostname_ip_esp32p4':  (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 3), (None, None,                           ('SetOption',   '"SO53 {}".format($)')) ),
+        'tuya_apply_o20_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 4), (None, None,                           ('SetOption',   '"SO54 {}".format($)')) ),
+        'mdns_enabled_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 5), (None, None,                           ('SetOption',   '"SO55 {}".format($)')) ),
+        'use_wifi_scan_esp32p4':    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 6), (None, None,                           ('SetOption',   '"SO56 {}".format($)')) ),
+        'use_wifi_rescan_esp32p4':  (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 7), (None, None,                           ('SetOption',   '"SO57 {}".format($)')) ),
+        'receive_raw_esp32p4':      (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 8), (None, None,                           ('SetOption',   '"SO58 {}".format($)')) ),
+        'hass_tele_on_power_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1, 9), (None, None,                           ('SetOption',   '"SO59 {}".format($)')) ),
+        'sleep_normal_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,10), (None, None,                           ('SetOption',   '"SO60 {}".format($)')) ),
+        'button_switch_force_local_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,11), (None, None,                           ('SetOption',   '"SO61 {}".format($)')) ),
+        'no_hold_retain_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,12), (None, None,                           ('SetOption',   '"SO62 {}".format($)')) ),
+        'no_power_feedback_esp32p4':(HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,13), (None, None,                           ('SetOption',   '"SO63 {}".format($)')) ),
+        'use_underscore_esp32p4':   (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,14), (None, None,                           ('SetOption',   '"SO64 {}".format($)')) ),
+        'fast_power_cycle_disable_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,15), (None, None,                           ('SetOption',   '"SO65 {}".format($)')) ),
+        'tuya_serial_mqtt_publish_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,16), (None, None,                           ('SetOption',   '"SO66 {}".format($)')) ),
+        'buzzer_enable_esp32p4':    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,17), (None, None,                           ('SetOption',   '"SO67 {}".format($)')) ),
+        'pwm_multi_channels_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,18), (None, None,                           ('SetOption',   '"SO68 {}".format($)')) ),
+        'sb_receive_invert_esp32p4':(HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,19), (None, None,                           ('SetOption',   '"SO69 {}".format($)')) ),
+        'dds2382_model_esp32p4':    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,21), (None, None,                           ('SetOption',   '"SO71 {}".format($)')) ),
+        'hardware_energy_total_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,22), (None, None,                           ('SetOption',   '"SO72 {}".format($)')) ),
+        'mqtt_buttons_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,23), (None, None,                           ('SetOption',   '"SO73 {}".format($)')) ),
+        'ds18x20_internal_pullup_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,24), (None, None,                           ('SetOption',   '"SO74 {}".format($)')) ),
+        'grouptopic_mode_esp32p4':  (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,25), (None, None,                           ('SetOption',   '"SO75 {}".format($)')) ),
+        'bootcount_update_esp32p4': (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,26), (None, None,                           ('SetOption',   '"SO76 {}".format($)')) ),
+        'slider_dimmer_stay_on_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,27), (None, None,                           ('SetOption',   '"SO77 {}".format($)')) ),
+        'compatibility_check_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,28), (None, None,                           ('SetOption',   '"SO78 {}".format($)')) ),
+        'counter_reset_on_tele_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,29), (None, None,                           ('SetOption',   '"SO79 {}".format($)')) ),
+        'shutter_mode_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,30), (None, None,                           ('SetOption',   '"SO80 {}".format($)')) ),
+        'pcf8574_ports_inverted_esp32p4':
+                                    (HARDWARE.ESP32P4,
+                                                     '<L', (0x380,1,31), (None, None,                           ('SetOption',   '"SO81 {}".format($)')) ),
+                                    },                      0x380,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'energy_kWhdoy_esp32p4':        (HARDWARE.ESP32P4,
+                                                     '<H',  0x384,       (None, None,                           ('Power',       None)) ),
+    'energy_min_power_esp32p4':     (HARDWARE.ESP32P4,
+                                                     '<H',  0x386,       (None, None,                           ('Power',       '"PowerLow {}".format($)')) ),
+    # Mapping 0x38C to 0x496 for ESP32P4 (Domoticz in filesystem)
+    'my_gp_esp32':                  (HARDWARE.ESP ^   (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3 | HARDWARE.ESP32P4),
+                                                     '<H',  0x3AC,       ([40], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'my_gp_esp32p4':                (HARDWARE.ESP32P4,
+                                                     '<H',  0x38C,       ([55], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'eth_type':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x446,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_type_esp32p4':             (HARDWARE.ESP32P4,
+                                                     'B',   0x3FA,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_clk_mode':                 (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x447,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'eth_clk_mode_esp32p4':         (HARDWARE.ESP32P4,
+                                                     'B',   0x3FB,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+#+  mytmplt       user_template;             // 3FC  2x56 bytes (ESP32-P4)
+    'webcam_config':                (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4), {
+        'stream':                   (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'awb':                      (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
+        'awb_gain':                 (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 5), (None, None,                           ('Control',     '"WCAWBGain {}".format($)')) ),
+        'aec':                      (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 6), (None, None,                           ('Control',     '"WCAEC {}".format($)')) ),
+        'aec2':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 7), (None, None,                           ('Control',     '"WCAECDSP {}".format($)')) ),
+        'raw_gma':                  (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 8), (None, None,                           ('Control',     '"WCGammaCorrect {}".format($)')) ),
+        'lenc':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1, 9), (None, None,                           ('Control',     '"WCLensCorrect {}".format($)')) ),
+        'colorbar':                 (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1,10), (None, None,                           ('Control',     '"WCColorbar {}".format($)')) ),
+        'wpc':                      (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1,11), (None, None,                           ('Control',     '"WCWPC {}".format($)')) ),
+        'dcw':                      (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1,12), (None, None,                           ('Control',     '"WCDCW {}".format($)')) ),
+        'bpc':                      (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
+        'feature':                  (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<L', (0x44C,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<l', (0x44C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<l', (0x44C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<l', (0x44C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+                                    },                      0x44C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'webcam_config_esp32p4':        (HARDWARE.ESP32P4, {
+        'stream':                   (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'awb':                      (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
+        'awb_gain':                 (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 5), (None, None,                           ('Control',     '"WCAWBGain {}".format($)')) ),
+        'aec':                      (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 6), (None, None,                           ('Control',     '"WCAEC {}".format($)')) ),
+        'aec2':                     (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 7), (None, None,                           ('Control',     '"WCAECDSP {}".format($)')) ),
+        'raw_gma':                  (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 8), (None, None,                           ('Control',     '"WCGammaCorrect {}".format($)')) ),
+        'lenc':                     (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1, 9), (None, None,                           ('Control',     '"WCLensCorrect {}".format($)')) ),
+        'colorbar':                 (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1,10), (None, None,                           ('Control',     '"WCColorbar {}".format($)')) ),
+        'wpc':                      (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1,11), (None, None,                           ('Control',     '"WCWPC {}".format($)')) ),
+        'dcw':                      (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1,12), (None, None,                           ('Control',     '"WCDCW {}".format($)')) ),
+        'bpc':                      (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+        'feature':                  (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
+                                    },                      0x46C,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'eth_address':                  (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x450,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+    'eth_address_esp32p4':          (HARDWARE.ESP32P4,
+                                                     'B',   0x470,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+
+    'module_esp32':                 (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x474,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
+    'module_esp32p4':               (HARDWARE.ESP32P4,
+                                                     'B',   0x471,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
+
+    'ws_width':                     (HARDWARE.ESP   ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x481,       ([3],  None,                           ('Light',       None)) ),
+    'ws_width_esp32p4':             (HARDWARE.ESP32P4,
+                                                     'B',   0x472,       ([3],  None,                           ('Light',       None)) ),
+    'serial_delimiter':             (HARDWARE.ESP   ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x451,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'serial_delimiter_esp32p4':     (HARDWARE.ESP32P4,
+                                                     'B',   0x475,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'seriallog_level':              (HARDWARE.ESP   ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x452,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'seriallog_level_esp32p4':      (HARDWARE.ESP32P4,
+                                                     'B',   0x476,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sleep':                        (HARDWARE.ESP   ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x453,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'sleep_esp32p4':                (HARDWARE.ESP32P4,
+                                                     'B',   0x477,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'ws_color':                     (HARDWARE.ESP   ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     'B',   0x475,       ([4,3],None,                           ('Light',       None)) ),
+    'ws_color_esp32p4':             (HARDWARE.ESP32P4,
+                                                     'B',   0x478,       ([4,3],None,                           ('Light',       None)) ),
+                                    }
+SETTING_15_0_1_2['user_template_esp32'] = copy.deepcopy(SETTING_14_6_0_1['user_template_esp32'])
+SETTING_15_0_1_2['user_template_esp32'][1].update({
+        'gpio':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3 | HARDWARE.ESP32P4),
+                                                     '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+        'gpio_esp32p4':             (HARDWARE.ESP32P4,
+                                                     '<H',  0x3FC,       ([55], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+                                    })
+
 # ======================================================================
 SETTINGS = [
             (0x0F000102,0x1000, SETTING_15_0_1_2),
