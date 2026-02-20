@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.5.0.0',
+    'VERSION': '15.3.0.1',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3354,28 +3354,10 @@ SETTING_15_2_0_6.update              ({
     'i2c_drivers2':                 (HARDWARE.ESP,   '<L',  0xF64,       ([2],  None,                           ('Management',  'list("I2CDriver{} {}".format((#*32)+i+96, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
-SETTING_15_4_0_1 = copy.deepcopy(SETTING_15_2_0_6)
-SETTING_15_4_0_1['webcam_config2'][1].update({
-        'resolution':               (HARDWARE.ESP32, '<L', (0x730,1,29), (None, '0 <= $ <= 1',                  ('Control',     None)) ),
-                                    })
-SETTING_15_4_0_1['webcam_config'][1].update({
-        'resolution':               (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
-                                                     '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
-                                    })
-SETTING_15_4_0_1['webcam_config_esp32s3'][1].update({
-        'resolution':               (HARDWARE.ESP32S3,
-                                                     '<L', (0x460,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
-                                    })
-SETTING_15_4_0_1['webcam_config_esp32p4'][1].update({
-        'resolution':               (HARDWARE.ESP32P4,
-                                                     '<L', (0x46C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
-                                    })
-# ======================================================================
-SETTING_15_5_0_0 = copy.deepcopy(SETTING_15_4_0_1)
+SETTING_15_3_0_1 = copy.deepcopy(SETTING_15_2_0_6)
 # ======================================================================
 SETTINGS = [
-            (0x0F050000,0x1000, SETTING_15_5_0_0),
-            (0x0F040001,0x1000, SETTING_15_4_0_1),
+            (0x0F030001,0x1000, SETTING_15_3_0_1),
             (0x0F020006,0x1000, SETTING_15_2_0_6),
             (0x0F010003,0x1000, SETTING_15_1_0_3),
             (0x0F010001,0x1000, SETTING_15_1_0_1),
