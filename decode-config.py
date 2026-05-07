@@ -3355,6 +3355,21 @@ SETTING_15_2_0_6.update              ({
                                     })
 # ======================================================================
 SETTING_15_4_0_1 = copy.deepcopy(SETTING_15_2_0_6)
+SETTING_15_4_0_1['webcam_config2'][1].update({
+        'resolution':               (HARDWARE.ESP32, '<L', (0x730,1,29), (None, '0 <= $ <= 1',                  ('Control',     None)) ),
+                                    })
+SETTING_15_4_0_1['webcam_config'][1].update({
+        'resolution':               (HARDWARE.ESP32 ^ (HARDWARE.ESP32S3 | HARDWARE.ESP32P4),
+                                                     '<l', (0x44C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
+                                    })
+SETTING_15_4_0_1['webcam_config_esp32s3'][1].update({
+        'resolution':               (HARDWARE.ESP32S3,
+                                                     '<L', (0x460,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
+                                    })
+SETTING_15_4_0_1['webcam_config_esp32p4'][1].update({
+        'resolution':               (HARDWARE.ESP32P4,
+                                                     '<L', (0x46C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
             (0x0F040001,0x1000, SETTING_15_4_0_1),
