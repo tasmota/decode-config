@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.4.0.3',
+    'VERSION': '15.5.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3371,10 +3371,10 @@ SETTING_15_4_0_1['webcam_config_esp32p4'][1].update({
                                                      '<L', (0x46C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
                                     })
 # ======================================================================
-SETTING_15_4_0_3 = copy.deepcopy(SETTING_15_4_0_1)
+SETTING_15_5_0_0 = copy.deepcopy(SETTING_15_4_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0F040003,0x1000, SETTING_15_4_0_3),
+            (0x0F050000,0x1000, SETTING_15_5_0_0),
             (0x0F040001,0x1000, SETTING_15_4_0_1),
             (0x0F020006,0x1000, SETTING_15_2_0_6),
             (0x0F010003,0x1000, SETTING_15_1_0_3),
