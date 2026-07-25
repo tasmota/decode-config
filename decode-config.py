@@ -4709,8 +4709,9 @@ def push_http(encode_cfg):
     if http_username is not None and http_password is not None:
         auth = (http_username, http_password)
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=METADATA['VERSION_BUILD']), encode_cfg)}
+    referer = make_url(http_host, http_port)
     try:
-        res = requests.post(url, auth=auth, files=files)
+        res = requests.post(url, auth=auth, files=files, headers={'referer': referer})
     except ConnectionError as err:
         log(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
