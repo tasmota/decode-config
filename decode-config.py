@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.5.0.0',
+    'VERSION': '15.6.0.0',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 5 - Production/Stable',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3371,10 +3371,10 @@ SETTING_15_4_0_1['webcam_config_esp32p4'][1].update({
                                                      '<L', (0x46C,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($ | (@["webcam_config2"]["resolution"] << 4))')) ),
                                     })
 # ======================================================================
-SETTING_15_5_0_0 = copy.deepcopy(SETTING_15_4_0_1)
+SETTING_15_6_0_0 = copy.deepcopy(SETTING_15_4_0_1)
 # ======================================================================
 SETTINGS = [
-            (0x0F050000,0x1000, SETTING_15_5_0_0),
+            (0x0F060000,0x1000, SETTING_15_6_0_0),
             (0x0F040001,0x1000, SETTING_15_4_0_1),
             (0x0F020006,0x1000, SETTING_15_2_0_6),
             (0x0F010003,0x1000, SETTING_15_1_0_3),
@@ -4709,8 +4709,9 @@ def push_http(encode_cfg):
     if http_username is not None and http_password is not None:
         auth = (http_username, http_password)
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=METADATA['VERSION_BUILD']), encode_cfg)}
+    referer = make_url(http_host, http_port)
     try:
-        res = requests.post(url, auth=auth, files=files)
+        res = requests.post(url, auth=auth, files=files, headers={'referer': referer})
     except ConnectionError as err:
         log(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
