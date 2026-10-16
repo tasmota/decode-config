@@ -2772,6 +2772,52 @@ SETTING_12_4_0_2['teleinfo'][1].update({
         'show_stats':               (HARDWARE.ESP,   '<L', (0xFA4,1,12), (None, None,                           ('Power',       None)) ),
                                     })
 # ======================================================================
+SETTING_12_4_0_5 = copy.copy(SETTING_12_4_0_2)
+SETTING_12_4_0_5.update             ({
+    'shutter_opentime':             (HARDWARE.ESP82, '<H',  0xE40,       ([4],  None,                           ('Shutter',     '"ShutterOpenDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
+    'shutter_closetime':            (HARDWARE.ESP82, '<H',  0xE48,       ([4],  None,                           ('Shutter',     '"ShutterCloseDuration{} {:.1f}".format(#+1,float($)/10.0)')) ),
+    'shuttercoeff':                 (HARDWARE.ESP82, '<H',  0xE50,       ([5,4],None,                           ('Shutter',     'list("ShutterCalibration{} {}".format(k+1, list(",".join(str(@["shuttercoeff"][i][j]) for i in range(0, len(@["shuttercoeff"]))) for j in range(0, len(@["shuttercoeff"][0])))[k]) for k in range(0,len(@["shuttercoeff"][0])))')) ),
+    'shutter_set50percent':         (HARDWARE.ESP82, 'B',   0xE7C,       ([4],  None,                           ('Shutter',     '"ShutterSetHalfway{} {}".format(#+1,$)')) ),
+    'shutter_position':             (HARDWARE.ESP82, 'B',   0xE80,       ([4],  None,                           ('Shutter',     '"ShutterPosition{} {}".format(#+1,$)')) ),
+    'shutter_startrelay':           (HARDWARE.ESP82, 'B',   0xE84,       ([4],  None,                           ('Shutter',     '"ShutterRelay{} {}".format(#+1,$)')) ),
+    'shutter_motordelay':           (HARDWARE.ESP82, 'B',   0xE9A,       ([4],  None,                           ('Shutter',     '"ShutterMotorDelay{} {:.1f}".format(#+1,float($)/20.0)')) ),
+    'shutter_accuracy':             (HARDWARE.ESP82, 'B',   0xF00,       (None, None,                           ('Shutter',     None)) ),
+    'shutter_button':               (HARDWARE.ESP82, {
+        'shutter':                  (HARDWARE.ESP82, '<L', (0xFDC,2, 0), (None, None,                           ('Shutter',     '"ShutterButton{x} {a} {b} {c} {d} {e} {f} {g} {h} {i} {j}".format( \
+                                                                                                                                    x=1+@["shutter_button"][#]["shutter"], \
+                                                                                                                                    a=#+1, \
+                                                                                                                                    b=@["shutter_button"][#]["press_single"], \
+                                                                                                                                    c=@["shutter_button"][#]["press_double"], \
+                                                                                                                                    d=@["shutter_button"][#]["press_triple"], \
+                                                                                                                                    e=@["shutter_button"][#]["press_hold"], \
+                                                                                                                                    f=@["shutter_button"][#]["mqtt_broadcast_single"], \
+                                                                                                                                    g=@["shutter_button"][#]["mqtt_broadcast_double"], \
+                                                                                                                                    h=@["shutter_button"][#]["mqtt_broadcast_triple"], \
+                                                                                                                                    i=@["shutter_button"][#]["mqtt_broadcast_hold"], \
+                                                                                                                                    j=@["shutter_button"][#]["mqtt_broadcast_all"] \
+                                                                                                                                )')), ('$+1','$-1') ),
+        'press_single':             (HARDWARE.ESP82, '<L', (0xFDC,6, 2), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_double':             (HARDWARE.ESP82, '<L', (0xFDC,6, 8), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_triple':             (HARDWARE.ESP82, '<L', (0xFDC,6,14), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'press_hold':               (HARDWARE.ESP82, '<L', (0xFDC,6,20), (None, None,                           ('Shutter',     None)), ('"-" if $==0 else ($-1)<<1','0 if $=="-" else (int(str($),0)>>1)+1') ),
+        'mqtt_broadcast_single':    (HARDWARE.ESP82, '<L', (0xFDC,1,26), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_double':    (HARDWARE.ESP82, '<L', (0xFDC,1,27), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_triple':    (HARDWARE.ESP82, '<L', (0xFDC,1,28), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_hold':      (HARDWARE.ESP82, '<L', (0xFDC,1,29), (None, None,                           ('Shutter',     None)) ),
+        'mqtt_broadcast_all':       (HARDWARE.ESP82, '<L', (0xFDC,1,30), (None, None,                           ('Shutter',     None)) ),
+        'enabled':                  (HARDWARE.ESP82, '<L', (0xFDC,1,31), (None, None,                           ('Shutter',     None)) ),
+                                    },                      0xFDC,       ([4], None,                            ('Shutter',     None)), (None, None) ),
+    'shutter_options':              (HARDWARE.ESP82, 'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
+                                                                                                                                 '"ShutterLock{} {}".format(#+1,1 if $ & 2 else 0)',\
+                                                                                                                                 '"ShutterEnableEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)',\
+                                                                                                                                 '"ShutterInvertWebButtons{} {}".format(#+1,1 if $ & 8 else 0)'))) ),
+    'shutter_mode':                 (HARDWARE.ESP82, 'B',  0xF43,       (None, '0 <= $ <= 7',                   ('Shutter',     '"ShutterMode {}".format($)')) ),
+    'shutter_pwmrange':             (HARDWARE.ESP82, '<H', 0xF4A,       ([2,4],'1 <= $ <= 1023',                ('Shutter',     'list("ShutterPWMRange{} {}".format(k+1, list(" ".join(str(@["shutter_pwmrange"][i][j]) for i in range(0, len(@["shutter_pwmrange"]))) for j in range(0, len(@["shutter_pwmrange"][0])))[k]) for k in range(0,len(@["shutter_pwmrange"][0])))')) ),
+    'shutter_motorstop':            (HARDWARE.ESP82, '<H',  0x738,       (None, None,                           ('Shutter',     '"ShutterMotorStop {}".format($)')) ),
+    'shutter_tilt_config':          (HARDWARE.ESP82, 'b',   0x508,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
+    'shutter_tilt_pos':             (HARDWARE.ESP82, 'b',   0x51C,       ([4],  None,                           ('Shutter',     None)) ),
+                                    })
+# ======================================================================
 SETTING_12_5_0_1 = copy.deepcopy(SETTING_12_4_0_2)
 SETTING_12_5_0_1['flag6'][1].update ({
         'bistable_single_pin':      (HARDWARE.ESP,   '<L', (0xF74,1, 6), (None, None,                           ('SetOption',   '"SO152 {}".format($)')) ),
@@ -2953,9 +2999,9 @@ SETTING_14_3_0_7 = copy.copy(SETTING_14_3_0_5)
 SETTING_14_3_0_7.update             ({
     'switchmode':                   (HARDWARE.ESP82, 'B',   0x4A8,       ([32], '0 <= $ <= 16',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
     'switchmode_esp32':             (HARDWARE.ESP32, 'B',   0x4A8,       ([32], '0 <= $ <= 16',                 ('Control',     '"SwitchMode{} {}".format(#+1,$)')) ),
-    'shutter_tilt_config':          (HARDWARE.ESP,   'b',   0x510,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
+    'shutter_tilt_config':          (HARDWARE.ESP82, 'b',   0x510,       ([5,4],None,                           ('Shutter',     'list("ShutterTiltConfig{} {}".format(k+1, list(",".join(str(@["shutter_tilt_config"][i][j]) for i in range(0, len(@["shutter_tilt_config"]))) for j in range(0, len(@["shutter_tilt_config"][0])))[k]) for k in range(0,len(@["shutter_tilt_config"][0])))')) ),
     'knx_CB_registered':            (HARDWARE.ESP,   'B',   0x533,       (None, None,                           ('KNX',         None)) ),
-    'shutter_tilt_pos':             (HARDWARE.ESP,   'b',   0x534,       ([4],  None,                           ('Shutter',     None)) ),
+    'shutter_tilt_pos':             (HARDWARE.ESP82, 'b',   0x534,       ([4],  None,                           ('Shutter',     None)) ),
     'influxdb_period':              (HARDWARE.ESP,   '<H',  0x538,       (None, '0 <= $ <= 3600',               ('Management',  '"IfxPeriod {}".format($)')) ),
     'rf_duplicate_time':            (HARDWARE.ESP,   '<H',  0x53A,       (None, '10 <= $ <= 65535',             ('Rf',          '"RfTimeOut {}".format($)')) ),
     'global_sensor_index':          (HARDWARE.ESP,   'B',   0x53C,       ([3], '0 <= $ <= 251',                 ('Sensor',      None)) ),
@@ -3412,6 +3458,7 @@ SETTINGS = [
             (0x0D000001,0x1000, SETTING_13_0_0_1),
             (0x0C050003,0x1000, SETTING_12_5_0_3),
             (0x0C050001,0x1000, SETTING_12_5_0_1),
+            (0x0C040005,0x1000, SETTING_12_4_0_5),
             (0x0C040002,0x1000, SETTING_12_4_0_2),
             (0x0C030105,0x1000, SETTING_12_3_1_5),
             (0x0C030101,0x1000, SETTING_12_3_1_1),
