@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.6.0.1',
+    'VERSION': '15.6.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3422,7 +3422,17 @@ SETTING_15_6_0_1['sbflag1'][1].update({
         'miel_hvac_mb_enable':      (HARDWARE.ESP,   '<L', (0xFA0,1,15), (None, '0 <= $ <= 1',                  ('Serial',      '"HVACModbus {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_15_6_0_2 = copy.copy(SETTING_15_6_0_1)
+SETTING_15_6_0_2.update             ({
+    'shutter_options':              (HARDWARE.ESP82, 'B',   0xE78,       ([4],  None,                           ('Shutter',     ('"ShutterInvert{} {}".format(#+1,1 if $ & 1 else 0)',\
+                                                                                                                                 '"ShutterLock{} {}".format(#+1,1 if $ & 2 else 0)',\
+                                                                                                                                 '"ShutterOpenEndStopTime{} {}".format(#+1,1 if $ & 4 else 0)',\
+                                                                                                                                 '"ShutterCloseEndStopTime{} {}".format(#+1,1 if $ & 16 else 0)',\
+                                                                                                                                 '"ShutterInvertWebButtons{} {}".format(#+1,1 if $ & 8 else 0)'))) ),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0F060002,0x1000, SETTING_15_6_0_2),
             (0x0F060001,0x1000, SETTING_15_6_0_1),
             (0x0F040001,0x1000, SETTING_15_4_0_1),
             (0x0F020006,0x1000, SETTING_15_2_0_6),
