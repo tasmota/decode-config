@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 METADATA = {
-    'VERSION': '15.6.0.2',
+    'VERSION': '15.6.0.3',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -624,19 +624,21 @@ class Hardware:
     ESPxx configuration data hardware class
     """
     # Bit mask for supported hardware
-    ESP82       = 0b000000001       # All ESP82xx
-    ESP32ex     = 0b000000010       # ESP32 excluding S2-S3/C2-C6/P4
-    ESP82_32ex  = 0b000000011       # ESP82xx + ESP32 excluding ESP32 S2-S3/C2-C6/P4
-    ESP32S3     = 0b000000100       # ESP32S3
-    ESP32S2     = 0b000001000       # ESP32S2
-    ESP32C3     = 0b000010000       # ESP32C3
-    ESP32C2     = 0b000100000       # ESP32C2
-    ESP32C6     = 0b001000000       # ESP32C6
-    ESP32P4     = 0b010000000       # ESP32P4
-    ESP32C5     = 0b100000000       # ESP32C5
-    ESPnP4      = 0b101111111       # All ESP excluding ESP32P4
-    ESP32       = 0b111111110       # All ESP32
-    ESP         = 0b111111111       # All ESP
+    ESP82       = 0b00000000001       # All ESP82xx
+    ESP32ex     = 0b00000000010       # ESP32 excluding S2-S3/C2-C6/P4
+    ESP82_32ex  = 0b00000000011       # ESP82xx + ESP32 excluding ESP32 S2-S3/C2-C6/P4
+    ESP32S3     = 0b00000000100
+    ESP32S2     = 0b00000001000
+    ESP32C3     = 0b00000010000
+    ESP32C2     = 0b00000100000
+    ESP32C6     = 0b00001000000
+    ESP32P4     = 0b00010000000
+    ESP32C5     = 0b00100000000
+    ESP32S31    = 0b01000000000
+    ESP32C61    = 0b10000000000
+    ESPnP4      = 0b11101111111       # All ESP excluding ESP32P4
+    ESP32       = 0b11111111110       # All ESP32
+    ESP         = 0b11111111111       # All ESP
 
     # Hardware bitmask and description
     config = (
@@ -660,7 +662,9 @@ class Hardware:
         ESP32C2,
         ESP32C6,
         ESP32P4,
-        ESP32C5
+        ESP32C5,
+        ESP32S31,
+        ESP32C61
         )
     config_versions_str = (
         "ESP82xx",
@@ -671,7 +675,9 @@ class Hardware:
         "ESP32-C2",
         "ESP32-C6",
         "ESP32-P4",
-        "ESP32-C5"
+        "ESP32-C5",
+        "ESP32-S31",
+        "ESP32-C61"
         )
 
     def get_bitmask(self, config_version):
@@ -3364,7 +3370,7 @@ SETTING_15_0_1_2.update             ({
                                     })
 SETTING_15_0_1_2['user_template_esp32'] = copy.deepcopy(SETTING_14_6_0_1['user_template_esp32'])
 SETTING_15_0_1_2['user_template_esp32'][1].update({
-        'gpio':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3 | HARDWARE.ESP32P4),
+        'gpio':                     (HARDWARE.ESP32 ^ (HARDWARE.ESP32S2 | HARDWARE.ESP32S3 | HARDWARE.ESP32C3 | HARDWARE.ESP32P4 | HARDWARE.ESP32S31),
                                                      '<H',  0x3FC,       ([36], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
         'gpio_esp32p4':             (HARDWARE.ESP32P4,
                                                      '<H',  0x3FC,       ([55], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
@@ -3431,7 +3437,84 @@ SETTING_15_6_0_2.update             ({
                                                                                                                                  '"ShutterInvertWebButtons{} {}".format(#+1,1 if $ & 8 else 0)'))) ),
                                     })
 # ======================================================================
+SETTING_15_6_0_3 = copy.copy(SETTING_15_6_0_2)
+SETTING_15_6_0_3.update             ({
+    'my_gp_esp32s31':                (HARDWARE.ESP32S31,
+                                                     '<H',  0x38C,       ([62], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
+    'eth_type_esp32s31':             (HARDWARE.ESP32S31,
+                                                     'B',   0x408,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
+    'eth_clk_mode_esp32s31':         (HARDWARE.ESP32S31,
+                                                     'B',   0x409,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
+    'webcam_config_esp32s31':        (HARDWARE.ESP32S31, {
+        'stream':                   (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
+        'mirror':                   (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 1), (None, None,                           ('Control',     '"WCMirror {}".format($)')) ),
+        'flip':                     (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 2), (None, None,                           ('Control',     '"WCFlip {}".format($)')) ),
+        'rtsp':                     (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 3), (None, None,                           ('Control',     '"WCRtsp {}".format($)')) ),
+        'awb':                      (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 4), (None, None,                           ('Control',     '"WCAWB {}".format($)')) ),
+        'awb_gain':                 (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 5), (None, None,                           ('Control',     '"WCAWBGain {}".format($)')) ),
+        'aec':                      (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 6), (None, None,                           ('Control',     '"WCAEC {}".format($)')) ),
+        'aec2':                     (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 7), (None, None,                           ('Control',     '"WCAECDSP {}".format($)')) ),
+        'raw_gma':                  (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 8), (None, None,                           ('Control',     '"WCGammaCorrect {}".format($)')) ),
+        'lenc':                     (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1, 9), (None, None,                           ('Control',     '"WCLensCorrect {}".format($)')) ),
+        'colorbar':                 (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1,10), (None, None,                           ('Control',     '"WCColorbar {}".format($)')) ),
+        'wpc':                      (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1,11), (None, None,                           ('Control',     '"WCWPC {}".format($)')) ),
+        'dcw':                      (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1,12), (None, None,                           ('Control',     '"WCDCW {}".format($)')) ),
+        'bpc':                      (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,1,13), (None, None,                           ('Control',     '"WCBPC {}".format($)')) ),
+        'contrast':                 (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,3,18), (None, '0 <= $ <= 4',                  ('Control',     '"WCContrast {}".format($-2)')) ),
+        'brightness':               (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,3,22), (None, '0 <= $ <= 4',                  ('Control',     '"WCBrightness {}".format($-2)')) ),
+        'saturation':               (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,3,25), (None, '0 <= $ <= 4',                  ('Control',     '"WCSaturation {}".format($-2)')) ),
+        'resolution':               (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,4,28), (None, '0 <= $ <= 10',                 ('Control',     '"WCResolution {}".format($)')) ),
+        'feature':                  (HARDWARE.ESP32S31,
+                                                     '<L', (0x488,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
+                                    },                      0x488,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
+    'eth_address_esp32s31':          (HARDWARE.ESP32S31,
+                                                     'B',   0x48C,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
+    'module_esp32s31':               (HARDWARE.ESP32S31,
+                                                     'B',   0x48D,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
+    'ws_width_esp32s31':             (HARDWARE.ESP32S31,
+                                                     'B',   0x48E,       ([3],  None,                           ('Light',       None)) ),
+    'serial_delimiter_esp32s31':     (HARDWARE.ESP32S31,
+                                                     'B',   0x491,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
+    'seriallog_level_esp32s31':      (HARDWARE.ESP32S31,
+                                                     'B',   0x492,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
+    'sleep_esp32s31':                (HARDWARE.ESP32S31,
+                                                     'B',   0x493,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
+    'ws_color_esp32s31':             (HARDWARE.ESP32S31,
+                                                     'B',   0xEB0,       ([4,3],None,                           ('Light',       None)) ),
+    'ldo_mv_esp32s31':              (HARDWARE.ESP32S31,
+                                                     '<H',  0x494,       ([1],  None,                           ('Management',  '"Ldo{} {}".format(#+1,$)')) ),
+    'ldo_mv_esp32p4':               (HARDWARE.ESP32P4,
+                                                     '<H',  0x484,       ([2],  None,                           ('Management',  '"Ldo{} {}".format(#+1,$)')) ),
+    'domoticz_relay_idx':           (HARDWARE.ESP ^ (HARDWARE.ESP32P4 | HARDWARE.ESP32S31),
+                                                     '<L',  0x344,       ([4],  None,                           ('Domoticz',    '"DzIdx{} {}".format(#+1,$)')) ),
+    'domoticz_key_idx':             (HARDWARE.ESP ^ (HARDWARE.ESP32P4 | HARDWARE.ESP32S31),
+                                                     '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DzKeyIdx{} {}".format(#+1,$)')) ),
+                                    })
+SETTING_15_6_0_3['user_template_esp32'][1].update({
+        'gpio_esp32s31':             (HARDWARE.ESP32S31,
+                                                     '<H',  0x40A,       ([62], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
+                                    })
+# ======================================================================
 SETTINGS = [
+            (0x0F060003,0x1000, SETTING_15_6_0_3),
             (0x0F060002,0x1000, SETTING_15_6_0_2),
             (0x0F060001,0x1000, SETTING_15_6_0_1),
             (0x0F040001,0x1000, SETTING_15_4_0_1),
