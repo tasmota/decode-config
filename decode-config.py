@@ -7410,7 +7410,7 @@ def parseargs():
     common.add_argument('--dry-run',
                         dest='dryrun',
                         action='store_true',
-                        default=DEFAULTS['common']['ignorewarning'],
+                        default=DEFAULTS['common']['dryrun'],
                         help="test program without changing configuration data on device or file{}".format(' (default)' if DEFAULTS['common']['dryrun'] else ''))
 
 
