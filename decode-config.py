@@ -194,6 +194,7 @@ MAX_BACKLOG = 30
 MAX_BACKLOGLEN = 320
 MQTT_MESSAGE_MAX_SIZE = 700
 MQTT_TIMEOUT = 5000
+HTTP_TIMEOUT = (5, 30)     # requests timeout in seconds: (connect, read)
 MQTT_FILETYPE = 2
 TASM_FILE_SETTINGS = '/.settings'
 
@@ -4766,8 +4767,8 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
     if username is not None and password is not None:
         auth = (username, password)
     try:
-        res = requests.get(url, auth=auth, headers={'referer': referer})
-    except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as _:
+        res = requests.get(url, auth=auth, headers={'referer': referer}, timeout=HTTP_TIMEOUT)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.InvalidURL) as _:
         log(ExitCode.HTTP_CONNECTION_ERROR, "Failed to establish HTTP connection to '{}:{}'".format(host, port))
 
     if not res.ok:
@@ -4857,8 +4858,8 @@ def push_http(encode_cfg):
     files = {'u2':('{sprog}_v{sver}.dmp'.format(sprog=os.path.basename(sys.argv[0]), sver=METADATA['VERSION_BUILD']), encode_cfg)}
     referer = make_url(http_host, http_port)
     try:
-        res = requests.post(url, auth=auth, files=files, headers={'referer': referer})
-    except ConnectionError as err:
+        res = requests.post(url, auth=auth, files=files, headers={'referer': referer}, timeout=HTTP_TIMEOUT)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
         log(ExitCode.UPLOAD_CONFIG_ERROR, "Error on http POST request for {} - {}".format(url, err), line=inspect.getlineno(inspect.currentframe()))
 
     if not res.ok:
