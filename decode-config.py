@@ -152,6 +152,7 @@ try:
     import urllib
     import textwrap
     import hashlib
+    import builtins
 except ImportError as err:
     module_import_error(err)
 try:
@@ -199,6 +200,11 @@ MQTT_FILETYPE = 2
 TASM_FILE_SETTINGS = '/.settings'
 # exceptions raised by the Unishox (de)compressor on malformed data
 UNISHOX_ERRORS = (IndexError, KeyError, TypeError, ValueError)
+# builtins allowed within eval'ed converter/validate expressions of the settings table
+# (everything else like open, __import__, exec, eval, getattr ... is not available there)
+EVAL_BUILTINS = {name: getattr(builtins, name) for name in (
+    'abs', 'bool', 'chr', 'enumerate', 'float', 'format', 'hex', 'int', 'len',
+    'list', 'max', 'min', 'ord', 'range', 'round', 'str')}
 
 # decode-config constant
 STR_CODING = 'utf-8'
@@ -610,6 +616,36 @@ def ruleswrite(value):
 
     # scripting is enabled, rule space used for script so rule is invalid and disabled
     return False
+
+def safe_eval(expression, scope):
+    """
+    eval() with restricted builtins.
+    Note: this is no real sandbox, it only prevents access to dangerous builtins.
+    Expressions must still come from trusted sources (the settings table), never from user input.
+
+    @param expression:
+        python expression string
+    @param scope:
+        dict with the names available within the expression
+
+    @return:
+        result of the expression
+    """
+    scope = dict(scope)
+    scope['__builtins__'] = EVAL_BUILTINS
+    return eval(expression, scope)     # pylint: disable=eval-used
+
+def pick_fields(fields, namespace):
+    """
+    Pick the variables named in the comma separated string <fields> from <namespace>
+
+    @return:
+        value for a single name, tuple of values for several names
+    """
+    names = [name.strip() for name in fields.split(',')]
+    if len(names) == 1:
+        return namespace[names[0]]
+    return tuple(namespace[name] for name in names)
 
 # ----------------------------------------------------------------------
 # Tasmota configuration data definition
@@ -5483,7 +5519,7 @@ def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, b
 
     # ignore calls with 'root' setting
     if isinstance(format_, dict) and baseaddr is None and datadef is None:
-        return eval(fields)     # pylint: disable=eval-used
+        return pick_fields(fields, locals())
 
     if not isinstance(hardware, int):
         print("baseaddr: {} datadef: {}".format(baseaddr, datadef))
@@ -5586,7 +5622,7 @@ def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, b
             print('wrong <converter> {} length ({}) in <fielddef> {}'.format(converter, len(converter), fielddef), file=sys.stderr)
             raise SyntaxError(raise_error)
 
-    return eval(fields)     # pylint: disable=eval-used
+    return pick_fields(fields, locals())
 
 def exec_function(func_, value, idx=None):
     """
@@ -5616,7 +5652,7 @@ def exec_function(func_, value, idx=None):
             scope = locals()
             scope.update(SETTING_OBJECTS)
             scope.update({"ARGS": ARGS})
-            value = eval(func_, scope)      # pylint: disable=eval-used
+            value = safe_eval(func_, scope)
 
         elif callable(func_):
             # use as format function
@@ -5736,7 +5772,7 @@ def validate_value(value, fielddef):
     valid = True
     try:
         if isinstance(validate, str): # evaluate strings
-            valid = eval(validate.replace('$', 'value'))    # pylint: disable=eval-used
+            valid = safe_eval(validate.replace('$', 'value'), {'value': value, 'HARDWARE': HARDWARE})
         elif callable(validate):     # use as format function
             valid = validate(value)
     except Exception:     # pylint: disable=broad-except
@@ -6715,9 +6751,9 @@ def bin2mapping(config, raw=False):
     }
     if ARGS.debug:
         valuemapping['header']['env'].update({'param': {}})
-        for key in ARGS.__dict__:
+        for key, arg_value in vars(ARGS).items():
             if str(key) != 'password':
-                valuemapping['header']['env']['param'].update({str(key): eval('ARGS.{}'.format(key))})  # pylint: disable=eval-used
+                valuemapping['header']['env']['param'].update({str(key): arg_value})
 
     if cfg_crc_fielddef is not None and cfg_size is not None:
         valuemapping['header']['template'].update({'size': cfg_size})
