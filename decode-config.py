@@ -182,7 +182,7 @@ try:
             SHA256.update(block)
         METADATA['BUILD'] = SHA256.hexdigest()[:7]
         METADATA['VERSION_BUILD'] = METADATA['VERSION'] + ' [' + METADATA['BUILD'] + ']'
-except:     # pylint: disable=bare-except
+except OSError:
     pass
 
 PROG = '{} v{} by {} {}'.format(os.path.basename(sys.argv[0]), METADATA['VERSION_BUILD'], METADATA['AUTHOR'], METADATA['AUTHOR_EMAIL'])
@@ -197,6 +197,8 @@ MQTT_TIMEOUT = 5000
 HTTP_TIMEOUT = (5, 30)     # requests timeout in seconds: (connect, read)
 MQTT_FILETYPE = 2
 TASM_FILE_SETTINGS = '/.settings'
+# exceptions raised by the Unishox (de)compressor on malformed data
+UNISHOX_ERRORS = (IndexError, KeyError, TypeError, ValueError)
 
 # decode-config constant
 STR_CODING = 'utf-8'
@@ -473,7 +475,7 @@ def scriptread(value):
             compressed = bytes.fromhex(value)
             try:
                 Unishox().decompress(compressed, len(compressed), uncompressed_data, len(uncompressed_data))
-            except:     # pylint: disable=bare-except
+            except UNISHOX_ERRORS:
                 return value
             try:
                 uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
@@ -528,7 +530,7 @@ def rulesread(value):
             compressed = bytes.fromhex(value[3:])
             try:
                 Unishox().decompress(compressed, len(compressed), uncompressed_data, len(uncompressed_data))
-            except:     # pylint: disable=bare-except
+            except UNISHOX_ERRORS:
                 return value
             try:
                 uncompressed_str = str(uncompressed_data, STR_CODING).split('\x00')[0]
@@ -576,12 +578,12 @@ def ruleswrite(value):
         try:
             subfielddef = get_subfielddef(fielddef)
             length = get_fieldlength(subfielddef)
-        except:     # pylint: disable=bare-except
+        except (IndexError, KeyError, TypeError, ValueError):
             length = 512
         # check if string should be compressed
         try:
             possible_compress = CONFIG['info']['template']['flag4'][1]['compress_rules_cpu']
-        except:     # pylint: disable=bare-except
+        except (IndexError, KeyError, TypeError):
             possible_compress = False
         if possible_compress and len(value) > 0 and value[0] != '\x00' and len(value) >= length:
             # compressed uncompressed string
@@ -595,7 +597,7 @@ def ruleswrite(value):
                 index0 = compressed_data.find(b'\x00')
                 if index0 >= 0:
                     compressed_data = compressed_data[:index0]
-            except:     # pylint: disable=bare-except
+            except UNISHOX_ERRORS:
                 return value
 
             return b'\x00' + struct.pack("B", int((len(value)+7)/8)) + compressed_data
@@ -687,7 +689,7 @@ class Hardware:
         """
         try:
             return self.config_versions[config_version]
-        except:     # pylint: disable=bare-except
+        except (IndexError, KeyError, TypeError):
             return self.ESP
 
     def hstr(self, setting_hardware):
@@ -702,7 +704,7 @@ class Hardware:
         """
         try:
             return 'TEXTINDEX_'+self.config[[hw[0] for hw in self.config].index(setting_hardware)][1]
-        except:     # pylint: disable=bare-except
+        except (ValueError, IndexError):
             return 'TEXTINDEX_'+self.config[len(self.config)-1][1]
 
     def str(self, config_version):
@@ -717,7 +719,7 @@ class Hardware:
         """
         try:
             return self.config_versions_str[config_version]
-        except:     # pylint: disable=bare-except
+        except (IndexError, KeyError, TypeError):
             return self.config_versions_str[0]
 
     def match(self, setting_hardware, config_version):
@@ -4451,7 +4453,7 @@ def get_filetype(filename):
                 # not a valid json, get filesize and compare it with all possible sizes
                 try:
                     size = os.path.getsize(filename)
-                except:     # pylint: disable=bare-except
+                except OSError:
                     filetype = FileType.UNKNOWN
 
                 header_format = '<L'
@@ -4476,7 +4478,7 @@ def get_filetype(filename):
                         else:
                             filetype = FileType.INVALID_BIN
 
-    except:     # pylint: disable=bare-except
+    except (OSError, struct.error):
         filetype = FileType.FILE_NOT_FOUND
 
     return filetype
@@ -4541,7 +4543,7 @@ def make_filename(filename, filetype, configmapping):
 
     try:
         config_version = configmapping['header']['data']['version']['id']
-    except:     # pylint: disable=bare-except
+    except (KeyError, TypeError):
         config_version = configmapping.get('version', '')
     if config_version != '':
         config_version = get_versionstr(int(str(config_version), 0))
@@ -4577,7 +4579,7 @@ def make_filename(filename, filetype, configmapping):
     # make a valid filename
     try:
         name = name.translate(dict((ord(char), None) for char in r'\/*?:"<>|'))
-    except:     # pylint: disable=bare-except
+    except (AttributeError, TypeError):
         pass
     name = name.replace(' ', '_')
 
@@ -4596,7 +4598,7 @@ def make_filename(filename, filetype, configmapping):
     # join path and filename
     try:
         filename = os.path.join(dirname, name_ext)
-    except:     # pylint: disable=bare-except
+    except (AttributeError, TypeError):
         pass
 
     filename = filename.replace('@v', config_version)
@@ -4654,7 +4656,7 @@ def get_http_parts():
                 http_username = urllib.parse.unquote(URLPARSE.username)
             if URLPARSE.password is not None:
                 http_password = urllib.parse.unquote(URLPARSE.password)
-    except:     # pylint: disable=bare-except
+    except (ValueError, TypeError):
         pass
     if not SSL_MODULE:
         log(ExitCode.MODULE_NOT_FOUND,
@@ -4666,7 +4668,7 @@ def get_http_parts():
     if http_port is None:
         try:
             http_port = DEFAULT_PORT_HTTPS if http_scheme[-1] == 's' else DEFAULT_PORT_HTTP
-        except:     # pylint: disable=bare-except
+        except (IndexError, TypeError):
             http_port = DEFAULT_PORT_HTTP
 
     return http_scheme, http_host, http_port, http_username, http_password
@@ -4702,7 +4704,7 @@ def get_mqtt_parts():
                 mqtt_password = urllib.parse.unquote(URLPARSE.password)
                 if ARGS.password is None:
                     http_password = mqtt_password
-    except:     # pylint: disable=bare-except
+    except (ValueError, TypeError):
         pass
     if not SSL_MODULE and len(mqtt_scheme) and mqtt_scheme[-1] == 's':
         log(ExitCode.MODULE_NOT_FOUND,
@@ -4714,7 +4716,7 @@ def get_mqtt_parts():
     if mqtt_port is None:
         try:
             mqtt_port = DEFAULT_PORT_MQTTS if mqtt_scheme[-1] == 's' else DEFAULT_PORT_MQTT
-        except:     # pylint: disable=bare-except
+        except (IndexError, TypeError):
             mqtt_port = DEFAULT_PORT_MQTT
     return mqtt_scheme, mqtt_host, mqtt_port, mqtt_topic, mqtt_username, mqtt_password, http_password
 
@@ -4998,7 +5000,7 @@ def pull_mqtt(use_base64=True):
                     base64_data = root["Data"]
                 if "Md5" in root:
                     file_md5 = root["Md5"]
-        except:
+        except (ValueError, TypeError, KeyError):
             pass
 
         if ARGS.debug:
@@ -5074,7 +5076,7 @@ def pull_mqtt(use_base64=True):
         # cafile and url scheme controls TLS usage
         try:
             tls = mqtt_scheme[-1] == 's'
-        except:
+        except (IndexError, TypeError):
             tls = False
         if tls or ARGS.cafile is not None:
             if ARGS.certfile is not None and ARGS.keyfile is not None:
@@ -5218,7 +5220,7 @@ def push_mqtt(encode_cfg, use_base64=True):
                     if rcv_id == file_id:
                         if "MaxSize" in root:
                             file_chunk_size = root["MaxSize"]
-        except:
+        except (ValueError, TypeError, KeyError):
             pass
 
         ack_flag = False
@@ -5263,7 +5265,7 @@ def push_mqtt(encode_cfg, use_base64=True):
         # cafile and url scheme controls TLS usage
         try:
             tls = mqtt_scheme[-1] == 's'
-        except:
+        except (IndexError, TypeError):
             tls = False
         if tls or ARGS.cafile is not None:
             if ARGS.certfile is not None and ARGS.keyfile is not None:
@@ -5438,7 +5440,7 @@ def get_strindex(hardware, strindex_name):
     # hardware = get_fielddef(fielddef, fields='hardware')
     try:
         return CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index(strindex_name)
-    except:     # pylint: disable=bare-except
+    except (KeyError, ValueError, TypeError):
         return -1
 
 def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, bitshift, strindex, datadef, arraydef, validate, cmd, group, tasmotacmnd, converter, readconverter, writeconverter"):
@@ -5516,7 +5518,7 @@ def get_fielddef(fielddef, fields="hardware, format_, addrdef, baseaddr, bits, b
                     if strindex < 0 or strindex >= CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index('SET_MAX'):
                         print('<strindex> out of range [0, {}] in <fielddef> {}'.format(CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(hardware)].index('SET_MAX'), fielddef), file=sys.stderr)
                         raise SyntaxError(raise_error)
-                except:     # pylint: disable=bare-except
+                except (KeyError, ValueError, SyntaxError):
                     pass
         else:
             print('wrong <addrdef> {} length ({}) in <fielddef> {}'.format(addrdef, len(addrdef), fielddef), file=sys.stderr)
@@ -5737,7 +5739,7 @@ def validate_value(value, fielddef):
             valid = eval(validate.replace('$', 'value'))    # pylint: disable=eval-used
         elif callable(validate):     # use as format function
             valid = validate(value)
-    except:     # pylint: disable=bare-except
+    except Exception:     # pylint: disable=broad-except
         valid = False
 
     return valid
@@ -5962,7 +5964,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
                CONFIG['valuemapping'].get('scripting_compressed', 0) == 1 and \
                fieldname == 'script':
                 compressed_str = True
-        except:     # pylint: disable=bare-except
+        except (IndexError, KeyError, TypeError):
             pass
 
         if compressed_str:
@@ -5993,7 +5995,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
                 # indexed string
                 try:
                     str_ = sarray[strindex+idxoffset]
-                except:     # pylint: disable=bare-except
+                except (IndexError, TypeError):
                     str_ = ""
 
         if maxlength:
@@ -6211,7 +6213,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                     else:
                         dobj = set_field(dobj, config_version, fieldname, subfielddef, subrestore, addroffset=addroffset+offset, filename=filename)
                 offset += length
-        except:     # pylint: disable=bare-except
+        except (TypeError, IndexError, KeyError, ValueError, struct.error):
             log(ExitCode.RESTORE_DATA_ERROR, "file '{sfile}' array '{sname}' couldn't restore, format has changed! Restore value contains {rtype} but an array of size [{smax}] is expected".format(sfile=filename, sname=fieldname, rtype=type(restoremapping), smax=arraydef[0]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
     # <format> contains a dict
@@ -6219,7 +6221,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
         for name, rm_fielddef in format_.items():    # -> iterate through format
             try:
                 restoremap = restoremapping.get(name, None)
-            except:     # pylint: disable=bare-except
+            except AttributeError:
                 restoremap = None
             if restoremap is not None:
                 dobj = set_field(dobj, config_version, name, rm_fielddef, restoremap, addroffset=addroffset, filename=filename)
@@ -6301,7 +6303,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
         elif format_[-1:] in ['f', 'd']:
             try:
                 value = write_converter(float(restoremapping), fielddef)
-            except:     # pylint: disable=bare-except
+            except (ValueError, TypeError, ArithmeticError):
                 valid = False
 
         # string
@@ -6328,7 +6330,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
                 # limit to SET_MAX
                 try:
                     set_max = get_strindex(hardware, 'SET_MAX')
-                except:     # pylint: disable=bare-except
+                except (KeyError, ValueError, TypeError):
                     set_max = CONFIG['info']['template'][SETTINGVAR][HARDWARE.hstr(HARDWARE.ESP)].index('SET_MAX')
                 if len(sarray) >= set_max:
                     delrange = len(sarray) - set_max
@@ -6513,7 +6515,7 @@ def config_has_settings_header(obj):
     """
     try:
         return obj[0:len(TASM_FILE_SETTINGS)].decode(STR_CODING) == TASM_FILE_SETTINGS
-    except:     # pylint: disable=bare-except
+    except (ValueError, AttributeError, TypeError):
         return False
 
 
@@ -6552,7 +6554,7 @@ def setting2mapping(obj):
             # use base64 encoding
             files[name_] = base64.b64encode(cfg).decode(STR_CODING)
             offset += (int((length_ + 16) / 16) * 16) + 16
-        except:     # pylint: disable=bare-except
+        except (struct.error, ValueError, TypeError):
             break
 
     return files
@@ -6577,12 +6579,12 @@ def mapping2setting(obj, new_files, template_size):
     # extract legacy config data w/o appened files
     try:
         new_decode = obj[:template_size]
-    except:     # pylint: disable=bare-except
+    except TypeError:
         new_decode = bytearray()
     # extract appened files settings
     try:
         new_settings = obj[template_size:]
-    except:     # pylint: disable=bare-except
+    except TypeError:
         new_settings = bytearray()
     if len(new_decode) < len(obj) and len(new_files) > 0:
         # config data has any setting files appended
@@ -6601,11 +6603,11 @@ def mapping2setting(obj, new_files, template_size):
             try:
                 # backward compatibility: try hex string decoding
                 cfg = bytearray(bytes.fromhex(files_[filename]))
-            except:     # pylint: disable=bare-except
+            except (ValueError, TypeError):
                 # try base64 string decoding
                 try:
                     cfg = bytearray(base64.decodebytes(files_[filename].encode(STR_CODING)))
-                except:     # pylint: disable=bare-except
+                except (ValueError, AttributeError, TypeError):
                     cfg = bytearray()
                     log(ExitCode.DATA_SIZE_MISMATCH, "JSON value for the settings file '{}' is invalid (must be base64 or hex)".format(files_[filename]), type_=LogType.WARNING, line=inspect.getlineno(inspect.currentframe()))
 
@@ -6688,7 +6690,7 @@ def bin2mapping(config, raw=False):
     if config_has_settings_header(config['encode']) and (raw or is_filtergroup("Settings")):
         try:
             cfg = config['decode'][config['info']['template_size']:]
-        except:     # pylint: disable=bare-except
+        except (KeyError, TypeError):
             cfg = bytearray()
         valuemapping['settings'] = setting2mapping(cfg)
 
@@ -6985,7 +6987,7 @@ def restore(restorefile, backupfileformat, config):
         else:
             try:
                 new_config_version = jsonconfig['config_version']
-            except:     # pylint: disable=bare-except
+            except (KeyError, TypeError):
                 new_config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
         config_version = config['info']['hardware']
         if config_version != new_config_version:
@@ -7569,7 +7571,7 @@ if __name__ == "__main__":
             if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
                 try:
                     COLUMNS = os.get_terminal_size()[0]
-                except:     # pylint: disable=bare-except
+                except OSError:
                     COLUMNS = 80
                 log(ExitCode.UNSUPPORTED_VERSION, \
                     "\n           ".join(textwrap.wrap(\
