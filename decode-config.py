@@ -5192,7 +5192,7 @@ def push_mqtt(encode_cfg, use_base64=True):
                         return
                     if "MD5 mismatch" in rcv_code:
                         err_str ="MD5 mismatch"
-                        Err_flag = True
+                        err_flag = True
                         return
                     if "Started" in rcv_code:
                         return
