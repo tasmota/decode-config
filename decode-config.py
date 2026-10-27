@@ -5345,14 +5345,14 @@ def push_mqtt(encode_cfg, use_base64=True):
             if use_base64:
                 base64_encoded_data = base64.b64encode(chunk)
                 base64_data = base64_encoded_data.decode(STR_CODING)
-                client.publish(topic_publish, json.dumps({"Id":file_id,"Data":base64_data}))
+                client.publish(topic_publish, json.dumps({"Id":file_id,"Data":base64_data}, separators=(",", ":")))
             else:
                 client.publish(topic_publish+"201", chunk)
             ack_flag = True
 
         else:
             md5_hash = out_hash_md5.hexdigest()
-            client.publish(topic_publish, json.dumps({"Id":file_id,"Md5":md5_hash}))
+            client.publish(topic_publish, json.dumps({"Id":file_id,"Md5":md5_hash}, separators=(",", ":")))
             run_flag = False
 
     if not err_flag:
