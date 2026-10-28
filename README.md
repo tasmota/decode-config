@@ -92,7 +92,7 @@ Alternatively you can download a ready-made binary from [Releases](https://githu
 
 **decode-config.py** needs an installed [Python](https://en.wikipedia.org/wiki/Python_%28programming_language%29) environment - (see [Prerequisite](#prerequisite)).
 
-After you have installed your Python environment, there are two ways to install deocde-config:
+After you have installed your Python environment, there are two ways to install decode-config:
 
 #### Installation using PyPi
 
