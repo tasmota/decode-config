@@ -25,6 +25,18 @@ jobs:
               pyinstaller --noconfirm build-executables/dc-build-ubuntu.spec && cd dist && tar -czf ../decode-config-ubuntu-22.04.tar.gz decode-config
             OUT_FILE_NAME: decode-config-ubuntu-22.04.tar.gz
             ASSET_MIME: application/x-gzip
+          - os: ubuntu-24.04-arm
+            TARGET: ubuntu-24.04-arm64
+            CMD_BUILD: >
+              pyinstaller --noconfirm build-executables/dc-build-ubuntu.spec && cd dist && tar -czf ../decode-config-ubuntu-24.04-arm64.tar.gz decode-config
+            OUT_FILE_NAME: decode-config-ubuntu-24.04-arm64.tar.gz
+            ASSET_MIME: application/x-gzip
+          - os: ubuntu-22.04-arm
+            TARGET: ubuntu-22.04-arm64
+            CMD_BUILD: >
+              pyinstaller --noconfirm build-executables/dc-build-ubuntu.spec && cd dist && tar -czf ../decode-config-ubuntu-22.04-arm64.tar.gz decode-config
+            OUT_FILE_NAME: decode-config-ubuntu-22.04-arm64.tar.gz
+            ASSET_MIME: application/x-gzip
           - os: macos-latest
             TARGET: macos-14
             CMD_BUILD: >
