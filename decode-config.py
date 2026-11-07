@@ -5085,11 +5085,11 @@ def pull_mqtt(use_base64=True):
 
     conn_rc = 0
     conn_flag = False
-    def on_connect(client, userdata, flags, rc):
+    def on_connect(client, userdata, flags, reason_code, properties):
         nonlocal conn_rc
         nonlocal conn_flag
 
-        conn_rc = rc
+        conn_rc = reason_code.value
         conn_flag = True
 
     def wait_for_connect():
@@ -5103,7 +5103,7 @@ def pull_mqtt(use_base64=True):
         return 0 != timeout
 
 
-    client = mqtt.Client()
+    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = on_connect
     client.on_message = on_message
     if SSL_MODULE:
@@ -5275,11 +5275,11 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     conn_rc = 0
     conn_flag = False
-    def on_connect(client, userdata, flags, rc):
+    def on_connect(client, userdata, flags, reason_code, properties):
         nonlocal conn_rc
         nonlocal conn_flag
 
-        conn_rc = rc
+        conn_rc = reason_code.value
         conn_flag = True
 
     def wait_for_connect():
@@ -5292,7 +5292,7 @@ def push_mqtt(encode_cfg, use_base64=True):
 
         return 0 != timeout
 
-    client = mqtt.Client()
+    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = on_connect
     client.on_message = on_message
     if SSL_MODULE:
