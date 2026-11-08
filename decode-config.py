@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 METADATA = {
     'VERSION': '16.0.0.2',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
@@ -30,7 +29,7 @@ METADATA = {
 
 
 Requirements:
-    decode-config is a Python 3.x program. Before installation prepare
+    decode-config is a Python 3.6+ program. Before installation prepare
     python and pip for your system:
       sudo apt-get install python3 python3-pip
 
@@ -136,9 +135,6 @@ def module_import_error(module):
 # pylint: disable=wrong-import-position
 import os.path
 import sys
-if sys.version_info[0] < 3:
-    print(f'Unsupported python version {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]} (EOL) - python 3.x required!', file=sys.stderr)
-    sys.exit(ExitCode.UNSUPPORTED_VERSION)
 import platform
 try:
     from datetime import datetime, timezone
