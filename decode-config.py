@@ -4869,15 +4869,12 @@ def push_http(encode_cfg):
     Upload binary data to a Tasmota host using http
 
     @param encode_cfg:
-        encrypted binary data or filename containing Tasmota encrypted binary config
+        encrypted binary data (bytes/bytearray) of the Tasmota config
 
     @return
         errorcode, errorstring
         errorcode=0 if success, otherwise http response or exception code
     """
-    if isinstance(encode_cfg, str):
-        encode_cfg = bytearray(encode_cfg)
-
     _, http_host, http_port, http_username, http_password = get_http_parts()
 
     # get restore config page first to set internal Tasmota vars
@@ -5181,7 +5178,7 @@ def push_mqtt(encode_cfg, use_base64=True):
     Upload binary data to a Tasmota host using mqtt
 
     @param encode_cfg:
-        encrypted binary data or filename containing Tasmota encrypted binary config
+        encrypted binary data (bytes/bytearray) of the Tasmota config
     @param use_base64
         optional True if using base64 data transfer, otherwise binary data transfer
 
@@ -5377,8 +5374,6 @@ def decrypt_encrypt(obj, has_header=False):
     @return:
         decrypted configuration (if obj contains encrypted data)
     """
-    if isinstance(obj, str):
-        obj = bytearray(obj)
     dobj = bytearray(obj[0:2])
     offset = 16 if has_header else 0
     for i in range(2, len(obj)):
@@ -5395,9 +5390,6 @@ def get_settingcrc(dobj):
     @return:
         2 byte unsigned integer crc value
     """
-    if isinstance(dobj, str):
-        dobj = bytearray(dobj)
-
     crc = 0
     config_info = get_config_info(dobj)
     for i in range(0, config_info['template_size']):
@@ -5417,8 +5409,6 @@ def get_settingcrc32(dobj):
     @return:
         4 byte unsigned integer crc value
     """
-    if isinstance(dobj, str):
-        dobj = bytearray(dobj)
     crc = 0
     for i in range(0, len(dobj)-4):
         crc ^= dobj[i]
@@ -6116,9 +6106,6 @@ def get_field(dobj, config_version, fieldname, fielddef, raw=False, addroffset=0
     @return:
         field mapping
     """
-    if isinstance(dobj, str):
-        dobj = bytearray(dobj)
-
     valuemapping = None
 
     if fieldname == SETTINGVAR:
