@@ -5128,8 +5128,8 @@ def pull_mqtt(use_base64=True):
         client.username_pw_set(mqtt_username, mqtt_password)
     try:
         client.connect(mqtt_host, mqtt_port, ARGS.keepalive)
-    except Exception as err:    # pylint: disable=broad-except,unused-variable
-        log(ExitCode.MQTT_CONNECTION_ERROR, f"Failed to establish MQTT connection to '{mqtt_host}:{mqtt_port}: {err.strerror}'")
+    except (OSError, ValueError) as err:
+        log(ExitCode.MQTT_CONNECTION_ERROR, f"Failed to establish MQTT connection to '{mqtt_host}:{mqtt_port}: {getattr(err, 'strerror', None) or err}'")
     client.loop_start()                    # Start loop to process received messages
     if not wait_for_connect():
         log(ExitCode.MQTT_CONNECTION_ERROR, f"Failed to establish MQTT connection to '{mqtt_host}:{mqtt_port}: Connection timeout'")
@@ -5317,8 +5317,8 @@ def push_mqtt(encode_cfg, use_base64=True):
         client.username_pw_set(mqtt_username, mqtt_password)
     try:
         client.connect(mqtt_host, mqtt_port, ARGS.keepalive)
-    except Exception as err:    # pylint: disable=broad-except,unused-variable
-        return ExitCode.MQTT_CONNECTION_ERROR, f"MQTT connection: {err.strerror}"
+    except (OSError, ValueError) as err:
+        return ExitCode.MQTT_CONNECTION_ERROR, f"MQTT connection: {getattr(err, 'strerror', None) or err}"
     client.loop_start()                    # Start loop to process received messages
     if not wait_for_connect():
         return ExitCode.MQTT_CONNECTION_ERROR, "MQTT connection: Connection timeout"
