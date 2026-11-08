@@ -5085,11 +5085,13 @@ def pull_mqtt(use_base64=True):
 
     conn_rc = 0
     conn_flag = False
-    def on_connect(client, userdata, flags, reason_code, properties):
+    def on_connect(client, userdata, flags, rc, properties=None):   # pylint: disable=unused-argument
+        # paho-mqtt 1.x: (client, userdata, flags, rc)
+        # paho-mqtt >= 2.0 (VERSION2): (client, userdata, flags, reason_code, properties)
         nonlocal conn_rc
         nonlocal conn_flag
 
-        conn_rc = reason_code.value
+        conn_rc = getattr(rc, 'value', rc)     # ReasonCode object (2.x) -> int
         conn_flag = True
 
     def wait_for_connect():
@@ -5103,7 +5105,13 @@ def pull_mqtt(use_base64=True):
         return 0 != timeout
 
 
-    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    """Create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0"""
+    try:
+        # paho-mqtt >= 2.0 requires the callback API version, VERSION1 is deprecated
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    except AttributeError:
+        # paho-mqtt 1.x has no CallbackAPIVersion
+        client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     if SSL_MODULE:
@@ -5275,11 +5283,13 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     conn_rc = 0
     conn_flag = False
-    def on_connect(client, userdata, flags, reason_code, properties):
+    def on_connect(client, userdata, flags, rc, properties=None):   # pylint: disable=unused-argument
+        # paho-mqtt 1.x: (client, userdata, flags, rc)
+        # paho-mqtt >= 2.0 (VERSION2): (client, userdata, flags, reason_code, properties)
         nonlocal conn_rc
         nonlocal conn_flag
 
-        conn_rc = reason_code.value
+        conn_rc = getattr(rc, 'value', rc)     # ReasonCode object (2.x) -> int
         conn_flag = True
 
     def wait_for_connect():
@@ -5292,7 +5302,13 @@ def push_mqtt(encode_cfg, use_base64=True):
 
         return 0 != timeout
 
-    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    """Create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0"""
+    try:
+        # paho-mqtt >= 2.0 requires the callback API version, VERSION1 is deprecated
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    except AttributeError:
+        # paho-mqtt 1.x has no CallbackAPIVersion
+        client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     if SSL_MODULE:
