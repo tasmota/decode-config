@@ -3445,7 +3445,7 @@ SETTING_15_1_0_3['sbflag1'][1].update({
                                     })
 # ======================================================================
 SETTING_15_2_0_6 = copy.deepcopy(SETTING_15_1_0_3)
-SETTING_15_2_0_6.update              ({
+SETTING_15_2_0_6.update             ({
     'i2c_drivers2':                 (HARDWARE.ESP,   '<L',  0xF64,       ([2],  None,                           ('Management',  'list("I2CDriver{} {}".format((#*32)+i+96, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')),'"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
@@ -3482,13 +3482,13 @@ SETTING_15_6_0_2.update             ({
 # ======================================================================
 SETTING_15_6_0_3 = copy.copy(SETTING_15_6_0_2)
 SETTING_15_6_0_3.update             ({
-    'my_gp_esp32s31':                (HARDWARE.ESP32S31,
+    'my_gp_esp32s31':               (HARDWARE.ESP32S31,
                                                      '<H',  0x38C,       ([62], None,                           ('Management',  '"Gpio{} {}".format(#, $)')) ),
-    'eth_type_esp32s31':             (HARDWARE.ESP32S31,
+    'eth_type_esp32s31':            (HARDWARE.ESP32S31,
                                                      'B',   0x408,       (None, '0 <= $ <= 8',                  ('Wifi',        '"EthType {}".format($)')) ),
-    'eth_clk_mode_esp32s31':         (HARDWARE.ESP32S31,
+    'eth_clk_mode_esp32s31':        (HARDWARE.ESP32S31,
                                                      'B',   0x409,       (None, '0 <= $ <= 3',                  ('Wifi',        '"EthClockMode {}".format($)')) ),
-    'webcam_config_esp32s31':        (HARDWARE.ESP32S31, {
+    'webcam_config_esp32s31':       (HARDWARE.ESP32S31, {
         'stream':                   (HARDWARE.ESP32S31,
                                                      '<L', (0x488,1, 0), (None, None,                           ('Control',     '"WCStream {}".format($)')) ),
         'mirror':                   (HARDWARE.ESP32S31,
@@ -3528,19 +3528,19 @@ SETTING_15_6_0_3.update             ({
         'feature':                  (HARDWARE.ESP32S31,
                                                      '<L', (0x488,2,16), (None, '0 <= $ <= 2',                  ('Control',     '"WCFeature {}".format($)')) ),
                                     },                      0x488,       (None, None,                           (VIRTUAL,       None)), (None, None) ),
-    'eth_address_esp32s31':          (HARDWARE.ESP32S31,
+    'eth_address_esp32s31':         (HARDWARE.ESP32S31,
                                                      'B',   0x48C,       (None, '0 <= $ <= 31',                 ('Wifi',        '"EthAddress {}".format($)')) ),
-    'module_esp32s31':               (HARDWARE.ESP32S31,
+    'module_esp32s31':              (HARDWARE.ESP32S31,
                                                      'B',   0x48D,       (None, None,                           ('Management',  '"Module {}".format($+1 & 0xff)')) ),
-    'ws_width_esp32s31':             (HARDWARE.ESP32S31,
+    'ws_width_esp32s31':            (HARDWARE.ESP32S31,
                                                      'B',   0x48E,       ([3],  None,                           ('Light',       None)) ),
-    'serial_delimiter_esp32s31':     (HARDWARE.ESP32S31,
+    'serial_delimiter_esp32s31':    (HARDWARE.ESP32S31,
                                                      'B',   0x491,       (None, None,                           ('Serial',      '"SerialDelimiter {}".format($)')) ),
-    'seriallog_level_esp32s31':      (HARDWARE.ESP32S31,
+    'seriallog_level_esp32s31':     (HARDWARE.ESP32S31,
                                                      'B',   0x492,       (None, '0 <= $ <= 4',                  ('Management',  '"SerialLog {}".format($)')) ),
-    'sleep_esp32s31':                (HARDWARE.ESP32S31,
+    'sleep_esp32s31':               (HARDWARE.ESP32S31,
                                                      'B',   0x493,       (None, '0 <= $ <= 250',                ('Management',  '"Sleep {}".format($)')) ),
-    'ws_color_esp32s31':             (HARDWARE.ESP32S31,
+    'ws_color_esp32s31':            (HARDWARE.ESP32S31,
                                                      'B',   0xEB0,       ([4,3],None,                           ('Light',       None)) ),
     'ldo_mv_esp32s31':              (HARDWARE.ESP32S31,
                                                      '<H',  0x494,       ([1],  None,                           ('Management',  '"Ldo{} {}".format(#+1,$)')) ),
@@ -3552,7 +3552,7 @@ SETTING_15_6_0_3.update             ({
                                                      '<L',  0x354,       ([4],  None,                           ('Domoticz',    '"DzKeyIdx{} {}".format(#+1,$)')) ),
                                     })
 SETTING_15_6_0_3['user_template_esp32'][1].update({
-        'gpio_esp32s31':             (HARDWARE.ESP32S31,
+        'gpio_esp32s31':            (HARDWARE.ESP32S31,
                                                      '<H',  0x40A,       ([62], None,                           ('Management',  None)), ('1 if $==65504 else $','65504 if $==1 else $')),
                                     })
 # ======================================================================
