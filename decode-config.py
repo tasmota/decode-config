@@ -3840,7 +3840,7 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
         doexit = True
     if doexit:
         log(msg=f"Premature exit - #{status} {ExitCode.str(status)}", type_=None, status=None, line=None)
-        sys.exit(EXIT_CODE)
+        sys.exit(status)    # not EXIT_CODE: the log() call above has reset it to None (status=None)
 
 def shorthelp(doexit=True):
     """
