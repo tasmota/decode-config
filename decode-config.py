@@ -7623,13 +7623,6 @@ if __name__ == "__main__":
         # config dict
         CONFIG['info'] = get_config_info(CONFIG['decode'])
 
-    if ARGS.version is None:
-        # decode into mapping dictionary
-        # first we need full mapped data for function macros in 2. step
-        CONFIG['valuemapping'] = bin2mapping(CONFIG, raw=True)
-        # second decode data using function macros
-        CONFIG['groupmapping'] = bin2mapping(CONFIG, raw=False)
-
     # check version compatibility
     if 'info' in CONFIG:
         if CONFIG['info']['version'] is not None:
@@ -7659,6 +7652,13 @@ if __name__ == "__main__":
                     COLUMNS - 16)) \
                     .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
                     type_=LogType.WARNING)
+
+    if ARGS.version is None:
+        # decode into mapping dictionary
+        # first we need full mapped data for function macros in 2. step
+        CONFIG['valuemapping'] = bin2mapping(CONFIG, raw=True)
+        # second decode data using function macros
+        CONFIG['groupmapping'] = bin2mapping(CONFIG, raw=False)
 
     if ARGS.version is not None:
         sys.exit(ExitCode.OK)
