@@ -4808,7 +4808,7 @@ def load_tasmotaconfig(filename):
     try:
         with open(filename, "rb") as tasmotafile:
             encode_cfg = tasmotafile.read()
-    except Exception as err:    # pylint: disable=broad-except
+    except OSError as err:
         log(ExitCode.INTERNAL_ERROR, f"'{filename}' {err}", line=lineno())
 
     return encode_cfg
@@ -5700,6 +5700,7 @@ def exec_function(func_, value, idx=None):
                 value = func_(value)
 
     except Exception as err:    # pylint: disable=broad-except
+        # intentionally broad: converter code from the settings table may raise any exception on invalid values
         log(ExitCode.INTERNAL_ERROR, f'{err}', line=lineno())
 
     return value
@@ -5814,6 +5815,7 @@ def validate_value(value, fielddef):
         elif callable(validate):     # use as format function
             valid = validate(value)
     except Exception:     # pylint: disable=broad-except
+        # intentionally broad: any failure of the validate expression/function means "value is not valid"
         valid = False
 
     return valid
@@ -6311,7 +6313,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
         if format_[-1:] in ['c']:
             try:
                 value = write_converter(restoremapping.encode(STR_CODING)[0], fielddef)
-            except Exception as err:    # pylint: disable=broad-except
+            except (AttributeError, IndexError, ValueError) as err:    # no str, empty str, not encodable
                 log(ExitCode.INTERNAL_ERROR, f'{err}', line=lineno())
                 valid = False
 
@@ -6319,7 +6321,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
         elif format_[-1:] in ['?']:
             try:
                 value = write_converter(bool(restoremapping), fielddef)
-            except Exception as err:  # pylint: disable=broad-except
+            except (TypeError, ValueError) as err:
                 log(ExitCode.INTERNAL_ERROR, f'{err}', line=lineno())
                 valid = False
 
@@ -6331,7 +6333,7 @@ def set_field(dobj, config_version, fieldname, fielddef, restoremapping, addroff
             else:
                 try:
                     value = int(value)
-                except Exception as err:  # pylint: disable=broad-except
+                except (TypeError, ValueError, OverflowError) as err:   # e.g. None, list, nan, inf
                     err_text = f"field '{fieldname}' couldn't restore, format may has changed! {err}"
                     valid = False
 
@@ -6951,7 +6953,7 @@ def backup(backupfile, backupfileformat, config):
         if not ARGS.dryrun:
             try:
                 _backup[2](backup_filename, config)
-            except Exception as err:    # pylint: disable=broad-except
+            except (OSError, ValueError, TypeError, struct.error) as err:
                 log(ExitCode.INTERNAL_ERROR, f"'{backup_filename}' {err}", line=lineno())
 
     if fileformat is not None and (ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output)):
@@ -6991,7 +6993,7 @@ def restore(restorefile, backupfileformat, config):
         try:
             with open(restorefilename, "rb") as restorefp:
                 new_encode_cfg = restorefp.read()
-        except Exception as err:    # pylint: disable=broad-except
+        except OSError as err:
             log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
         # remove tar header if any
         if config_has_settings_header(new_encode_cfg):
@@ -7004,7 +7006,7 @@ def restore(restorefile, backupfileformat, config):
         try:
             with open(restorefilename, "rb") as restorefp:
                 restorebin = restorefp.read()
-        except Exception as err:    # pylint: disable=broad-except
+        except OSError as err:
             log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
         # remove tar header if any
         if config_has_settings_header(restorebin):
@@ -7121,7 +7123,7 @@ def restore(restorefile, backupfileformat, config):
                     try:
                         with open(ARGS.filesource, "wb") as outputfile:
                             outputfile.write(new_encode_cfg)
-                    except Exception as err:    # pylint: disable=broad-except
+                    except OSError as err:
                         log(ExitCode.INTERNAL_ERROR, f"'{ARGS.filesource}' {err}", line=lineno())
                 if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
                     log(msg=f"{dryrun}Restore successful to file '{ARGS.filesource}' from '{restorefilename}'", type_=LogType.INFO if ARGS.verbose else None)
