@@ -7527,7 +7527,14 @@ def parseargs():
 
     return _args
 
-if __name__ == "__main__":
+def main():
+    """
+    Program main: parse arguments, load the Tasmota configuration from the given source,
+    decode it and do backup/restore/output
+    """
+    global ARGS         # pylint: disable=global-statement
+    global EXIT_CODE    # pylint: disable=global-statement
+
     ARGS = parseargs()
     if ARGS.shorthelp:
         shorthelp()
@@ -7549,20 +7556,20 @@ if __name__ == "__main__":
     # set the source type based on the criteria
     if ARGS.source is not None:
         # check source args
-        URLPARSE = urllib.parse.urlparse(urllib.parse.quote(ARGS.source, safe='/:@'))
+        url_parts = urllib.parse.urlparse(urllib.parse.quote(ARGS.source, safe='/:@'))
         # http(s)
         #   ARGS.source = http(s)://<user>:<password>@tasmota:<port>
-        if URLPARSE.scheme in ('http', 'https'):
+        if url_parts.scheme in ('http', 'https'):
             ARGS.httpsource = ARGS.source
 
         # mqtt(s)
         #   ARGS.source = mqtt(s)://<user>:<password>@tasmota:<port>
-        elif MQTT_MODULE and URLPARSE.scheme in ('mqtt', 'mqtts'):
+        elif MQTT_MODULE and url_parts.scheme in ('mqtt', 'mqtts'):
             ARGS.mqttsource = ARGS.source
 
         # file:
         #   ARGS.source = file:// or (not http(s)and not mqtt(s) and <source> exists)
-        elif URLPARSE.scheme in ('file',) or (
+        elif url_parts.scheme in ('file',) or (
             ARGS.httpsource is None and
             ARGS.mqttsource is None and
             os.path.isfile(ARGS.source) and
@@ -7572,8 +7579,8 @@ if __name__ == "__main__":
         else:
             ARGS.httpsource = ARGS.source
 
-    SOURCES = sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource)))
-    if 0 == SOURCES and ARGS.version is None:
+    sources = sum(map(lambda i: i is not None, (ARGS.source, ARGS.httpsource, ARGS.mqttsource, ARGS.filesource)))
+    if 0 == sources and ARGS.version is None:
         shorthelp()
 
     # souce is a file: pull config from Tasmota file
@@ -7588,7 +7595,7 @@ if __name__ == "__main__":
     if ARGS.mqttsource is not None:
         CONFIG['encode'] = pull_mqtt()
 
-    if SOURCES > 0:
+    if sources > 0:
         if CONFIG['encode'] is None:
             # no config source given
             shorthelp(False)
@@ -7631,12 +7638,12 @@ if __name__ == "__main__":
                 source_name = ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource if ARGS.mqttsource is not None else ARGS.filesource
                 log(msg=f"{source_label}'{source_name}' is using Tasmota v{get_versionstr(CONFIG['info']['version'])} on {HARDWARE.str(CONFIG['info']['hardware'])}",
                     type_=LogType.INFO if ARGS.version is None else None)
-            SUPPORTED_VERSION = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
-            if CONFIG['info']['version'] > SUPPORTED_VERSION and not ARGS.ignorewarning:
+            supported_version = sorted(SETTINGS, key=lambda s: s[0], reverse=True)[0][0]
+            if CONFIG['info']['version'] > supported_version and not ARGS.ignorewarning:
                 try:
-                    COLUMNS = os.get_terminal_size()[0]
+                    columns = os.get_terminal_size()[0]
                 except OSError:
-                    COLUMNS = 80
+                    columns = 80
                 log(ExitCode.UNSUPPORTED_VERSION, \
                     "\n           ".join(textwrap.wrap(\
                     "Tasmota configuration data v{} currently unsupported! "
@@ -7649,8 +7656,8 @@ if __name__ == "__main__":
                     "it again using the serial interface. If you are unsure and do not know the  changes "
                     "in the configuration structure, you may able to use the developer version of this "
                     "program from https://github.com/tasmota/decode-config/tree/development.", \
-                    COLUMNS - 16)) \
-                    .format(get_versionstr(CONFIG['info']['version']), get_versionstr(SUPPORTED_VERSION)),
+                    columns - 16)) \
+                    .format(get_versionstr(CONFIG['info']['version']), get_versionstr(supported_version)),
                     type_=LogType.WARNING)
 
     if ARGS.version is None:
@@ -7665,8 +7672,8 @@ if __name__ == "__main__":
 
     if ARGS.backupfile is not None:
         # backup to file(s)
-        for BACKUPFILE in ARGS.backupfile:
-            backup(BACKUPFILE, ARGS.backupfileformat, CONFIG)
+        for backupfile in ARGS.backupfile:
+            backup(backupfile, ARGS.backupfileformat, CONFIG)
 
     if ARGS.restorefile is not None:
         # restore from file
@@ -7684,3 +7691,6 @@ if __name__ == "__main__":
     if EXIT_CODE != ExitCode.OK and ARGS.ignorewarning:
         EXIT_CODE = ExitCode.OK
     sys.exit(EXIT_CODE)
+
+if __name__ == "__main__":
+    main()
