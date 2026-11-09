@@ -3798,7 +3798,6 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
         True to exit program, otherwise return
     """
     global EXIT_CODE    # pylint: disable=global-statement
-    global ARGS         # pylint: disable=global-statement
 
     def message(msg, type_=None, status=None, line=None):
         """
@@ -5011,7 +5010,6 @@ def pull_mqtt(use_base64=True):
         nonlocal file_type
         nonlocal file_size
         nonlocal file_md5
-        nonlocal in_hash_md5
         nonlocal dobj
 
         base64_data = ""
@@ -5122,7 +5120,6 @@ def pull_mqtt(use_base64=True):
         conn_flag = True
 
     def wait_for_connect():
-        nonlocal conn_flag
 
         timeout = 200
         while not conn_flag and timeout > 0:
@@ -5132,7 +5129,7 @@ def pull_mqtt(use_base64=True):
         return 0 != timeout
 
 
-    """Create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0"""
+    # create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0
     try:
         # paho-mqtt >= 2.0 requires the callback API version, VERSION1 is deprecated
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -5245,7 +5242,6 @@ def push_mqtt(encode_cfg, use_base64=True):
         nonlocal err_flag
         nonlocal err_str
         nonlocal file_chunk_size
-        nonlocal encode_cfg
 
         rcv_code = ""
         rcv_id = 0
@@ -5296,6 +5292,7 @@ def push_mqtt(encode_cfg, use_base64=True):
 
     def wait_for_ack():
         nonlocal err_flag
+        nonlocal err_str
 
         timeout = MQTT_TIMEOUT/10
         while ack_flag and not err_flag and timeout > 0:
@@ -5320,7 +5317,6 @@ def push_mqtt(encode_cfg, use_base64=True):
         conn_flag = True
 
     def wait_for_connect():
-        nonlocal conn_flag
 
         timeout = 200
         while not conn_flag and timeout > 0:
@@ -5329,7 +5325,7 @@ def push_mqtt(encode_cfg, use_base64=True):
 
         return 0 != timeout
 
-    """Create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0"""
+    # create a paho MQTT client, compatible with paho-mqtt 1.x and >= 2.0
     try:
         # paho-mqtt >= 2.0 requires the callback API version, VERSION1 is deprecated
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -5363,7 +5359,7 @@ def push_mqtt(encode_cfg, use_base64=True):
     if not wait_for_connect():
         return ExitCode.MQTT_CONNECTION_ERROR, "MQTT connection: Connection timeout"
     elif conn_rc != mqtt.MQTT_ERR_SUCCESS:
-        return ExitCode.MQTT_CONNECTION_ERROR, f"MQTT connection: Code {conn_rc} - {mqtt.connack_string(conn_rc)}'"
+        return ExitCode.MQTT_CONNECTION_ERROR, f"MQTT connection: Code {conn_rc} - {mqtt.connack_string(conn_rc)}"
     client.subscribe(mqtt_maketopic(mqtt_topic, 'stat', cmnd))
 
     client.publish(topic_publish, json.dumps({"Password":tasmota_mqtt_password,
