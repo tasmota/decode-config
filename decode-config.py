@@ -4866,7 +4866,10 @@ def get_tasmotahostname(host, port, username=DEFAULTS['source']['username'], pas
     # get hostname
     _, body = get_tasmotaconfig(f"cm?{loginstr}cmnd=status%205", host, port, username=username, password=password)
     if body is not None:
-        jsonbody = json.loads(str(body, STR_CODING))
+        try:
+            jsonbody = json.loads(str(body, STR_CODING))
+        except ValueError as err:   # json.JSONDecodeError and UnicodeDecodeError are both ValueError
+            log(ExitCode.DOWNLOAD_CONFIG_ERROR, f"Device '{host}:{port}' did not respond with valid JSON on hostname request ({err}) - wrong login data or Tasmota webserver admin mode disabled?", line=inspect.getlineno(inspect.currentframe()))
         statusnet = jsonbody.get('StatusNET', None)
         if statusnet is not None:
             hostname = statusnet.get('Hostname', None)
