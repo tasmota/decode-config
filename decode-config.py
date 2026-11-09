@@ -4667,6 +4667,30 @@ def make_url(host, port=80, location=''):
     """
     return f"http://{host}{':' if port != 80 else ''}{port if port != 80 else ''}/{location}"
 
+def mask_password(url):
+    """
+    Mask a password given in the query part of an url (user=..&password=..) to not expose it in log output
+
+    @param url:
+        url to mask
+
+    @return:
+        url with masked password
+    """
+    return re.sub(r'(password=)[^&]*', r'\1***', url, flags=re.IGNORECASE)
+
+def get_content_type(res):
+    """
+    Get the media type of a http response without parameters like charset
+
+    @param res:
+        requests response
+
+    @return:
+        lower case media type, e.g. 'text/html', or '' if the response has no Content-Type header
+    """
+    return res.headers.get('Content-Type', '').split(';')[0].strip().lower()
+
 def get_http_parts():
     """
     Get http connection parameter parts from url/hostnme/ip and optional arguments
@@ -4806,13 +4830,14 @@ def get_tasmotaconfig(cmnd, host, port, username=DEFAULTS['source']['username'],
         auth = (username, password)
     try:
         res = requests.get(url, auth=auth, headers={'referer': referer}, timeout=HTTP_TIMEOUT)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.InvalidURL) as _:
+    except requests.exceptions.RequestException:
+        # no exception details here, they contain the request url which may include the password
         log(ExitCode.HTTP_CONNECTION_ERROR, f"Failed to establish HTTP connection to '{host}:{port}'")
 
     if not res.ok:
-        log(res.status_code, f"Error on http GET request for {url} - {res.reason}", line=inspect.getlineno(inspect.currentframe()))
+        log(res.status_code, f"Error on http GET request for {mask_password(url)} - {res.reason}", line=inspect.getlineno(inspect.currentframe()))
 
-    if contenttype is not None and res.headers['Content-Type'] != contenttype:
+    if contenttype is not None and get_content_type(res) != contenttype:
         log(ExitCode.DOWNLOAD_CONFIG_ERROR, "Device did not respond properly, maybe Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     return res.status_code, res.content
@@ -4894,13 +4919,13 @@ def push_http(encode_cfg):
     referer = make_url(http_host, http_port)
     try:
         res = requests.post(url, auth=auth, files=files, headers={'referer': referer}, timeout=HTTP_TIMEOUT)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
-        log(ExitCode.UPLOAD_CONFIG_ERROR, f"Error on http POST request for {url} - {err}", line=inspect.getlineno(inspect.currentframe()))
+    except requests.exceptions.RequestException as err:
+        log(ExitCode.UPLOAD_CONFIG_ERROR, f"Error on http POST request for {mask_password(url)} - {err}", line=inspect.getlineno(inspect.currentframe()))
 
     if not res.ok:
-        log(res.status_code, f"Error on http POST request for {url} - {res.reason}", line=inspect.getlineno(inspect.currentframe()))
+        log(res.status_code, f"Error on http POST request for {mask_password(url)} - {res.reason}", line=inspect.getlineno(inspect.currentframe()))
 
-    if res.headers['Content-Type'] != 'text/html':
+    if get_content_type(res) != 'text/html':
         log(ExitCode.UPLOAD_CONFIG_ERROR, "Device did not response properly, may be Tasmota webserver admin mode is disabled (WebServer 2)", line=inspect.getlineno(inspect.currentframe()))
 
     body = res.text
