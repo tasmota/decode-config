@@ -146,6 +146,7 @@ try:
     import re
     import itertools
     import json
+    import argparse
     import configargparse
     import requests
     import urllib
@@ -270,7 +271,8 @@ DEFAULTS = {
 }
 
 PARSER = None
-ARGS = {}
+# program arguments, replaced by the result of parseargs() - until then only the values used by log() are available
+ARGS = argparse.Namespace(version=None, ignorewarning=DEFAULTS['common']['ignorewarning'])
 EXIT_CODE = 0
 
 # CONFIG map
