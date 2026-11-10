@@ -7072,8 +7072,8 @@ def restore(restorefile, backupfileformat, config):
         @param jsonconfig:
             JSON data of the restore file or None if the restore file is not a JSON file
         """
-        restore_source_type = "File" if ARGS.filesource is not None else "Device"
-        restore_source_name = ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource
+        restore_source_type = "File" if ARGS.filesource is not None else "Device" if ARGS.httpsource is not None else "Data"
+        restore_source_name = ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource if ARGS.httpsource is not None else ARGS.mqttsource
 
         # Platform compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
