@@ -4045,18 +4045,18 @@ class Unishox:
         ol = 0
         state = self.SHX_STATE_1
         is_all_upper = 0
-        l = 0
-        while l < len_:
-        # for (l=0; l<len_; l++) {
+        n = 0
+        while n < len_:
+        # for (n=0; n<len_; n++) {
 
-            c_in = inn[l]
+            c_in = inn[n]
 
-            if l and l < len_ - 4:
-                if c_in == inn[l - 1] and c_in == inn[l + 1] and c_in == inn[l + 2] and c_in == inn[l + 3]:
-                    rpt_count = l + 4
+            if n and n < len_ - 4:
+                if c_in == inn[n - 1] and c_in == inn[n + 1] and c_in == inn[n + 2] and c_in == inn[n + 3]:
+                    rpt_count = n + 4
                     while rpt_count < len_ and inn[rpt_count] == c_in:
                         rpt_count += 1
-                    rpt_count -= l
+                    rpt_count -= n
 
                     if state == self.SHX_STATE_2 or is_all_upper:
                         is_all_upper = 0
@@ -4065,19 +4065,19 @@ class Unishox:
 
                     ol = self.append_bits(out, ol, self.RPT_CODE_TASMOTA, self.RPT_CODE_TASMOTA_LEN, 1)     # reusing CRLF for RPT
                     ol = self.encodeCount(out, ol, rpt_count - 4)
-                    l += rpt_count
-                    #l -= 1
+                    n += rpt_count
+                    #n -= 1
                     continue
 
-            if l < (len_ - self.NICE_LEN + 1):
-                #l_old = l
-                (l, ol, state, is_all_upper) = self.matchOccurance(inn, len_, l, out, ol, state, is_all_upper)
-                if l > 0:
-                    #print("matchOccurance l = {l} l_old = {lo}".format(l=l,lo=l_old))
-                    l += 1    # for loop
+            if n < (len_ - self.NICE_LEN + 1):
+                #n_old = n
+                (n, ol, state, is_all_upper) = self.matchOccurance(inn, len_, n, out, ol, state, is_all_upper)
+                if n > 0:
+                    #print("matchOccurance n = {n} n_old = {no}".format(n=n,no=n_old))
+                    n += 1    # for loop
                     continue
 
-                l = -l
+                n = -n
 
             if state == self.SHX_STATE_2:      # if Set2
                 if ord(' ') <= c_in <= ord('@') or ord('[') <= c_in <= ord('`') or ord('{') <= c_in <= ord('~'):
@@ -4096,15 +4096,15 @@ class Unishox:
 
             if 32 <= c_in <= 126:
                 if is_upper and not is_all_upper:
-                    ll = l+5
-                    # for (ll=l+5; ll>=l && ll<len_; ll--) {
-                    while l <= ll < len_:
+                    ll = n+5
+                    # for (ll=n+5; ll>=n && ll<len_; ll--) {
+                    while n <= ll < len_:
                         if inn[ll] < ord('A') or inn[ll] > ord('Z'):
                             break
 
                         ll -= 1
 
-                    if ll == l-1:
+                    if ll == n-1:
                         ol = self.append_bits(out, ol, self.ALL_UPPER_CODE, self.ALL_UPPER_CODE_LEN, state)   # CapsLock
                         is_all_upper = 1
 
@@ -4118,7 +4118,7 @@ class Unishox:
                 if c_in == 0 and state == self.SHX_STATE_2:
                     ol = self.append_bits(out, ol, self.ST2_SPC_CODE, self.ST2_SPC_CODE_LEN, state)       # space from Set2 ionstead of Set1
                 else:
-                    # ol = self.append_bits(out, ol, pgm_read_word(&c_95[c_in]), pgm_read_byte(&l_95[c_in]), state);  // original version with c/l in split arrays
+                    # ol = self.append_bits(out, ol, pgm_read_word(&c_95[c_in]), pgm_read_byte(&l_95[c_in]), state);  // original version with c/n in split arrays
                     cl = self.cl_95[c_in]
                     cl_code = cl & 0xFFF0
                     cl_len = cl & 0x000F
@@ -4139,7 +4139,7 @@ class Unishox:
             if ol // 8 >= len_out - 4:
                 return -1      # we risk overflow and crash
 
-            l += 1
+            n += 1
 
         bits = ol % 8
         if bits:
