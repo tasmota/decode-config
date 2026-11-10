@@ -3831,7 +3831,9 @@ def log(status=0, msg="end", type_=LogType.ERROR, src=None, doexit=None, line=No
     if src is not None:
         msg = f'{src} ({msg})'
     message(msg, type_=type_ if status != ExitCode.OK else LogType.INFO if ARGS.version is None else None, status=status, line=line)
-    EXIT_CODE = status
+    if status:
+        # keep the last error/warning/restore skipped status - plain messages (status 0 or None) must not reset it
+        EXIT_CODE = status
     if LogType.INFO == type_ and doexit is None:
         doexit = False
     if LogType.WARNING == type_:
@@ -7718,7 +7720,8 @@ def main():
             # Tasmota command output
             output_tasmotacmnds(mapping2cmnd(CONFIG))
 
-    if EXIT_CODE != ExitCode.OK and ARGS.ignorewarning:
+    if EXIT_CODE not in (ExitCode.OK, ExitCode.RESTORE_SKIPPED) and ARGS.ignorewarning:
+        # ignored warnings are no error - but 'restore skipped' is no warning and still returned
         EXIT_CODE = ExitCode.OK
     sys.exit(EXIT_CODE)
 
