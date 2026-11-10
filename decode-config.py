@@ -6965,8 +6965,8 @@ def restore(restorefile, backupfileformat, config):
     """
     Restore from file
 
-    @param encode_cfg:
-        binary config data (encrypted)
+    @param restorefile:
+        name of the restore file
     @param backupfileformat:
         Backup file format
     @param config: dict
@@ -6977,87 +6977,104 @@ def restore(restorefile, backupfileformat, config):
     """
     global EXIT_CODE    # pylint: disable=global-statement
 
-    new_encode_cfg = None
-
-    restorefileformat = None
-    if backupfileformat.lower() == 'bin':
-        restorefileformat = FileType.BIN
-    elif backupfileformat.lower() == 'dmp':
-        restorefileformat = FileType.DMP
-    elif backupfileformat.lower() == 'json':
-        restorefileformat = FileType.JSON
+    restorefileformat = {'bin': FileType.BIN, 'dmp': FileType.DMP, 'json': FileType.JSON}.get(backupfileformat.lower())
     restorefilename = make_filename(restorefile, restorefileformat, config['valuemapping'])
     filetype = get_filetype(restorefilename)
 
-    if filetype == FileType.DMP:
-        if ARGS.verbose:
-            log(msg=f"Reading restore file '{restorefilename}' (Tasmota format)", type_=LogType.INFO)
-        try:
-            with open(restorefilename, "rb") as restorefp:
-                new_encode_cfg = restorefp.read()
-        except OSError as err:
-            log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
-        # remove tar header if any
-        if config_has_settings_header(new_encode_cfg):
-            new_encode_cfg = new_encode_cfg[16:]
+    def log_restore_result(msg):
+        """
+        Log a restore result message if verbose or if a restore/backup file is used without output requested
+        """
+        if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
+            log(msg=msg, type_=LogType.INFO if ARGS.verbose else None)
 
+    def load_restorefile():
+        """
+        Read restore file and convert it into binary Tasmota config data
 
-    elif filetype == FileType.BIN:
-        if ARGS.verbose:
-            log(msg=f"Reading restore file '{restorefilename}' (Binary format)", type_=LogType.INFO)
-        try:
-            with open(restorefilename, "rb") as restorefp:
-                restorebin = restorefp.read()
-        except OSError as err:
-            log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
-        # remove tar header if any
-        if config_has_settings_header(restorebin):
-            restorebin = restorebin[16:]
-        decode_cfg = None
-        header_format = '<L'
-        if struct.unpack_from(header_format, restorebin, 0)[0] == BINARYFILE_MAGIC:
-            # remove file format identifier (outdated header at the beginning)
-            decode_cfg = restorebin[struct.calcsize(header_format):]
-        elif struct.unpack_from(header_format, restorebin, len(restorebin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
-            # remove file format identifier (new append format)
-            decode_cfg = restorebin[:len(restorebin)-struct.calcsize(header_format)]
-        if decode_cfg is not None:
-            # process binary to binary config
-            new_encode_cfg = decrypt_encrypt(decode_cfg, has_header=(len(decode_cfg) > config['info']['template_size']))
+        @return:
+            tuple of
+                binary config data (encrypted) or None if data can't be processed
+                JSON data of the restore file or None if the restore file is not a JSON file
+        """
+        new_encode_cfg = None
+        jsonconfig = None
 
-    elif filetype in (FileType.JSON, FileType.INVALID_JSON):
-        if ARGS.verbose:
-            log(msg=f"Reading restore file '{restorefilename}' (JSON format)", type_=LogType.INFO)
-        try:
-            with open(restorefilename, "r", encoding=STR_CODING) as restorefp:
-                jsonconfig = json.load(restorefp)
-        except ValueError as err:
-            log(ExitCode.JSON_READ_ERROR, f"File '{restorefilename}' invalid JSON: {err}", line=lineno())
-        # process json config to binary config
-        new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
-        new_encode_cfg = decrypt_encrypt(new_decode_cfg, has_header=(len(new_decode_cfg) > config['info']['template_size']))
+        if filetype == FileType.DMP:
+            if ARGS.verbose:
+                log(msg=f"Reading restore file '{restorefilename}' (Tasmota format)", type_=LogType.INFO)
+            try:
+                with open(restorefilename, "rb") as restorefp:
+                    new_encode_cfg = restorefp.read()
+            except OSError as err:
+                log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
+            # remove tar header if any
+            if config_has_settings_header(new_encode_cfg):
+                new_encode_cfg = new_encode_cfg[16:]
 
-    elif filetype == FileType.FILE_NOT_FOUND:
-        log(ExitCode.FILE_NOT_FOUND, f"File '{restorefilename}' not found", line=lineno())
-    elif filetype == FileType.INCOMPLETE_JSON:
-        log(ExitCode.JSON_READ_ERROR, f"File '{restorefilename}' incomplete JSON, missing name 'header'", line=lineno())
-    elif filetype == FileType.INVALID_BIN:
-        log(ExitCode.FILE_READ_ERROR, f"File '{restorefilename}' invalid BIN format", line=lineno())
-    else:
-        log(ExitCode.FILE_READ_ERROR, f"File '{restorefilename}' unknown error", line=lineno())
+        elif filetype == FileType.BIN:
+            if ARGS.verbose:
+                log(msg=f"Reading restore file '{restorefilename}' (Binary format)", type_=LogType.INFO)
+            try:
+                with open(restorefilename, "rb") as restorefp:
+                    restorebin = restorefp.read()
+            except OSError as err:
+                log(ExitCode.INTERNAL_ERROR, f"'{restorefilename}' {err}", line=lineno())
+            # remove tar header if any
+            if config_has_settings_header(restorebin):
+                restorebin = restorebin[16:]
+            decode_cfg = None
+            header_format = '<L'
+            if struct.unpack_from(header_format, restorebin, 0)[0] == BINARYFILE_MAGIC:
+                # remove file format identifier (outdated header at the beginning)
+                decode_cfg = restorebin[struct.calcsize(header_format):]
+            elif struct.unpack_from(header_format, restorebin, len(restorebin)-struct.calcsize(header_format))[0] == BINARYFILE_MAGIC:
+                # remove file format identifier (new append format)
+                decode_cfg = restorebin[:len(restorebin)-struct.calcsize(header_format)]
+            if decode_cfg is not None:
+                # process binary to binary config
+                new_encode_cfg = decrypt_encrypt(decode_cfg, has_header=(len(decode_cfg) > config['info']['template_size']))
 
-    if new_encode_cfg is not None:
-        new_decode_cfg = decrypt_encrypt(new_encode_cfg, has_header=(len(new_encode_cfg) > config['info']['template_size']))
-        # add tar header if config contains appended settings
-        if (len(new_encode_cfg) > config['info']['template_size']):
-            fsize = len(new_encode_cfg)
-            header = bytearray(TASM_FILE_SETTINGS.encode() + bytearray(16 - len(TASM_FILE_SETTINGS)))
-            struct.pack_into("<H", header, 14, fsize + 16)
-            new_encode_cfg = header + new_encode_cfg
+        elif filetype in (FileType.JSON, FileType.INVALID_JSON):
+            if ARGS.verbose:
+                log(msg=f"Reading restore file '{restorefilename}' (JSON format)", type_=LogType.INFO)
+            try:
+                with open(restorefilename, "r", encoding=STR_CODING) as restorefp:
+                    jsonconfig = json.load(restorefp)
+            except ValueError as err:
+                log(ExitCode.JSON_READ_ERROR, f"File '{restorefilename}' invalid JSON: {err}", line=lineno())
+            # process json config to binary config
+            new_decode_cfg = mapping2bin(config, jsonconfig, restorefilename)
+            new_encode_cfg = decrypt_encrypt(new_decode_cfg, has_header=(len(new_decode_cfg) > config['info']['template_size']))
+
+        elif filetype == FileType.FILE_NOT_FOUND:
+            log(ExitCode.FILE_NOT_FOUND, f"File '{restorefilename}' not found", line=lineno())
+        elif filetype == FileType.INCOMPLETE_JSON:
+            log(ExitCode.JSON_READ_ERROR, f"File '{restorefilename}' incomplete JSON, missing name 'header'", line=lineno())
+        elif filetype == FileType.INVALID_BIN:
+            log(ExitCode.FILE_READ_ERROR, f"File '{restorefilename}' invalid BIN format", line=lineno())
+        else:
+            log(ExitCode.FILE_READ_ERROR, f"File '{restorefilename}' unknown error", line=lineno())
+
+        return new_encode_cfg, jsonconfig
+
+    def check_restore_compatibility(new_decode_cfg, jsonconfig):
+        """
+        Check if the restore data is compatible with the configuration of the source (hardware platform and data version)
+        and exit with an error if not
+
+        @param new_decode_cfg:
+            binary config data to restore (decrypted)
+        @param jsonconfig:
+            JSON data of the restore file or None if the restore file is not a JSON file
+        """
+        restore_source_type = "File" if ARGS.filesource is not None else "Device"
+        restore_source_name = ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource
 
         # Platform compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
-            new_config_version = get_config_info(new_decode_cfg)['hardware']
+            new_config_info = get_config_info(new_decode_cfg)
+            new_config_version = new_config_info['hardware']
         else:
             try:
                 new_config_version = jsonconfig['config_version']
@@ -7065,8 +7082,6 @@ def restore(restorefile, backupfileformat, config):
                 new_config_version = HARDWARE.config_versions.index(HARDWARE.ESP82)
         config_version = config['info']['hardware']
         if config_version != new_config_version:
-            restore_source_type = "File" if ARGS.filesource is not None else "Device"
-            restore_source_name = ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource
             log(ExitCode.RESTORE_DATA_ERROR,
                 f"Restore data incompatibility: {restore_source_type} '{restore_source_name}' "
                 f"hardware is '{HARDWARE.str(config_version)}', "
@@ -7074,66 +7089,77 @@ def restore(restorefile, backupfileformat, config):
 
         # Data version compatibility check
         if filetype in (FileType.DMP, FileType.BIN):
-            version_new_data = get_config_info(new_decode_cfg)['version']
+            version_new_data = new_config_info['version']
             version_device = config['info']['version']
             if version_device != version_new_data:
-                restore_source_type = "File" if ARGS.filesource is not None else "Device"
-                restore_source_name = ARGS.filesource if ARGS.filesource is not None else ARGS.httpsource
                 log(ExitCode.RESTORE_DATA_ERROR,
                     f"Restore binary data incompatibility: {restore_source_type} '{restore_source_name}' "
                     f"v'{get_versionstr(version_device)}', restore file '{restorefilename}' v'{get_versionstr(version_new_data)}'")
 
-        if ARGS.verbose:
-            # get binary header and template to use
-            log(msg=f"Config file contains data of Tasmota v{get_versionstr(config['info']['version'])}", type_=LogType.INFO)
-        if ARGS.forcerestore or new_encode_cfg != config['encode']:
-            dryrun = ""
-            if ARGS.dryrun:
-                if ARGS.verbose:
-                    log(msg="Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
-                dryrun = SIMULATING
-                error_code = 0
-            # write config direct to device via http
+    def write_restore(new_encode_cfg):
+        """
+        Write restore data to the source (device by http, device by mqtt or file)
+
+        @param new_encode_cfg:
+            binary config data to restore (encrypted)
+        """
+        dryrun = ""
+        error_code = 0
+        error_str = ""
+        if ARGS.dryrun:
+            if ARGS.verbose:
+                log(msg="Configuration data changed but leaving untouched, simulating writes for dry run", type_=LogType.INFO)
+            dryrun = SIMULATING
+
+        if ARGS.httpsource is not None or ARGS.mqttsource is not None:
+            # write config direct to device via http or mqtt
             if ARGS.httpsource is not None:
-                if not ARGS.dryrun:
-                    if ARGS.verbose:
-                        log(msg=f"{dryrun}Push new data to '{ARGS.httpsource}' using restore file '{restorefilename}'", type_=LogType.INFO)
-                    error_code, error_str = push_http(new_encode_cfg)
-                if error_code:
-                    log(ExitCode.UPLOAD_CONFIG_ERROR, f"Config data upload failed - {error_str}", line=lineno())
-                else:
-                    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                        log(msg=f"{dryrun}Restore successful to device '{ARGS.httpsource}' from '{restorefilename}'", type_=LogType.INFO if ARGS.verbose else None)
-
-            # write config direct to mqttsource via mqtt
-            elif ARGS.mqttsource is not None:
-                if not ARGS.dryrun:
-                    if ARGS.verbose:
-                        log(msg=f"{dryrun}Push new data to '{ARGS.mqttsource}' using restore file '{restorefilename}'", type_=LogType.INFO)
-                    error_code, error_str = push_mqtt(new_encode_cfg)
-                if error_code:
-                    log(ExitCode.UPLOAD_CONFIG_ERROR, f"Config data upload failed - {error_str}", line=lineno())
-                else:
-                    if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                        log(msg=f"{dryrun}Restore successful to device '{ARGS.mqttsource}' from '{restorefilename}'", type_=LogType.INFO if ARGS.verbose else None)
-
-            # write config from a file
-            elif ARGS.filesource is not None:
+                target, push = ARGS.httpsource, push_http
+            else:
+                target, push = ARGS.mqttsource, push_mqtt
+            if not ARGS.dryrun:
                 if ARGS.verbose:
-                    log(msg=f"{dryrun}Write new data to file '{ARGS.filesource}' using restore file '{restorefilename}'", type_=LogType.INFO)
-                if not ARGS.dryrun:
-                    try:
-                        with open(ARGS.filesource, "wb") as outputfile:
-                            outputfile.write(new_encode_cfg)
-                    except OSError as err:
-                        log(ExitCode.INTERNAL_ERROR, f"'{ARGS.filesource}' {err}", line=lineno())
-                if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                    log(msg=f"{dryrun}Restore successful to file '{ARGS.filesource}' from '{restorefilename}'", type_=LogType.INFO if ARGS.verbose else None)
+                    log(msg=f"{dryrun}Push new data to '{target}' using restore file '{restorefilename}'", type_=LogType.INFO)
+                error_code, error_str = push(new_encode_cfg)
+            if error_code:
+                log(ExitCode.UPLOAD_CONFIG_ERROR, f"Config data upload failed - {error_str}", line=lineno())
+            else:
+                log_restore_result(f"{dryrun}Restore successful to device '{target}' from '{restorefilename}'")
 
-        else:
-            EXIT_CODE = ExitCode.RESTORE_SKIPPED
-            if ARGS.verbose or ((ARGS.backupfile is not None or ARGS.restorefile is not None) and not ARGS.output):
-                log(msg="Restore skipped, configuration data unchanged", type_=LogType.INFO if ARGS.verbose else None)
+        elif ARGS.filesource is not None:
+            # write config from a file
+            if ARGS.verbose:
+                log(msg=f"{dryrun}Write new data to file '{ARGS.filesource}' using restore file '{restorefilename}'", type_=LogType.INFO)
+            if not ARGS.dryrun:
+                try:
+                    with open(ARGS.filesource, "wb") as outputfile:
+                        outputfile.write(new_encode_cfg)
+                except OSError as err:
+                    log(ExitCode.INTERNAL_ERROR, f"'{ARGS.filesource}' {err}", line=lineno())
+            log_restore_result(f"{dryrun}Restore successful to file '{ARGS.filesource}' from '{restorefilename}'")
+
+    new_encode_cfg, jsonconfig = load_restorefile()
+    if new_encode_cfg is None:
+        return
+
+    new_decode_cfg = decrypt_encrypt(new_encode_cfg, has_header=(len(new_encode_cfg) > config['info']['template_size']))
+    # add tar header if config contains appended settings
+    if (len(new_encode_cfg) > config['info']['template_size']):
+        fsize = len(new_encode_cfg)
+        header = bytearray(TASM_FILE_SETTINGS.encode() + bytearray(16 - len(TASM_FILE_SETTINGS)))
+        struct.pack_into("<H", header, 14, fsize + 16)
+        new_encode_cfg = header + new_encode_cfg
+
+    check_restore_compatibility(new_decode_cfg, jsonconfig)
+
+    if ARGS.verbose:
+        # get binary header and template to use
+        log(msg=f"Config file contains data of Tasmota v{get_versionstr(config['info']['version'])}", type_=LogType.INFO)
+    if ARGS.forcerestore or new_encode_cfg != config['encode']:
+        write_restore(new_encode_cfg)
+    else:
+        EXIT_CODE = ExitCode.RESTORE_SKIPPED
+        log_restore_result("Restore skipped, configuration data unchanged")
 
 def output_tasmotacmnds(tasmotacmnds):
     """
