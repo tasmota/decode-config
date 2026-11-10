@@ -5452,7 +5452,7 @@ def get_settingcrc(dobj):
     crc = 0
     config_info = get_config_info(dobj)
     for i in range(0, config_info['template_size']):
-        if not i in [14, 15]: # Skip crc
+        if i not in [14, 15]: # Skip crc
             byte_ = dobj[i]
             crc += byte_ * (i+1)
 
@@ -6025,7 +6025,7 @@ def get_fieldvalue(fieldname, fielddef, dobj, addr, idxoffset=0):
     unpackedvalue = struct.unpack_from(format_, dobj, addr)
     _, bitsize = get_formattype(format_)
 
-    if not format_[-1:].lower() in ['s', 'p']:
+    if format_[-1:].lower() not in ['s', 'p']:
         for val in unpackedvalue:
             value_ <<= bitsize
             value_ = value_ + val
@@ -6114,7 +6114,7 @@ def set_fieldvalue(fielddef, dobj, addr, value):
     format_ = get_fielddef(fielddef, fields='format_')
     formatcnt = get_formatcount(format_)
     singletype, bitsize = get_formattype(format_)
-    if not format_[-1:].lower() in ['s', 'p', 'f']:
+    if format_[-1:].lower() not in ['s', 'p', 'f']:
         addr += (bitsize // 8) * formatcnt
         for _ in range(0, formatcnt):
             addr -= (bitsize // 8)
