@@ -4497,7 +4497,7 @@ def get_filetype(filename):
                 # try reading as json
                 json.load(file)
                 filetype = FileType.JSON
-            except ValueError:
+            except ValueError as err:
                 filetype = FileType.INVALID_JSON
                 # not a valid json, get filesize and compare it with all possible sizes
                 try:
@@ -4509,6 +4509,10 @@ def get_filetype(filename):
                 sizes = get_templatesizes()
                 with open(filename, "rb") as inputfile:
                     inputbin = inputfile.read()
+                # data that can't be decoded as text and doesn't start like a JSON document (after optional BOM/whitespace)
+                # is binary and not a JSON file with an unexpected encoding - UnicodeDecodeError is a ValueError
+                if isinstance(err, UnicodeDecodeError) and not inputbin.lstrip(b'\xef\xbb\xbf\xff\xfe\x00 \t\r\n').startswith((b'{', b'[')):
+                    filetype = FileType.INVALID_BIN
                 if config_has_settings_header(inputbin):
                     if BINARYFILE_MAGIC in (struct.unpack(header_format, inputbin[-struct.calcsize(header_format):])[0],
                                             struct.unpack_from(header_format, inputbin, 0)[0]):
