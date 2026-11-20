@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 METADATA = {
-    'VERSION': '16.0.0.3',
+    'VERSION': '16.0.0.4',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3558,10 +3558,16 @@ SETTING_16_0_0_2.update             ({
     'bme680_iaq_baseline':          (HARDWARE.ESP,   '<H',  0xEBC,       ([4],  None,                           ('Sensor',      None)) ),
                                     })
 # ======================================================================
-SETTING_16_0_0_3 = copy.copy(SETTING_16_0_0_2)
+SETTING_16_0_0_4 = copy.copy(SETTING_16_0_0_2)
+SETTING_16_0_0_4.update             ({
+    'location_packed':              (HARDWARE.ESP,   'B',   0x3D0,       ([12], None,                           ('Timer',       None)) ),
+                                    })
+SETTING_16_0_0_4['flag6'][1].update ({
+        'location_tele':            (HARDWARE.ESP,   '<L', (0xF74,1,20), (None, None,                           ('SetOption',   '"SO166 {}".format($)')) ),
+                                    })
 # ======================================================================
 SETTINGS = [
-            (0x10000003,0x1000, SETTING_16_0_0_3),
+            (0x10000004,0x1000, SETTING_16_0_0_4),
             (0x10000002,0x1000, SETTING_16_0_0_2),
             (0x0F060003,0x1000, SETTING_15_6_0_3),
             (0x0F060002,0x1000, SETTING_15_6_0_2),
