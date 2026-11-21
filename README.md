@@ -740,10 +740,11 @@ For advanced help use parameter `-H` or `--full-help`.
                           [--insecure] [--keepalive <sec>] [-i <restorefile>]
                           [-o <backupfile>] [-t json|bin|dmp] [-E] [-e] [-F]
                           [--json-indent <indent>] [--json-compact] [--json-show-pw]
-                          [--cmnd-indent <indent>] [--cmnd-groups] [--cmnd-sort]
-                          [--cmnd-use-rule-concat] [--cmnd-use-backlog] [-c <configfile>]
-                          [-S] [-T json|cmnd|command] [-g <groupname> [<groupname> ...]]
-                          [-w] [--dry-run] [-h] [-H] [-v] [-V]
+                          [--json-header] [--cmnd-indent <indent>] [--cmnd-groups]
+                          [--cmnd-sort] [--cmnd-use-rule-concat] [--cmnd-use-backlog]
+                          [-c <configfile>] [-S] [-T json|cmnd|command]
+                          [-g <groupname> [<groupname> ...]] [-w] [--dry-run] [-h] [-H]
+                          [-v] [-V]
 
   Backup/Restore Tasmota configuration data.
 
@@ -751,9 +752,10 @@ For advanced help use parameter `-H` or `--full-help`.
     Read/Write Tasmota configuration from/to
 
     -s, --source <filename|host|url>
-                          source used for the Tasmota configuration (default: None).
-                          Specify source type, path, file, user, password, hostname, port
-                          and topic at once as an URL. The URL must be in the form
+                          source used for the Tasmota configuration (default: None), the
+                          source parameter is mandatory. Specify source type, path, file,
+                          user, password, hostname, port and topic at once as an URL. The
+                          URL must be in the form
                           'scheme://[username[:password]@]host[:port][/topic]|pathfile'
                           where 'scheme' is 'file' for a tasmota binary config file,
                           'http' for a Tasmota HTTP web connection and 'mqtt(s)' for
@@ -803,13 +805,15 @@ For advanced help use parameter `-H` or `--full-help`.
 
   JSON output:
     JSON format specification. To revert an option, insert "dont" or "no" after "json",
-    e.g. --json-no-indent, --json-dont-show-pw
+    e.g. --json-no-indent, --json-dont-show-pw, --json-no-header
 
     --json-indent <indent>
                           pretty-printed JSON output using indent level (default: 'None').
                           -1 disables indent.
     --json-compact        compact JSON output by eliminate whitespace
     --json-show-pw        unhide passwords (default)
+    --json-header         include the key 'header' (information about the program run and
+                          the config data) in the JSON output (default)
 
   Tasmota command output:
     Tasmota command output format specification. To revert an option, insert "dont" or
@@ -857,10 +861,10 @@ For advanced help use parameter `-H` or `--full-help`.
 
   The arguments -s <filename|host|url> must be given.
 
-  Args that start with '--' (eg. -s) can also be set in a config file (specified via -c).
-  Config file syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax
-  at https://goo.gl/R74nmi). If an arg is specified in more than one place, then
-  commandline values override config file values which override defaults.
+  Args that start with '--' can also be set in a config file (specified via -c). Config
+  file syntax allows: key=value, flag=true, stuff=[a,b,c] (for details, see syntax at
+  https://goo.gl/R74nmi). In general, command-line values override config file values
+  which override defaults.
   ```
 
 > **Note**  

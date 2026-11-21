@@ -250,6 +250,7 @@ DEFAULTS = {
         'compact':      False,
         'sort':         True,
         'hidepw':       False,
+        'header':       True,
     },
     'cmndformat':
     {
@@ -4362,7 +4363,7 @@ class Unishox:
 
     # pylint: enable=missing-function-docstring
 
-def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
+def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact, jsonheader=True):
     """
     Get JSON string output from config mapping
 
@@ -4375,10 +4376,15 @@ def get_jsonstr(configmapping, jsonsort, jsonindent, jsoncompact):
         pretty-printed JSON output indent level (<0 disables indent)
     @param jsoncompact:
         True: output of dictionaries will be compacted (no space after , and :)
+    @param jsonheader:
+        False: the key 'header' (information about the program run and the config data) is not part of the output
 
     @return:
         template sizes as list []
     """
+    if not jsonheader:
+        # work on a copy, the config mapping itself still contains the header
+        configmapping = {key: value for key, value in configmapping.items() if key != 'header'}
     conv_keys = {}
     for key in list(configmapping):
         if key[0].isupper():
@@ -6944,7 +6950,7 @@ def backup(backupfile, backupfileformat, config):
     def backup_json(backup_filename, config):
         # do json file write
         with open(backup_filename, "w", encoding=STR_CODING) as backupfp:
-            backupfp.write(get_jsonstr(config['groupmapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            backupfp.write(get_jsonstr(config['groupmapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact, ARGS.jsonheader))
 
     backups = {
         FileType.DMP.lower():("Tasmota", FileType.DMP, backup_dmp),
@@ -7399,7 +7405,7 @@ def parseargs():
 
 
     jsonformat = PARSER.add_argument_group('JSON output',
-                                           'JSON format specification. To revert an option, insert "dont" or "no" after "json", e.g. --json-no-indent, --json-dont-show-pw')
+                                           'JSON format specification. To revert an option, insert "dont" or "no" after "json", e.g. --json-no-indent, --json-dont-show-pw, --json-no-header')
     jsonformat.add_argument('--json-indent',
                             metavar='<indent>',
                             dest='jsonindent',
@@ -7430,6 +7436,16 @@ def parseargs():
                             dest='jsonhidepw',
                             action='store_true',
                             help=configargparse.SUPPRESS)
+    jsonformat.add_argument('--json-header',
+                            dest='jsonheader',
+                            action='store_true',
+                            default=DEFAULTS['jsonformat']['header'],
+                            help=f"include the key 'header' (information about the program run and the config data) in the JSON output{' (default)' if DEFAULTS['jsonformat']['header'] else ''}")
+    jsonformat.add_argument('--json-no-header', '--json-dont-header', '--jsonno-header', '--jsondont-header', '--json-noheader', '--json-dontheader', '--jsonnoheader', '--jsondontheader',
+                            dest='jsonheader',
+                            action='store_false',
+                            help=configargparse.SUPPRESS)
+
     # for backward compatibility only
     jsonformat.add_argument('--json-hide-pw', dest='jsonhidepw', action='store_true', help=configargparse.SUPPRESS)
     jsonformat.add_argument('--json-unhide-pw', dest='jsonhidepw', action='store_false', help=configargparse.SUPPRESS)
@@ -7730,7 +7746,7 @@ def main():
     if (ARGS.backupfile is None and ARGS.restorefile is None) or ARGS.output:
         if ARGS.outputformat == 'json':
             # json screen output
-            print(get_jsonstr(CONFIG['groupmapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact))
+            print(get_jsonstr(CONFIG['groupmapping'], ARGS.jsonsort, ARGS.jsonindent, ARGS.jsoncompact, ARGS.jsonheader))
 
         if ARGS.outputformat in ('cmnd', 'command'):
             # Tasmota command output
