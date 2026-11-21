@@ -26,7 +26,8 @@ If you like **decode-config** give it a star or fork it and contribute:
 
 [![GitHub stars](https://img.shields.io/github/stars/tasmota/decode-config.svg?style=social&label=Star)](https://github.com/tasmota/decode-config/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/tasmota/decode-config.svg?style=social&label=Fork)](https://github.com/tasmota/decode-config/network)
-[![donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/NorbertRichterDE)
+[![PayPal](https://img.shields.io/badge/donate-PayPal-0070BA?logo=paypal)](https://paypal.me/NorbertRichterDE)
+[![Buy Me A Coffee](https://img.shields.io/badge/donate-Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/curzon01)
 
 Comparing backup files created by **decode-config** and [.dmp](#dmp-format) files created by Tasmota "*Backup Configuration*" / "*Restore Configuration*":
 
