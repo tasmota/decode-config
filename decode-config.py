@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 METADATA = {
-    'VERSION': '16.0.0.5',
+    'VERSION': '16.0.0.6',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3572,7 +3572,10 @@ SETTING_16_0_0_5.update              ({
     'sensors2':                     (HARDWARE.ESP,   '<L',  0x720,       ([2],  None,                           ('Management',  'list("{}Sensor{} {}".format("Set" if (# < 1) else "Web", max(#, 1) * 32 + i + 96 + 1, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
 })
 # ======================================================================
+SETTING_16_0_0_6 = copy.copy(SETTING_16_0_0_5)
+# ======================================================================
 SETTINGS = [
+            (0x10000006,0x1000, SETTING_16_0_0_6),
             (0x10000005,0x1000, SETTING_16_0_0_5),
             (0x10000004,0x1000, SETTING_16_0_0_4),
             (0x10000002,0x1000, SETTING_16_0_0_2),
