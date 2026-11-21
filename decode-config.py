@@ -2306,7 +2306,7 @@ SETTING_9_5_0_2['flag5'][1].update  ({
 # ======================================================================
 SETTING_9_5_0_3 = copy.copy(SETTING_9_5_0_2)
 SETTING_9_5_0_3.update              ({
-    'sensors':                      (HARDWARE.ESP,   '<L',  0x794,       ([2,4],  None,                         ('Wifi',        None)), '"0x{:08x}".format($)' ),
+    'sensors':                      (HARDWARE.ESP,   '<L',  0x794,       ([2,4],None,                           ('Management',  'list("{}Sensor{} {}".format("Set" if (#[0] < 1) else "Web", (#[1]*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
                                     })
 # ======================================================================
 SETTING_9_5_0_4 = copy.copy(SETTING_9_5_0_3)
