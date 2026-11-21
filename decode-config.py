@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 METADATA = {
-    'VERSION': '16.0.0.4',
+    'VERSION': '16.0.0.5',
     'DESCRIPTION': 'Backup/restore and decode configuration tool for Tasmota',
     'CLASSIFIER': 'Development Status :: 4 - Beta',
     'URL': 'https://github.com/tasmota/decode-config',
@@ -3566,7 +3566,14 @@ SETTING_16_0_0_4['flag6'][1].update ({
         'location_tele':            (HARDWARE.ESP,   '<L', (0xF74,1,20), (None, None,                           ('SetOption',   '"SO166 {}".format($)')) ),
                                     })
 # ======================================================================
+SETTING_16_0_0_5 = copy.copy(SETTING_16_0_0_4)
+SETTING_16_0_0_5.update              ({
+    'sensors':                      (HARDWARE.ESP,   '<L',  0x794,       ([2,4],None,                           ('Management',  'list("{}Sensor{} {}".format("Set" if (#[0] < 1) else "Web", (#[1]*32)+i, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
+    'sensors2':                     (HARDWARE.ESP,   '<L',  0x720,       ([2],  None,                           ('Management',  'list("{}Sensor{} {}".format("Set" if (# < 1) else "Web", max(#, 1) * 32 + i + 96 + 1, 1 if (int($,0) & (1<<i)) else 0) for i in range(0, 32))')), '"0x{:08x}".format($)' ),
+})
+# ======================================================================
 SETTINGS = [
+            (0x10000005,0x1000, SETTING_16_0_0_5),
             (0x10000004,0x1000, SETTING_16_0_0_4),
             (0x10000002,0x1000, SETTING_16_0_0_2),
             (0x0F060003,0x1000, SETTING_15_6_0_3),
