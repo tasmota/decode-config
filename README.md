@@ -996,6 +996,7 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | RtcNtpserver                |                        |             |
   |                | SaveData                    |                        |             |
   |                | SerialLog                   |                        |             |
+  |                | SetSensor<x\>               |                        |             |
   |                | Sleep                       |                        |             |
   |                | SSPMDisplay<sup>2</sup>     |                        |             |
   |                | SysLog                      |                        |             |
@@ -1034,7 +1035,6 @@ These Tasmota commands are unsupported and not implemented in **decode-config**
   |                | WebCanvas                   |                        |             |
   |                | WebColor<x\>                |                        |             |
   |                | WebRefresh                  |                        |             |
-  |                | WebSensor<x\>               |                        |             |
   |                | WebServer                   |                        |             |
   |                | Wifi                        |                        |             |
   |                | WifiConfig                  |                        |             |
